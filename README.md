@@ -4,4 +4,4 @@ Work in progress: new snapshots will be committed as the rewrite continues.
 
 `█░░░░░░░░░░░░░░░░░░░` 7.1% migrated by Nemotron 3.5 Lightning (267 of 3,751 pieces)
 
-`████░░░░░░░░░░░░░░░░` 19.8% migrated by DeepSeek V4.1 Flash (743 of 3,751 pieces)
+`████████████░░░░░░░░` 57.5% migrated by DeepSeek V4.1 Flash (2,157 of 3,751 pieces)

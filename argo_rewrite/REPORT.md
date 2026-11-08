@@ -1,6 +1,6 @@
 # Argo rewrite of https://github.com/fernandotcl/TinyEMU.git
 
-1010 of 3751 functions exported into 23 modules; 2741 left out.
+2424 of 3751 functions exported into 52 modules; 1327 left out.
 
 Every exported function compiled on its own with rustc when its worker checked it. `cargo build` here checks that they also compile together as one crate.
 
@@ -649,7 +649,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `free(fname); fs->dump_cache_load = TRUE;` | fs_net.c | exported | Unvalidated |
 | `filelist_load_rec` | fs_net.c | left out | not translated yet |
 | `char fname[1024], lname[1024]; int ret; const char *p; FSINodeTypeEnum type; uint32_t mode, uid…` | fs_net.c | exported | Unvalidated |
-| `for (; ; )` | fs_net.c | left out | still being translated |
+| `for (; ; )` | fs_net.c | exported | Unvalidated |
 | `*pp = p; return 0;` | fs_net.c | exported | Unvalidated |
 | `filelist_load` | fs_net.c | left out | not translated yet |
 | `if (parse_tag_version(str) != 1)` | fs_net.c | exported | Unvalidated |
@@ -1380,1494 +1380,1494 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `PS2KbdState *s = (PS2KbdState *)mallocz(sizeof(PS2KbdState)); s->common.update_irq = update_irq…` | ps2.c | exported | Unvalidated |
 | `ps2_mouse_init` | ps2.c | left out | not translated yet |
 | `PS2MouseState *s = (PS2MouseState *)mallocz(sizeof(PS2MouseState)); s->common.update_irq = upda…` | ps2.c | exported | Unvalidated |
-| `log_vprintf` | riscv_cpu.c | left out | not translated yet |
-| `vprintf(fmt, ap);` | riscv_cpu.c | left out | still being translated |
-| `fprint_target_ulong` | riscv_cpu.c | left out | not translated yet |
-| `fprintf(f, "%016" "l" "x" "%016" "l" "x" , (uint64_t)(a >> 64), (uint64_t)a);` | riscv_cpu.c | left out | still being translated |
-| `print_target_ulong` | riscv_cpu.c | left out | not translated yet |
-| `fprint_target_ulong( stdout , a);` | riscv_cpu.c | left out | still being translated |
-| `dump_regs` | riscv_cpu.c | left out | not translated yet |
-| `int i, cols; const char priv_str[4] = "USHM"; cols = 256 / 128; printf("pc ="); print_target_ul…` | riscv_cpu.c | left out | still being translated |
-| `for (i = 1; i < 32; i++)` | riscv_cpu.c | left out | still being translated |
-| `printf("priv=%c", priv_str[s->priv]); printf(" mstatus="); print_target_ulong(s->mstatus); prin…` | riscv_cpu.c | left out | still being translated |
-| `cpu_abort` | riscv_cpu.c | left out | not translated yet |
-| `dump_regs(s); abort();` | riscv_cpu.c | left out | still being translated |
-| `phys_write_u8` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `*(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
-| `phys_read_u8` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `return *(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
-| `phys_write_u32` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `*(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
-| `phys_read_u32` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `return *(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
-| `phys_write_u64` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `*(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
-| `phys_read_u64` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
-| `return *(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
-| `get_phys_addr` | riscv_cpu.c | left out | not translated yet |
-| `if (s->mstatus & (1 << 17)) && access != 2) … else` | riscv_cpu.c | left out | still being translated |
-| `if (priv == 3)` | riscv_cpu.c | left out | still being translated |
-| `mode = (s->satp >> 60) & 0xf;` | riscv_cpu.c | left out | still being translated |
-| `if (mode == 0) … else` | riscv_cpu.c | left out | still being translated |
-| `pte_addr = (s->satp & (((target_ulong)1 << pte_addr_bits) - 1)) << 12; pte_bits = 12 - pte_size…` | riscv_cpu.c | left out | still being translated |
-| `for (i = 0; i < levels; i++)` | riscv_cpu.c | left out | still being translated |
-| `return -1;` | riscv_cpu.c | left out | still being translated |
-| `riscv128_read_slow` | riscv_cpu.c | left out | not translated yet |
-| `int size, tlb_idx, err, al; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; mem_…` | riscv_cpu.c | left out | still being translated |
-| `if (al != 0) … else` | riscv_cpu.c | left out | still being translated |
-| `*pval = ret; return 0;` | riscv_cpu.c | left out | still being translated |
-| `riscv128_write_slow` | riscv_cpu.c | left out | not translated yet |
-| `int size, i, tlb_idx, err; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; size…` | riscv_cpu.c | left out | not translated yet |
-| `if (addr & (size - 1)) != 0) … else` | riscv_cpu.c | left out | not translated yet |
-| `return 0;` | riscv_cpu.c | left out | not translated yet |
-| `get_insn32` | riscv_cpu.c | left out | not translated yet |
-| `return ((struct unaligned_u32 *)ptr)->u32;` | riscv_cpu.c | left out | not translated yet |
-| `target_read_insn_slow` | riscv_cpu.c | left out | not translated yet |
-| `if (get_phys_addr(s, &paddr, addr, 2))` | riscv_cpu.c | left out | not translated yet |
-| `pr = get_phys_mem_range(s->mem_map, paddr);` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `tlb_idx = (addr >> 12) & (256 - 1); ptr = pr->phys_mem + (uintptr_t)(paddr - pr->addr); s->tlb_…` | riscv_cpu.c | left out | not translated yet |
-| `target_read_insn_u16` | riscv_cpu.c | left out | not translated yet |
-| `uint32_t tlb_idx; uint8_t *ptr; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu.c | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_code[tlb_idx].vaddr == (addr & ~((1 << 12) - 1))), 1)) … else` | riscv_cpu.c | left out | not translated yet |
-| `*pinsn = *(uint16_t *)ptr; return 0;` | riscv_cpu.c | left out | not translated yet |
-| `tlb_init` | riscv_cpu.c | left out | not translated yet |
-| `for (i = 0; i < 256; i++)` | riscv_cpu.c | left out | not translated yet |
-| `tlb_flush_all` | riscv_cpu.c | left out | not translated yet |
-| `tlb_init(s);` | riscv_cpu.c | left out | not translated yet |
-| `tlb_flush_vaddr` | riscv_cpu.c | left out | not translated yet |
-| `tlb_flush_all(s);` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_flush_tlb_write_range_ram128` | riscv_cpu.c | left out | not translated yet |
-| `uint8_t *ptr, *ram_end; int i; ram_end = ram_ptr + ram_size;` | riscv_cpu.c | left out | not translated yet |
-| `for (i = 0; i < 256; i++)` | riscv_cpu.c | left out | not translated yet |
-| `get_mstatus` | riscv_cpu.c | left out | not translated yet |
-| `target_ulong val; BOOL sd; val = s->mstatus | (s->fs << 13); val &= mask; sd = ((val & (3 << 13…` | riscv_cpu.c | left out | not translated yet |
-| `if (sd)` | riscv_cpu.c | left out | not translated yet |
-| `return val;` | riscv_cpu.c | left out | not translated yet |
-| `get_base_from_xlen` | riscv_cpu.c | left out | not translated yet |
-| `if (xlen == 32) … else` | riscv_cpu.c | left out | not translated yet |
-| `set_mstatus` | riscv_cpu.c | left out | not translated yet |
-| `target_ulong mod, mask; mod = s->mstatus ^ val;` | riscv_cpu.c | left out | not translated yet |
-| `if (mod & ((1 << 17) | (1 << 18) | (1 << 19))) != 0 || ((s->mstatus & (1 << 17)) && (mod & (3 <…` | riscv_cpu.c | left out | not translated yet |
-| `s->fs = (val >> 13) & 3; mask = ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7…` | riscv_cpu.c | left out | not translated yet |
-| `{ … }` | riscv_cpu.c | left out | not translated yet |
-| `s->mstatus = (s->mstatus & ~mask) | (val & mask);` | riscv_cpu.c | left out | not translated yet |
-| `csr_read` | riscv_cpu.c | left out | not translated yet |
-| `if (csr & 0xc00) == 0xc00) && will_write)` | riscv_cpu.c | left out | not translated yet |
-| `if (s->priv < ((csr >> 8) & 3)` | riscv_cpu.c | left out | not translated yet |
-| `switch (csr)` | riscv_cpu.c | left out | not translated yet |
-| `*pval = val; return 0;` | riscv_cpu.c | left out | not translated yet |
-| `set_frm` | riscv_cpu.c | left out | not translated yet |
-| `if (val >= 5)` | riscv_cpu.c | left out | not translated yet |
-| `s->frm = val;` | riscv_cpu.c | left out | not translated yet |
-| `get_insn_rm` | riscv_cpu.c | left out | not translated yet |
-| `if (rm == 7)` | riscv_cpu.c | left out | not translated yet |
-| `if (rm >= 5) … else` | riscv_cpu.c | left out | not translated yet |
-| `csr_write` | riscv_cpu.c | left out | not translated yet |
-| `switch (csr)` | riscv_cpu.c | left out | not translated yet |
-| `return 0;` | riscv_cpu.c | left out | not translated yet |
-| `set_priv` | riscv_cpu.c | left out | not translated yet |
-| `if (s->priv != priv)` | riscv_cpu.c | left out | not translated yet |
-| `raise_exception2` | riscv_cpu.c | left out | not translated yet |
-| `if (s->priv <= 1) … else` | riscv_cpu.c | left out | not translated yet |
-| `causel = cause & 0x7fffffff;` | riscv_cpu.c | left out | not translated yet |
-| `if (cause & ((uint32_t)1 << 31)` | riscv_cpu.c | left out | not translated yet |
-| `if (deleg) … else` | riscv_cpu.c | left out | not translated yet |
-| `raise_exception` | riscv_cpu.c | left out | not translated yet |
-| `raise_exception2(s, cause, 0);` | riscv_cpu.c | left out | not translated yet |
-| `handle_sret` | riscv_cpu.c | left out | not translated yet |
-| `int spp, spie; spp = (s->mstatus >> 8) & 1; spie = (s->mstatus >> 5) & 1; s->mstatus = (s->msta…` | riscv_cpu.c | left out | not translated yet |
-| `handle_mret` | riscv_cpu.c | left out | not translated yet |
-| `int mpp, mpie; mpp = (s->mstatus >> 11) & 3; mpie = (s->mstatus >> 7) & 1; s->mstatus = (s->mst…` | riscv_cpu.c | left out | not translated yet |
-| `get_pending_irq_mask` | riscv_cpu.c | left out | not translated yet |
-| `uint32_t pending_ints, enabled_ints; pending_ints = s->mip & s->mie;` | riscv_cpu.c | left out | not translated yet |
-| `if (pending_ints == 0)` | riscv_cpu.c | left out | not translated yet |
-| `enabled_ints = 0;` | riscv_cpu.c | left out | not translated yet |
-| `switch (s->priv)` | riscv_cpu.c | left out | not translated yet |
-| `return pending_ints & enabled_ints;` | riscv_cpu.c | left out | not translated yet |
-| `raise_interrupt` | riscv_cpu.c | left out | not translated yet |
-| `uint32_t mask; int irq_num; mask = get_pending_irq_mask(s);` | riscv_cpu.c | left out | not translated yet |
-| `if (mask == 0)` | riscv_cpu.c | left out | not translated yet |
-| `irq_num = ctz32(mask); raise_exception(s, irq_num | ((uint32_t)1 << 31)); return -1;` | riscv_cpu.c | left out | not translated yet |
-| `sext` | riscv_cpu.c | left out | not translated yet |
-| `return (val << (32 - n)) >> (32 - n);` | riscv_cpu.c | left out | not translated yet |
-| `get_field1` | riscv_cpu.c | left out | not translated yet |
-| `int mask; ((void) sizeof (__assert_single_arg ( dst_pos_max >= dst_pos )), __extension__ ({ if…` | riscv_cpu.c | left out | not translated yet |
-| `if (dst_pos >= src_pos) … else` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_interp128` | riscv_cpu.c | left out | not translated yet |
-| `uint64_t timeout; timeout = s->insn_counter + n_cycles;` | riscv_cpu.c | left out | not translated yet |
-| `while (!s->power_down_flag && (int)(timeout - s->insn_counter) > 0)` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_get_cycles128` | riscv_cpu.c | left out | not translated yet |
-| `return s->insn_counter;` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_set_mip128` | riscv_cpu.c | left out | not translated yet |
-| `s->mip |= mask;` | riscv_cpu.c | left out | not translated yet |
-| `if (s->power_down_flag && (s->mip & s->mie) != 0)` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_reset_mip128` | riscv_cpu.c | left out | not translated yet |
-| `s->mip &= ~mask;` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_get_mip128` | riscv_cpu.c | left out | not translated yet |
-| `return s->mip;` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_get_power_down128` | riscv_cpu.c | left out | not translated yet |
-| `return s->power_down_flag;` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_init128` | riscv_cpu.c | left out | not translated yet |
-| `RISCVCPUState *s; s = mallocz(sizeof(*s)); s->common.class_ptr = &riscv_cpu_class128; s->mem_ma…` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_end128` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_get_misa128` | riscv_cpu.c | left out | not translated yet |
-| `return s->misa;` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_init` | riscv_cpu.c | left out | not translated yet |
-| `switch (max_xlen)` | riscv_cpu.c | left out | not translated yet |
-| `return c->riscv_cpu_init(mem_map);` | riscv_cpu.c | left out | not translated yet |
-| `riscv_cpu_end` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_end(s);` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_interp` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_interp(s, n_cycles…` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_get_cycles` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_cycles(…` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_set_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_set_mip(s, mask);` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_reset_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_reset_mip(s, mask);` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_get_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_mip(s);` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_get_power_down` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_power_d…` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_get_misa` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_misa(s);` | riscv_cpu.h | left out | still being translated |
-| `riscv_cpu_flush_tlb_write_range_ram` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_flush_tlb_write_ra…` | riscv_cpu.h | left out | still being translated |
-| `target_read_u8` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) - 1… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
-| `target_write_u8` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `target_read_u16` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
-| `target_write_u16` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `target_read_u32` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
-| `target_write_u32` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `target_read_u64` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
-| `target_write_u64` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `target_read_u128` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
-| `target_write_u128` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8)… … else` | riscv_cpu_priv.h | left out | still being translated |
-| `div32` | riscv_cpu_template.h | left out | not translated yet |
-| `div64` | riscv_cpu_template.h | left out | not translated yet |
-| `div128` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `divu32` | riscv_cpu_template.h | left out | not translated yet |
-| `divu64` | riscv_cpu_template.h | left out | not translated yet |
-| `divu128` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `rem32` | riscv_cpu_template.h | left out | not translated yet |
-| `rem64` | riscv_cpu_template.h | left out | not translated yet |
-| `rem128` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `remu32` | riscv_cpu_template.h | left out | not translated yet |
-| `remu64` | riscv_cpu_template.h | left out | not translated yet |
-| `remu128` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b == 0) … else` | riscv_cpu_template.h | left out | not translated yet |
-| `mulh32` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhsu32` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhu32` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulh64` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhsu64` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhu64` | riscv_cpu_template.h | left out | not translated yet |
-| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhu128` | riscv_cpu_template.h | left out | not translated yet |
-| `uint64_t a0, a1, b0, b1, r2, r3; uint128_t r00, r01, r10, r11, c; a0 = a; a1 = a >> 64; b0 = b;…` | riscv_cpu_template.h | left out | not translated yet |
-| `mulh128` | riscv_cpu_template.h | left out | not translated yet |
-| `uint128_t r1; r1 = mulhu128(a, b);` | riscv_cpu_template.h | left out | not translated yet |
-| `if (a < 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `if (b < 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `return r1;` | riscv_cpu_template.h | left out | not translated yet |
-| `mulhsu128` | riscv_cpu_template.h | left out | not translated yet |
-| `uint128_t r1; r1 = mulhu128(a, b);` | riscv_cpu_template.h | left out | not translated yet |
-| `if (a < 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `return r1;` | riscv_cpu_template.h | left out | not translated yet |
-| `riscv_cpu_interp_x32` | riscv_cpu_template.h | left out | not translated yet |
-| `riscv_cpu_interp_x64` | riscv_cpu_template.h | left out | not translated yet |
-| `riscv_cpu_interp_x128` | riscv_cpu_template.h | left out | not translated yet |
-| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | not translated yet |
-| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | not translated yet |
-| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | not translated yet |
-| `for (; ; )` | riscv_cpu_template.h | left out | not translated yet |
-| `for (; ; )` | riscv_cpu_template.h | left out | not translated yet |
-| `for (; ; )` | riscv_cpu_template.h | left out | not translated yet |
-| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | not translated yet |
-| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | not translated yet |
-| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | not translated yet |
-| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | not translated yet |
-| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | not translated yet |
-| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | not translated yet |
-| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | not translated yet |
-| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | not translated yet |
-| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | not translated yet |
-| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | not translated yet |
-| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | not translated yet |
+| `log_vprintf` | riscv_cpu.c | left out | translation failed |
+| `vprintf(fmt, ap);` | riscv_cpu.c | left out | translation failed |
+| `fprint_target_ulong` | riscv_cpu.c | left out | translation failed |
+| `fprintf(f, "%016" "l" "x" "%016" "l" "x" , (uint64_t)(a >> 64), (uint64_t)a);` | riscv_cpu.c | left out | translation failed |
+| `print_target_ulong` | riscv_cpu.c | left out | translation failed |
+| `fprint_target_ulong( stdout , a);` | riscv_cpu.c | left out | translation failed |
+| `dump_regs` | riscv_cpu.c | left out | translation failed |
+| `int i, cols; const char priv_str[4] = "USHM"; cols = 256 / 128; printf("pc ="); print_target_ul…` | riscv_cpu.c | left out | translation failed |
+| `for (i = 1; i < 32; i++)` | riscv_cpu.c | left out | translation failed |
+| `printf("priv=%c", priv_str[s->priv]); printf(" mstatus="); print_target_ulong(s->mstatus); prin…` | riscv_cpu.c | left out | translation failed |
+| `cpu_abort` | riscv_cpu.c | left out | translation failed |
+| `dump_regs(s); abort();` | riscv_cpu.c | left out | translation failed |
+| `phys_write_u8` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `*(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | translation failed |
+| `phys_read_u8` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `return *(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | translation failed |
+| `phys_write_u32` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `*(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | translation failed |
+| `phys_read_u32` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `return *(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | translation failed |
+| `phys_write_u64` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `*(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | translation failed |
+| `phys_read_u64` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `return *(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | translation failed |
+| `get_phys_addr` | riscv_cpu.c | left out | translation failed |
+| `if (s->mstatus & (1 << 17)) && access != 2) … else` | riscv_cpu.c | left out | translation failed |
+| `if (priv == 3)` | riscv_cpu.c | left out | translation failed |
+| `mode = (s->satp >> 60) & 0xf;` | riscv_cpu.c | left out | translation failed |
+| `if (mode == 0) … else` | riscv_cpu.c | left out | translation failed |
+| `pte_addr = (s->satp & (((target_ulong)1 << pte_addr_bits) - 1)) << 12; pte_bits = 12 - pte_size…` | riscv_cpu.c | left out | translation failed |
+| `for (i = 0; i < levels; i++)` | riscv_cpu.c | left out | translation failed |
+| `return -1;` | riscv_cpu.c | left out | translation failed |
+| `riscv128_read_slow` | riscv_cpu.c | left out | translation failed |
+| `int size, tlb_idx, err, al; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; mem_…` | riscv_cpu.c | left out | translation failed |
+| `if (al != 0) … else` | riscv_cpu.c | left out | translation failed |
+| `*pval = ret; return 0;` | riscv_cpu.c | left out | translation failed |
+| `riscv128_write_slow` | riscv_cpu.c | left out | translation failed |
+| `int size, i, tlb_idx, err; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; size…` | riscv_cpu.c | left out | translation failed |
+| `if (addr & (size - 1)) != 0) … else` | riscv_cpu.c | left out | translation failed |
+| `return 0;` | riscv_cpu.c | left out | translation failed |
+| `get_insn32` | riscv_cpu.c | left out | translation failed |
+| `return ((struct unaligned_u32 *)ptr)->u32;` | riscv_cpu.c | left out | translation failed |
+| `target_read_insn_slow` | riscv_cpu.c | left out | translation failed |
+| `if (get_phys_addr(s, &paddr, addr, 2))` | riscv_cpu.c | left out | translation failed |
+| `pr = get_phys_mem_range(s->mem_map, paddr);` | riscv_cpu.c | left out | translation failed |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | translation failed |
+| `tlb_idx = (addr >> 12) & (256 - 1); ptr = pr->phys_mem + (uintptr_t)(paddr - pr->addr); s->tlb_…` | riscv_cpu.c | left out | translation failed |
+| `target_read_insn_u16` | riscv_cpu.c | left out | translation failed |
+| `uint32_t tlb_idx; uint8_t *ptr; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu.c | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_code[tlb_idx].vaddr == (addr & ~((1 << 12) - 1))), 1)) … else` | riscv_cpu.c | left out | translation failed |
+| `*pinsn = *(uint16_t *)ptr; return 0;` | riscv_cpu.c | left out | translation failed |
+| `tlb_init` | riscv_cpu.c | left out | translation failed |
+| `for (i = 0; i < 256; i++)` | riscv_cpu.c | left out | translation failed |
+| `tlb_flush_all` | riscv_cpu.c | left out | translation failed |
+| `tlb_init(s);` | riscv_cpu.c | left out | translation failed |
+| `tlb_flush_vaddr` | riscv_cpu.c | left out | translation failed |
+| `tlb_flush_all(s);` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_flush_tlb_write_range_ram128` | riscv_cpu.c | left out | translation failed |
+| `uint8_t *ptr, *ram_end; int i; ram_end = ram_ptr + ram_size;` | riscv_cpu.c | left out | translation failed |
+| `for (i = 0; i < 256; i++)` | riscv_cpu.c | left out | translation failed |
+| `get_mstatus` | riscv_cpu.c | left out | translation failed |
+| `target_ulong val; BOOL sd; val = s->mstatus | (s->fs << 13); val &= mask; sd = ((val & (3 << 13…` | riscv_cpu.c | left out | translation failed |
+| `if (sd)` | riscv_cpu.c | left out | translation failed |
+| `return val;` | riscv_cpu.c | left out | translation failed |
+| `get_base_from_xlen` | riscv_cpu.c | left out | translation failed |
+| `if (xlen == 32) … else` | riscv_cpu.c | left out | translation failed |
+| `set_mstatus` | riscv_cpu.c | left out | translation failed |
+| `target_ulong mod, mask; mod = s->mstatus ^ val;` | riscv_cpu.c | left out | translation failed |
+| `if (mod & ((1 << 17) | (1 << 18) | (1 << 19))) != 0 || ((s->mstatus & (1 << 17)) && (mod & (3 <…` | riscv_cpu.c | left out | translation failed |
+| `s->fs = (val >> 13) & 3; mask = ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 7…` | riscv_cpu.c | left out | translation failed |
+| `{ … }` | riscv_cpu.c | left out | translation failed |
+| `s->mstatus = (s->mstatus & ~mask) | (val & mask);` | riscv_cpu.c | left out | translation failed |
+| `csr_read` | riscv_cpu.c | left out | translation failed |
+| `if (csr & 0xc00) == 0xc00) && will_write)` | riscv_cpu.c | left out | translation failed |
+| `if (s->priv < ((csr >> 8) & 3)` | riscv_cpu.c | left out | translation failed |
+| `switch (csr)` | riscv_cpu.c | left out | translation failed |
+| `*pval = val; return 0;` | riscv_cpu.c | left out | translation failed |
+| `set_frm` | riscv_cpu.c | left out | translation failed |
+| `if (val >= 5)` | riscv_cpu.c | left out | translation failed |
+| `s->frm = val;` | riscv_cpu.c | left out | translation failed |
+| `get_insn_rm` | riscv_cpu.c | left out | translation failed |
+| `if (rm == 7)` | riscv_cpu.c | left out | translation failed |
+| `if (rm >= 5) … else` | riscv_cpu.c | left out | translation failed |
+| `csr_write` | riscv_cpu.c | left out | translation failed |
+| `switch (csr)` | riscv_cpu.c | left out | translation failed |
+| `return 0;` | riscv_cpu.c | left out | translation failed |
+| `set_priv` | riscv_cpu.c | left out | translation failed |
+| `if (s->priv != priv)` | riscv_cpu.c | left out | translation failed |
+| `raise_exception2` | riscv_cpu.c | left out | translation failed |
+| `if (s->priv <= 1) … else` | riscv_cpu.c | left out | translation failed |
+| `causel = cause & 0x7fffffff;` | riscv_cpu.c | left out | translation failed |
+| `if (cause & ((uint32_t)1 << 31)` | riscv_cpu.c | left out | translation failed |
+| `if (deleg) … else` | riscv_cpu.c | left out | translation failed |
+| `raise_exception` | riscv_cpu.c | left out | translation failed |
+| `raise_exception2(s, cause, 0);` | riscv_cpu.c | left out | translation failed |
+| `handle_sret` | riscv_cpu.c | left out | translation failed |
+| `int spp, spie; spp = (s->mstatus >> 8) & 1; spie = (s->mstatus >> 5) & 1; s->mstatus = (s->msta…` | riscv_cpu.c | left out | translation failed |
+| `handle_mret` | riscv_cpu.c | left out | translation failed |
+| `int mpp, mpie; mpp = (s->mstatus >> 11) & 3; mpie = (s->mstatus >> 7) & 1; s->mstatus = (s->mst…` | riscv_cpu.c | left out | translation failed |
+| `get_pending_irq_mask` | riscv_cpu.c | left out | translation failed |
+| `uint32_t pending_ints, enabled_ints; pending_ints = s->mip & s->mie;` | riscv_cpu.c | left out | translation failed |
+| `if (pending_ints == 0)` | riscv_cpu.c | left out | translation failed |
+| `enabled_ints = 0;` | riscv_cpu.c | left out | translation failed |
+| `switch (s->priv)` | riscv_cpu.c | left out | translation failed |
+| `return pending_ints & enabled_ints;` | riscv_cpu.c | left out | translation failed |
+| `raise_interrupt` | riscv_cpu.c | left out | translation failed |
+| `uint32_t mask; int irq_num; mask = get_pending_irq_mask(s);` | riscv_cpu.c | left out | translation failed |
+| `if (mask == 0)` | riscv_cpu.c | left out | translation failed |
+| `irq_num = ctz32(mask); raise_exception(s, irq_num | ((uint32_t)1 << 31)); return -1;` | riscv_cpu.c | left out | translation failed |
+| `sext` | riscv_cpu.c | left out | translation failed |
+| `return (val << (32 - n)) >> (32 - n);` | riscv_cpu.c | left out | translation failed |
+| `get_field1` | riscv_cpu.c | left out | translation failed |
+| `int mask; ((void) sizeof (__assert_single_arg ( dst_pos_max >= dst_pos )), __extension__ ({ if…` | riscv_cpu.c | left out | translation failed |
+| `if (dst_pos >= src_pos) … else` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_interp128` | riscv_cpu.c | left out | translation failed |
+| `uint64_t timeout; timeout = s->insn_counter + n_cycles;` | riscv_cpu.c | left out | translation failed |
+| `while (!s->power_down_flag && (int)(timeout - s->insn_counter) > 0)` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_get_cycles128` | riscv_cpu.c | left out | translation failed |
+| `return s->insn_counter;` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_set_mip128` | riscv_cpu.c | left out | translation failed |
+| `s->mip |= mask;` | riscv_cpu.c | left out | translation failed |
+| `if (s->power_down_flag && (s->mip & s->mie) != 0)` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_reset_mip128` | riscv_cpu.c | left out | translation failed |
+| `s->mip &= ~mask;` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_get_mip128` | riscv_cpu.c | left out | translation failed |
+| `return s->mip;` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_get_power_down128` | riscv_cpu.c | left out | translation failed |
+| `return s->power_down_flag;` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_init128` | riscv_cpu.c | left out | translation failed |
+| `RISCVCPUState *s; s = mallocz(sizeof(*s)); s->common.class_ptr = &riscv_cpu_class128; s->mem_ma…` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_end128` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_get_misa128` | riscv_cpu.c | left out | translation failed |
+| `return s->misa;` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_init` | riscv_cpu.c | left out | translation failed |
+| `switch (max_xlen)` | riscv_cpu.c | left out | translation failed |
+| `return c->riscv_cpu_init(mem_map);` | riscv_cpu.c | left out | translation failed |
+| `riscv_cpu_end` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_end(s);` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_interp` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_interp(s, n_cycles…` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_get_cycles` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_cycles(…` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_set_mip` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_set_mip(s, mask);` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_reset_mip` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_reset_mip(s, mask);` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_get_mip` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_mip(s);` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_get_power_down` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_power_d…` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_get_misa` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_misa(s);` | riscv_cpu.h | left out | translation failed |
+| `riscv_cpu_flush_tlb_write_range_ram` | riscv_cpu.h | left out | translation failed |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_flush_tlb_write_ra…` | riscv_cpu.h | left out | translation failed |
+| `target_read_u8` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) - 1… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `return 0;` | riscv_cpu_priv.h | left out | translation failed |
+| `target_write_u8` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `target_read_u16` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `return 0;` | riscv_cpu_priv.h | left out | translation failed |
+| `target_write_u16` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `target_read_u32` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `return 0;` | riscv_cpu_priv.h | left out | translation failed |
+| `target_write_u32` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `target_read_u64` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `return 0;` | riscv_cpu_priv.h | left out | translation failed |
+| `target_write_u64` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `target_read_u128` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8) -… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `return 0;` | riscv_cpu_priv.h | left out | translation failed |
+| `target_write_u128` | riscv_cpu_priv.h | left out | translation failed |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | translation failed |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8)… … else` | riscv_cpu_priv.h | left out | translation failed |
+| `div32` | riscv_cpu_template.h | left out | translation failed |
+| `div64` | riscv_cpu_template.h | left out | translation failed |
+| `div128` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `divu32` | riscv_cpu_template.h | left out | translation failed |
+| `divu64` | riscv_cpu_template.h | left out | translation failed |
+| `divu128` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `rem32` | riscv_cpu_template.h | left out | translation failed |
+| `rem64` | riscv_cpu_template.h | left out | translation failed |
+| `rem128` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `remu32` | riscv_cpu_template.h | left out | translation failed |
+| `remu64` | riscv_cpu_template.h | left out | translation failed |
+| `remu128` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `if (b == 0) … else` | riscv_cpu_template.h | left out | translation failed |
+| `mulh32` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhsu32` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhu32` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int64_t)a * (int64_t)b) >> 32;` | riscv_cpu_template.h | left out | translation failed |
+| `mulh64` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhsu64` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhu64` | riscv_cpu_template.h | left out | translation failed |
+| `return ((int128_t)a * (int128_t)b) >> 64;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhu128` | riscv_cpu_template.h | left out | translation failed |
+| `uint64_t a0, a1, b0, b1, r2, r3; uint128_t r00, r01, r10, r11, c; a0 = a; a1 = a >> 64; b0 = b;…` | riscv_cpu_template.h | left out | translation failed |
+| `mulh128` | riscv_cpu_template.h | left out | translation failed |
+| `uint128_t r1; r1 = mulhu128(a, b);` | riscv_cpu_template.h | left out | translation failed |
+| `if (a < 0)` | riscv_cpu_template.h | left out | translation failed |
+| `if (b < 0)` | riscv_cpu_template.h | left out | translation failed |
+| `return r1;` | riscv_cpu_template.h | left out | translation failed |
+| `mulhsu128` | riscv_cpu_template.h | left out | translation failed |
+| `uint128_t r1; r1 = mulhu128(a, b);` | riscv_cpu_template.h | left out | translation failed |
+| `if (a < 0)` | riscv_cpu_template.h | left out | translation failed |
+| `return r1;` | riscv_cpu_template.h | left out | translation failed |
+| `riscv_cpu_interp_x32` | riscv_cpu_template.h | left out | translation failed |
+| `riscv_cpu_interp_x64` | riscv_cpu_template.h | left out | translation failed |
+| `riscv_cpu_interp_x128` | riscv_cpu_template.h | left out | translation failed |
+| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | translation failed |
+| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | translation failed |
+| `if (n_cycles1 == 0)` | riscv_cpu_template.h | left out | translation failed |
+| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | translation failed |
+| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | translation failed |
+| `insn_counter_addend = s->insn_counter + n_cycles1; s->n_cycles = n_cycles1;` | riscv_cpu_template.h | left out | translation failed |
+| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | translation failed |
+| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | translation failed |
+| `if (__builtin_expect(!!((s->mip & s->mie) != 0), 0))` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_exception = -1; code_ptr = ((void *)0) ; code_end = ((void *)0) ; code_to_pc_addend…` | riscv_cpu_template.h | left out | translation failed |
+| `for (; ; )` | riscv_cpu_template.h | left out | translation failed |
+| `for (; ; )` | riscv_cpu_template.h | left out | translation failed |
+| `for (; ; )` | riscv_cpu_template.h | left out | translation failed |
+| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | translation failed |
+| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | translation failed |
+| `illegal_insn: s->pending_exception = 0x2;` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | translation failed |
+| `s->pending_tval = insn;` | riscv_cpu_template.h | left out | translation failed |
+| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | translation failed |
+| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | translation failed |
+| `mmu_exception: exception: s->pc = (target_ulong)((uintptr_t)code_ptr + code_to_pc_addend);` | riscv_cpu_template.h | left out | translation failed |
+| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | translation failed |
+| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | translation failed |
+| `if (s->pending_exception >= 0)` | riscv_cpu_template.h | left out | translation failed |
+| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | translation failed |
+| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | translation failed |
+| `done_interp: the_end: s->insn_counter = (insn_counter_addend - s->n_cycles);` | riscv_cpu_template.h | left out | translation failed |
 | `rtc_get_real_time` | riscv_machine.c | left out | not translated yet |
-| `struct timespec ts; clock_gettime( 1 , &ts); return (uint64_t)ts.tv_sec * 10000000 + (ts.tv_nse…` | riscv_machine.c | left out | not translated yet |
+| `struct timespec ts; clock_gettime( 1 , &ts); return (uint64_t)ts.tv_sec * 10000000 + (ts.tv_nse…` | riscv_machine.c | exported | Unvalidated |
 | `rtc_get_time` | riscv_machine.c | left out | not translated yet |
-| `if (m->rtc_real_time) … else` | riscv_machine.c | left out | not translated yet |
-| `return val;` | riscv_machine.c | left out | not translated yet |
+| `if (m->rtc_real_time) … else` | riscv_machine.c | exported | Unvalidated |
+| `return val;` | riscv_machine.c | exported | Unvalidated |
 | `htif_read` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; uint32_t val; ((void) sizeof (__assert_single_arg ( size_log2 == 2 ))…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
-| `return val;` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; uint32_t val; ((void) sizeof (__assert_single_arg ( size_log2 == 2 ))…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
+| `return val;` | riscv_machine.c | exported | Unvalidated |
 | `htif_handle_cmd` | riscv_machine.c | left out | not translated yet |
-| `uint32_t device, cmd; device = s->htif_tohost >> 56; cmd = (s->htif_tohost >> 48) & 0xff;` | riscv_machine.c | left out | not translated yet |
-| `if (s->htif_tohost == 1) … else` | riscv_machine.c | left out | not translated yet |
+| `uint32_t device, cmd; device = s->htif_tohost >> 56; cmd = (s->htif_tohost >> 48) & 0xff;` | riscv_machine.c | exported | Unvalidated |
+| `if (s->htif_tohost == 1) … else` | riscv_machine.c | exported | Unvalidated |
 | `htif_write` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
 | `clint_read` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *m = opaque; uint32_t val; ((void) sizeof (__assert_single_arg ( size_log2 == 2 ))…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
-| `return val;` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *m = opaque; uint32_t val; ((void) sizeof (__assert_single_arg ( size_log2 == 2 ))…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
+| `return val;` | riscv_machine.c | exported | Unvalidated |
 | `clint_write` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *m = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *m = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
 | `plic_update_mip` | riscv_machine.c | left out | not translated yet |
-| `RISCVCPUState *cpu = s->cpu_state; uint32_t mask; mask = s->plic_pending_irq & ~s->plic_served_…` | riscv_machine.c | left out | not translated yet |
-| `if (mask) … else` | riscv_machine.c | left out | not translated yet |
+| `RISCVCPUState *cpu = s->cpu_state; uint32_t mask; mask = s->plic_pending_irq & ~s->plic_served_…` | riscv_machine.c | exported | Unvalidated |
+| `if (mask) … else` | riscv_machine.c | exported | Unvalidated |
 | `plic_read` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; uint32_t val, mask; int i; ((void) sizeof (__assert_single_arg ( size…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
-| `return val;` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; uint32_t val, mask; int i; ((void) sizeof (__assert_single_arg ( size…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
+| `return val;` | riscv_machine.c | exported | Unvalidated |
 | `plic_write` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | left out | not translated yet |
-| `switch (offset)` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; ((void) sizeof (__assert_single_arg ( size_log2 == 2 )), __extension_…` | riscv_machine.c | exported | Unvalidated |
+| `switch (offset)` | riscv_machine.c | exported | Unvalidated |
 | `plic_set_irq` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; uint32_t mask; mask = 1 << (irq_num - 1);` | riscv_machine.c | left out | not translated yet |
-| `if (state) … else` | riscv_machine.c | left out | not translated yet |
-| `plic_update_mip(s);` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; uint32_t mask; mask = 1 << (irq_num - 1);` | riscv_machine.c | exported | Unvalidated |
+| `if (state) … else` | riscv_machine.c | exported | Unvalidated |
+| `plic_update_mip(s);` | riscv_machine.c | exported | Unvalidated |
 | `get_ram_ptr` | riscv_machine.c | left out | not translated yet |
-| `return phys_mem_get_ram_ptr(s->mem_map, paddr, is_rw);` | riscv_machine.c | left out | not translated yet |
+| `return phys_mem_get_ram_ptr(s->mem_map, paddr, is_rw);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_init` | riscv_machine.c | left out | not translated yet |
-| `FDTState *s; s = mallocz(sizeof(*s)); return s;` | riscv_machine.c | left out | not translated yet |
+| `FDTState *s; s = mallocz(sizeof(*s)); return s;` | riscv_machine.c | exported | Unvalidated |
 | `fdt_alloc_len` | riscv_machine.c | left out | not translated yet |
-| `if (__builtin_expect(!!(len > s->tab_size), 0))` | riscv_machine.c | left out | not translated yet |
+| `if (__builtin_expect(!!(len > s->tab_size), 0))` | riscv_machine.c | exported | Unvalidated |
 | `fdt_put32` | riscv_machine.c | left out | not translated yet |
-| `fdt_alloc_len(s, s->tab_len + 1); s->tab[s->tab_len++] = cpu_to_be32(v);` | riscv_machine.c | left out | not translated yet |
+| `fdt_alloc_len(s, s->tab_len + 1); s->tab[s->tab_len++] = cpu_to_be32(v);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_put_data` | riscv_machine.c | left out | not translated yet |
-| `int len1; len1 = (len + 3) / 4; fdt_alloc_len(s, s->tab_len + len1); memcpy(s->tab + s->tab_len…` | riscv_machine.c | left out | not translated yet |
+| `int len1; len1 = (len + 3) / 4; fdt_alloc_len(s, s->tab_len + len1); memcpy(s->tab + s->tab_len…` | riscv_machine.c | exported | Unvalidated |
 | `fdt_begin_node` | riscv_machine.c | left out | not translated yet |
-| `fdt_put32(s, 1); fdt_put_data(s, (uint8_t *)name, strlen(name) + 1); s->open_node_count++;` | riscv_machine.c | left out | not translated yet |
+| `fdt_put32(s, 1); fdt_put_data(s, (uint8_t *)name, strlen(name) + 1); s->open_node_count++;` | riscv_machine.c | exported | Unvalidated |
 | `fdt_begin_node_num` | riscv_machine.c | left out | not translated yet |
-| `char buf[256]; snprintf(buf, sizeof(buf), "%s@%" "l" "x" , name, n); fdt_begin_node(s, buf);` | riscv_machine.c | left out | not translated yet |
+| `char buf[256]; snprintf(buf, sizeof(buf), "%s@%" "l" "x" , name, n); fdt_begin_node(s, buf);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_end_node` | riscv_machine.c | left out | not translated yet |
-| `fdt_put32(s, 2); s->open_node_count--;` | riscv_machine.c | left out | not translated yet |
+| `fdt_put32(s, 2); s->open_node_count--;` | riscv_machine.c | exported | Unvalidated |
 | `fdt_get_string_offset` | riscv_machine.c | left out | not translated yet |
-| `int pos, new_size, name_size, new_len; pos = 0;` | riscv_machine.c | left out | not translated yet |
-| `while (pos < s->string_table_len)` | riscv_machine.c | left out | not translated yet |
-| `name_size = strlen(name) + 1; new_len = s->string_table_len + name_size;` | riscv_machine.c | left out | not translated yet |
-| `if (new_len > s->string_table_size)` | riscv_machine.c | left out | not translated yet |
-| `pos = s->string_table_len; memcpy(s->string_table + pos, name, name_size); s->string_table_len…` | riscv_machine.c | left out | not translated yet |
+| `int pos, new_size, name_size, new_len; pos = 0;` | riscv_machine.c | exported | Unvalidated |
+| `while (pos < s->string_table_len)` | riscv_machine.c | exported | Unvalidated |
+| `name_size = strlen(name) + 1; new_len = s->string_table_len + name_size;` | riscv_machine.c | exported | Unvalidated |
+| `if (new_len > s->string_table_size)` | riscv_machine.c | exported | Unvalidated |
+| `pos = s->string_table_len; memcpy(s->string_table + pos, name, name_size); s->string_table_len…` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop` | riscv_machine.c | left out | not translated yet |
-| `fdt_put32(s, 3); fdt_put32(s, data_len); fdt_put32(s, fdt_get_string_offset(s, prop_name)); fdt…` | riscv_machine.c | left out | not translated yet |
+| `fdt_put32(s, 3); fdt_put32(s, data_len); fdt_put32(s, fdt_get_string_offset(s, prop_name)); fdt…` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop_tab_u32` | riscv_machine.c | left out | not translated yet |
-| `int i; fdt_put32(s, 3); fdt_put32(s, tab_len * sizeof(uint32_t)); fdt_put32(s, fdt_get_string_o…` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < tab_len; i++)` | riscv_machine.c | left out | not translated yet |
+| `int i; fdt_put32(s, 3); fdt_put32(s, tab_len * sizeof(uint32_t)); fdt_put32(s, fdt_get_string_o…` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < tab_len; i++)` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop_u32` | riscv_machine.c | left out | not translated yet |
-| `fdt_prop_tab_u32(s, prop_name, &val, 1);` | riscv_machine.c | left out | not translated yet |
+| `fdt_prop_tab_u32(s, prop_name, &val, 1);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop_tab_u64` | riscv_machine.c | left out | not translated yet |
-| `uint32_t tab[2]; tab[0] = v0 >> 32; tab[1] = v0; fdt_prop_tab_u32(s, prop_name, tab, 2);` | riscv_machine.c | left out | not translated yet |
+| `uint32_t tab[2]; tab[0] = v0 >> 32; tab[1] = v0; fdt_prop_tab_u32(s, prop_name, tab, 2);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop_tab_u64_2` | riscv_machine.c | left out | not translated yet |
-| `uint32_t tab[4]; tab[0] = v0 >> 32; tab[1] = v0; tab[2] = v1 >> 32; tab[3] = v1; fdt_prop_tab_u…` | riscv_machine.c | left out | not translated yet |
+| `uint32_t tab[4]; tab[0] = v0 >> 32; tab[1] = v0; tab[2] = v1 >> 32; tab[3] = v1; fdt_prop_tab_u…` | riscv_machine.c | exported | Unvalidated |
 | `fdt_prop_str` | riscv_machine.c | left out | not translated yet |
-| `fdt_prop(s, prop_name, str, strlen(str) + 1);` | riscv_machine.c | left out | not translated yet |
+| `fdt_prop(s, prop_name, str, strlen(str) + 1);` | riscv_machine.c | exported | Unvalidated |
 | `fdt_output` | riscv_machine.c | left out | not translated yet |
-| `struct fdt_header *h; struct fdt_reserve_entry *re; int dt_struct_size; int dt_strings_size; in…` | riscv_machine.c | left out | not translated yet |
-| `while (pos & 7) != 0)` | riscv_machine.c | left out | not translated yet |
-| `h->off_mem_rsvmap = cpu_to_be32(pos); re = (struct fdt_reserve_entry *)(dst + pos); re->address…` | riscv_machine.c | left out | not translated yet |
-| `while (pos & 7) != 0)` | riscv_machine.c | left out | not translated yet |
-| `h->totalsize = cpu_to_be32(pos); return pos;` | riscv_machine.c | left out | not translated yet |
+| `struct fdt_header *h; struct fdt_reserve_entry *re; int dt_struct_size; int dt_strings_size; in…` | riscv_machine.c | exported | Unvalidated |
+| `while (pos & 7) != 0)` | riscv_machine.c | exported | Unvalidated |
+| `h->off_mem_rsvmap = cpu_to_be32(pos); re = (struct fdt_reserve_entry *)(dst + pos); re->address…` | riscv_machine.c | exported | Unvalidated |
+| `while (pos & 7) != 0)` | riscv_machine.c | exported | Unvalidated |
+| `h->totalsize = cpu_to_be32(pos); return pos;` | riscv_machine.c | exported | Unvalidated |
 | `fdt_end` | riscv_machine.c | left out | not translated yet |
-| `free(s->tab); free(s->string_table); free(s);` | riscv_machine.c | left out | not translated yet |
+| `free(s->tab); free(s->string_table); free(s);` | riscv_machine.c | exported | Unvalidated |
 | `riscv_build_fdt` | riscv_machine.c | left out | not translated yet |
-| `FDTState *s; int size, max_xlen, i, cur_phandle, intc_phandle, plic_phandle; char isa_string[12…` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < 26; i++)` | riscv_machine.c | left out | not translated yet |
-| `*q = '\0'; fdt_prop_str(s, "riscv,isa", isa_string); fdt_prop_str(s, "mmu-type", max_xlen <= 32…` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < m->virtio_count; i++)` | riscv_machine.c | left out | not translated yet |
-| `fb_dev = m->common.fb_dev;` | riscv_machine.c | left out | not translated yet |
-| `if (fb_dev)` | riscv_machine.c | left out | not translated yet |
-| `fdt_end_node(s); fdt_begin_node(s, "chosen"); fdt_prop_str(s, "bootargs", cmd_line ? cmd_line :…` | riscv_machine.c | left out | not translated yet |
-| `if (kernel_size > 0)` | riscv_machine.c | left out | not translated yet |
-| `if (initrd_size > 0)` | riscv_machine.c | left out | not translated yet |
-| `fdt_end_node(s); fdt_end_node(s); size = fdt_output(s, dst); fdt_end(s); return size;` | riscv_machine.c | left out | not translated yet |
+| `FDTState *s; int size, max_xlen, i, cur_phandle, intc_phandle, plic_phandle; char isa_string[12…` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < 26; i++)` | riscv_machine.c | exported | Unvalidated |
+| `*q = '\0'; fdt_prop_str(s, "riscv,isa", isa_string); fdt_prop_str(s, "mmu-type", max_xlen <= 32…` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < m->virtio_count; i++)` | riscv_machine.c | exported | Unvalidated |
+| `fb_dev = m->common.fb_dev;` | riscv_machine.c | exported | Unvalidated |
+| `if (fb_dev)` | riscv_machine.c | exported | Unvalidated |
+| `fdt_end_node(s); fdt_begin_node(s, "chosen"); fdt_prop_str(s, "bootargs", cmd_line ? cmd_line :…` | riscv_machine.c | exported | Unvalidated |
+| `if (kernel_size > 0)` | riscv_machine.c | exported | Unvalidated |
+| `if (initrd_size > 0)` | riscv_machine.c | exported | Unvalidated |
+| `fdt_end_node(s); fdt_end_node(s); size = fdt_output(s, dst); fdt_end(s); return size;` | riscv_machine.c | exported | Unvalidated |
 | `copy_bios` | riscv_machine.c | left out | not translated yet |
-| `uint64_t fdt_addr, kernel_align, kernel_base, kernel_size; uint64_t bios_base, bios_size, initr…` | riscv_machine.c | left out | not translated yet |
-| `if (elf_detect_magic(buf, buf_len)) … else` | riscv_machine.c | left out | not translated yet |
-| `if (kernel_buf_len > 0) … else` | riscv_machine.c | left out | not translated yet |
-| `if (initrd_buf_len > 0) … else` | riscv_machine.c | left out | not translated yet |
-| `ram_ptr = get_ram_ptr(s, 0, TRUE); fdt_addr = 0x1000 + 8 * 8; riscv_build_fdt(s, ram_ptr + fdt_…` | riscv_machine.c | left out | not translated yet |
+| `uint64_t fdt_addr, kernel_align, kernel_base, kernel_size; uint64_t bios_base, bios_size, initr…` | riscv_machine.c | exported | Unvalidated |
+| `if (elf_detect_magic(buf, buf_len)) … else` | riscv_machine.c | exported | Unvalidated |
+| `if (kernel_buf_len > 0) … else` | riscv_machine.c | exported | Unvalidated |
+| `if (initrd_buf_len > 0) … else` | riscv_machine.c | exported | Unvalidated |
+| `ram_ptr = get_ram_ptr(s, 0, TRUE); fdt_addr = 0x1000 + 8 * 8; riscv_build_fdt(s, ram_ptr + fdt_…` | riscv_machine.c | exported | Unvalidated |
 | `riscv_flush_tlb_write_range` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = opaque; riscv_cpu_flush_tlb_write_range_ram(s->cpu_state, ram_addr, ram_size);` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = opaque; riscv_cpu_flush_tlb_write_range_ram(s->cpu_state, ram_addr, ram_size);` | riscv_machine.c | exported | Unvalidated |
 | `riscv_machine_set_defaults` | riscv_machine.c | left out | not translated yet |
 | `riscv_machine_init` | riscv_machine.c | left out | not translated yet |
-| `if (!strcmp(p->machine_name, "riscv32")) … else` | riscv_machine.c | left out | not translated yet |
-| `s = mallocz(sizeof(*s)); s->common.vmc = p->vmc; s->ram_size = p->ram_size; s->max_xlen = max_x…` | riscv_machine.c | left out | not translated yet |
-| `if (!s->cpu_state)` | riscv_machine.c | left out | not translated yet |
-| `if (p->files[VM_FILE_BIOS].buf)` | riscv_machine.c | left out | not translated yet |
-| `cpu_register_device(s->mem_map, htif_start, 16, s, htif_read, htif_write, (1 << 2)); ram_flags…` | riscv_machine.c | left out | not translated yet |
-| `if (p->rtc_real_time)` | riscv_machine.c | left out | not translated yet |
-| `cpu_register_device(s->mem_map, 0x02000000, 0x000c0000, s, clint_read, clint_write, (1 << 2));…` | riscv_machine.c | left out | not translated yet |
-| `for (i = 1; i < 32; i++)` | riscv_machine.c | left out | not translated yet |
-| `s->common.console = p->console; memset(vbus, 0, sizeof(*vbus)); vbus->mem_map = s->mem_map; vbu…` | riscv_machine.c | left out | not translated yet |
-| `if (p->console)` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < p->eth_count; i++)` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < p->drive_count; i++)` | riscv_machine.c | left out | not translated yet |
-| `for (i = 0; i < p->fs_count; i++)` | riscv_machine.c | left out | not translated yet |
-| `if (p->display_device)` | riscv_machine.c | left out | not translated yet |
-| `if (p->input_device)` | riscv_machine.c | left out | not translated yet |
-| `if (!p->files[VM_FILE_BIOS].buf)` | riscv_machine.c | left out | not translated yet |
-| `copy_bios(s, p->files[VM_FILE_BIOS].buf, p->files[VM_FILE_BIOS].len, p->files[VM_FILE_KERNEL].b…` | riscv_machine.c | left out | not translated yet |
+| `if (!strcmp(p->machine_name, "riscv32")) … else` | riscv_machine.c | exported | Unvalidated |
+| `s = mallocz(sizeof(*s)); s->common.vmc = p->vmc; s->ram_size = p->ram_size; s->max_xlen = max_x…` | riscv_machine.c | exported | Unvalidated |
+| `if (!s->cpu_state)` | riscv_machine.c | exported | Unvalidated |
+| `if (p->files[VM_FILE_BIOS].buf)` | riscv_machine.c | exported | Unvalidated |
+| `cpu_register_device(s->mem_map, htif_start, 16, s, htif_read, htif_write, (1 << 2)); ram_flags…` | riscv_machine.c | exported | Unvalidated |
+| `if (p->rtc_real_time)` | riscv_machine.c | exported | Unvalidated |
+| `cpu_register_device(s->mem_map, 0x02000000, 0x000c0000, s, clint_read, clint_write, (1 << 2));…` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 1; i < 32; i++)` | riscv_machine.c | exported | Unvalidated |
+| `s->common.console = p->console; memset(vbus, 0, sizeof(*vbus)); vbus->mem_map = s->mem_map; vbu…` | riscv_machine.c | exported | Unvalidated |
+| `if (p->console)` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->eth_count; i++)` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->drive_count; i++)` | riscv_machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->fs_count; i++)` | riscv_machine.c | exported | Unvalidated |
+| `if (p->display_device)` | riscv_machine.c | exported | Unvalidated |
+| `if (p->input_device)` | riscv_machine.c | exported | Unvalidated |
+| `if (!p->files[VM_FILE_BIOS].buf)` | riscv_machine.c | exported | Unvalidated |
+| `copy_bios(s, p->files[VM_FILE_BIOS].buf, p->files[VM_FILE_BIOS].len, p->files[VM_FILE_KERNEL].b…` | riscv_machine.c | exported | Unvalidated |
 | `riscv_machine_end` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = (RISCVMachine *)s1; riscv_cpu_end(s->cpu_state); phys_mem_map_end(s->mem_map)…` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = (RISCVMachine *)s1; riscv_cpu_end(s->cpu_state); phys_mem_map_end(s->mem_map)…` | riscv_machine.c | exported | Unvalidated |
 | `riscv_machine_get_sleep_duration` | riscv_machine.c | left out | not translated yet |
-| `if (!(riscv_cpu_get_mip(s) & (1 << 7)` | riscv_machine.c | left out | not translated yet |
-| `if (!riscv_cpu_get_power_down(s))` | riscv_machine.c | left out | not translated yet |
-| `return delay;` | riscv_machine.c | left out | not translated yet |
+| `if (!(riscv_cpu_get_mip(s) & (1 << 7)` | riscv_machine.c | exported | Unvalidated |
+| `if (!riscv_cpu_get_power_down(s))` | riscv_machine.c | exported | Unvalidated |
+| `return delay;` | riscv_machine.c | exported | Unvalidated |
 | `riscv_machine_interp` | riscv_machine.c | left out | not translated yet |
-| `RISCVMachine *s = (RISCVMachine *)s1; riscv_cpu_interp(s->cpu_state, max_exec_cycle);` | riscv_machine.c | left out | not translated yet |
+| `RISCVMachine *s = (RISCVMachine *)s1; riscv_cpu_interp(s->cpu_state, max_exec_cycle);` | riscv_machine.c | exported | Unvalidated |
 | `riscv_vm_send_key_event` | riscv_machine.c | left out | not translated yet |
-| `if (s->keyboard_dev)` | riscv_machine.c | left out | not translated yet |
+| `if (s->keyboard_dev)` | riscv_machine.c | exported | Unvalidated |
 | `riscv_vm_mouse_is_absolute` | riscv_machine.c | left out | not translated yet |
-| `return TRUE;` | riscv_machine.c | left out | not translated yet |
+| `return TRUE;` | riscv_machine.c | exported | Unvalidated |
 | `riscv_vm_send_mouse_event` | riscv_machine.c | left out | not translated yet |
-| `if (s->mouse_dev)` | riscv_machine.c | left out | not translated yet |
-| `sdl_update_fb_texture` | sdl.c | left out | not translated yet |
-| `if (!fb_texture || fb_width != fb_dev->width || fb_height != fb_dev->height)` | sdl.c | left out | not translated yet |
-| `sdl_update` | sdl.c | left out | not translated yet |
-| `int *dirty = (int *)opaque; *dirty = 1;` | sdl.c | left out | not translated yet |
-| `sdl_get_keycode` | sdl.c | left out | not translated yet |
-| `switch (ev->keysym.scancode)` | sdl.c | left out | not translated yet |
-| `sdl_reset_keys` | sdl.c | left out | not translated yet |
-| `for (i = 1; i <= 127; i++)` | sdl.c | left out | not translated yet |
-| `sdl_handle_key_event` | sdl.c | left out | not translated yet |
-| `int keycode, keypress; keycode = sdl_get_keycode(ev);` | sdl.c | left out | not translated yet |
-| `if (keycode) … else` | sdl.c | left out | not translated yet |
-| `sdl_send_mouse_event` | sdl.c | left out | not translated yet |
-| `int buttons, x, y; buttons = 0;` | sdl.c | left out | not translated yet |
-| `if (state & (1 << ((1)-1)` | sdl.c | left out | not translated yet |
-| `if (state & (1 << ((3)-1)` | sdl.c | left out | not translated yet |
-| `if (state & (1 << ((2)-1)` | sdl.c | left out | not translated yet |
-| `if (is_absolute) … else` | sdl.c | left out | not translated yet |
-| `vm_send_mouse_event(m, x, y, dz, buttons);` | sdl.c | left out | not translated yet |
-| `sdl_handle_mouse_motion_event` | sdl.c | left out | not translated yet |
-| `if (is_absolute) … else` | sdl.c | left out | not translated yet |
-| `sdl_send_mouse_event(m, x, y, 0, ev->motion.state, is_absolute);` | sdl.c | left out | not translated yet |
-| `sdl_handle_mouse_button_event` | sdl.c | left out | not translated yet |
-| `BOOL is_absolute = vm_mouse_is_absolute(m); int state, dz; dz = 0;` | sdl.c | left out | not translated yet |
-| `if (ev->type == SDL_MOUSEWHEEL)` | sdl.c | left out | not translated yet |
-| `state = SDL_GetMouseState( ((void *)0) , ((void *)0) );` | sdl.c | left out | not translated yet |
-| `if (ev->type == SDL_MOUSEBUTTONDOWN) … else` | sdl.c | left out | not translated yet |
-| `if (is_absolute) … else` | sdl.c | left out | not translated yet |
-| `sdl_refresh` | sdl.c | left out | not translated yet |
-| `if (!m->fb_dev)` | sdl.c | left out | not translated yet |
-| `sdl_update_fb_texture(m->fb_dev); int dirty = 0; m->fb_dev->refresh(m->fb_dev, sdl_update, &dir…` | sdl.c | left out | not translated yet |
-| `if (dirty)` | sdl.c | left out | not translated yet |
-| `while (SDL_PollEvent(ev))` | sdl.c | left out | not translated yet |
-| `sdl_hide_cursor` | sdl.c | left out | not translated yet |
-| `uint8_t data = 0; sdl_cursor_hidden = SDL_CreateCursor(&data, &data, 8, 1, 0, 0); SDL_ShowCurso…` | sdl.c | left out | not translated yet |
-| `sdl_init` | sdl.c | left out | not translated yet |
-| `window_width = width; window_height = height;` | sdl.c | left out | not translated yet |
-| `if (SDL_Init( 0x00000020u | 0x00100000u ))` | sdl.c | left out | not translated yet |
-| `if (result == -1)` | sdl.c | left out | not translated yet |
-| `SDL_SetWindowTitle(window, "TinyEMU"); sdl_hide_cursor();` | sdl.c | left out | not translated yet |
+| `if (s->mouse_dev)` | riscv_machine.c | exported | Unvalidated |
+| `sdl_update_fb_texture` | sdl.c | left out | translation failed |
+| `if (!fb_texture || fb_width != fb_dev->width || fb_height != fb_dev->height)` | sdl.c | left out | translation failed |
+| `sdl_update` | sdl.c | left out | translation failed |
+| `int *dirty = (int *)opaque; *dirty = 1;` | sdl.c | left out | translation failed |
+| `sdl_get_keycode` | sdl.c | left out | translation failed |
+| `switch (ev->keysym.scancode)` | sdl.c | left out | translation failed |
+| `sdl_reset_keys` | sdl.c | left out | translation failed |
+| `for (i = 1; i <= 127; i++)` | sdl.c | left out | translation failed |
+| `sdl_handle_key_event` | sdl.c | left out | translation failed |
+| `int keycode, keypress; keycode = sdl_get_keycode(ev);` | sdl.c | left out | translation failed |
+| `if (keycode) … else` | sdl.c | left out | translation failed |
+| `sdl_send_mouse_event` | sdl.c | left out | translation failed |
+| `int buttons, x, y; buttons = 0;` | sdl.c | left out | translation failed |
+| `if (state & (1 << ((1)-1)` | sdl.c | left out | translation failed |
+| `if (state & (1 << ((3)-1)` | sdl.c | left out | translation failed |
+| `if (state & (1 << ((2)-1)` | sdl.c | left out | translation failed |
+| `if (is_absolute) … else` | sdl.c | left out | translation failed |
+| `vm_send_mouse_event(m, x, y, dz, buttons);` | sdl.c | left out | translation failed |
+| `sdl_handle_mouse_motion_event` | sdl.c | left out | translation failed |
+| `if (is_absolute) … else` | sdl.c | left out | translation failed |
+| `sdl_send_mouse_event(m, x, y, 0, ev->motion.state, is_absolute);` | sdl.c | left out | translation failed |
+| `sdl_handle_mouse_button_event` | sdl.c | left out | translation failed |
+| `BOOL is_absolute = vm_mouse_is_absolute(m); int state, dz; dz = 0;` | sdl.c | left out | translation failed |
+| `if (ev->type == SDL_MOUSEWHEEL)` | sdl.c | left out | translation failed |
+| `state = SDL_GetMouseState( ((void *)0) , ((void *)0) );` | sdl.c | left out | translation failed |
+| `if (ev->type == SDL_MOUSEBUTTONDOWN) … else` | sdl.c | left out | translation failed |
+| `if (is_absolute) … else` | sdl.c | left out | translation failed |
+| `sdl_refresh` | sdl.c | left out | translation failed |
+| `if (!m->fb_dev)` | sdl.c | left out | translation failed |
+| `sdl_update_fb_texture(m->fb_dev); int dirty = 0; m->fb_dev->refresh(m->fb_dev, sdl_update, &dir…` | sdl.c | left out | translation failed |
+| `if (dirty)` | sdl.c | left out | translation failed |
+| `while (SDL_PollEvent(ev))` | sdl.c | left out | translation failed |
+| `sdl_hide_cursor` | sdl.c | left out | translation failed |
+| `uint8_t data = 0; sdl_cursor_hidden = SDL_CreateCursor(&data, &data, 8, 1, 0, 0); SDL_ShowCurso…` | sdl.c | left out | translation failed |
+| `sdl_init` | sdl.c | left out | translation failed |
+| `window_width = width; window_height = height;` | sdl.c | left out | translation failed |
+| `if (SDL_Init( 0x00000020u | 0x00100000u ))` | sdl.c | left out | translation failed |
+| `if (result == -1)` | sdl.c | left out | translation failed |
+| `SDL_SetWindowTitle(window, "TinyEMU"); sdl_hide_cursor();` | sdl.c | left out | translation failed |
 | `sha256_compress` | sha256.c | left out | not translated yet |
-| `for (i = 0; i < 8; i++)` | sha256.c | left out | not translated yet |
-| `for (i = 0; i < 16; i++)` | sha256.c | left out | not translated yet |
-| `for (i = 16; i < 64; i++)` | sha256.c | left out | not translated yet |
-| `t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))…` | sha256.c | left out | not translated yet |
-| `for (i = 0; i < 8; i++)` | sha256.c | left out | not translated yet |
+| `for (i = 0; i < 8; i++)` | sha256.c | exported | Unvalidated |
+| `for (i = 0; i < 16; i++)` | sha256.c | exported | Unvalidated |
+| `for (i = 16; i < 64; i++)` | sha256.c | exported | Unvalidated |
+| `t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))…` | sha256.c | exported | Unvalidated |
+| `for (i = 0; i < 8; i++)` | sha256.c | exported | Unvalidated |
 | `SHA256_Init` | sha256.c | left out | not translated yet |
-| `s->curlen = 0; s->length = 0; s->state[0] = 0x6A09E667UL; s->state[1] = 0xBB67AE85UL; s->state[…` | sha256.c | left out | not translated yet |
+| `s->curlen = 0; s->length = 0; s->state[0] = 0x6A09E667UL; s->state[1] = 0xBB67AE85UL; s->state[…` | sha256.c | exported | Unvalidated |
 | `SHA256_Update` | sha256.c | left out | not translated yet |
-| `if (s->curlen > sizeof(s->buf)` | sha256.c | left out | not translated yet |
-| `if (s->length + inlen) < s->length)` | sha256.c | left out | not translated yet |
-| `while (inlen > 0)` | sha256.c | left out | not translated yet |
+| `if (s->curlen > sizeof(s->buf)` | sha256.c | exported | Unvalidated |
+| `if (s->length + inlen) < s->length)` | sha256.c | exported | Unvalidated |
+| `while (inlen > 0)` | sha256.c | exported | Unvalidated |
 | `SHA256_Final` | sha256.c | left out | not translated yet |
-| `if (s->curlen >= sizeof(s->buf)` | sha256.c | left out | not translated yet |
-| `s->length += s->curlen * 8; s->buf[s->curlen++] = (unsigned char)0x80;` | sha256.c | left out | not translated yet |
-| `if (s->curlen > 56)` | sha256.c | left out | not translated yet |
-| `while (s->curlen < 56)` | sha256.c | left out | not translated yet |
-| `put_be64(s->buf+56, s->length); sha256_compress(s, s->buf);` | sha256.c | left out | not translated yet |
-| `for (i = 0; i < 8; i++)` | sha256.c | left out | not translated yet |
+| `if (s->curlen >= sizeof(s->buf)` | sha256.c | exported | Unvalidated |
+| `s->length += s->curlen * 8; s->buf[s->curlen++] = (unsigned char)0x80;` | sha256.c | exported | Unvalidated |
+| `if (s->curlen > 56)` | sha256.c | exported | Unvalidated |
+| `while (s->curlen < 56)` | sha256.c | exported | Unvalidated |
+| `put_be64(s->buf+56, s->length); sha256_compress(s, s->buf);` | sha256.c | exported | Unvalidated |
+| `for (i = 0; i < 8; i++)` | sha256.c | exported | Unvalidated |
 | `SHA256` | sha256.c | left out | not translated yet |
-| `SHA256_CTX ctx; SHA256_Init(&ctx); SHA256_Update(&ctx, buf, buf_len); SHA256_Final(out, &ctx);` | sha256.c | left out | not translated yet |
+| `SHA256_CTX ctx; SHA256_Init(&ctx); SHA256_Update(&ctx, buf, buf_len); SHA256_Final(out, &ctx);` | sha256.c | exported | Unvalidated |
 | `simplefb_refresh` | simplefb.c | left out | not translated yet |
-| `const uint32_t *dirty_bits; uint32_t dirty_val; int y0, y1, page_y0, page_y1, byte_pos, page_in…` | simplefb.c | left out | not translated yet |
-| `while (page_index < fb_page_count)` | simplefb.c | left out | not translated yet |
-| `if (y0 != y1)` | simplefb.c | left out | not translated yet |
+| `const uint32_t *dirty_bits; uint32_t dirty_val; int y0, y1, page_y0, page_y1, byte_pos, page_in…` | simplefb.c | exported | Unvalidated |
+| `while (page_index < fb_page_count)` | simplefb.c | exported | Unvalidated |
+| `if (y0 != y1)` | simplefb.c | exported | Unvalidated |
 | `simplefb_refresh1` | simplefb.c | left out | not translated yet |
-| `SimpleFBState *s = fb_dev->device_opaque; simplefb_refresh(fb_dev, redraw_func, opaque, s->mem_…` | simplefb.c | left out | not translated yet |
+| `SimpleFBState *s = fb_dev->device_opaque; simplefb_refresh(fb_dev, redraw_func, opaque, s->mem_…` | simplefb.c | exported | Unvalidated |
 | `simplefb_init` | simplefb.c | left out | not translated yet |
-| `SimpleFBState *s; s = mallocz(sizeof(*s)); s->fb_dev = fb_dev; fb_dev->width = width; fb_dev->h…` | simplefb.c | left out | not translated yet |
+| `SimpleFBState *s; s = mallocz(sizeof(*s)); s->fb_dev = fb_dev; fb_dev->width = width; fb_dev->h…` | simplefb.c | exported | Unvalidated |
 | `get_new_addr` | slirp/bootp.c | left out | not translated yet |
-| `for (i = 0; i < 16; i++)` | slirp/bootp.c | left out | not translated yet |
-| `return ((void *)0) ;` | slirp/bootp.c | left out | not translated yet |
-| `found: bc = &slirp->bootp_clients[i];` | slirp/bootp.c | left out | not translated yet |
-| `bc->allocated = 1; paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i); return bc;` | slirp/bootp.c | left out | not translated yet |
+| `for (i = 0; i < 16; i++)` | slirp/bootp.c | exported | Unvalidated |
+| `return ((void *)0) ;` | slirp/bootp.c | exported | Unvalidated |
+| `found: bc = &slirp->bootp_clients[i];` | slirp/bootp.c | exported | Unvalidated |
+| `bc->allocated = 1; paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i); return bc;` | slirp/bootp.c | exported | Unvalidated |
 | `request_addr` | slirp/bootp.c | left out | not translated yet |
-| `if (req_addr >= dhcp_addr && req_addr < (dhcp_addr + 16)` | slirp/bootp.c | left out | not translated yet |
-| `return ((void *)0) ;` | slirp/bootp.c | left out | not translated yet |
+| `if (req_addr >= dhcp_addr && req_addr < (dhcp_addr + 16)` | slirp/bootp.c | exported | Unvalidated |
+| `return ((void *)0) ;` | slirp/bootp.c | exported | Unvalidated |
 | `find_addr` | slirp/bootp.c | left out | not translated yet |
-| `for (i = 0; i < 16; i++)` | slirp/bootp.c | left out | not translated yet |
-| `return ((void *)0) ;` | slirp/bootp.c | left out | not translated yet |
-| `found: bc = &slirp->bootp_clients[i];` | slirp/bootp.c | left out | not translated yet |
-| `bc->allocated = 1; paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i); return bc;` | slirp/bootp.c | left out | not translated yet |
+| `for (i = 0; i < 16; i++)` | slirp/bootp.c | exported | Unvalidated |
+| `return ((void *)0) ;` | slirp/bootp.c | exported | Unvalidated |
+| `found: bc = &slirp->bootp_clients[i];` | slirp/bootp.c | exported | Unvalidated |
+| `bc->allocated = 1; paddr->s_addr = slirp->vdhcp_startaddr.s_addr + htonl(i); return bc;` | slirp/bootp.c | exported | Unvalidated |
 | `dhcp_decode` | slirp/bootp.c | left out | not translated yet |
-| `const uint8_t *p, *p_end; int len, tag; *pmsg_type = 0; preq_addr->s_addr = htonl(0L); p = bp->…` | slirp/bootp.c | left out | not translated yet |
-| `if (memcmp(p, rfc1533_cookie, 4) != 0)` | slirp/bootp.c | left out | not translated yet |
-| `p += 4;` | slirp/bootp.c | left out | not translated yet |
-| `while (p < p_end)` | slirp/bootp.c | left out | not translated yet |
-| `if (*pmsg_type == 3 && preq_addr->s_addr == htonl(0L) && bp->bp_ciaddr.s_addr)` | slirp/bootp.c | left out | not translated yet |
+| `const uint8_t *p, *p_end; int len, tag; *pmsg_type = 0; preq_addr->s_addr = htonl(0L); p = bp->…` | slirp/bootp.c | exported | Unvalidated |
+| `if (memcmp(p, rfc1533_cookie, 4) != 0)` | slirp/bootp.c | exported | Unvalidated |
+| `p += 4;` | slirp/bootp.c | exported | Unvalidated |
+| `while (p < p_end)` | slirp/bootp.c | exported | Unvalidated |
+| `if (*pmsg_type == 3 && preq_addr->s_addr == htonl(0L) && bp->bp_ciaddr.s_addr)` | slirp/bootp.c | exported | Unvalidated |
 | `bootp_reply` | slirp/bootp.c | left out | not translated yet |
-| `BOOTPClient *bc = ((void *)0) ; struct mbuf *m; struct bootp_t *rbp; struct sockaddr_in saddr,…` | slirp/bootp.c | left out | not translated yet |
-| `do … while (0)` | slirp/bootp.c | left out | not translated yet |
-| `if (preq_addr.s_addr != htonl(0L)) … else` | slirp/bootp.c | left out | not translated yet |
-| `if (dhcp_msg_type == 0)` | slirp/bootp.c | left out | not translated yet |
-| `if (dhcp_msg_type != 1 && dhcp_msg_type != 3)` | slirp/bootp.c | left out | not translated yet |
-| `memcpy(slirp->client_ethaddr, bp->bp_hwaddr, 6); m = m_get(slirp);` | slirp/bootp.c | left out | not translated yet |
-| `if (!m)` | slirp/bootp.c | left out | not translated yet |
-| `m->m_hdr.mh_data += (2 + 14 + 40); rbp = (struct bootp_t *)m->m_hdr.mh_data; m->m_hdr.mh_data +…` | slirp/bootp.c | left out | not translated yet |
-| `if (dhcp_msg_type == 1) … else` | slirp/bootp.c | left out | not translated yet |
-| `saddr.sin_addr = slirp->vhost_addr; saddr.sin_port = htons(67); daddr.sin_port = htons(68); rbp…` | slirp/bootp.c | left out | not translated yet |
-| `if (bc) … else` | slirp/bootp.c | left out | not translated yet |
-| `*q = 255; daddr.sin_addr.s_addr = 0xffffffffu; m->m_hdr.mh_len = sizeof(struct bootp_t) - sizeo…` | slirp/bootp.c | left out | not translated yet |
+| `BOOTPClient *bc = ((void *)0) ; struct mbuf *m; struct bootp_t *rbp; struct sockaddr_in saddr,…` | slirp/bootp.c | exported | Unvalidated |
+| `do … while (0)` | slirp/bootp.c | exported | Unvalidated |
+| `if (preq_addr.s_addr != htonl(0L)) … else` | slirp/bootp.c | exported | Unvalidated |
+| `if (dhcp_msg_type == 0)` | slirp/bootp.c | exported | Unvalidated |
+| `if (dhcp_msg_type != 1 && dhcp_msg_type != 3)` | slirp/bootp.c | exported | Unvalidated |
+| `memcpy(slirp->client_ethaddr, bp->bp_hwaddr, 6); m = m_get(slirp);` | slirp/bootp.c | exported | Unvalidated |
+| `if (!m)` | slirp/bootp.c | exported | Unvalidated |
+| `m->m_hdr.mh_data += (2 + 14 + 40); rbp = (struct bootp_t *)m->m_hdr.mh_data; m->m_hdr.mh_data +…` | slirp/bootp.c | exported | Unvalidated |
+| `if (dhcp_msg_type == 1) … else` | slirp/bootp.c | exported | Unvalidated |
+| `saddr.sin_addr = slirp->vhost_addr; saddr.sin_port = htons(67); daddr.sin_port = htons(68); rbp…` | slirp/bootp.c | exported | Unvalidated |
+| `if (bc) … else` | slirp/bootp.c | exported | Unvalidated |
+| `*q = 255; daddr.sin_addr.s_addr = 0xffffffffu; m->m_hdr.mh_len = sizeof(struct bootp_t) - sizeo…` | slirp/bootp.c | exported | Unvalidated |
 | `bootp_input` | slirp/bootp.c | left out | not translated yet |
-| `if (bp->bp_op == 1)` | slirp/bootp.c | left out | not translated yet |
+| `if (bp->bp_op == 1)` | slirp/bootp.c | exported | Unvalidated |
 | `cksum` | slirp/cksum.c | left out | not translated yet |
-| `if (m->m_hdr.mh_len == 0)` | slirp/cksum.c | left out | not translated yet |
-| `w = ((uint16_t *)(m)->m_hdr.mh_data); mlen = m->m_hdr.mh_len;` | slirp/cksum.c | left out | not translated yet |
-| `if (len < mlen)` | slirp/cksum.c | left out | not translated yet |
-| `if (1 & (long) w) && (mlen > 0)` | slirp/cksum.c | left out | not translated yet |
-| `while (mlen -= 32) >= 0)` | slirp/cksum.c | left out | not translated yet |
-| `mlen += 32;` | slirp/cksum.c | left out | not translated yet |
-| `while (mlen -= 8) >= 0)` | slirp/cksum.c | left out | not translated yet |
-| `mlen += 8;` | slirp/cksum.c | left out | not translated yet |
-| `if (mlen == 0 && byte_swapped == 0)` | slirp/cksum.c | left out | not translated yet |
-| `{ … }` | slirp/cksum.c | left out | not translated yet |
-| `;` | slirp/cksum.c | left out | not translated yet |
-| `while (mlen -= 2) >= 0)` | slirp/cksum.c | left out | not translated yet |
-| `if (byte_swapped) … else` | slirp/cksum.c | left out | not translated yet |
-| `cont: if (mlen == -1) { s_util.c[1] = 0; sum += s_util.s; }` | slirp/cksum.c | left out | not translated yet |
-| `{ … }` | slirp/cksum.c | left out | not translated yet |
-| `; return (~sum & 0xffff);` | slirp/cksum.c | left out | not translated yet |
+| `if (m->m_hdr.mh_len == 0)` | slirp/cksum.c | exported | Unvalidated |
+| `w = ((uint16_t *)(m)->m_hdr.mh_data); mlen = m->m_hdr.mh_len;` | slirp/cksum.c | exported | Unvalidated |
+| `if (len < mlen)` | slirp/cksum.c | exported | Unvalidated |
+| `if (1 & (long) w) && (mlen > 0)` | slirp/cksum.c | exported | Unvalidated |
+| `while (mlen -= 32) >= 0)` | slirp/cksum.c | exported | Unvalidated |
+| `mlen += 32;` | slirp/cksum.c | exported | Unvalidated |
+| `while (mlen -= 8) >= 0)` | slirp/cksum.c | exported | Unvalidated |
+| `mlen += 8;` | slirp/cksum.c | exported | Unvalidated |
+| `if (mlen == 0 && byte_swapped == 0)` | slirp/cksum.c | exported | Unvalidated |
+| `{ … }` | slirp/cksum.c | exported | Unvalidated |
+| `;` | slirp/cksum.c | exported | Unvalidated |
+| `while (mlen -= 2) >= 0)` | slirp/cksum.c | exported | Unvalidated |
+| `if (byte_swapped) … else` | slirp/cksum.c | exported | Unvalidated |
+| `cont: if (mlen == -1) { s_util.c[1] = 0; sum += s_util.s; }` | slirp/cksum.c | exported | Unvalidated |
+| `{ … }` | slirp/cksum.c | exported | Unvalidated |
+| `; return (~sum & 0xffff);` | slirp/cksum.c | exported | Unvalidated |
 | `ifs_insque` | slirp/if.c | left out | not translated yet |
-| `ifm->m_hdr.mh_nextpkt = ifmhead->m_hdr.mh_nextpkt; ifmhead->m_hdr.mh_nextpkt = ifm; ifm->m_hdr.…` | slirp/if.c | left out | not translated yet |
+| `ifm->m_hdr.mh_nextpkt = ifmhead->m_hdr.mh_nextpkt; ifmhead->m_hdr.mh_nextpkt = ifm; ifm->m_hdr.…` | slirp/if.c | exported | Unvalidated |
 | `ifs_remque` | slirp/if.c | left out | not translated yet |
-| `ifm->m_hdr.mh_prevpkt->m_hdr.mh_nextpkt = ifm->m_hdr.mh_nextpkt; ifm->m_hdr.mh_nextpkt->m_hdr.m…` | slirp/if.c | left out | not translated yet |
+| `ifm->m_hdr.mh_prevpkt->m_hdr.mh_nextpkt = ifm->m_hdr.mh_nextpkt; ifm->m_hdr.mh_nextpkt->m_hdr.m…` | slirp/if.c | exported | Unvalidated |
 | `if_init` | slirp/if.c | left out | not translated yet |
-| `slirp->if_fastq.m_hdr.mh_next = slirp->if_fastq.m_hdr.mh_prev = &slirp->if_fastq; slirp->if_bat…` | slirp/if.c | left out | not translated yet |
+| `slirp->if_fastq.m_hdr.mh_next = slirp->if_fastq.m_hdr.mh_prev = &slirp->if_fastq; slirp->if_bat…` | slirp/if.c | exported | Unvalidated |
 | `if_output` | slirp/if.c | left out | not translated yet |
-| `Slirp *slirp = ifm->slirp; struct mbuf *ifq; int on_fastq = 1; ; ; ;` | slirp/if.c | left out | not translated yet |
-| `if (ifm->m_hdr.mh_flags & 0x04)` | slirp/if.c | left out | not translated yet |
-| `for (ifq = slirp->if_batchq.m_hdr.mh_prev; ifq != &slirp->if_batchq; ifq = ifq->m_hdr.mh_prev)` | slirp/if.c | left out | not translated yet |
-| `if (so && (so->so_iptos & 0x10) … else` | slirp/if.c | left out | not translated yet |
-| `ifm->m_hdr.mh_so = so; ((ifm)->m_hdr.mh_nextpkt = (ifm)->m_hdr.mh_prevpkt = (ifm)); slirp_insqu…` | slirp/if.c | left out | not translated yet |
-| `diddit: slirp->if_queued++;` | slirp/if.c | left out | not translated yet |
-| `if (so)` | slirp/if.c | left out | not translated yet |
-| `if_start(ifm->slirp);` | slirp/if.c | left out | not translated yet |
+| `Slirp *slirp = ifm->slirp; struct mbuf *ifq; int on_fastq = 1; ; ; ;` | slirp/if.c | exported | Unvalidated |
+| `if (ifm->m_hdr.mh_flags & 0x04)` | slirp/if.c | exported | Unvalidated |
+| `for (ifq = slirp->if_batchq.m_hdr.mh_prev; ifq != &slirp->if_batchq; ifq = ifq->m_hdr.mh_prev)` | slirp/if.c | exported | Unvalidated |
+| `if (so && (so->so_iptos & 0x10) … else` | slirp/if.c | exported | Unvalidated |
+| `ifm->m_hdr.mh_so = so; ((ifm)->m_hdr.mh_nextpkt = (ifm)->m_hdr.mh_prevpkt = (ifm)); slirp_insqu…` | slirp/if.c | exported | Unvalidated |
+| `diddit: slirp->if_queued++;` | slirp/if.c | exported | Unvalidated |
+| `if (so)` | slirp/if.c | exported | Unvalidated |
+| `if_start(ifm->slirp);` | slirp/if.c | exported | Unvalidated |
 | `if_start` | slirp/if.c | left out | not translated yet |
-| `struct mbuf *ifm, *ifqt; ;` | slirp/if.c | left out | not translated yet |
-| `if (slirp->if_queued == 0)` | slirp/if.c | left out | not translated yet |
-| `again: if (!slirp_can_output(slirp->opaque)) return;` | slirp/if.c | left out | not translated yet |
-| `if (slirp->if_fastq.m_hdr.mh_next != &slirp->if_fastq) … else` | slirp/if.c | left out | not translated yet |
-| `ifqt = ifm->m_hdr.mh_prev; slirp_remque(ifm); slirp->if_queued--;` | slirp/if.c | left out | not translated yet |
-| `if (ifm->m_hdr.mh_nextpkt != ifm)` | slirp/if.c | left out | not translated yet |
-| `if (ifm->m_hdr.mh_so)` | slirp/if.c | left out | not translated yet |
-| `if_encap(slirp, (uint8_t *)ifm->m_hdr.mh_data, ifm->m_hdr.mh_len); m_free(ifm);` | slirp/if.c | left out | not translated yet |
-| `if (slirp->if_queued)` | slirp/if.c | left out | not translated yet |
+| `struct mbuf *ifm, *ifqt; ;` | slirp/if.c | exported | Unvalidated |
+| `if (slirp->if_queued == 0)` | slirp/if.c | exported | Unvalidated |
+| `again: if (!slirp_can_output(slirp->opaque)) return;` | slirp/if.c | exported | Unvalidated |
+| `if (slirp->if_fastq.m_hdr.mh_next != &slirp->if_fastq) … else` | slirp/if.c | exported | Unvalidated |
+| `ifqt = ifm->m_hdr.mh_prev; slirp_remque(ifm); slirp->if_queued--;` | slirp/if.c | exported | Unvalidated |
+| `if (ifm->m_hdr.mh_nextpkt != ifm)` | slirp/if.c | exported | Unvalidated |
+| `if (ifm->m_hdr.mh_so)` | slirp/if.c | exported | Unvalidated |
+| `if_encap(slirp, (uint8_t *)ifm->m_hdr.mh_data, ifm->m_hdr.mh_len); m_free(ifm);` | slirp/if.c | exported | Unvalidated |
+| `if (slirp->if_queued)` | slirp/if.c | exported | Unvalidated |
 | `icmp_input` | slirp/ip_icmp.c | left out | not translated yet |
-| `register struct icmp *icp; register struct ip *ip=((struct ip *)(m)->m_hdr.mh_data); int icmple…` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (icmplen < 8)` | slirp/ip_icmp.c | left out | not translated yet |
-| `m->m_hdr.mh_len -= hlen; m->m_hdr.mh_data += hlen; icp = ((struct icmp *)(m)->m_hdr.mh_data);` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (cksum(m, icmplen))` | slirp/ip_icmp.c | left out | not translated yet |
-| `m->m_hdr.mh_len += hlen; m->m_hdr.mh_data -= hlen; ;` | slirp/ip_icmp.c | left out | not translated yet |
-| `switch (icp->icmp_type)` | slirp/ip_icmp.c | left out | not translated yet |
-| `end_error: return;` | slirp/ip_icmp.c | left out | not translated yet |
+| `register struct icmp *icp; register struct ip *ip=((struct ip *)(m)->m_hdr.mh_data); int icmple…` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (icmplen < 8)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `m->m_hdr.mh_len -= hlen; m->m_hdr.mh_data += hlen; icp = ((struct icmp *)(m)->m_hdr.mh_data);` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (cksum(m, icmplen))` | slirp/ip_icmp.c | exported | Unvalidated |
+| `m->m_hdr.mh_len += hlen; m->m_hdr.mh_data -= hlen; ;` | slirp/ip_icmp.c | exported | Unvalidated |
+| `switch (icp->icmp_type)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `end_error: return;` | slirp/ip_icmp.c | exported | Unvalidated |
 | `icmp_error` | slirp/ip_icmp.c | left out | not translated yet |
-| `unsigned hlen, shlen, s_ip_len; register struct ip *ip; register struct icmp *icp; register str…` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (type!=3 && type!=11)` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (!msrc)` | slirp/ip_icmp.c | left out | not translated yet |
-| `ip = ((struct ip *)(msrc)->m_hdr.mh_data);` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (ip->ip_off & 0x1fff)` | slirp/ip_icmp.c | left out | not translated yet |
-| `shlen=ip->ip_hl << 2; s_ip_len=ip->ip_len;` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (ip->ip_p == IPPROTO_ICMP)` | slirp/ip_icmp.c | left out | not translated yet |
-| `m = m_get(msrc->slirp);` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (!m)` | slirp/ip_icmp.c | left out | not translated yet |
-| `{ … }` | slirp/ip_icmp.c | left out | not translated yet |
-| `memcpy(m->m_hdr.mh_data, msrc->m_hdr.mh_data, msrc->m_hdr.mh_len); m->m_hdr.mh_len = msrc->m_hd…` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (minsize) … else` | slirp/ip_icmp.c | left out | not translated yet |
-| `m->m_hdr.mh_len=8 +s_ip_len; icp->icmp_type = type; icp->icmp_code = code; icp->icmp_hun.ih_ids…` | slirp/ip_icmp.c | left out | not translated yet |
-| `end_error: return;` | slirp/ip_icmp.c | left out | not translated yet |
+| `unsigned hlen, shlen, s_ip_len; register struct ip *ip; register struct icmp *icp; register str…` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (type!=3 && type!=11)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (!msrc)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `ip = ((struct ip *)(msrc)->m_hdr.mh_data);` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (ip->ip_off & 0x1fff)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `shlen=ip->ip_hl << 2; s_ip_len=ip->ip_len;` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (ip->ip_p == IPPROTO_ICMP)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `m = m_get(msrc->slirp);` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (!m)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `{ … }` | slirp/ip_icmp.c | exported | Unvalidated |
+| `memcpy(m->m_hdr.mh_data, msrc->m_hdr.mh_data, msrc->m_hdr.mh_len); m->m_hdr.mh_len = msrc->m_hd…` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (minsize) … else` | slirp/ip_icmp.c | exported | Unvalidated |
+| `m->m_hdr.mh_len=8 +s_ip_len; icp->icmp_type = type; icp->icmp_code = code; icp->icmp_hun.ih_ids…` | slirp/ip_icmp.c | exported | Unvalidated |
+| `end_error: return;` | slirp/ip_icmp.c | exported | Unvalidated |
 | `icmp_reflect` | slirp/ip_icmp.c | left out | not translated yet |
-| `register struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data); int hlen = ip->ip_hl << 2; int optl…` | slirp/ip_icmp.c | left out | not translated yet |
-| `if (optlen > 0)` | slirp/ip_icmp.c | left out | not translated yet |
-| `ip->ip_ttl = 255;` | slirp/ip_icmp.c | left out | not translated yet |
-| `{ … }` | slirp/ip_icmp.c | left out | not translated yet |
-| `(void ) ip_output((struct socket *) ((void *)0) , m);` | slirp/ip_icmp.c | left out | not translated yet |
+| `register struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data); int hlen = ip->ip_hl << 2; int optl…` | slirp/ip_icmp.c | exported | Unvalidated |
+| `if (optlen > 0)` | slirp/ip_icmp.c | exported | Unvalidated |
+| `ip->ip_ttl = 255;` | slirp/ip_icmp.c | exported | Unvalidated |
+| `{ … }` | slirp/ip_icmp.c | exported | Unvalidated |
+| `(void ) ip_output((struct socket *) ((void *)0) , m);` | slirp/ip_icmp.c | exported | Unvalidated |
 | `ip_init` | slirp/ip_input.c | left out | not translated yet |
-| `slirp->ipq.ip_link.next = slirp->ipq.ip_link.prev = &slirp->ipq.ip_link; udp_init(slirp); tcp_i…` | slirp/ip_input.c | left out | not translated yet |
+| `slirp->ipq.ip_link.next = slirp->ipq.ip_link.prev = &slirp->ipq.ip_link; udp_init(slirp); tcp_i…` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_input` | slirp/ip_input.c | left out | not translated yet |
-| `Slirp *slirp = m->slirp; register struct ip *ip; int hlen; ; ; ;` | slirp/ip_input.c | left out | not translated yet |
-| `if (m->m_hdr.mh_len < sizeof (struct ip))` | slirp/ip_input.c | left out | not translated yet |
-| `ip = ((struct ip *)(m)->m_hdr.mh_data);` | slirp/ip_input.c | left out | not translated yet |
-| `if (ip->ip_v != 4)` | slirp/ip_input.c | left out | not translated yet |
-| `hlen = ip->ip_hl << 2;` | slirp/ip_input.c | left out | not translated yet |
-| `if (hlen<sizeof(struct ip ) || hlen>m->m_hdr.mh_len)` | slirp/ip_input.c | left out | not translated yet |
-| `if (cksum(m,hlen))` | slirp/ip_input.c | left out | not translated yet |
-| `((ip->ip_len) = ntohs((uint16_t)(ip->ip_len)));` | slirp/ip_input.c | left out | not translated yet |
-| `if (ip->ip_len < hlen)` | slirp/ip_input.c | left out | not translated yet |
-| `((ip->ip_id) = ntohs((uint16_t)(ip->ip_id))); ((ip->ip_off) = ntohs((uint16_t)(ip->ip_off)));` | slirp/ip_input.c | left out | not translated yet |
-| `if (m->m_hdr.mh_len < ip->ip_len)` | slirp/ip_input.c | left out | not translated yet |
-| `if (slirp->restricted)` | slirp/ip_input.c | left out | not translated yet |
-| `if (m->m_hdr.mh_len > ip->ip_len)` | slirp/ip_input.c | left out | not translated yet |
-| `if (ip->ip_ttl==0)` | slirp/ip_input.c | left out | not translated yet |
-| `if (ip->ip_off &~ 0x4000) … else` | slirp/ip_input.c | left out | not translated yet |
-| `switch (ip->ip_p)` | slirp/ip_input.c | left out | not translated yet |
-| `return;` | slirp/ip_input.c | left out | not translated yet |
-| `bad: m_free(m);` | slirp/ip_input.c | left out | not translated yet |
-| `return;` | slirp/ip_input.c | left out | not translated yet |
+| `Slirp *slirp = m->slirp; register struct ip *ip; int hlen; ; ; ;` | slirp/ip_input.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_len < sizeof (struct ip))` | slirp/ip_input.c | exported | Unvalidated |
+| `ip = ((struct ip *)(m)->m_hdr.mh_data);` | slirp/ip_input.c | exported | Unvalidated |
+| `if (ip->ip_v != 4)` | slirp/ip_input.c | exported | Unvalidated |
+| `hlen = ip->ip_hl << 2;` | slirp/ip_input.c | exported | Unvalidated |
+| `if (hlen<sizeof(struct ip ) || hlen>m->m_hdr.mh_len)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (cksum(m,hlen))` | slirp/ip_input.c | exported | Unvalidated |
+| `((ip->ip_len) = ntohs((uint16_t)(ip->ip_len)));` | slirp/ip_input.c | exported | Unvalidated |
+| `if (ip->ip_len < hlen)` | slirp/ip_input.c | exported | Unvalidated |
+| `((ip->ip_id) = ntohs((uint16_t)(ip->ip_id))); ((ip->ip_off) = ntohs((uint16_t)(ip->ip_off)));` | slirp/ip_input.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_len < ip->ip_len)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (slirp->restricted)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_len > ip->ip_len)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (ip->ip_ttl==0)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (ip->ip_off &~ 0x4000) … else` | slirp/ip_input.c | exported | Unvalidated |
+| `switch (ip->ip_p)` | slirp/ip_input.c | exported | Unvalidated |
+| `return;` | slirp/ip_input.c | exported | Unvalidated |
+| `bad: m_free(m);` | slirp/ip_input.c | exported | Unvalidated |
+| `return;` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_reass` | slirp/ip_input.c | left out | not translated yet |
-| `register struct mbuf *m = dtom(slirp, ip); register struct ipasfrag *q; int hlen = ip->ip_hl <<…` | slirp/ip_input.c | left out | not translated yet |
-| `if (fp == ((void *)0)` | slirp/ip_input.c | left out | not translated yet |
-| `for (q = fp->frag_link.next; q != (struct ipasfrag *)&fp->frag_link; q = q->ipf_link.next)` | slirp/ip_input.c | left out | not translated yet |
-| `if (q->ipf_link.prev != &fp->frag_link)` | slirp/ip_input.c | left out | not translated yet |
-| `while (q != (struct ipasfrag*)&fp->frag_link && ip->ip_off + ip->ip_len > q->ipf_ip.ip_off)` | slirp/ip_input.c | left out | not translated yet |
-| `insert: ip_enq(((struct ipasfrag *)(((char*)(ip)) - sizeof(struct qlink))), q->ipf_link.prev);` | slirp/ip_input.c | left out | not translated yet |
-| `next = 0;` | slirp/ip_input.c | left out | not translated yet |
-| `for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = q->ipf_link.next)` | slirp/ip_input.c | left out | not translated yet |
-| `if ((struct ipasfrag *)(q->ipf_link.prev))->ipf_ip.ip_tos & 1)` | slirp/ip_input.c | left out | not translated yet |
-| `q = fp->frag_link.next; m = dtom(slirp, q); q = (struct ipasfrag *) q->ipf_link.next;` | slirp/ip_input.c | left out | not translated yet |
-| `while (q != (struct ipasfrag*)&fp->frag_link)` | slirp/ip_input.c | left out | not translated yet |
-| `q = fp->frag_link.next;` | slirp/ip_input.c | left out | not translated yet |
-| `if (m->m_hdr.mh_flags & 0x01)` | slirp/ip_input.c | left out | not translated yet |
-| `ip = ((struct ip*)(((char*)(q)) + sizeof(struct qlink))); ip->ip_len = next; ip->ip_tos &= ~1;…` | slirp/ip_input.c | left out | not translated yet |
-| `dropfrag: m_free(m);` | slirp/ip_input.c | left out | not translated yet |
-| `return ((void *)0) ;` | slirp/ip_input.c | left out | not translated yet |
+| `register struct mbuf *m = dtom(slirp, ip); register struct ipasfrag *q; int hlen = ip->ip_hl <<…` | slirp/ip_input.c | exported | Unvalidated |
+| `if (fp == ((void *)0)` | slirp/ip_input.c | exported | Unvalidated |
+| `for (q = fp->frag_link.next; q != (struct ipasfrag *)&fp->frag_link; q = q->ipf_link.next)` | slirp/ip_input.c | exported | Unvalidated |
+| `if (q->ipf_link.prev != &fp->frag_link)` | slirp/ip_input.c | exported | Unvalidated |
+| `while (q != (struct ipasfrag*)&fp->frag_link && ip->ip_off + ip->ip_len > q->ipf_ip.ip_off)` | slirp/ip_input.c | exported | Unvalidated |
+| `insert: ip_enq(((struct ipasfrag *)(((char*)(ip)) - sizeof(struct qlink))), q->ipf_link.prev);` | slirp/ip_input.c | exported | Unvalidated |
+| `next = 0;` | slirp/ip_input.c | exported | Unvalidated |
+| `for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = q->ipf_link.next)` | slirp/ip_input.c | exported | Unvalidated |
+| `if ((struct ipasfrag *)(q->ipf_link.prev))->ipf_ip.ip_tos & 1)` | slirp/ip_input.c | exported | Unvalidated |
+| `q = fp->frag_link.next; m = dtom(slirp, q); q = (struct ipasfrag *) q->ipf_link.next;` | slirp/ip_input.c | exported | Unvalidated |
+| `while (q != (struct ipasfrag*)&fp->frag_link)` | slirp/ip_input.c | exported | Unvalidated |
+| `q = fp->frag_link.next;` | slirp/ip_input.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_flags & 0x01)` | slirp/ip_input.c | exported | Unvalidated |
+| `ip = ((struct ip*)(((char*)(q)) + sizeof(struct qlink))); ip->ip_len = next; ip->ip_tos &= ~1;…` | slirp/ip_input.c | exported | Unvalidated |
+| `dropfrag: m_free(m);` | slirp/ip_input.c | exported | Unvalidated |
+| `return ((void *)0) ;` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_freef` | slirp/ip_input.c | left out | not translated yet |
-| `for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = p)` | slirp/ip_input.c | left out | not translated yet |
-| `slirp_remque(&fp->ip_link); (void) m_free(dtom(slirp, fp));` | slirp/ip_input.c | left out | not translated yet |
+| `for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = p)` | slirp/ip_input.c | exported | Unvalidated |
+| `slirp_remque(&fp->ip_link); (void) m_free(dtom(slirp, fp));` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_enq` | slirp/ip_input.c | left out | not translated yet |
-| `; ; p->ipf_link.prev = prev; p->ipf_link.next = prev->ipf_link.next; ((struct ipasfrag *)(prev-…` | slirp/ip_input.c | left out | not translated yet |
+| `; ; p->ipf_link.prev = prev; p->ipf_link.next = prev->ipf_link.next; ((struct ipasfrag *)(prev-…` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_deq` | slirp/ip_input.c | left out | not translated yet |
-| `((struct ipasfrag *)(p->ipf_link.prev))->ipf_link.next = p->ipf_link.next; ((struct ipasfrag *)…` | slirp/ip_input.c | left out | not translated yet |
+| `((struct ipasfrag *)(p->ipf_link.prev))->ipf_link.next = p->ipf_link.next; ((struct ipasfrag *)…` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_slowtimo` | slirp/ip_input.c | left out | not translated yet |
-| `struct qlink *l; ; l = slirp->ipq.ip_link.next;` | slirp/ip_input.c | left out | not translated yet |
-| `if (l == ((void *)0)` | slirp/ip_input.c | left out | not translated yet |
-| `while (l != &slirp->ipq.ip_link)` | slirp/ip_input.c | left out | not translated yet |
+| `struct qlink *l; ; l = slirp->ipq.ip_link.next;` | slirp/ip_input.c | exported | Unvalidated |
+| `if (l == ((void *)0)` | slirp/ip_input.c | exported | Unvalidated |
+| `while (l != &slirp->ipq.ip_link)` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_stripoptions` | slirp/ip_input.c | left out | not translated yet |
-| `register int i; struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data); register caddr_t opts; int o…` | slirp/ip_input.c | left out | not translated yet |
+| `register int i; struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data); register caddr_t opts; int o…` | slirp/ip_input.c | exported | Unvalidated |
 | `ip_output` | slirp/ip_output.c | left out | not translated yet |
-| `Slirp *slirp = m0->slirp; register struct ip *ip; register struct mbuf *m = m0; register int hl…` | slirp/ip_output.c | left out | not translated yet |
-| `if ((uint16_t)ip->ip_len <= 1500)` | slirp/ip_output.c | left out | not translated yet |
-| `if (ip->ip_off & 0x4000)` | slirp/ip_output.c | left out | not translated yet |
-| `len = (1500 - hlen) &~ 7;` | slirp/ip_output.c | left out | not translated yet |
-| `if (len < 8)` | slirp/ip_output.c | left out | not translated yet |
-| `{ … }` | slirp/ip_output.c | left out | not translated yet |
-| `done: return (error);` | slirp/ip_output.c | left out | not translated yet |
-| `bad: m_free(m0);` | slirp/ip_output.c | left out | not translated yet |
-| `goto done;` | slirp/ip_output.c | left out | not translated yet |
+| `Slirp *slirp = m0->slirp; register struct ip *ip; register struct mbuf *m = m0; register int hl…` | slirp/ip_output.c | exported | Unvalidated |
+| `if ((uint16_t)ip->ip_len <= 1500)` | slirp/ip_output.c | exported | Unvalidated |
+| `if (ip->ip_off & 0x4000)` | slirp/ip_output.c | exported | Unvalidated |
+| `len = (1500 - hlen) &~ 7;` | slirp/ip_output.c | exported | Unvalidated |
+| `if (len < 8)` | slirp/ip_output.c | exported | Unvalidated |
+| `{ … }` | slirp/ip_output.c | exported | Unvalidated |
+| `done: return (error);` | slirp/ip_output.c | exported | Unvalidated |
+| `bad: m_free(m0);` | slirp/ip_output.c | exported | Unvalidated |
+| `goto done;` | slirp/ip_output.c | exported | Unvalidated |
 | `m_init` | slirp/mbuf.c | left out | not translated yet |
-| `slirp->m_freelist.m_hdr.mh_next = slirp->m_freelist.m_hdr.mh_prev = &slirp->m_freelist; slirp->…` | slirp/mbuf.c | left out | not translated yet |
+| `slirp->m_freelist.m_hdr.mh_next = slirp->m_freelist.m_hdr.mh_prev = &slirp->m_freelist; slirp->…` | slirp/mbuf.c | exported | Unvalidated |
 | `m_get` | slirp/mbuf.c | left out | not translated yet |
-| `register struct mbuf *m; int flags = 0; ;` | slirp/mbuf.c | left out | not translated yet |
-| `if (slirp->m_freelist.m_hdr.mh_next == &slirp->m_freelist) … else` | slirp/mbuf.c | left out | not translated yet |
-| `slirp_insque(m,&slirp->m_usedlist); m->m_hdr.mh_flags = (flags | 0x04); m->m_hdr.mh_size = (150…` | slirp/mbuf.c | left out | not translated yet |
-| `end_error: ;` | slirp/mbuf.c | left out | not translated yet |
-| `return m;` | slirp/mbuf.c | left out | not translated yet |
+| `register struct mbuf *m; int flags = 0; ;` | slirp/mbuf.c | exported | Unvalidated |
+| `if (slirp->m_freelist.m_hdr.mh_next == &slirp->m_freelist) … else` | slirp/mbuf.c | exported | Unvalidated |
+| `slirp_insque(m,&slirp->m_usedlist); m->m_hdr.mh_flags = (flags | 0x04); m->m_hdr.mh_size = (150…` | slirp/mbuf.c | exported | Unvalidated |
+| `end_error: ;` | slirp/mbuf.c | exported | Unvalidated |
+| `return m;` | slirp/mbuf.c | exported | Unvalidated |
 | `m_free` | slirp/mbuf.c | left out | not translated yet |
-| `; ;` | slirp/mbuf.c | left out | not translated yet |
-| `if (m)` | slirp/mbuf.c | left out | not translated yet |
+| `; ;` | slirp/mbuf.c | exported | Unvalidated |
+| `if (m)` | slirp/mbuf.c | exported | Unvalidated |
 | `m_cat` | slirp/mbuf.c | left out | not translated yet |
-| `if (m->m_hdr.mh_flags & 0x01)? (((m)->M_dat.m_ext_ + (m)->m_hdr.mh_size) - (m)->m_hdr.mh_data)…` | slirp/mbuf.c | left out | not translated yet |
-| `memcpy(m->m_hdr.mh_data+m->m_hdr.mh_len, n->m_hdr.mh_data, n->m_hdr.mh_len); m->m_hdr.mh_len +=…` | slirp/mbuf.c | left out | not translated yet |
+| `if (m->m_hdr.mh_flags & 0x01)? (((m)->M_dat.m_ext_ + (m)->m_hdr.mh_size) - (m)->m_hdr.mh_data)…` | slirp/mbuf.c | exported | Unvalidated |
+| `memcpy(m->m_hdr.mh_data+m->m_hdr.mh_len, n->m_hdr.mh_data, n->m_hdr.mh_len); m->m_hdr.mh_len +=…` | slirp/mbuf.c | exported | Unvalidated |
 | `m_inc` | slirp/mbuf.c | left out | not translated yet |
-| `if (m->m_hdr.mh_size>size)` | slirp/mbuf.c | left out | not translated yet |
-| `if (m->m_hdr.mh_flags & 0x01) … else` | slirp/mbuf.c | left out | not translated yet |
-| `m->m_hdr.mh_size = size;` | slirp/mbuf.c | left out | not translated yet |
+| `if (m->m_hdr.mh_size>size)` | slirp/mbuf.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_flags & 0x01) … else` | slirp/mbuf.c | exported | Unvalidated |
+| `m->m_hdr.mh_size = size;` | slirp/mbuf.c | exported | Unvalidated |
 | `m_adj` | slirp/mbuf.c | left out | not translated yet |
-| `if (m == ((void *)0)` | slirp/mbuf.c | left out | not translated yet |
-| `if (len >= 0) … else` | slirp/mbuf.c | left out | not translated yet |
+| `if (m == ((void *)0)` | slirp/mbuf.c | exported | Unvalidated |
+| `if (len >= 0) … else` | slirp/mbuf.c | exported | Unvalidated |
 | `m_copy` | slirp/mbuf.c | left out | not translated yet |
-| `if (len > (((n->m_hdr.mh_flags & 0x01)? (((n)->M_dat.m_ext_ + (n)->m_hdr.mh_size) - (n)->m_hdr.…` | slirp/mbuf.c | left out | not translated yet |
-| `memcpy((n->m_hdr.mh_data + n->m_hdr.mh_len), (m->m_hdr.mh_data + off), len); n->m_hdr.mh_len +=…` | slirp/mbuf.c | left out | not translated yet |
+| `if (len > (((n->m_hdr.mh_flags & 0x01)? (((n)->M_dat.m_ext_ + (n)->m_hdr.mh_size) - (n)->m_hdr.…` | slirp/mbuf.c | exported | Unvalidated |
+| `memcpy((n->m_hdr.mh_data + n->m_hdr.mh_len), (m->m_hdr.mh_data + off), len); n->m_hdr.mh_len +=…` | slirp/mbuf.c | exported | Unvalidated |
 | `dtom` | slirp/mbuf.c | left out | not translated yet |
-| `struct mbuf *m; ; ;` | slirp/mbuf.c | left out | not translated yet |
-| `for (m = slirp->m_usedlist.m_hdr.mh_next; m != &slirp->m_usedlist; m = m->m_hdr.mh_next)` | slirp/mbuf.c | left out | not translated yet |
-| `; return (struct mbuf *)0;` | slirp/mbuf.c | left out | not translated yet |
+| `struct mbuf *m; ; ;` | slirp/mbuf.c | exported | Unvalidated |
+| `for (m = slirp->m_usedlist.m_hdr.mh_next; m != &slirp->m_usedlist; m = m->m_hdr.mh_next)` | slirp/mbuf.c | exported | Unvalidated |
+| `; return (struct mbuf *)0;` | slirp/mbuf.c | exported | Unvalidated |
 | `slirp_insque` | slirp/misc.c | left out | not translated yet |
-| `register struct quehead *element = (struct quehead *) a; register struct quehead *head = (struc…` | slirp/misc.c | left out | not translated yet |
+| `register struct quehead *element = (struct quehead *) a; register struct quehead *head = (struc…` | slirp/misc.c | exported | Unvalidated |
 | `slirp_remque` | slirp/misc.c | left out | not translated yet |
-| `register struct quehead *element = (struct quehead *) a; ((struct quehead *)(element->qh_link))…` | slirp/misc.c | left out | not translated yet |
+| `register struct quehead *element = (struct quehead *) a; ((struct quehead *)(element->qh_link))…` | slirp/misc.c | exported | Unvalidated |
 | `add_exec` | slirp/misc.c | left out | not translated yet |
-| `for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next)` | slirp/misc.c | left out | not translated yet |
-| `tmp_ptr = *ex_ptr; *ex_ptr = (struct ex_list *)malloc(sizeof(struct ex_list)); (*ex_ptr)->ex_fp…` | slirp/misc.c | left out | not translated yet |
+| `for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next)` | slirp/misc.c | exported | Unvalidated |
+| `tmp_ptr = *ex_ptr; *ex_ptr = (struct ex_list *)malloc(sizeof(struct ex_list)); (*ex_ptr)->ex_fp…` | slirp/misc.c | exported | Unvalidated |
 | `os_socket` | slirp/misc.c | left out | not translated yet |
-| `return socket(domain, type, protocol);` | slirp/misc.c | left out | not translated yet |
+| `return socket(domain, type, protocol);` | slirp/misc.c | exported | Unvalidated |
 | `os_get_time_ms` | slirp/misc.c | left out | not translated yet |
-| `struct timespec ts; clock_gettime( 1 , &ts); return ts.tv_sec * 1000 + (ts.tv_nsec / 1000000);` | slirp/misc.c | left out | not translated yet |
+| `struct timespec ts; clock_gettime( 1 , &ts); return ts.tv_sec * 1000 + (ts.tv_nsec / 1000000);` | slirp/misc.c | exported | Unvalidated |
 | `fork_exec` | slirp/misc.c | left out | not translated yet |
-| `return 0;` | slirp/misc.c | left out | not translated yet |
+| `return 0;` | slirp/misc.c | exported | Unvalidated |
 | `fd_nonblock` | slirp/misc.c | left out | not translated yet |
-| `int opt = 1; ioctl(fd, 0x5421 , &opt);` | slirp/misc.c | left out | not translated yet |
+| `int opt = 1; ioctl(fd, 0x5421 , &opt);` | slirp/misc.c | exported | Unvalidated |
 | `fd_block` | slirp/misc.c | left out | not translated yet |
-| `int opt = 0; ioctl(fd, 0x5421 , &opt);` | slirp/misc.c | left out | not translated yet |
+| `int opt = 0; ioctl(fd, 0x5421 , &opt);` | slirp/misc.c | exported | Unvalidated |
 | `sbfree` | slirp/sbuf.c | left out | not translated yet |
-| `free(sb->sb_data);` | slirp/sbuf.c | left out | not translated yet |
+| `free(sb->sb_data);` | slirp/sbuf.c | exported | Unvalidated |
 | `sbdrop` | slirp/sbuf.c | left out | not translated yet |
-| `if (num > sb->sb_cc)` | slirp/sbuf.c | left out | not translated yet |
-| `sb->sb_cc -= num; sb->sb_rptr += num;` | slirp/sbuf.c | left out | not translated yet |
-| `if (sb->sb_rptr >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | left out | not translated yet |
+| `if (num > sb->sb_cc)` | slirp/sbuf.c | exported | Unvalidated |
+| `sb->sb_cc -= num; sb->sb_rptr += num;` | slirp/sbuf.c | exported | Unvalidated |
+| `if (sb->sb_rptr >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | exported | Unvalidated |
 | `sbreserve` | slirp/sbuf.c | left out | not translated yet |
-| `if (sb->sb_data) … else` | slirp/sbuf.c | left out | not translated yet |
+| `if (sb->sb_data) … else` | slirp/sbuf.c | exported | Unvalidated |
 | `sbappend` | slirp/sbuf.c | left out | not translated yet |
-| `int ret = 0; ; ; ; ;` | slirp/sbuf.c | left out | not translated yet |
-| `if (m->m_hdr.mh_len <= 0)` | slirp/sbuf.c | left out | not translated yet |
-| `if (so->so_urgc)` | slirp/sbuf.c | left out | not translated yet |
-| `if (!so->so_rcv.sb_cc)` | slirp/sbuf.c | left out | not translated yet |
-| `if (ret <= 0) … else` | slirp/sbuf.c | left out | not translated yet |
-| `m_free(m);` | slirp/sbuf.c | left out | not translated yet |
+| `int ret = 0; ; ; ; ;` | slirp/sbuf.c | exported | Unvalidated |
+| `if (m->m_hdr.mh_len <= 0)` | slirp/sbuf.c | exported | Unvalidated |
+| `if (so->so_urgc)` | slirp/sbuf.c | exported | Unvalidated |
+| `if (!so->so_rcv.sb_cc)` | slirp/sbuf.c | exported | Unvalidated |
+| `if (ret <= 0) … else` | slirp/sbuf.c | exported | Unvalidated |
+| `m_free(m);` | slirp/sbuf.c | exported | Unvalidated |
 | `sbappendsb` | slirp/sbuf.c | left out | not translated yet |
-| `int len, n, nn; len = m->m_hdr.mh_len;` | slirp/sbuf.c | left out | not translated yet |
-| `if (sb->sb_wptr < sb->sb_rptr) … else` | slirp/sbuf.c | left out | not translated yet |
-| `sb->sb_cc += n; sb->sb_wptr += n;` | slirp/sbuf.c | left out | not translated yet |
-| `if (sb->sb_wptr >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | left out | not translated yet |
+| `int len, n, nn; len = m->m_hdr.mh_len;` | slirp/sbuf.c | exported | Unvalidated |
+| `if (sb->sb_wptr < sb->sb_rptr) … else` | slirp/sbuf.c | exported | Unvalidated |
+| `sb->sb_cc += n; sb->sb_wptr += n;` | slirp/sbuf.c | exported | Unvalidated |
+| `if (sb->sb_wptr >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | exported | Unvalidated |
 | `sbcopy` | slirp/sbuf.c | left out | not translated yet |
-| `char *from; from = sb->sb_rptr + off;` | slirp/sbuf.c | left out | not translated yet |
-| `if (from >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | left out | not translated yet |
-| `if (from < sb->sb_wptr) … else` | slirp/sbuf.c | left out | not translated yet |
+| `char *from; from = sb->sb_rptr + off;` | slirp/sbuf.c | exported | Unvalidated |
+| `if (from >= sb->sb_data + sb->sb_datalen)` | slirp/sbuf.c | exported | Unvalidated |
+| `if (from < sb->sb_wptr) … else` | slirp/sbuf.c | exported | Unvalidated |
 | `get_dns_addr` | slirp/slirp.c | left out | not translated yet |
-| `if (dns_addr.s_addr != 0)` | slirp/slirp.c | left out | not translated yet |
-| `f = fopen("/etc/resolv.conf", "r");` | slirp/slirp.c | left out | not translated yet |
-| `if (!f)` | slirp/slirp.c | left out | not translated yet |
-| `while (fgets(buff, 512, f) != ((void *)0)` | slirp/slirp.c | left out | not translated yet |
-| `fclose(f);` | slirp/slirp.c | left out | not translated yet |
-| `if (!found)` | slirp/slirp.c | left out | not translated yet |
-| `return 0;` | slirp/slirp.c | left out | not translated yet |
+| `if (dns_addr.s_addr != 0)` | slirp/slirp.c | exported | Unvalidated |
+| `f = fopen("/etc/resolv.conf", "r");` | slirp/slirp.c | exported | Unvalidated |
+| `if (!f)` | slirp/slirp.c | exported | Unvalidated |
+| `while (fgets(buff, 512, f) != ((void *)0)` | slirp/slirp.c | exported | Unvalidated |
+| `fclose(f);` | slirp/slirp.c | exported | Unvalidated |
+| `if (!found)` | slirp/slirp.c | exported | Unvalidated |
+| `return 0;` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_init_once` | slirp/slirp.c | left out | not translated yet |
-| `if (initialized)` | slirp/slirp.c | left out | not translated yet |
-| `initialized = 1; loopback_addr.s_addr = htonl( ((in_addr_t) 0x7f000001) );` | slirp/slirp.c | left out | not translated yet |
+| `if (initialized)` | slirp/slirp.c | exported | Unvalidated |
+| `initialized = 1; loopback_addr.s_addr = htonl( ((in_addr_t) 0x7f000001) );` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_init` | slirp/slirp.c | left out | not translated yet |
-| `Slirp *slirp = mallocz(sizeof(Slirp)); slirp_init_once(); slirp->restricted = restricted; if_in…` | slirp/slirp.c | left out | not translated yet |
-| `if (vhostname)` | slirp/slirp.c | left out | not translated yet |
-| `if (tftp_path)` | slirp/slirp.c | left out | not translated yet |
-| `if (bootfile)` | slirp/slirp.c | left out | not translated yet |
-| `slirp->vdhcp_startaddr = vdhcp_start; slirp->vnameserver_addr = vnameserver; slirp->opaque = op…` | slirp/slirp.c | left out | not translated yet |
+| `Slirp *slirp = mallocz(sizeof(Slirp)); slirp_init_once(); slirp->restricted = restricted; if_in…` | slirp/slirp.c | exported | Unvalidated |
+| `if (vhostname)` | slirp/slirp.c | exported | Unvalidated |
+| `if (tftp_path)` | slirp/slirp.c | exported | Unvalidated |
+| `if (bootfile)` | slirp/slirp.c | exported | Unvalidated |
+| `slirp->vdhcp_startaddr = vdhcp_start; slirp->vnameserver_addr = vnameserver; slirp->opaque = op…` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_cleanup` | slirp/slirp.c | left out | not translated yet |
-| `free(slirp->tftp_prefix); free(slirp->bootp_filename); free(slirp);` | slirp/slirp.c | left out | not translated yet |
+| `free(slirp->tftp_prefix); free(slirp->bootp_filename); free(slirp);` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_select_fill` | slirp/slirp.c | left out | not translated yet |
-| `struct socket *so, *so_next; int nfds; global_readfds = ((void *)0) ; global_writefds = ((void…` | slirp/slirp.c | left out | not translated yet |
-| `{ … }` | slirp/slirp.c | left out | not translated yet |
-| `*pnfds = nfds;` | slirp/slirp.c | left out | not translated yet |
+| `struct socket *so, *so_next; int nfds; global_readfds = ((void *)0) ; global_writefds = ((void…` | slirp/slirp.c | exported | Unvalidated |
+| `{ … }` | slirp/slirp.c | exported | Unvalidated |
+| `*pnfds = nfds;` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_select_poll` | slirp/slirp.c | left out | not translated yet |
-| `struct socket *so, *so_next; int ret; global_readfds = readfds; global_writefds = writefds; glo…` | slirp/slirp.c | left out | not translated yet |
-| `{ … }` | slirp/slirp.c | left out | not translated yet |
-| `global_readfds = ((void *)0) ; global_writefds = ((void *)0) ; global_xfds = ((void *)0) ;` | slirp/slirp.c | left out | not translated yet |
+| `struct socket *so, *so_next; int ret; global_readfds = readfds; global_writefds = writefds; glo…` | slirp/slirp.c | exported | Unvalidated |
+| `{ … }` | slirp/slirp.c | exported | Unvalidated |
+| `global_readfds = ((void *)0) ; global_writefds = ((void *)0) ; global_xfds = ((void *)0) ;` | slirp/slirp.c | exported | Unvalidated |
 | `arp_input` | slirp/slirp.c | left out | not translated yet |
-| `struct ethhdr *eh = (struct ethhdr *)pkt; struct arphdr *ah = (struct arphdr *)(pkt + 14); uint…` | slirp/slirp.c | left out | not translated yet |
-| `switch (ar_op)` | slirp/slirp.c | left out | not translated yet |
+| `struct ethhdr *eh = (struct ethhdr *)pkt; struct arphdr *ah = (struct arphdr *)(pkt + 14); uint…` | slirp/slirp.c | exported | Unvalidated |
+| `switch (ar_op)` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_input` | slirp/slirp.c | left out | not translated yet |
-| `if (pkt_len < 14)` | slirp/slirp.c | left out | not translated yet |
-| `proto = ntohs(*(uint16_t *)(pkt + 12));` | slirp/slirp.c | left out | not translated yet |
-| `switch (proto)` | slirp/slirp.c | left out | not translated yet |
+| `if (pkt_len < 14)` | slirp/slirp.c | exported | Unvalidated |
+| `proto = ntohs(*(uint16_t *)(pkt + 12));` | slirp/slirp.c | exported | Unvalidated |
+| `switch (proto)` | slirp/slirp.c | exported | Unvalidated |
 | `if_encap` | slirp/slirp.c | left out | not translated yet |
-| `if (ip_data_len + 14 > sizeof(buf)` | slirp/slirp.c | left out | not translated yet |
-| `if (!memcmp(slirp->client_ethaddr, zero_ethaddr, 6)) … else` | slirp/slirp.c | left out | not translated yet |
+| `if (ip_data_len + 14 > sizeof(buf)` | slirp/slirp.c | exported | Unvalidated |
+| `if (!memcmp(slirp->client_ethaddr, zero_ethaddr, 6)) … else` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_remove_hostfwd` | slirp/slirp.c | left out | not translated yet |
-| `for (so = head->so_next; so != head; so = so->so_next)` | slirp/slirp.c | left out | not translated yet |
-| `return -1;` | slirp/slirp.c | left out | not translated yet |
+| `for (so = head->so_next; so != head; so = so->so_next)` | slirp/slirp.c | exported | Unvalidated |
+| `return -1;` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_add_hostfwd` | slirp/slirp.c | left out | not translated yet |
-| `if (!guest_addr.s_addr)` | slirp/slirp.c | left out | not translated yet |
-| `if (is_udp) … else` | slirp/slirp.c | left out | not translated yet |
-| `return 0;` | slirp/slirp.c | left out | not translated yet |
+| `if (!guest_addr.s_addr)` | slirp/slirp.c | exported | Unvalidated |
+| `if (is_udp) … else` | slirp/slirp.c | exported | Unvalidated |
+| `return 0;` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_add_exec` | slirp/slirp.c | left out | not translated yet |
-| `if (!guest_addr->s_addr)` | slirp/slirp.c | left out | not translated yet |
-| `if (guest_addr->s_addr & slirp->vnetwork_mask.s_addr) != slirp->vnetwork_addr.s_addr || guest_a…` | slirp/slirp.c | left out | not translated yet |
-| `return add_exec(&slirp->exec_list, do_pty, (char *)args, *guest_addr, htons(guest_port));` | slirp/slirp.c | left out | not translated yet |
+| `if (!guest_addr->s_addr)` | slirp/slirp.c | exported | Unvalidated |
+| `if (guest_addr->s_addr & slirp->vnetwork_mask.s_addr) != slirp->vnetwork_addr.s_addr || guest_a…` | slirp/slirp.c | exported | Unvalidated |
+| `return add_exec(&slirp->exec_list, do_pty, (char *)args, *guest_addr, htons(guest_port));` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_send` | slirp/slirp.c | left out | not translated yet |
-| `return send(so->s, buf, len, flags);` | slirp/slirp.c | left out | not translated yet |
+| `return send(so->s, buf, len, flags);` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_find_ctl_socket` | slirp/slirp.c | left out | not translated yet |
-| `for (so = slirp->tcb.so_next; so != &slirp->tcb; so = so->so_next)` | slirp/slirp.c | left out | not translated yet |
-| `return ((void *)0) ;` | slirp/slirp.c | left out | not translated yet |
+| `for (so = slirp->tcb.so_next; so != &slirp->tcb; so = so->so_next)` | slirp/slirp.c | exported | Unvalidated |
+| `return ((void *)0) ;` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_socket_can_recv` | slirp/slirp.c | left out | not translated yet |
-| `struct iovec iov[2]; struct socket *so; so = slirp_find_ctl_socket(slirp, guest_addr, guest_por…` | slirp/slirp.c | left out | not translated yet |
-| `if (!so || so->so_state & 0x001)` | slirp/slirp.c | left out | not translated yet |
-| `if (!(((so)->so_state & (0x008|0x004)) == 0x004) || so->so_snd.sb_cc >= (so->so_snd.sb_datalen/…` | slirp/slirp.c | left out | not translated yet |
-| `return sopreprbuf(so, iov, ((void *)0) );` | slirp/slirp.c | left out | not translated yet |
+| `struct iovec iov[2]; struct socket *so; so = slirp_find_ctl_socket(slirp, guest_addr, guest_por…` | slirp/slirp.c | exported | Unvalidated |
+| `if (!so || so->so_state & 0x001)` | slirp/slirp.c | exported | Unvalidated |
+| `if (!(((so)->so_state & (0x008|0x004)) == 0x004) || so->so_snd.sb_cc >= (so->so_snd.sb_datalen/…` | slirp/slirp.c | exported | Unvalidated |
+| `return sopreprbuf(so, iov, ((void *)0) );` | slirp/slirp.c | exported | Unvalidated |
 | `slirp_socket_recv` | slirp/slirp.c | left out | not translated yet |
-| `if (!so)` | slirp/slirp.c | left out | not translated yet |
-| `ret = soreadbuf(so, (const char *)buf, size);` | slirp/slirp.c | left out | not translated yet |
-| `if (ret > 0)` | slirp/slirp.c | left out | not translated yet |
+| `if (!so)` | slirp/slirp.c | exported | Unvalidated |
+| `ret = soreadbuf(so, (const char *)buf, size);` | slirp/slirp.c | exported | Unvalidated |
+| `if (ret > 0)` | slirp/slirp.c | exported | Unvalidated |
 | `solookup` | slirp/socket.c | left out | not translated yet |
-| `for (so = head->so_next; so != head; so = so->so_next)` | slirp/socket.c | left out | not translated yet |
-| `if (so == head)` | slirp/socket.c | left out | not translated yet |
-| `return so;` | slirp/socket.c | left out | not translated yet |
+| `for (so = head->so_next; so != head; so = so->so_next)` | slirp/socket.c | exported | Unvalidated |
+| `if (so == head)` | slirp/socket.c | exported | Unvalidated |
+| `return so;` | slirp/socket.c | exported | Unvalidated |
 | `socreate` | slirp/socket.c | left out | not translated yet |
-| `struct socket *so; so = (struct socket *)malloc(sizeof(struct socket));` | slirp/socket.c | left out | not translated yet |
-| `if (so)` | slirp/socket.c | left out | not translated yet |
-| `return(so);` | slirp/socket.c | left out | not translated yet |
+| `struct socket *so; so = (struct socket *)malloc(sizeof(struct socket));` | slirp/socket.c | exported | Unvalidated |
+| `if (so)` | slirp/socket.c | exported | Unvalidated |
+| `return(so);` | slirp/socket.c | exported | Unvalidated |
 | `sofree` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_emu==0x8 && so->extra)` | slirp/socket.c | left out | not translated yet |
-| `if (so == slirp->tcp_last_so) … else` | slirp/socket.c | left out | not translated yet |
-| `m_free(so->so_m);` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_next && so->so_prev)` | slirp/socket.c | left out | not translated yet |
-| `free(so);` | slirp/socket.c | left out | not translated yet |
+| `if (so->so_emu==0x8 && so->extra)` | slirp/socket.c | exported | Unvalidated |
+| `if (so == slirp->tcp_last_so) … else` | slirp/socket.c | exported | Unvalidated |
+| `m_free(so->so_m);` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_next && so->so_prev)` | slirp/socket.c | exported | Unvalidated |
+| `free(so);` | slirp/socket.c | exported | Unvalidated |
 | `sopreprbuf` | slirp/socket.c | left out | not translated yet |
-| `int n, lss, total; struct sbuf *sb = &so->so_snd; int len = sb->sb_datalen - sb->sb_cc; int mss…` | slirp/socket.c | left out | not translated yet |
-| `if (len <= 0)` | slirp/socket.c | left out | not translated yet |
-| `iov[0].iov_base = sb->sb_wptr; iov[1].iov_base = ((void *)0) ; iov[1].iov_len = 0;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_wptr < sb->sb_rptr) … else` | slirp/socket.c | left out | not translated yet |
-| `if (np)` | slirp/socket.c | left out | not translated yet |
-| `return iov[0].iov_len + (n - 1) * iov[1].iov_len;` | slirp/socket.c | left out | not translated yet |
+| `int n, lss, total; struct sbuf *sb = &so->so_snd; int len = sb->sb_datalen - sb->sb_cc; int mss…` | slirp/socket.c | exported | Unvalidated |
+| `if (len <= 0)` | slirp/socket.c | exported | Unvalidated |
+| `iov[0].iov_base = sb->sb_wptr; iov[1].iov_base = ((void *)0) ; iov[1].iov_len = 0;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_wptr < sb->sb_rptr) … else` | slirp/socket.c | exported | Unvalidated |
+| `if (np)` | slirp/socket.c | exported | Unvalidated |
+| `return iov[0].iov_len + (n - 1) * iov[1].iov_len;` | slirp/socket.c | exported | Unvalidated |
 | `soread` | slirp/socket.c | left out | not translated yet |
-| `int n, nn; struct sbuf *sb = &so->so_snd; struct iovec iov[2]; ; ; sopreprbuf(so, iov, &n); nn…` | slirp/socket.c | left out | not translated yet |
-| `if (nn <= 0)` | slirp/socket.c | left out | not translated yet |
-| `if (n == 2 && nn == iov[0].iov_len)` | slirp/socket.c | left out | not translated yet |
-| `; sb->sb_cc += nn; sb->sb_wptr += nn;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_wptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | left out | not translated yet |
-| `return nn;` | slirp/socket.c | left out | not translated yet |
+| `int n, nn; struct sbuf *sb = &so->so_snd; struct iovec iov[2]; ; ; sopreprbuf(so, iov, &n); nn…` | slirp/socket.c | exported | Unvalidated |
+| `if (nn <= 0)` | slirp/socket.c | exported | Unvalidated |
+| `if (n == 2 && nn == iov[0].iov_len)` | slirp/socket.c | exported | Unvalidated |
+| `; sb->sb_cc += nn; sb->sb_wptr += nn;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_wptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | exported | Unvalidated |
+| `return nn;` | slirp/socket.c | exported | Unvalidated |
 | `soreadbuf` | slirp/socket.c | left out | not translated yet |
-| `int n, nn, copy = size; struct sbuf *sb = &so->so_snd; struct iovec iov[2]; ; ;` | slirp/socket.c | left out | not translated yet |
-| `if (sopreprbuf(so, iov, &n) < size)` | slirp/socket.c | left out | not translated yet |
-| `nn = ((iov[0].iov_len) < (copy) ? (iov[0].iov_len) : (copy)); memcpy(iov[0].iov_base, buf, nn);…` | slirp/socket.c | left out | not translated yet |
-| `if (copy == 0)` | slirp/socket.c | left out | not translated yet |
-| `memcpy(iov[1].iov_base, buf, copy);` | slirp/socket.c | left out | not translated yet |
-| `done: sb->sb_cc += size;` | slirp/socket.c | left out | not translated yet |
-| `sb->sb_wptr += size;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_wptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | left out | not translated yet |
-| `return size;` | slirp/socket.c | left out | not translated yet |
-| `err: sofcantrcvmore(so);` | slirp/socket.c | left out | not translated yet |
-| `tcp_sockclosed(((so)->so_tcpcb)); fprintf( stderr , "soreadbuf buffer to small"); return -1;` | slirp/socket.c | left out | not translated yet |
+| `int n, nn, copy = size; struct sbuf *sb = &so->so_snd; struct iovec iov[2]; ; ;` | slirp/socket.c | exported | Unvalidated |
+| `if (sopreprbuf(so, iov, &n) < size)` | slirp/socket.c | exported | Unvalidated |
+| `nn = ((iov[0].iov_len) < (copy) ? (iov[0].iov_len) : (copy)); memcpy(iov[0].iov_base, buf, nn);…` | slirp/socket.c | exported | Unvalidated |
+| `if (copy == 0)` | slirp/socket.c | exported | Unvalidated |
+| `memcpy(iov[1].iov_base, buf, copy);` | slirp/socket.c | exported | Unvalidated |
+| `done: sb->sb_cc += size;` | slirp/socket.c | exported | Unvalidated |
+| `sb->sb_wptr += size;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_wptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | exported | Unvalidated |
+| `return size;` | slirp/socket.c | exported | Unvalidated |
+| `err: sofcantrcvmore(so);` | slirp/socket.c | exported | Unvalidated |
+| `tcp_sockclosed(((so)->so_tcpcb)); fprintf( stderr , "soreadbuf buffer to small"); return -1;` | slirp/socket.c | exported | Unvalidated |
 | `sorecvoob` | slirp/socket.c | left out | not translated yet |
-| `struct tcpcb *tp = ((so)->so_tcpcb); ; ; soread(so); tp->snd_up = tp->snd_una + so->so_snd.sb_c…` | slirp/socket.c | left out | not translated yet |
+| `struct tcpcb *tp = ((so)->so_tcpcb); ; ; soread(so); tp->snd_up = tp->snd_una + so->so_snd.sb_c…` | slirp/socket.c | exported | Unvalidated |
 | `sosendoob` | slirp/socket.c | left out | not translated yet |
-| `struct sbuf *sb = &so->so_rcv; char buff[2048]; int n, len; ; ; ;` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_urgc > 2048)` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_rptr < sb->sb_wptr) … else` | slirp/socket.c | left out | not translated yet |
-| `sb->sb_cc -= n; sb->sb_rptr += n;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_rptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | left out | not translated yet |
-| `return n;` | slirp/socket.c | left out | not translated yet |
+| `struct sbuf *sb = &so->so_rcv; char buff[2048]; int n, len; ; ; ;` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_urgc > 2048)` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_rptr < sb->sb_wptr) … else` | slirp/socket.c | exported | Unvalidated |
+| `sb->sb_cc -= n; sb->sb_rptr += n;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_rptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | exported | Unvalidated |
+| `return n;` | slirp/socket.c | exported | Unvalidated |
 | `sowrite` | slirp/socket.c | left out | not translated yet |
-| `int n,nn; struct sbuf *sb = &so->so_rcv; int len = sb->sb_cc; struct iovec iov[2]; ; ;` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_urgc)` | slirp/socket.c | left out | not translated yet |
-| `iov[0].iov_base = sb->sb_rptr; iov[1].iov_base = ((void *)0) ; iov[1].iov_len = 0;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_rptr < sb->sb_wptr) … else` | slirp/socket.c | left out | not translated yet |
-| `nn = slirp_send(so, iov[0].iov_base, iov[0].iov_len,0);` | slirp/socket.c | left out | not translated yet |
-| `if (nn < 0 && ( (*__errno_location ()) == 11 || (*__errno_location ()) == 4)` | slirp/socket.c | left out | not translated yet |
-| `if (nn <= 0)` | slirp/socket.c | left out | not translated yet |
-| `if (n == 2 && nn == iov[0].iov_len)` | slirp/socket.c | left out | not translated yet |
-| `; sb->sb_cc -= nn; sb->sb_rptr += nn;` | slirp/socket.c | left out | not translated yet |
-| `if (sb->sb_rptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_state & 0x040) && sb->sb_cc == 0)` | slirp/socket.c | left out | not translated yet |
-| `return nn;` | slirp/socket.c | left out | not translated yet |
+| `int n,nn; struct sbuf *sb = &so->so_rcv; int len = sb->sb_cc; struct iovec iov[2]; ; ;` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_urgc)` | slirp/socket.c | exported | Unvalidated |
+| `iov[0].iov_base = sb->sb_rptr; iov[1].iov_base = ((void *)0) ; iov[1].iov_len = 0;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_rptr < sb->sb_wptr) … else` | slirp/socket.c | exported | Unvalidated |
+| `nn = slirp_send(so, iov[0].iov_base, iov[0].iov_len,0);` | slirp/socket.c | exported | Unvalidated |
+| `if (nn < 0 && ( (*__errno_location ()) == 11 || (*__errno_location ()) == 4)` | slirp/socket.c | exported | Unvalidated |
+| `if (nn <= 0)` | slirp/socket.c | exported | Unvalidated |
+| `if (n == 2 && nn == iov[0].iov_len)` | slirp/socket.c | exported | Unvalidated |
+| `; sb->sb_cc -= nn; sb->sb_rptr += nn;` | slirp/socket.c | exported | Unvalidated |
+| `if (sb->sb_rptr >= (sb->sb_data + sb->sb_datalen)` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_state & 0x040) && sb->sb_cc == 0)` | slirp/socket.c | exported | Unvalidated |
+| `return nn;` | slirp/socket.c | exported | Unvalidated |
 | `sorecvfrom` | slirp/socket.c | left out | not translated yet |
-| `struct sockaddr_in addr; socklen_t addrlen = sizeof(struct sockaddr_in); ; ;` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_type == IPPROTO_ICMP) … else` | slirp/socket.c | left out | not translated yet |
+| `struct sockaddr_in addr; socklen_t addrlen = sizeof(struct sockaddr_in); ; ;` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_type == IPPROTO_ICMP) … else` | slirp/socket.c | exported | Unvalidated |
 | `sosendto` | slirp/socket.c | left out | not translated yet |
-| `Slirp *slirp = so->slirp; int ret; struct sockaddr_in addr; ; ; ; addr.sin_family = 2 ;` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) == slirp->vnetwork_addr.s_addr) … else` | slirp/socket.c | left out | not translated yet |
-| `addr.sin_port = so->so_fport; ; ret = sendto(so->s, m->m_hdr.mh_data, m->m_hdr.mh_len, 0, (stru…` | slirp/socket.c | left out | not translated yet |
-| `if (ret < 0)` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_expire)` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= 0xf000; so->so_state |= 0x004; return 0;` | slirp/socket.c | left out | not translated yet |
+| `Slirp *slirp = so->slirp; int ret; struct sockaddr_in addr; ; ; ; addr.sin_family = 2 ;` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) == slirp->vnetwork_addr.s_addr) … else` | slirp/socket.c | exported | Unvalidated |
+| `addr.sin_port = so->so_fport; ; ret = sendto(so->s, m->m_hdr.mh_data, m->m_hdr.mh_len, 0, (stru…` | slirp/socket.c | exported | Unvalidated |
+| `if (ret < 0)` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_expire)` | slirp/socket.c | exported | Unvalidated |
+| `so->so_state &= 0xf000; so->so_state |= 0x004; return 0;` | slirp/socket.c | exported | Unvalidated |
 | `tcp_listen` | slirp/socket.c | left out | not translated yet |
-| `struct sockaddr_in addr; struct socket *so; int s, opt = 1; socklen_t addrlen = sizeof(addr); m…` | slirp/socket.c | left out | not translated yet |
-| `if (!so)` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_tcpcb = tcp_newtcpcb(so)) == ((void *)0)` | slirp/socket.c | left out | not translated yet |
-| `slirp_insque(so, &slirp->tcb);` | slirp/socket.c | left out | not translated yet |
-| `if (flags & 0x200)` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= 0xf000; so->so_state |= (0x100 | flags); so->so_lport = lport; so->so_laddr.s_a…` | slirp/socket.c | left out | not translated yet |
-| `if (s = os_socket( 2 , SOCK_STREAM ,0)) < 0) || (setsockopt(s, 1 , 2 ,(char *)&opt,sizeof(int))…` | slirp/socket.c | left out | not translated yet |
-| `setsockopt(s, 1 , 10 ,(char *)&opt,sizeof(int)); getsockname(s,(struct sockaddr *)&addr,&addrle…` | slirp/socket.c | left out | not translated yet |
-| `if (addr.sin_addr.s_addr == 0 || addr.sin_addr.s_addr == loopback_addr.s_addr) … else` | slirp/socket.c | left out | not translated yet |
-| `so->s = s; return so;` | slirp/socket.c | left out | not translated yet |
+| `struct sockaddr_in addr; struct socket *so; int s, opt = 1; socklen_t addrlen = sizeof(addr); m…` | slirp/socket.c | exported | Unvalidated |
+| `if (!so)` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_tcpcb = tcp_newtcpcb(so)) == ((void *)0)` | slirp/socket.c | exported | Unvalidated |
+| `slirp_insque(so, &slirp->tcb);` | slirp/socket.c | exported | Unvalidated |
+| `if (flags & 0x200)` | slirp/socket.c | exported | Unvalidated |
+| `so->so_state &= 0xf000; so->so_state |= (0x100 | flags); so->so_lport = lport; so->so_laddr.s_a…` | slirp/socket.c | exported | Unvalidated |
+| `if (s = os_socket( 2 , SOCK_STREAM ,0)) < 0) || (setsockopt(s, 1 , 2 ,(char *)&opt,sizeof(int))…` | slirp/socket.c | exported | Unvalidated |
+| `setsockopt(s, 1 , 10 ,(char *)&opt,sizeof(int)); getsockname(s,(struct sockaddr *)&addr,&addrle…` | slirp/socket.c | exported | Unvalidated |
+| `if (addr.sin_addr.s_addr == 0 || addr.sin_addr.s_addr == loopback_addr.s_addr) … else` | slirp/socket.c | exported | Unvalidated |
+| `so->s = s; return so;` | slirp/socket.c | exported | Unvalidated |
 | `soisfconnecting` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= ~(0x001|0x004|0x008| 0x010|0x040); so->so_state |= 0x002;` | slirp/socket.c | left out | not translated yet |
+| `so->so_state &= ~(0x001|0x004|0x008| 0x010|0x040); so->so_state |= 0x002;` | slirp/socket.c | exported | Unvalidated |
 | `soisfconnected` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= ~(0x002|0x040|0x001); so->so_state |= 0x004;` | slirp/socket.c | left out | not translated yet |
+| `so->so_state &= ~(0x002|0x040|0x001); so->so_state |= 0x004;` | slirp/socket.c | exported | Unvalidated |
 | `sofcantrcvmore` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_state & 0x001) == 0)` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= ~(0x002);` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_state & 0x010) … else` | slirp/socket.c | left out | not translated yet |
+| `if (so->so_state & 0x001) == 0)` | slirp/socket.c | exported | Unvalidated |
+| `so->so_state &= ~(0x002);` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_state & 0x010) … else` | slirp/socket.c | exported | Unvalidated |
 | `sofcantsendmore` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_state & 0x001) == 0)` | slirp/socket.c | left out | not translated yet |
-| `so->so_state &= ~(0x002);` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_state & 0x008) … else` | slirp/socket.c | left out | not translated yet |
+| `if (so->so_state & 0x001) == 0)` | slirp/socket.c | exported | Unvalidated |
+| `so->so_state &= ~(0x002);` | slirp/socket.c | exported | Unvalidated |
+| `if (so->so_state & 0x008) … else` | slirp/socket.c | exported | Unvalidated |
 | `sofwdrain` | slirp/socket.c | left out | not translated yet |
-| `if (so->so_rcv.sb_cc) … else` | slirp/socket.c | left out | not translated yet |
+| `if (so->so_rcv.sb_cc) … else` | slirp/socket.c | exported | Unvalidated |
 | `tcp_reass` | slirp/tcp_input.c | left out | not translated yet |
-| `if (ti == ((void *)0)` | slirp/tcp_input.c | left out | not translated yet |
-| `for (q = ((struct tcpiphdr*)(((char*)((tp)->seg_next)) + sizeof(struct qlink); !(((struct qlink…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (!(((struct qlink*)(((char*)(((struct tcpiphdr*)(((char*)(((struct qlink*)(((char*)(q)) - si…` | slirp/tcp_input.c | left out | not translated yet |
-| `ti->ti_i.ih_mbuf.mptr = m;` | slirp/tcp_input.c | left out | not translated yet |
-| `while (!(((struct qlink*)(((char*)(q)) - sizeof(struct qlink))) == (struct qlink*)(tp)` | slirp/tcp_input.c | left out | not translated yet |
-| `slirp_insque(((struct qlink*)(((char*)(ti)) - sizeof(struct qlink))), ((struct qlink*)(((char*)…` | slirp/tcp_input.c | left out | not translated yet |
-| `present: if (!((tp->t_state) >= 4)) return (0);` | slirp/tcp_input.c | left out | not translated yet |
-| `ti = ((struct tcpiphdr*)(((char*)((tp)->seg_next)) + sizeof(struct qlink)));` | slirp/tcp_input.c | left out | not translated yet |
-| `if ((struct qlink*)(((char*)(ti)) - sizeof(struct qlink))) == (struct qlink*)(tp)) || ti->ti_t.…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tp->t_state == 3 && ti->ti_i.ih_len)` | slirp/tcp_input.c | left out | not translated yet |
-| `do … while (ti != (struct tcpiphdr *)tp && ti->ti_t.th_seq == tp->rcv_nxt)` | slirp/tcp_input.c | left out | not translated yet |
-| `return (flags);` | slirp/tcp_input.c | left out | not translated yet |
+| `if (ti == ((void *)0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `for (q = ((struct tcpiphdr*)(((char*)((tp)->seg_next)) + sizeof(struct qlink); !(((struct qlink…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (!(((struct qlink*)(((char*)(((struct tcpiphdr*)(((char*)(((struct qlink*)(((char*)(q)) - si…` | slirp/tcp_input.c | exported | Unvalidated |
+| `ti->ti_i.ih_mbuf.mptr = m;` | slirp/tcp_input.c | exported | Unvalidated |
+| `while (!(((struct qlink*)(((char*)(q)) - sizeof(struct qlink))) == (struct qlink*)(tp)` | slirp/tcp_input.c | exported | Unvalidated |
+| `slirp_insque(((struct qlink*)(((char*)(ti)) - sizeof(struct qlink))), ((struct qlink*)(((char*)…` | slirp/tcp_input.c | exported | Unvalidated |
+| `present: if (!((tp->t_state) >= 4)) return (0);` | slirp/tcp_input.c | exported | Unvalidated |
+| `ti = ((struct tcpiphdr*)(((char*)((tp)->seg_next)) + sizeof(struct qlink)));` | slirp/tcp_input.c | exported | Unvalidated |
+| `if ((struct qlink*)(((char*)(ti)) - sizeof(struct qlink))) == (struct qlink*)(tp)) || ti->ti_t.…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tp->t_state == 3 && ti->ti_i.ih_len)` | slirp/tcp_input.c | exported | Unvalidated |
+| `do … while (ti != (struct tcpiphdr *)tp && ti->ti_t.th_seq == tp->rcv_nxt)` | slirp/tcp_input.c | exported | Unvalidated |
+| `return (flags);` | slirp/tcp_input.c | exported | Unvalidated |
 | `tcp_input` | slirp/tcp_input.c | left out | not translated yet |
-| `struct ip save_ip, *ip; register struct tcpiphdr *ti; caddr_t optp = ((void *)0) ; int optlen =…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (m == ((void *)0)` | slirp/tcp_input.c | left out | not translated yet |
-| `slirp = m->slirp; ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);` | slirp/tcp_input.c | left out | not translated yet |
-| `if (iphlen > sizeof(struct ip ))` | slirp/tcp_input.c | left out | not translated yet |
-| `ip=((struct ip *)(m)->m_hdr.mh_data); save_ip = *ip; save_ip.ip_len+= iphlen; tlen = ((struct i…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (cksum(m, len))` | slirp/tcp_input.c | left out | not translated yet |
-| `off = ti->ti_t.th_off << 2;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (off < sizeof (struct tcphdr) || off > tlen)` | slirp/tcp_input.c | left out | not translated yet |
-| `tlen -= off; ti->ti_i.ih_len = tlen;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (off > sizeof (struct tcphdr))` | slirp/tcp_input.c | left out | not translated yet |
-| `tiflags = ti->ti_t.th_flags; ((ti->ti_t.th_seq) = ntohl((ti->ti_t.th_seq))); ((ti->ti_t.th_ack)…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (slirp->restricted)` | slirp/tcp_input.c | left out | not translated yet |
-| `findso: so = slirp->tcp_last_so;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (so->so_fport != ti->ti_t.th_dport || so->so_lport != ti->ti_t.th_sport || so->so_laddr.s_ad…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (so == ((void *)0)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (so->so_state & 0x002)` | slirp/tcp_input.c | left out | not translated yet |
-| `tp = ((so)->so_tcpcb);` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tp == ((void *)0)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tp->t_state == 0)` | slirp/tcp_input.c | left out | not translated yet |
-| `tiwin = ti->ti_t.th_win; tp->t_idle = 0;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (0) … else` | slirp/tcp_input.c | left out | not translated yet |
-| `if (optp && tp->t_state != 1)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tp->t_state == 4 && (tiflags & (0x02|0x01|0x04|0x20|0x10)) == 0x10 && ti->ti_t.th_seq == tp…` | slirp/tcp_input.c | left out | not translated yet |
-| `{ … }` | slirp/tcp_input.c | left out | not translated yet |
-| `switch (tp->t_state)` | slirp/tcp_input.c | left out | not translated yet |
-| `todrop = tp->rcv_nxt - ti->ti_t.th_seq;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (todrop > 0)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (so->so_state & 0x001) && tp->t_state > 5 && ti->ti_i.ih_len)` | slirp/tcp_input.c | left out | not translated yet |
-| `todrop = (ti->ti_t.th_seq+ti->ti_i.ih_len) - (tp->rcv_nxt+tp->rcv_wnd);` | slirp/tcp_input.c | left out | not translated yet |
-| `if (todrop > 0)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tiflags&0x04)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tiflags & 0x02)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tiflags & 0x10) == 0)` | slirp/tcp_input.c | left out | not translated yet |
-| `switch (tp->t_state)` | slirp/tcp_input.c | left out | not translated yet |
-| `step6: if ((tiflags & 0x10) && (((int)((tp->snd_wl1)-(ti->ti_t.th_seq)) < 0) || (tp->snd_wl1 ==…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tiflags & 0x20) && ti->ti_t.th_urp && ((tp->t_state) >= 10) == 0) … else` | slirp/tcp_input.c | left out | not translated yet |
-| `dodata: if ((ti->ti_i.ih_len || (tiflags&0x01)) && ((tp->t_state) >= 10) == 0) { { if ((ti)->ti…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tiflags & 0x01)` | slirp/tcp_input.c | left out | not translated yet |
-| `if (ti->ti_i.ih_len && (unsigned)ti->ti_i.ih_len <= 5 && ((struct tcpiphdr_2 *)ti)->first_char…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (needoutput || (tp->t_flags & 0x0001)` | slirp/tcp_input.c | left out | not translated yet |
-| `return;` | slirp/tcp_input.c | left out | not translated yet |
-| `dropafterack: if (tiflags & 0x04) goto drop;` | slirp/tcp_input.c | left out | not translated yet |
-| `m_free(m); tp->t_flags |= 0x0001; (void) tcp_output(tp); return;` | slirp/tcp_input.c | left out | not translated yet |
-| `dropwithreset: if (tiflags & 0x10) tcp_respond(tp, ti, m, (tcp_seq)0, ti->ti_t.th_ack, 0x04); e…` | slirp/tcp_input.c | left out | not translated yet |
-| `return;` | slirp/tcp_input.c | left out | not translated yet |
-| `drop: m_free(m);` | slirp/tcp_input.c | left out | not translated yet |
-| `return;` | slirp/tcp_input.c | left out | not translated yet |
+| `struct ip save_ip, *ip; register struct tcpiphdr *ti; caddr_t optp = ((void *)0) ; int optlen =…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (m == ((void *)0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `slirp = m->slirp; ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (iphlen > sizeof(struct ip ))` | slirp/tcp_input.c | exported | Unvalidated |
+| `ip=((struct ip *)(m)->m_hdr.mh_data); save_ip = *ip; save_ip.ip_len+= iphlen; tlen = ((struct i…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (cksum(m, len))` | slirp/tcp_input.c | exported | Unvalidated |
+| `off = ti->ti_t.th_off << 2;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (off < sizeof (struct tcphdr) || off > tlen)` | slirp/tcp_input.c | exported | Unvalidated |
+| `tlen -= off; ti->ti_i.ih_len = tlen;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (off > sizeof (struct tcphdr))` | slirp/tcp_input.c | exported | Unvalidated |
+| `tiflags = ti->ti_t.th_flags; ((ti->ti_t.th_seq) = ntohl((ti->ti_t.th_seq))); ((ti->ti_t.th_ack)…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (slirp->restricted)` | slirp/tcp_input.c | exported | Unvalidated |
+| `findso: so = slirp->tcp_last_so;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (so->so_fport != ti->ti_t.th_dport || so->so_lport != ti->ti_t.th_sport || so->so_laddr.s_ad…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (so == ((void *)0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (so->so_state & 0x002)` | slirp/tcp_input.c | exported | Unvalidated |
+| `tp = ((so)->so_tcpcb);` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tp == ((void *)0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tp->t_state == 0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `tiwin = ti->ti_t.th_win; tp->t_idle = 0;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (0) … else` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (optp && tp->t_state != 1)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tp->t_state == 4 && (tiflags & (0x02|0x01|0x04|0x20|0x10)) == 0x10 && ti->ti_t.th_seq == tp…` | slirp/tcp_input.c | exported | Unvalidated |
+| `{ … }` | slirp/tcp_input.c | exported | Unvalidated |
+| `switch (tp->t_state)` | slirp/tcp_input.c | left out | still being translated |
+| `todrop = tp->rcv_nxt - ti->ti_t.th_seq;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (todrop > 0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (so->so_state & 0x001) && tp->t_state > 5 && ti->ti_i.ih_len)` | slirp/tcp_input.c | exported | Unvalidated |
+| `todrop = (ti->ti_t.th_seq+ti->ti_i.ih_len) - (tp->rcv_nxt+tp->rcv_wnd);` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (todrop > 0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tiflags&0x04)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tiflags & 0x02)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tiflags & 0x10) == 0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `switch (tp->t_state)` | slirp/tcp_input.c | left out | still being translated |
+| `step6: if ((tiflags & 0x10) && (((int)((tp->snd_wl1)-(ti->ti_t.th_seq)) < 0) || (tp->snd_wl1 ==…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tiflags & 0x20) && ti->ti_t.th_urp && ((tp->t_state) >= 10) == 0) … else` | slirp/tcp_input.c | exported | Unvalidated |
+| `dodata: if ((ti->ti_i.ih_len || (tiflags&0x01)) && ((tp->t_state) >= 10) == 0) { { if ((ti)->ti…` | slirp/tcp_input.c | left out | still being translated |
+| `if (tiflags & 0x01)` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (ti->ti_i.ih_len && (unsigned)ti->ti_i.ih_len <= 5 && ((struct tcpiphdr_2 *)ti)->first_char…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (needoutput || (tp->t_flags & 0x0001)` | slirp/tcp_input.c | exported | Unvalidated |
+| `return;` | slirp/tcp_input.c | exported | Unvalidated |
+| `dropafterack: if (tiflags & 0x04) goto drop;` | slirp/tcp_input.c | exported | Unvalidated |
+| `m_free(m); tp->t_flags |= 0x0001; (void) tcp_output(tp); return;` | slirp/tcp_input.c | exported | Unvalidated |
+| `dropwithreset: if (tiflags & 0x10) tcp_respond(tp, ti, m, (tcp_seq)0, ti->ti_t.th_ack, 0x04); e…` | slirp/tcp_input.c | exported | Unvalidated |
+| `return;` | slirp/tcp_input.c | exported | Unvalidated |
+| `drop: m_free(m);` | slirp/tcp_input.c | exported | Unvalidated |
+| `return;` | slirp/tcp_input.c | exported | Unvalidated |
 | `tcp_dooptions` | slirp/tcp_input.c | left out | not translated yet |
-| `uint16_t mss; int opt, optlen; ; ;` | slirp/tcp_input.c | left out | not translated yet |
-| `for (; cnt > 0; cnt -= optlen, cp += optlen)` | slirp/tcp_input.c | left out | not translated yet |
+| `uint16_t mss; int opt, optlen; ; ;` | slirp/tcp_input.c | exported | Unvalidated |
+| `for (; cnt > 0; cnt -= optlen, cp += optlen)` | slirp/tcp_input.c | exported | Unvalidated |
 | `tcp_xmit_timer` | slirp/tcp_input.c | left out | not translated yet |
-| `register short delta; ; ; ;` | slirp/tcp_input.c | left out | not translated yet |
-| `if (tp->t_srtt != 0) … else` | slirp/tcp_input.c | left out | not translated yet |
-| `tp->t_rtt = 0; tp->t_rxtshift = 0;` | slirp/tcp_input.c | left out | not translated yet |
-| `{ … }` | slirp/tcp_input.c | left out | not translated yet |
-| `; tp->t_softerror = 0;` | slirp/tcp_input.c | left out | not translated yet |
+| `register short delta; ; ; ;` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (tp->t_srtt != 0) … else` | slirp/tcp_input.c | exported | Unvalidated |
+| `tp->t_rtt = 0; tp->t_rxtshift = 0;` | slirp/tcp_input.c | exported | Unvalidated |
+| `{ … }` | slirp/tcp_input.c | exported | Unvalidated |
+| `; tp->t_softerror = 0;` | slirp/tcp_input.c | exported | Unvalidated |
 | `tcp_mss` | slirp/tcp_input.c | left out | not translated yet |
-| `struct socket *so = tp->t_socket; int mss; ; ; ; mss = ((1500) < (1500) ? (1500) : (1500)) - si…` | slirp/tcp_input.c | left out | not translated yet |
-| `if (offer)` | slirp/tcp_input.c | left out | not translated yet |
-| `mss = ((mss) > (32) ? (mss) : (32));` | slirp/tcp_input.c | left out | not translated yet |
-| `if (mss < tp->t_maxseg || offer != 0)` | slirp/tcp_input.c | left out | not translated yet |
-| `tp->snd_cwnd = mss; sbreserve(&so->so_snd, 8192 + ((8192 % mss) ? (mss - (8192 % mss)) : 0)); s…` | slirp/tcp_input.c | left out | not translated yet |
+| `struct socket *so = tp->t_socket; int mss; ; ; ; mss = ((1500) < (1500) ? (1500) : (1500)) - si…` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (offer)` | slirp/tcp_input.c | exported | Unvalidated |
+| `mss = ((mss) > (32) ? (mss) : (32));` | slirp/tcp_input.c | exported | Unvalidated |
+| `if (mss < tp->t_maxseg || offer != 0)` | slirp/tcp_input.c | exported | Unvalidated |
+| `tp->snd_cwnd = mss; sbreserve(&so->so_snd, 8192 + ((8192 % mss) ? (mss - (8192 % mss)) : 0)); s…` | slirp/tcp_input.c | exported | Unvalidated |
 | `tcp_output` | slirp/tcp_output.c | left out | not translated yet |
-| `register struct socket *so = tp->t_socket; register long len, win; int off, flags, error; regis…` | slirp/tcp_output.c | left out | not translated yet |
-| `if (idle && tp->t_idle >= tp->t_rxtcur)` | slirp/tcp_output.c | left out | not translated yet |
-| `again: sendalot = 0;` | slirp/tcp_output.c | left out | not translated yet |
-| `off = tp->snd_nxt - tp->snd_una; win = ((tp->snd_wnd) < (tp->snd_cwnd) ? (tp->snd_wnd) : (tp->s…` | slirp/tcp_output.c | left out | not translated yet |
-| `if (tp->t_force)` | slirp/tcp_output.c | left out | not translated yet |
-| `len = ((so->so_snd.sb_cc) < (win) ? (so->so_snd.sb_cc) : (win)) - off;` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len < 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len > tp->t_maxseg)` | slirp/tcp_output.c | left out | not translated yet |
-| `if ((int)((tp->snd_nxt + len)-(tp->snd_una + so->so_snd.sb_cc)) < 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `win = ((&so->so_rcv)->sb_datalen - (&so->so_rcv)->sb_cc);` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (win > 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (tp->t_flags & 0x0001)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (flags & (0x02|0x04)` | slirp/tcp_output.c | left out | not translated yet |
-| `if ((int)((tp->snd_up)-(tp->snd_una)) > 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (flags & 0x01 && ((tp->t_flags & 0x0010) == 0 || tp->snd_nxt == tp->snd_una)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (so->so_snd.sb_cc && tp->t_timer[0] == 0 && tp->t_timer[1] == 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `return (0);` | slirp/tcp_output.c | left out | not translated yet |
-| `send: optlen = 0;` | slirp/tcp_output.c | left out | not translated yet |
-| `hdrlen = sizeof (struct tcpiphdr);` | slirp/tcp_output.c | left out | not translated yet |
-| `if (flags & 0x02)` | slirp/tcp_output.c | left out | not translated yet |
-| `hdrlen += optlen;` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len > tp->t_maxseg - optlen)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len) … else` | slirp/tcp_output.c | left out | not translated yet |
-| `ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data); memcpy((caddr_t)ti, &tp->t_template, sizeof (stru…` | slirp/tcp_output.c | left out | not translated yet |
-| `if (flags & 0x01 && tp->t_flags & 0x0010 && tp->snd_nxt == tp->snd_max)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len || (flags & (0x02|0x01)) || tp->t_timer[1]) … else` | slirp/tcp_output.c | left out | not translated yet |
-| `ti->ti_t.th_ack = htonl(tp->rcv_nxt);` | slirp/tcp_output.c | left out | not translated yet |
-| `if (optlen)` | slirp/tcp_output.c | left out | not translated yet |
-| `ti->ti_t.th_flags = flags;` | slirp/tcp_output.c | left out | not translated yet |
-| `if (win < (long)(so->so_rcv.sb_datalen / 4) && win < (long)tp->t_maxseg)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (win > (long)65535 << tp->rcv_scale)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (win < (long)(tp->rcv_adv - tp->rcv_nxt)` | slirp/tcp_output.c | left out | not translated yet |
-| `ti->ti_t.th_win = htons((uint16_t) (win>>tp->rcv_scale));` | slirp/tcp_output.c | left out | not translated yet |
-| `if ((int)((tp->snd_up)-(tp->snd_una)) > 0) … else` | slirp/tcp_output.c | left out | not translated yet |
-| `if (len + optlen)` | slirp/tcp_output.c | left out | not translated yet |
-| `ti->ti_t.th_sum = cksum(m, (int)(hdrlen + len));` | slirp/tcp_output.c | left out | not translated yet |
-| `if (tp->t_force == 0 || tp->t_timer[1] == 0) … else` | slirp/tcp_output.c | left out | not translated yet |
-| `m->m_hdr.mh_len = hdrlen + len;` | slirp/tcp_output.c | left out | not translated yet |
-| `{ … }` | slirp/tcp_output.c | left out | not translated yet |
-| `if (error)` | slirp/tcp_output.c | left out | not translated yet |
-| `if (win > 0 && ((int)((tp->rcv_nxt+win)-(tp->rcv_adv)) > 0)` | slirp/tcp_output.c | left out | not translated yet |
-| `tp->last_ack_sent = tp->rcv_nxt; tp->t_flags &= ~(0x0001|0x0002);` | slirp/tcp_output.c | left out | not translated yet |
-| `if (sendalot)` | slirp/tcp_output.c | left out | not translated yet |
-| `return (0);` | slirp/tcp_output.c | left out | not translated yet |
+| `register struct socket *so = tp->t_socket; register long len, win; int off, flags, error; regis…` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (idle && tp->t_idle >= tp->t_rxtcur)` | slirp/tcp_output.c | exported | Unvalidated |
+| `again: sendalot = 0;` | slirp/tcp_output.c | exported | Unvalidated |
+| `off = tp->snd_nxt - tp->snd_una; win = ((tp->snd_wnd) < (tp->snd_cwnd) ? (tp->snd_wnd) : (tp->s…` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (tp->t_force)` | slirp/tcp_output.c | exported | Unvalidated |
+| `len = ((so->so_snd.sb_cc) < (win) ? (so->so_snd.sb_cc) : (win)) - off;` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len < 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len > tp->t_maxseg)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if ((int)((tp->snd_nxt + len)-(tp->snd_una + so->so_snd.sb_cc)) < 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `win = ((&so->so_rcv)->sb_datalen - (&so->so_rcv)->sb_cc);` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (win > 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (tp->t_flags & 0x0001)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (flags & (0x02|0x04)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if ((int)((tp->snd_up)-(tp->snd_una)) > 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (flags & 0x01 && ((tp->t_flags & 0x0010) == 0 || tp->snd_nxt == tp->snd_una)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (so->so_snd.sb_cc && tp->t_timer[0] == 0 && tp->t_timer[1] == 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `return (0);` | slirp/tcp_output.c | exported | Unvalidated |
+| `send: optlen = 0;` | slirp/tcp_output.c | exported | Unvalidated |
+| `hdrlen = sizeof (struct tcpiphdr);` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (flags & 0x02)` | slirp/tcp_output.c | exported | Unvalidated |
+| `hdrlen += optlen;` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len > tp->t_maxseg - optlen)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len) … else` | slirp/tcp_output.c | exported | Unvalidated |
+| `ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data); memcpy((caddr_t)ti, &tp->t_template, sizeof (stru…` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (flags & 0x01 && tp->t_flags & 0x0010 && tp->snd_nxt == tp->snd_max)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len || (flags & (0x02|0x01)) || tp->t_timer[1]) … else` | slirp/tcp_output.c | exported | Unvalidated |
+| `ti->ti_t.th_ack = htonl(tp->rcv_nxt);` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (optlen)` | slirp/tcp_output.c | exported | Unvalidated |
+| `ti->ti_t.th_flags = flags;` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (win < (long)(so->so_rcv.sb_datalen / 4) && win < (long)tp->t_maxseg)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (win > (long)65535 << tp->rcv_scale)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (win < (long)(tp->rcv_adv - tp->rcv_nxt)` | slirp/tcp_output.c | exported | Unvalidated |
+| `ti->ti_t.th_win = htons((uint16_t) (win>>tp->rcv_scale));` | slirp/tcp_output.c | exported | Unvalidated |
+| `if ((int)((tp->snd_up)-(tp->snd_una)) > 0) … else` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (len + optlen)` | slirp/tcp_output.c | exported | Unvalidated |
+| `ti->ti_t.th_sum = cksum(m, (int)(hdrlen + len));` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (tp->t_force == 0 || tp->t_timer[1] == 0) … else` | slirp/tcp_output.c | exported | Unvalidated |
+| `m->m_hdr.mh_len = hdrlen + len;` | slirp/tcp_output.c | exported | Unvalidated |
+| `{ … }` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (error)` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (win > 0 && ((int)((tp->rcv_nxt+win)-(tp->rcv_adv)) > 0)` | slirp/tcp_output.c | exported | Unvalidated |
+| `tp->last_ack_sent = tp->rcv_nxt; tp->t_flags &= ~(0x0001|0x0002);` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (sendalot)` | slirp/tcp_output.c | exported | Unvalidated |
+| `return (0);` | slirp/tcp_output.c | exported | Unvalidated |
 | `tcp_setpersist` | slirp/tcp_output.c | left out | not translated yet |
-| `{ … }` | slirp/tcp_output.c | left out | not translated yet |
-| `;` | slirp/tcp_output.c | left out | not translated yet |
-| `if (tp->t_rxtshift < 12)` | slirp/tcp_output.c | left out | not translated yet |
+| `{ … }` | slirp/tcp_output.c | exported | Unvalidated |
+| `;` | slirp/tcp_output.c | exported | Unvalidated |
+| `if (tp->t_rxtshift < 12)` | slirp/tcp_output.c | exported | Unvalidated |
 | `tcp_init` | slirp/tcp_subr.c | left out | not translated yet |
-| `slirp->tcp_iss = 1; slirp->tcb.so_next = slirp->tcb.so_prev = &slirp->tcb; slirp->tcp_last_so =…` | slirp/tcp_subr.c | left out | not translated yet |
+| `slirp->tcp_iss = 1; slirp->tcb.so_next = slirp->tcb.so_prev = &slirp->tcb; slirp->tcp_last_so =…` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_template` | slirp/tcp_subr.c | left out | not translated yet |
-| `struct socket *so = tp->t_socket; register struct tcpiphdr *n = &tp->t_template; n->ti_i.ih_mbu…` | slirp/tcp_subr.c | left out | not translated yet |
+| `struct socket *so = tp->t_socket; register struct tcpiphdr *n = &tp->t_template; n->ti_i.ih_mbu…` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_respond` | slirp/tcp_subr.c | left out | not translated yet |
-| `register int tlen; int win = 0; ; ; ; ; ; ; ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (tp)` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (m == ((void *)0) … else` | slirp/tcp_subr.c | left out | not translated yet |
-| `ti->ti_i.ih_len = htons((u_short)(sizeof (struct tcphdr) + tlen)); tlen += sizeof (struct tcpip…` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (tp) … else` | slirp/tcp_subr.c | left out | not translated yet |
-| `ti->ti_t.th_urp = 0; ti->ti_t.th_sum = 0; ti->ti_t.th_sum = cksum(m, tlen); ((struct ip *)ti)->…` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (flags & 0x04) … else` | slirp/tcp_subr.c | left out | not translated yet |
-| `(void) ip_output((struct socket *)0, m);` | slirp/tcp_subr.c | left out | not translated yet |
+| `register int tlen; int win = 0; ; ; ; ; ; ; ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (tp)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (m == ((void *)0) … else` | slirp/tcp_subr.c | exported | Unvalidated |
+| `ti->ti_i.ih_len = htons((u_short)(sizeof (struct tcphdr) + tlen)); tlen += sizeof (struct tcpip…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (tp) … else` | slirp/tcp_subr.c | exported | Unvalidated |
+| `ti->ti_t.th_urp = 0; ti->ti_t.th_sum = 0; ti->ti_t.th_sum = cksum(m, tlen); ((struct ip *)ti)->…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (flags & 0x04) … else` | slirp/tcp_subr.c | exported | Unvalidated |
+| `(void) ip_output((struct socket *)0, m);` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_newtcpcb` | slirp/tcp_subr.c | left out | not translated yet |
-| `register struct tcpcb *tp; tp = (struct tcpcb *)malloc(sizeof(*tp));` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (tp == ((void *)0)` | slirp/tcp_subr.c | left out | not translated yet |
-| `memset((char *) tp, 0, sizeof(struct tcpcb)); tp->seg_next = tp->seg_prev = (struct tcpiphdr*)t…` | slirp/tcp_subr.c | left out | not translated yet |
-| `{ … }` | slirp/tcp_subr.c | left out | not translated yet |
-| `; tp->snd_cwnd = 65535 << 14; tp->snd_ssthresh = 65535 << 14; tp->t_state = 0; so->so_tcpcb = t…` | slirp/tcp_subr.c | left out | not translated yet |
+| `register struct tcpcb *tp; tp = (struct tcpcb *)malloc(sizeof(*tp));` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (tp == ((void *)0)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `memset((char *) tp, 0, sizeof(struct tcpcb)); tp->seg_next = tp->seg_prev = (struct tcpiphdr*)t…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `{ … }` | slirp/tcp_subr.c | exported | Unvalidated |
+| `; tp->snd_cwnd = 65535 << 14; tp->snd_ssthresh = 65535 << 14; tp->t_state = 0; so->so_tcpcb = t…` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_drop` | slirp/tcp_subr.c | left out | not translated yet |
-| `; ; ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (tp->t_state) >= 3)` | slirp/tcp_subr.c | left out | not translated yet |
-| `return (tcp_close(tp));` | slirp/tcp_subr.c | left out | not translated yet |
+| `; ; ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (tp->t_state) >= 3)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `return (tcp_close(tp));` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_close` | slirp/tcp_subr.c | left out | not translated yet |
-| `register struct tcpiphdr *t; struct socket *so = tp->t_socket; Slirp *slirp = so->slirp; regist…` | slirp/tcp_subr.c | left out | not translated yet |
-| `while (!(((struct qlink*)(((char*)(t)) - sizeof(struct qlink))) == (struct qlink*)(tp)` | slirp/tcp_subr.c | left out | not translated yet |
-| `free(tp); so->so_tcpcb = ((void *)0) ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (so == slirp->tcp_last_so)` | slirp/tcp_subr.c | left out | not translated yet |
-| `close(so->s); sbfree(&so->so_rcv); sbfree(&so->so_snd); sofree(so); return ((struct tcpcb *)0);` | slirp/tcp_subr.c | left out | not translated yet |
+| `register struct tcpiphdr *t; struct socket *so = tp->t_socket; Slirp *slirp = so->slirp; regist…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `while (!(((struct qlink*)(((char*)(t)) - sizeof(struct qlink))) == (struct qlink*)(tp)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `free(tp); so->so_tcpcb = ((void *)0) ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (so == slirp->tcp_last_so)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `close(so->s); sbfree(&so->so_rcv); sbfree(&so->so_snd); sofree(so); return ((struct tcpcb *)0);` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_sockclosed` | slirp/tcp_subr.c | left out | not translated yet |
-| `; ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `switch (tp->t_state)` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (tp)` | slirp/tcp_subr.c | left out | not translated yet |
+| `; ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `switch (tp->t_state)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (tp)` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_fconnect` | slirp/tcp_subr.c | left out | not translated yet |
-| `Slirp *slirp = so->slirp; int ret=0; ; ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (ret = so->s = os_socket( 2 , SOCK_STREAM ,0)) >= 0)` | slirp/tcp_subr.c | left out | not translated yet |
-| `return(ret);` | slirp/tcp_subr.c | left out | not translated yet |
+| `Slirp *slirp = so->slirp; int ret=0; ; ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (ret = so->s = os_socket( 2 , SOCK_STREAM ,0)) >= 0)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `return(ret);` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_connect` | slirp/tcp_subr.c | left out | not translated yet |
-| `Slirp *slirp = inso->slirp; struct socket *so; struct sockaddr_in addr; socklen_t addrlen = siz…` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (inso->so_state & 0x200) … else` | slirp/tcp_subr.c | left out | not translated yet |
-| `(void) tcp_mss(((so)->so_tcpcb), 0);` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (s = accept(inso->s,(struct sockaddr *)&addr,&addrlen)) < 0)` | slirp/tcp_subr.c | left out | not translated yet |
-| `fd_nonblock(s); opt = 1; setsockopt(s, 1 , 2 ,(char *)&opt,sizeof(int)); opt = 1; setsockopt(s,…` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (so->so_faddr.s_addr == 0 || so->so_faddr.s_addr == loopback_addr.s_addr)` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (inso->so_state & 0x200)` | slirp/tcp_subr.c | left out | not translated yet |
-| `so->s = s; so->so_state |= 0x2000; so->so_iptos = tcp_tos(so); tp = ((so)->so_tcpcb); tcp_templ…` | slirp/tcp_subr.c | left out | not translated yet |
+| `Slirp *slirp = inso->slirp; struct socket *so; struct sockaddr_in addr; socklen_t addrlen = siz…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (inso->so_state & 0x200) … else` | slirp/tcp_subr.c | exported | Unvalidated |
+| `(void) tcp_mss(((so)->so_tcpcb), 0);` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (s = accept(inso->s,(struct sockaddr *)&addr,&addrlen)) < 0)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `fd_nonblock(s); opt = 1; setsockopt(s, 1 , 2 ,(char *)&opt,sizeof(int)); opt = 1; setsockopt(s,…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (so->so_faddr.s_addr == 0 || so->so_faddr.s_addr == loopback_addr.s_addr)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (inso->so_state & 0x200)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `so->s = s; so->so_state |= 0x2000; so->so_iptos = tcp_tos(so); tp = ((so)->so_tcpcb); tcp_templ…` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_attach` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (so->so_tcpcb = tcp_newtcpcb(so)) == ((void *)0)` | slirp/tcp_subr.c | left out | not translated yet |
-| `slirp_insque(so, &so->slirp->tcb); return 0;` | slirp/tcp_subr.c | left out | not translated yet |
+| `if (so->so_tcpcb = tcp_newtcpcb(so)) == ((void *)0)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `slirp_insque(so, &so->slirp->tcb); return 0;` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_tos` | slirp/tcp_subr.c | left out | not translated yet |
-| `while (tcptos[i].tos)` | slirp/tcp_subr.c | left out | not translated yet |
-| `for (emup = tcpemu; emup; emup = emup->next)` | slirp/tcp_subr.c | left out | not translated yet |
-| `return 0;` | slirp/tcp_subr.c | left out | not translated yet |
+| `while (tcptos[i].tos)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `for (emup = tcpemu; emup; emup = emup->next)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `return 0;` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_emu` | slirp/tcp_subr.c | left out | not translated yet |
-| `Slirp *slirp = so->slirp; u_int n1, n2, n3, n4, n5, n6; char buff[257]; uint32_t laddr; u_int l…` | slirp/tcp_subr.c | left out | not translated yet |
-| `switch(so->so_emu) { int x, i; case 0x7: { struct socket *tmpso; struct sockaddr_in addr; sockl…` | slirp/tcp_subr.c | left out | not translated yet |
+| `Slirp *slirp = so->slirp; u_int n1, n2, n3, n4, n5, n6; char buff[257]; uint32_t laddr; u_int l…` | slirp/tcp_subr.c | exported | Unvalidated |
+| `switch(so->so_emu) { int x, i; case 0x7: { struct socket *tmpso; struct sockaddr_in addr; sockl…` | slirp/tcp_subr.c | left out | still being translated |
 | `tcp_ctl` | slirp/tcp_subr.c | left out | not translated yet |
-| `Slirp *slirp = so->slirp; struct sbuf *sb = &so->so_snd; struct ex_list *ex_ptr; int do_pty; ; ;` | slirp/tcp_subr.c | left out | not translated yet |
-| `if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr)` | slirp/tcp_subr.c | left out | not translated yet |
-| `sb->sb_cc = snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data), "Error: No appl…` | slirp/tcp_subr.c | left out | not translated yet |
+| `Slirp *slirp = so->slirp; struct sbuf *sb = &so->so_snd; struct ex_list *ex_ptr; int do_pty; ; ;` | slirp/tcp_subr.c | exported | Unvalidated |
+| `if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr)` | slirp/tcp_subr.c | exported | Unvalidated |
+| `sb->sb_cc = snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data), "Error: No appl…` | slirp/tcp_subr.c | exported | Unvalidated |
 | `tcp_fasttimo` | slirp/tcp_timer.c | left out | not translated yet |
-| `register struct socket *so; register struct tcpcb *tp; ; so = slirp->tcb.so_next;` | slirp/tcp_timer.c | left out | not translated yet |
-| `if (so)` | slirp/tcp_timer.c | left out | not translated yet |
+| `register struct socket *so; register struct tcpcb *tp; ; so = slirp->tcb.so_next;` | slirp/tcp_timer.c | exported | Unvalidated |
+| `if (so)` | slirp/tcp_timer.c | exported | Unvalidated |
 | `tcp_slowtimo` | slirp/tcp_timer.c | left out | not translated yet |
-| `register struct socket *ip, *ipnxt; register struct tcpcb *tp; register int i; ; ip = slirp->tc…` | slirp/tcp_timer.c | left out | not translated yet |
-| `if (ip == ((void *)0)` | slirp/tcp_timer.c | left out | not translated yet |
-| `for (; ip != &slirp->tcb; ip = ipnxt)` | slirp/tcp_timer.c | left out | not translated yet |
-| `slirp->tcp_iss += (125*1024)/2; slirp->tcp_now++;` | slirp/tcp_timer.c | left out | not translated yet |
+| `register struct socket *ip, *ipnxt; register struct tcpcb *tp; register int i; ; ip = slirp->tc…` | slirp/tcp_timer.c | exported | Unvalidated |
+| `if (ip == ((void *)0)` | slirp/tcp_timer.c | exported | Unvalidated |
+| `for (; ip != &slirp->tcb; ip = ipnxt)` | slirp/tcp_timer.c | exported | Unvalidated |
+| `slirp->tcp_iss += (125*1024)/2; slirp->tcp_now++;` | slirp/tcp_timer.c | exported | Unvalidated |
 | `tcp_canceltimers` | slirp/tcp_timer.c | left out | not translated yet |
-| `for (i = 0; i < 4; i++)` | slirp/tcp_timer.c | left out | not translated yet |
+| `for (i = 0; i < 4; i++)` | slirp/tcp_timer.c | exported | Unvalidated |
 | `tcp_timers` | slirp/tcp_timer.c | left out | not translated yet |
-| `register int rexmt; ;` | slirp/tcp_timer.c | left out | not translated yet |
-| `switch (timer)` | slirp/tcp_timer.c | left out | not translated yet |
-| `return (tp);` | slirp/tcp_timer.c | left out | not translated yet |
+| `register int rexmt; ;` | slirp/tcp_timer.c | exported | Unvalidated |
+| `switch (timer)` | slirp/tcp_timer.c | exported | Unvalidated |
+| `return (tp);` | slirp/tcp_timer.c | exported | Unvalidated |
 | `udp_init` | slirp/udp.c | left out | not translated yet |
-| `slirp->udb.so_next = slirp->udb.so_prev = &slirp->udb; slirp->udp_last_so = &slirp->udb;` | slirp/udp.c | left out | not translated yet |
+| `slirp->udb.so_next = slirp->udb.so_prev = &slirp->udb; slirp->udp_last_so = &slirp->udb;` | slirp/udp.c | exported | Unvalidated |
 | `udp_input` | slirp/udp.c | left out | not translated yet |
-| `Slirp *slirp = m->slirp; register struct ip *ip; register struct udphdr *uh; int len; struct ip…` | slirp/udp.c | left out | not translated yet |
-| `if (iphlen > sizeof(struct ip))` | slirp/udp.c | left out | not translated yet |
-| `ip = ((struct ip *)(m)->m_hdr.mh_data); uh = (struct udphdr *)((caddr_t)ip + iphlen); len = nto…` | slirp/udp.c | left out | not translated yet |
-| `if (ip->ip_len != len)` | slirp/udp.c | left out | not translated yet |
-| `save_ip = *ip; save_ip.ip_len+= iphlen;` | slirp/udp.c | left out | not translated yet |
-| `if (uh->uh_sum)` | slirp/udp.c | left out | not translated yet |
-| `if (ntohs(uh->uh_dport) == 67)` | slirp/udp.c | left out | not translated yet |
-| `if (slirp->restricted)` | slirp/udp.c | left out | not translated yet |
-| `so = slirp->udp_last_so;` | slirp/udp.c | left out | not translated yet |
-| `if (so->so_lport != uh->uh_sport || so->so_laddr.s_addr != ip->ip_src.s_addr)` | slirp/udp.c | left out | not translated yet |
-| `if (so == ((void *)0)` | slirp/udp.c | left out | not translated yet |
-| `so->so_faddr = ip->ip_dst; so->so_fport = uh->uh_dport; iphlen += sizeof(struct udphdr); m->m_h…` | slirp/udp.c | left out | not translated yet |
-| `if (sosendto(so,m) == -1)` | slirp/udp.c | left out | not translated yet |
-| `m_free(so->so_m); m->m_hdr.mh_len += iphlen; m->m_hdr.mh_data -= iphlen; *ip=save_ip; so->so_m=…` | slirp/udp.c | left out | not translated yet |
-| `bad: m_free(m);` | slirp/udp.c | left out | not translated yet |
-| `return;` | slirp/udp.c | left out | not translated yet |
+| `Slirp *slirp = m->slirp; register struct ip *ip; register struct udphdr *uh; int len; struct ip…` | slirp/udp.c | exported | Unvalidated |
+| `if (iphlen > sizeof(struct ip))` | slirp/udp.c | exported | Unvalidated |
+| `ip = ((struct ip *)(m)->m_hdr.mh_data); uh = (struct udphdr *)((caddr_t)ip + iphlen); len = nto…` | slirp/udp.c | exported | Unvalidated |
+| `if (ip->ip_len != len)` | slirp/udp.c | exported | Unvalidated |
+| `save_ip = *ip; save_ip.ip_len+= iphlen;` | slirp/udp.c | exported | Unvalidated |
+| `if (uh->uh_sum)` | slirp/udp.c | exported | Unvalidated |
+| `if (ntohs(uh->uh_dport) == 67)` | slirp/udp.c | exported | Unvalidated |
+| `if (slirp->restricted)` | slirp/udp.c | exported | Unvalidated |
+| `so = slirp->udp_last_so;` | slirp/udp.c | exported | Unvalidated |
+| `if (so->so_lport != uh->uh_sport || so->so_laddr.s_addr != ip->ip_src.s_addr)` | slirp/udp.c | exported | Unvalidated |
+| `if (so == ((void *)0)` | slirp/udp.c | exported | Unvalidated |
+| `so->so_faddr = ip->ip_dst; so->so_fport = uh->uh_dport; iphlen += sizeof(struct udphdr); m->m_h…` | slirp/udp.c | exported | Unvalidated |
+| `if (sosendto(so,m) == -1)` | slirp/udp.c | exported | Unvalidated |
+| `m_free(so->so_m); m->m_hdr.mh_len += iphlen; m->m_hdr.mh_data -= iphlen; *ip=save_ip; so->so_m=…` | slirp/udp.c | exported | Unvalidated |
+| `bad: m_free(m);` | slirp/udp.c | exported | Unvalidated |
+| `return;` | slirp/udp.c | exported | Unvalidated |
 | `udp_output2` | slirp/udp.c | left out | not translated yet |
-| `register struct udpiphdr *ui; int error = 0; ; ; ; ; ; m->m_hdr.mh_data -= sizeof(struct udpiph…` | slirp/udp.c | left out | not translated yet |
-| `if (ui->ui_u.uh_sum = cksum(m, m->m_hdr.mh_len)) == 0)` | slirp/udp.c | left out | not translated yet |
-| `((struct ip *)ui)->ip_len = m->m_hdr.mh_len; ((struct ip *)ui)->ip_ttl = 64; ((struct ip *)ui)-…` | slirp/udp.c | left out | not translated yet |
+| `register struct udpiphdr *ui; int error = 0; ; ; ; ; ; m->m_hdr.mh_data -= sizeof(struct udpiph…` | slirp/udp.c | exported | Unvalidated |
+| `if (ui->ui_u.uh_sum = cksum(m, m->m_hdr.mh_len)) == 0)` | slirp/udp.c | exported | Unvalidated |
+| `((struct ip *)ui)->ip_len = m->m_hdr.mh_len; ((struct ip *)ui)->ip_ttl = 64; ((struct ip *)ui)-…` | slirp/udp.c | exported | Unvalidated |
 | `udp_output` | slirp/udp.c | left out | not translated yet |
-| `Slirp *slirp = so->slirp; struct sockaddr_in saddr, daddr; saddr = *addr;` | slirp/udp.c | left out | not translated yet |
-| `if (so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) == slirp->vnetwork_addr.s_addr)` | slirp/udp.c | left out | not translated yet |
-| `daddr.sin_addr = so->so_laddr; daddr.sin_port = so->so_lport; return udp_output2(so, m, &saddr,…` | slirp/udp.c | left out | not translated yet |
+| `Slirp *slirp = so->slirp; struct sockaddr_in saddr, daddr; saddr = *addr;` | slirp/udp.c | exported | Unvalidated |
+| `if (so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) == slirp->vnetwork_addr.s_addr)` | slirp/udp.c | exported | Unvalidated |
+| `daddr.sin_addr = so->so_laddr; daddr.sin_port = so->so_lport; return udp_output2(so, m, &saddr,…` | slirp/udp.c | exported | Unvalidated |
 | `udp_attach` | slirp/udp.c | left out | not translated yet |
-| `if (so->s = os_socket( 2 , SOCK_DGRAM ,0)) != -1)` | slirp/udp.c | left out | not translated yet |
-| `return(so->s);` | slirp/udp.c | left out | not translated yet |
+| `if (so->s = os_socket( 2 , SOCK_DGRAM ,0)) != -1)` | slirp/udp.c | exported | Unvalidated |
+| `return(so->s);` | slirp/udp.c | exported | Unvalidated |
 | `udp_detach` | slirp/udp.c | left out | not translated yet |
-| `close(so->s); sofree(so);` | slirp/udp.c | left out | not translated yet |
+| `close(so->s); sofree(so);` | slirp/udp.c | exported | Unvalidated |
 | `udp_tos` | slirp/udp.c | left out | not translated yet |
-| `while (udptos[i].tos)` | slirp/udp.c | left out | not translated yet |
-| `return 0;` | slirp/udp.c | left out | not translated yet |
+| `while (udptos[i].tos)` | slirp/udp.c | exported | Unvalidated |
+| `return 0;` | slirp/udp.c | exported | Unvalidated |
 | `udp_listen` | slirp/udp.c | left out | not translated yet |
-| `struct sockaddr_in addr; struct socket *so; socklen_t addrlen = sizeof(struct sockaddr_in), opt…` | slirp/udp.c | left out | not translated yet |
-| `if (!so)` | slirp/udp.c | left out | not translated yet |
-| `so->s = os_socket( 2 , SOCK_DGRAM ,0); so->so_expire = curtime + 240000; slirp_insque(so, &slir…` | slirp/udp.c | left out | not translated yet |
-| `if (bind(so->s,(struct sockaddr *)&addr, addrlen) < 0)` | slirp/udp.c | left out | not translated yet |
-| `setsockopt(so->s, 1 , 2 ,(char *)&opt,sizeof(int)); getsockname(so->s,(struct sockaddr *)&addr,…` | slirp/udp.c | left out | not translated yet |
-| `if (addr.sin_addr.s_addr == 0 || addr.sin_addr.s_addr == loopback_addr.s_addr) … else` | slirp/udp.c | left out | not translated yet |
-| `so->so_lport = lport; so->so_laddr.s_addr = laddr;` | slirp/udp.c | left out | not translated yet |
-| `if (flags != 0x200)` | slirp/udp.c | left out | not translated yet |
-| `so->so_state &= 0xf000; so->so_state |= 0x004 | flags; return so;` | slirp/udp.c | left out | not translated yet |
+| `struct sockaddr_in addr; struct socket *so; socklen_t addrlen = sizeof(struct sockaddr_in), opt…` | slirp/udp.c | exported | Unvalidated |
+| `if (!so)` | slirp/udp.c | exported | Unvalidated |
+| `so->s = os_socket( 2 , SOCK_DGRAM ,0); so->so_expire = curtime + 240000; slirp_insque(so, &slir…` | slirp/udp.c | exported | Unvalidated |
+| `if (bind(so->s,(struct sockaddr *)&addr, addrlen) < 0)` | slirp/udp.c | exported | Unvalidated |
+| `setsockopt(so->s, 1 , 2 ,(char *)&opt,sizeof(int)); getsockname(so->s,(struct sockaddr *)&addr,…` | slirp/udp.c | exported | Unvalidated |
+| `if (addr.sin_addr.s_addr == 0 || addr.sin_addr.s_addr == loopback_addr.s_addr) … else` | slirp/udp.c | exported | Unvalidated |
+| `so->so_lport = lport; so->so_laddr.s_addr = laddr;` | slirp/udp.c | exported | Unvalidated |
+| `if (flags != 0x200)` | slirp/udp.c | exported | Unvalidated |
+| `so->so_state &= 0xf000; so->so_state |= 0x004 | flags; return so;` | slirp/udp.c | exported | Unvalidated |
 | `clz32` | softfp.c | left out | not translated yet |
-| `if (a == 0) … else` | softfp.c | left out | not translated yet |
-| `return r;` | softfp.c | left out | not translated yet |
+| `if (a == 0) … else` | softfp.c | exported | Unvalidated |
+| `return r;` | softfp.c | exported | Unvalidated |
 | `clz64` | softfp.c | left out | not translated yet |
-| `if (a == 0) … else` | softfp.c | left out | not translated yet |
-| `return r;` | softfp.c | left out | not translated yet |
+| `if (a == 0) … else` | softfp.c | exported | Unvalidated |
+| `return r;` | softfp.c | exported | Unvalidated |
 | `clz128` | softfp.c | left out | not translated yet |
-| `if (a == 0) … else` | softfp.c | left out | not translated yet |
-| `return r;` | softfp.c | left out | not translated yet |
+| `if (a == 0) … else` | softfp.c | exported | Unvalidated |
+| `return r;` | softfp.c | exported | Unvalidated |
 | `pack_sf32` | softfp_template.h | left out | not translated yet |
 | `pack_sf64` | softfp_template.h | left out | not translated yet |
 | `pack_sf128` | softfp_template.h | left out | not translated yet |
-| `return ((uint32_t)a_sign << (32 - 1)) | ((uint32_t)a_exp << 23) | (a_mant & (((uint32_t)1 << 23…` | softfp_template.h | left out | not translated yet |
-| `return ((uint64_t)a_sign << (64 - 1)) | ((uint64_t)a_exp << 52) | (a_mant & (((uint64_t)1 << 52…` | softfp_template.h | left out | not translated yet |
-| `return ((uint128_t)a_sign << (128 - 1)) | ((uint128_t)a_exp << 112) | (a_mant & (((uint128_t)1…` | softfp_template.h | left out | not translated yet |
+| `return ((uint32_t)a_sign << (32 - 1)) | ((uint32_t)a_exp << 23) | (a_mant & (((uint32_t)1 << 23…` | softfp_template.h | exported | Unvalidated |
+| `return ((uint64_t)a_sign << (64 - 1)) | ((uint64_t)a_exp << 52) | (a_mant & (((uint64_t)1 << 52…` | softfp_template.h | exported | Unvalidated |
+| `return ((uint128_t)a_sign << (128 - 1)) | ((uint128_t)a_exp << 112) | (a_mant & (((uint128_t)1…` | softfp_template.h | exported | Unvalidated |
 | `unpack_sf32` | softfp_template.h | left out | not translated yet |
 | `unpack_sf64` | softfp_template.h | left out | not translated yet |
 | `unpack_sf128` | softfp_template.h | left out | not translated yet |
-| `*pa_sign = a >> (32 - 1); *pa_exp = (a >> 23) & ((1 << 8) - 1); return a & (((uint32_t)1 << 23)…` | softfp_template.h | left out | not translated yet |
-| `*pa_sign = a >> (64 - 1); *pa_exp = (a >> 52) & ((1 << 11) - 1); return a & (((uint64_t)1 << 52…` | softfp_template.h | left out | not translated yet |
-| `*pa_sign = a >> (128 - 1); *pa_exp = (a >> 112) & ((1 << 15) - 1); return a & (((uint128_t)1 <<…` | softfp_template.h | left out | not translated yet |
+| `*pa_sign = a >> (32 - 1); *pa_exp = (a >> 23) & ((1 << 8) - 1); return a & (((uint32_t)1 << 23)…` | softfp_template.h | exported | Unvalidated |
+| `*pa_sign = a >> (64 - 1); *pa_exp = (a >> 52) & ((1 << 11) - 1); return a & (((uint64_t)1 << 52…` | softfp_template.h | exported | Unvalidated |
+| `*pa_sign = a >> (128 - 1); *pa_exp = (a >> 112) & ((1 << 15) - 1); return a & (((uint128_t)1 <<…` | softfp_template.h | exported | Unvalidated |
 | `rshift_rnd32` | softfp_template.h | left out | not translated yet |
 | `rshift_rnd64` | softfp_template.h | left out | not translated yet |
 | `rshift_rnd128` | softfp_template.h | left out | not translated yet |
-| `if (d != 0)` | softfp_template.h | left out | not translated yet |
-| `if (d != 0)` | softfp_template.h | left out | not translated yet |
-| `if (d != 0)` | softfp_template.h | left out | not translated yet |
-| `return a;` | softfp_template.h | left out | not translated yet |
-| `return a;` | softfp_template.h | left out | not translated yet |
-| `return a;` | softfp_template.h | left out | not translated yet |
+| `if (d != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (d != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (d != 0)` | softfp_template.h | exported | Unvalidated |
+| `return a;` | softfp_template.h | exported | Unvalidated |
+| `return a;` | softfp_template.h | exported | Unvalidated |
+| `return a;` | softfp_template.h | exported | Unvalidated |
 | `roundpack_sf32` | softfp_template.h | left out | not translated yet |
 | `roundpack_sf64` | softfp_template.h | left out | not translated yet |
 | `roundpack_sf128` | softfp_template.h | left out | not translated yet |
-| `switch (rm)` | softfp_template.h | left out | not translated yet |
-| `switch (rm)` | softfp_template.h | left out | not translated yet |
-| `switch (rm)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp <= 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp <= 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp <= 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (rnd_bits != 0)` | softfp_template.h | left out | not translated yet |
-| `if (rnd_bits != 0)` | softfp_template.h | left out | not translated yet |
-| `if (rnd_bits != 0)` | softfp_template.h | left out | not translated yet |
-| `a_mant = (a_mant + addend) >> ((32 - 2) - 23);` | softfp_template.h | left out | not translated yet |
-| `a_mant = (a_mant + addend) >> ((64 - 2) - 52);` | softfp_template.h | left out | not translated yet |
-| `a_mant = (a_mant + addend) >> ((128 - 2) - 112);` | softfp_template.h | left out | not translated yet |
-| `if (rm == RM_RNE && rnd_bits == (1 << (((32 - 2) - 23) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (rm == RM_RNE && rnd_bits == (1 << (((64 - 2) - 52) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (rm == RM_RNE && rnd_bits == (1 << (((128 - 2) - 112) - 1)` | softfp_template.h | left out | not translated yet |
-| `a_exp += a_mant >> (23 + 1);` | softfp_template.h | left out | not translated yet |
-| `a_exp += a_mant >> (52 + 1);` | softfp_template.h | left out | not translated yet |
-| `a_exp += a_mant >> (112 + 1);` | softfp_template.h | left out | not translated yet |
-| `if (a_mant <= (((uint32_t)1 << 23) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_mant <= (((uint64_t)1 << 52) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_mant <= (((uint128_t)1 << 112) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `return pack_sf32(a_sign, a_exp, a_mant);` | softfp_template.h | left out | not translated yet |
-| `return pack_sf64(a_sign, a_exp, a_mant);` | softfp_template.h | left out | not translated yet |
-| `return pack_sf128(a_sign, a_exp, a_mant);` | softfp_template.h | left out | not translated yet |
+| `switch (rm)` | softfp_template.h | exported | Unvalidated |
+| `switch (rm)` | softfp_template.h | exported | Unvalidated |
+| `switch (rm)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp <= 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp <= 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp <= 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (rnd_bits != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (rnd_bits != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (rnd_bits != 0)` | softfp_template.h | exported | Unvalidated |
+| `a_mant = (a_mant + addend) >> ((32 - 2) - 23);` | softfp_template.h | exported | Unvalidated |
+| `a_mant = (a_mant + addend) >> ((64 - 2) - 52);` | softfp_template.h | exported | Unvalidated |
+| `a_mant = (a_mant + addend) >> ((128 - 2) - 112);` | softfp_template.h | exported | Unvalidated |
+| `if (rm == RM_RNE && rnd_bits == (1 << (((32 - 2) - 23) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (rm == RM_RNE && rnd_bits == (1 << (((64 - 2) - 52) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (rm == RM_RNE && rnd_bits == (1 << (((128 - 2) - 112) - 1)` | softfp_template.h | exported | Unvalidated |
+| `a_exp += a_mant >> (23 + 1);` | softfp_template.h | exported | Unvalidated |
+| `a_exp += a_mant >> (52 + 1);` | softfp_template.h | exported | Unvalidated |
+| `a_exp += a_mant >> (112 + 1);` | softfp_template.h | exported | Unvalidated |
+| `if (a_mant <= (((uint32_t)1 << 23) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_mant <= (((uint64_t)1 << 52) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_mant <= (((uint128_t)1 << 112) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `return pack_sf32(a_sign, a_exp, a_mant);` | softfp_template.h | exported | Unvalidated |
+| `return pack_sf64(a_sign, a_exp, a_mant);` | softfp_template.h | exported | Unvalidated |
+| `return pack_sf128(a_sign, a_exp, a_mant);` | softfp_template.h | exported | Unvalidated |
 | `normalize_sf32` | softfp_template.h | left out | not translated yet |
 | `normalize_sf64` | softfp_template.h | left out | not translated yet |
 | `normalize_sf128` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = clz32(a_mant) - (32 - 1 - (32 - 2)); ((void) sizeof (__assert_single_arg ( s…` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = clz64(a_mant) - (64 - 1 - (64 - 2)); ((void) sizeof (__assert_single_arg ( s…` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = clz128(a_mant) - (128 - 1 - (128 - 2)); ((void) sizeof (__assert_single_arg…` | softfp_template.h | left out | not translated yet |
+| `int shift; shift = clz32(a_mant) - (32 - 1 - (32 - 2)); ((void) sizeof (__assert_single_arg ( s…` | softfp_template.h | exported | Unvalidated |
+| `int shift; shift = clz64(a_mant) - (64 - 1 - (64 - 2)); ((void) sizeof (__assert_single_arg ( s…` | softfp_template.h | exported | Unvalidated |
+| `int shift; shift = clz128(a_mant) - (128 - 1 - (128 - 2)); ((void) sizeof (__assert_single_arg…` | softfp_template.h | exported | Unvalidated |
 | `normalize2_sf32` | softfp_template.h | left out | not translated yet |
 | `normalize2_sf64` | softfp_template.h | left out | not translated yet |
 | `normalize2_sf128` | softfp_template.h | left out | not translated yet |
-| `if (a_mant1 == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_mant1 == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_mant1 == 0) … else` | softfp_template.h | left out | not translated yet |
-| `shift = l - (32 - 1 - (32 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __extensi…` | softfp_template.h | left out | not translated yet |
-| `shift = l - (64 - 1 - (64 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __extensi…` | softfp_template.h | left out | not translated yet |
-| `shift = l - (128 - 1 - (128 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __exten…` | softfp_template.h | left out | not translated yet |
-| `if (shift == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (shift == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (shift == 0) … else` | softfp_template.h | left out | not translated yet |
-| `return roundpack_sf32(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return roundpack_sf64(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return roundpack_sf128(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `if (a_mant1 == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_mant1 == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_mant1 == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `shift = l - (32 - 1 - (32 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __extensi…` | softfp_template.h | exported | Unvalidated |
+| `shift = l - (64 - 1 - (64 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __extensi…` | softfp_template.h | exported | Unvalidated |
+| `shift = l - (128 - 1 - (128 - 2)); ((void) sizeof (__assert_single_arg ( shift >= 0 )), __exten…` | softfp_template.h | exported | Unvalidated |
+| `if (shift == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (shift == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (shift == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `return roundpack_sf32(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return roundpack_sf64(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return roundpack_sf128(a_sign, a_exp, a_mant1, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `issignan_sf32` | softfp_template.h | left out | not translated yet |
 | `issignan_sf64` | softfp_template.h | left out | not translated yet |
 | `issignan_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp1; uint32_t a_mant; a_exp1 = (a >> (23 - 1)) & ((1 << (8 + 1)) - 1); a_mant = a &…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp1; uint64_t a_mant; a_exp1 = (a >> (52 - 1)) & ((1 << (11 + 1)) - 1); a_mant = a…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp1; uint128_t a_mant; a_exp1 = (a >> (112 - 1)) & ((1 << (15 + 1)) - 1); a_mant =…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_exp1; uint32_t a_mant; a_exp1 = (a >> (23 - 1)) & ((1 << (8 + 1)) - 1); a_mant = a &…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_exp1; uint64_t a_mant; a_exp1 = (a >> (52 - 1)) & ((1 << (11 + 1)) - 1); a_mant = a…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_exp1; uint128_t a_mant; a_exp1 = (a >> (112 - 1)) & ((1 << (15 + 1)) - 1); a_mant =…` | softfp_template.h | exported | Unvalidated |
 | `isnan_sf32` | softfp_template.h | left out | not translated yet |
 | `isnan_sf64` | softfp_template.h | left out | not translated yet |
 | `isnan_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp; uint32_t a_mant; a_exp = (a >> 23) & ((1 << 8) - 1); a_mant = a & (((uint32_t)1…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp; uint64_t a_mant; a_exp = (a >> 52) & ((1 << 11) - 1); a_mant = a & (((uint64_t)…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_exp; uint128_t a_mant; a_exp = (a >> 112) & ((1 << 15) - 1); a_mant = a & (((uint128…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_exp; uint32_t a_mant; a_exp = (a >> 23) & ((1 << 8) - 1); a_mant = a & (((uint32_t)1…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_exp; uint64_t a_mant; a_exp = (a >> 52) & ((1 << 11) - 1); a_mant = a & (((uint64_t)…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_exp; uint128_t a_mant; a_exp = (a >> 112) & ((1 << 15) - 1); a_mant = a & (((uint128…` | softfp_template.h | exported | Unvalidated |
 | `add_sf32` | softfp_template.h | left out | not translated yet |
 | `add_sf64` | softfp_template.h | left out | not translated yet |
 | `add_sf128` | softfp_template.h | left out | not translated yet |
-| `if (a & ~((uint32_t)1 << (32 - 1))) < (b & ~((uint32_t)1 << (32 - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a & ~((uint64_t)1 << (64 - 1))) < (b & ~((uint64_t)1 << (64 - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a & ~((uint128_t)1 << (128 - 1))) < (b & ~((uint128_t)1 << (128 - 1)` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1); a_exp = (a >> 23) & ((1 << 8) - 1); b_exp = (b…` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1); a_exp = (a >> 52) & ((1 << 11) - 1); b_exp = (b…` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1); a_exp = (a >> 112) & ((1 << 15) - 1); b_exp =…` | softfp_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!(a_exp == ((1 << 8) - 1)), 0))` | softfp_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!(a_exp == ((1 << 11) - 1)), 0))` | softfp_template.h | left out | not translated yet |
-| `if (__builtin_expect(!!(a_exp == ((1 << 15) - 1)), 0))` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `b_mant = rshift_rnd32(b_mant, a_exp - b_exp);` | softfp_template.h | left out | not translated yet |
-| `b_mant = rshift_rnd64(b_mant, a_exp - b_exp);` | softfp_template.h | left out | not translated yet |
-| `b_mant = rshift_rnd128(b_mant, a_exp - b_exp);` | softfp_template.h | left out | not translated yet |
-| `if (a_sign == b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign == b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign == b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `a_exp += (((32 - 2) - 23) - 3); return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `a_exp += (((64 - 2) - 52) - 3); return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `a_exp += (((128 - 2) - 112) - 3); return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `if (a & ~((uint32_t)1 << (32 - 1))) < (b & ~((uint32_t)1 << (32 - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a & ~((uint64_t)1 << (64 - 1))) < (b & ~((uint64_t)1 << (64 - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a & ~((uint128_t)1 << (128 - 1))) < (b & ~((uint128_t)1 << (128 - 1)` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1); a_exp = (a >> 23) & ((1 << 8) - 1); b_exp = (b…` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1); a_exp = (a >> 52) & ((1 << 11) - 1); b_exp = (b…` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1); a_exp = (a >> 112) & ((1 << 15) - 1); b_exp =…` | softfp_template.h | exported | Unvalidated |
+| `if (__builtin_expect(!!(a_exp == ((1 << 8) - 1)), 0))` | softfp_template.h | exported | Unvalidated |
+| `if (__builtin_expect(!!(a_exp == ((1 << 11) - 1)), 0))` | softfp_template.h | exported | Unvalidated |
+| `if (__builtin_expect(!!(a_exp == ((1 << 15) - 1)), 0))` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `b_mant = rshift_rnd32(b_mant, a_exp - b_exp);` | softfp_template.h | exported | Unvalidated |
+| `b_mant = rshift_rnd64(b_mant, a_exp - b_exp);` | softfp_template.h | exported | Unvalidated |
+| `b_mant = rshift_rnd128(b_mant, a_exp - b_exp);` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign == b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign == b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign == b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `a_exp += (((32 - 2) - 23) - 3); return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `a_exp += (((64 - 2) - 52) - 3); return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `a_exp += (((128 - 2) - 112) - 3); return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `sub_sf32` | softfp_template.h | left out | not translated yet |
 | `sub_sf64` | softfp_template.h | left out | not translated yet |
 | `sub_sf128` | softfp_template.h | left out | not translated yet |
-| `return add_sf32(a, b ^ ((uint32_t)1 << (32 - 1)), rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return add_sf64(a, b ^ ((uint64_t)1 << (64 - 1)), rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return add_sf128(a, b ^ ((uint128_t)1 << (128 - 1)), rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `return add_sf32(a, b ^ ((uint32_t)1 << (32 - 1)), rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return add_sf64(a, b ^ ((uint64_t)1 << (64 - 1)), rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return add_sf128(a, b ^ ((uint128_t)1 << (128 - 1)), rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `normalize_subnormal_sf32` | softfp_template.h | left out | not translated yet |
 | `normalize_subnormal_sf64` | softfp_template.h | left out | not translated yet |
 | `normalize_subnormal_sf128` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = 23 - ((32 - 1 - clz32(a_mant))); *pa_exp = 1 - shift; return a_mant << shift;` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = 52 - ((64 - 1 - clz64(a_mant))); *pa_exp = 1 - shift; return a_mant << shift;` | softfp_template.h | left out | not translated yet |
-| `int shift; shift = 112 - ((128 - 1 - clz128(a_mant))); *pa_exp = 1 - shift; return a_mant << sh…` | softfp_template.h | left out | not translated yet |
+| `int shift; shift = 23 - ((32 - 1 - clz32(a_mant))); *pa_exp = 1 - shift; return a_mant << shift;` | softfp_template.h | exported | Unvalidated |
+| `int shift; shift = 52 - ((64 - 1 - clz64(a_mant))); *pa_exp = 1 - shift; return a_mant << shift;` | softfp_template.h | exported | Unvalidated |
+| `int shift; shift = 112 - ((128 - 1 - clz128(a_mant))); *pa_exp = 1 - shift; return a_mant << sh…` | softfp_template.h | exported | Unvalidated |
 | `mul_u32` | softfp_template.h | left out | not translated yet |
 | `mul_u64` | softfp_template.h | left out | not translated yet |
-| `uint64_t r; r = (uint64_t)a * (uint64_t)b; *plow = r; return r >> 32;` | softfp_template.h | left out | not translated yet |
-| `uint128_t r; r = (uint128_t)a * (uint128_t)b; *plow = r; return r >> 64;` | softfp_template.h | left out | not translated yet |
+| `uint64_t r; r = (uint64_t)a * (uint64_t)b; *plow = r; return r >> 32;` | softfp_template.h | exported | Unvalidated |
+| `uint128_t r; r = (uint128_t)a * (uint128_t)b; *plow = r; return r >> 64;` | softfp_template.h | exported | Unvalidated |
 | `mul_u128` | softfp_template.h | left out | not translated yet |
-| `uint64_t a0, a1, b0, b1, r0, r1, r2, r3; uint128_t r00, r01, r10, r11, c; a0 = a; a1 = a >> (12…` | softfp_template.h | left out | not translated yet |
+| `uint64_t a0, a1, b0, b1, r0, r1, r2, r3; uint128_t r00, r01, r10, r11, c; a0 = a; a1 = a >> (12…` | softfp_template.h | exported | Unvalidated |
 | `mul_sf32` | softfp_template.h | left out | not translated yet |
 | `mul_sf64` | softfp_template.h | left out | not translated yet |
 | `mul_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint32_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint64_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint128_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) || b_exp == ((1 << 8) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) || b_exp == ((1 << 11) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) || b_exp == ((1 << 15) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (8 - 1)) + 2; r_mant = mul_u32(&r_mant_low,a_mant << ((32 - 2) -…` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (11 - 1)) + 2; r_mant = mul_u64(&r_mant_low,a_mant << ((64 - 2) -…` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (15 - 1)) + 2; r_mant = mul_u128(&r_mant_low,a_mant << ((128 - 2)…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint32_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint64_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint128_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) || b_exp == ((1 << 8) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) || b_exp == ((1 << 11) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) || b_exp == ((1 << 15) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (8 - 1)) + 2; r_mant = mul_u32(&r_mant_low,a_mant << ((32 - 2) -…` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (11 - 1)) + 2; r_mant = mul_u64(&r_mant_low,a_mant << ((64 - 2) -…` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (15 - 1)) + 2; r_mant = mul_u128(&r_mant_low,a_mant << ((128 - 2)…` | softfp_template.h | exported | Unvalidated |
 | `fma_sf32` | softfp_template.h | left out | not translated yet |
 | `fma_sf64` | softfp_template.h | left out | not translated yet |
 | `fma_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint32_t a_…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint64_t a_…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint128_t a…` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) || b_exp == ((1 << 8) - 1) || c_exp == ((1 << 8) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) || b_exp == ((1 << 11) - 1) || c_exp == ((1 << 11) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) || b_exp == ((1 << 15) - 1) || c_exp == ((1 << 15) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (8 - 1)) + 3; r_mant1 = mul_u32(&r_mant0, a_mant << ((32 - 2) - 2…` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (11 - 1)) + 3; r_mant1 = mul_u64(&r_mant0, a_mant << ((64 - 2) -…` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp + b_exp - (1 << (15 - 1)) + 3; r_mant1 = mul_u128(&r_mant0, a_mant << ((128 - 2)…` | softfp_template.h | left out | not translated yet |
-| `if (r_mant1 < ((uint32_t)1 << (32 - 3)` | softfp_template.h | left out | not translated yet |
-| `if (r_mant1 < ((uint64_t)1 << (64 - 3)` | softfp_template.h | left out | not translated yet |
-| `if (r_mant1 < ((uint128_t)1 << (128 - 3)` | softfp_template.h | left out | not translated yet |
-| `if (c_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (c_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (c_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `c_exp++; c_mant1 = c_mant << (((32 - 2) - 23) - 1); c_mant0 = 0;` | softfp_template.h | left out | not translated yet |
-| `c_exp++; c_mant1 = c_mant << (((64 - 2) - 52) - 1); c_mant0 = 0;` | softfp_template.h | left out | not translated yet |
-| `c_exp++; c_mant1 = c_mant << (((128 - 2) - 112) - 1); c_mant0 = 0;` | softfp_template.h | left out | not translated yet |
-| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | left out | not translated yet |
-| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | left out | not translated yet |
-| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | left out | not translated yet |
-| `shift = r_exp - c_exp;` | softfp_template.h | left out | not translated yet |
-| `shift = r_exp - c_exp;` | softfp_template.h | left out | not translated yet |
-| `shift = r_exp - c_exp;` | softfp_template.h | left out | not translated yet |
-| `if (shift >= 2 * 32) … else` | softfp_template.h | left out | not translated yet |
-| `if (shift >= 2 * 64) … else` | softfp_template.h | left out | not translated yet |
-| `if (shift >= 2 * 128) … else` | softfp_template.h | left out | not translated yet |
-| `if (r_sign == c_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (r_sign == c_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (r_sign == c_sign) … else` | softfp_template.h | left out | not translated yet |
-| `return normalize2_sf32(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize2_sf64(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize2_sf128(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint32_t a_…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint64_t a_…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, c_sign, r_sign; int32_t a_exp, b_exp, c_exp, r_exp, shift; uint128_t a…` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) || b_exp == ((1 << 8) - 1) || c_exp == ((1 << 8) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) || b_exp == ((1 << 11) - 1) || c_exp == ((1 << 11) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) || b_exp == ((1 << 15) - 1) || c_exp == ((1 << 15) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (8 - 1)) + 3; r_mant1 = mul_u32(&r_mant0, a_mant << ((32 - 2) - 2…` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (11 - 1)) + 3; r_mant1 = mul_u64(&r_mant0, a_mant << ((64 - 2) -…` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp + b_exp - (1 << (15 - 1)) + 3; r_mant1 = mul_u128(&r_mant0, a_mant << ((128 - 2)…` | softfp_template.h | exported | Unvalidated |
+| `if (r_mant1 < ((uint32_t)1 << (32 - 3)` | softfp_template.h | exported | Unvalidated |
+| `if (r_mant1 < ((uint64_t)1 << (64 - 3)` | softfp_template.h | exported | Unvalidated |
+| `if (r_mant1 < ((uint128_t)1 << (128 - 3)` | softfp_template.h | exported | Unvalidated |
+| `if (c_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (c_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (c_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `c_exp++; c_mant1 = c_mant << (((32 - 2) - 23) - 1); c_mant0 = 0;` | softfp_template.h | exported | Unvalidated |
+| `c_exp++; c_mant1 = c_mant << (((64 - 2) - 52) - 1); c_mant0 = 0;` | softfp_template.h | exported | Unvalidated |
+| `c_exp++; c_mant1 = c_mant << (((128 - 2) - 112) - 1); c_mant0 = 0;` | softfp_template.h | exported | Unvalidated |
+| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | exported | Unvalidated |
+| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | exported | Unvalidated |
+| `if (!(r_exp > c_exp || (r_exp == c_exp && r_mant1 >= c_mant1)` | softfp_template.h | exported | Unvalidated |
+| `shift = r_exp - c_exp;` | softfp_template.h | exported | Unvalidated |
+| `shift = r_exp - c_exp;` | softfp_template.h | exported | Unvalidated |
+| `shift = r_exp - c_exp;` | softfp_template.h | exported | Unvalidated |
+| `if (shift >= 2 * 32) … else` | softfp_template.h | exported | Unvalidated |
+| `if (shift >= 2 * 64) … else` | softfp_template.h | exported | Unvalidated |
+| `if (shift >= 2 * 128) … else` | softfp_template.h | exported | Unvalidated |
+| `if (r_sign == c_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (r_sign == c_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (r_sign == c_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `return normalize2_sf32(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize2_sf64(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize2_sf128(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `divrem_u32` | softfp_template.h | left out | not translated yet |
 | `divrem_u64` | softfp_template.h | left out | not translated yet |
-| `uint64_t a; a = ((uint64_t)ah << 32) | al; *pr = a % b; return a / b;` | softfp_template.h | left out | not translated yet |
-| `uint128_t a; a = ((uint128_t)ah << 64) | al; *pr = a % b; return a / b;` | softfp_template.h | left out | not translated yet |
+| `uint64_t a; a = ((uint64_t)ah << 32) | al; *pr = a % b; return a / b;` | softfp_template.h | exported | Unvalidated |
+| `uint128_t a; a = ((uint128_t)ah << 64) | al; *pr = a % b; return a / b;` | softfp_template.h | exported | Unvalidated |
 | `divrem_u128` | softfp_template.h | left out | not translated yet |
-| `int i, qb, ab; ((void) sizeof (__assert_single_arg ( a1 < b )), __extension__ ({ if ( a1 < b )…` | softfp_template.h | left out | not translated yet |
-| `for (i = 0; i < 128; i++)` | softfp_template.h | left out | not translated yet |
-| `*pr = a1; return a0;` | softfp_template.h | left out | not translated yet |
+| `int i, qb, ab; ((void) sizeof (__assert_single_arg ( a1 < b )), __extension__ ({ if ( a1 < b )…` | softfp_template.h | exported | Unvalidated |
+| `for (i = 0; i < 128; i++)` | softfp_template.h | exported | Unvalidated |
+| `*pr = a1; return a0;` | softfp_template.h | exported | Unvalidated |
 | `div_sf32` | softfp_template.h | left out | not translated yet |
 | `div_sf64` | softfp_template.h | left out | not translated yet |
 | `div_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint32_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint64_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint128_t a_mant, b_mant, r_mant,…` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (b_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp - b_exp + (1 << (8 - 1)) - 1; r_mant = divrem_u32(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp - b_exp + (1 << (11 - 1)) - 1; r_mant = divrem_u64(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | left out | not translated yet |
-| `r_exp = a_exp - b_exp + (1 << (15 - 1)) - 1; r_mant = divrem_u128(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | left out | not translated yet |
-| `if (r != 0)` | softfp_template.h | left out | not translated yet |
-| `if (r != 0)` | softfp_template.h | left out | not translated yet |
-| `if (r != 0)` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf32(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf64(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf128(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint32_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint64_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign, b_sign, r_sign; int32_t a_exp, b_exp, r_exp; uint128_t a_mant, b_mant, r_mant,…` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (b_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp - b_exp + (1 << (8 - 1)) - 1; r_mant = divrem_u32(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp - b_exp + (1 << (11 - 1)) - 1; r_mant = divrem_u64(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | exported | Unvalidated |
+| `r_exp = a_exp - b_exp + (1 << (15 - 1)) - 1; r_mant = divrem_u128(&r, a_mant, 0, b_mant << 2);` | softfp_template.h | exported | Unvalidated |
+| `if (r != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (r != 0)` | softfp_template.h | exported | Unvalidated |
+| `if (r != 0)` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf32(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf64(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf128(r_sign, r_exp, r_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `sqrtrem_u32` | softfp_template.h | left out | not translated yet |
 | `sqrtrem_u64` | softfp_template.h | left out | not translated yet |
-| `if (ah != 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (ah != 0) … else` | softfp_template.h | left out | not translated yet |
-| `a = ((uint64_t)ah << 32) | al; u = (uint64_t)1 << ((l + 1) / 2);` | softfp_template.h | left out | not translated yet |
-| `a = ((uint128_t)ah << 64) | al; u = (uint128_t)1 << ((l + 1) / 2);` | softfp_template.h | left out | not translated yet |
-| `for (; ; )` | softfp_template.h | left out | not translated yet |
-| `for (; ; )` | softfp_template.h | left out | not translated yet |
-| `inexact = (a - s * s) != 0; *pr = s; return inexact;` | softfp_template.h | left out | not translated yet |
-| `inexact = (a - s * s) != 0; *pr = s; return inexact;` | softfp_template.h | left out | not translated yet |
+| `if (ah != 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (ah != 0) … else` | softfp_template.h | exported | Unvalidated |
+| `a = ((uint64_t)ah << 32) | al; u = (uint64_t)1 << ((l + 1) / 2);` | softfp_template.h | exported | Unvalidated |
+| `a = ((uint128_t)ah << 64) | al; u = (uint128_t)1 << ((l + 1) / 2);` | softfp_template.h | exported | Unvalidated |
+| `for (; ; )` | softfp_template.h | exported | Unvalidated |
+| `for (; ; )` | softfp_template.h | exported | Unvalidated |
+| `inexact = (a - s * s) != 0; *pr = s; return inexact;` | softfp_template.h | exported | Unvalidated |
+| `inexact = (a - s * s) != 0; *pr = s; return inexact;` | softfp_template.h | exported | Unvalidated |
 | `sqrtrem_u128` | softfp_template.h | left out | not translated yet |
-| `if (a1 != 0) … else` | softfp_template.h | left out | not translated yet |
-| `u = (uint128_t)1 << ((l + 1) / 2);` | softfp_template.h | left out | not translated yet |
-| `for (; ; )` | softfp_template.h | left out | not translated yet |
-| `sq1 = mul_u128(&sq0, s, s); inexact = (sq0 != a0 || sq1 != a1); *pr = s; return inexact;` | softfp_template.h | left out | not translated yet |
+| `if (a1 != 0) … else` | softfp_template.h | exported | Unvalidated |
+| `u = (uint128_t)1 << ((l + 1) / 2);` | softfp_template.h | exported | Unvalidated |
+| `for (; ; )` | softfp_template.h | exported | Unvalidated |
+| `sq1 = mul_u128(&sq0, s, s); inexact = (sq0 != a0 || sq1 != a1); *pr = s; return inexact;` | softfp_template.h | exported | Unvalidated |
 | `sqrt_sf32` | softfp_template.h | left out | not translated yet |
 | `sqrt_sf64` | softfp_template.h | left out | not translated yet |
 | `sqrt_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint32_t a_mant; a_sign = a >> (32 - 1); a_exp = (a >> 23) & ((…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_sign = a >> (64 - 1); a_exp = (a >> 52) & ((…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_sign = a >> (128 - 1); a_exp = (a >> 112) &…` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `a_exp -= ((1 << 8) - 1) / 2;` | softfp_template.h | left out | not translated yet |
-| `a_exp -= ((1 << 11) - 1) / 2;` | softfp_template.h | left out | not translated yet |
-| `a_exp -= ((1 << 15) - 1) / 2;` | softfp_template.h | left out | not translated yet |
-| `if (a_exp & 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp & 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp & 1)` | softfp_template.h | left out | not translated yet |
-| `a_exp = (a_exp >> 1) + ((1 << 8) - 1) / 2; a_mant <<= (32 - 4 - 23);` | softfp_template.h | left out | not translated yet |
-| `a_exp = (a_exp >> 1) + ((1 << 11) - 1) / 2; a_mant <<= (64 - 4 - 52);` | softfp_template.h | left out | not translated yet |
-| `a_exp = (a_exp >> 1) + ((1 << 15) - 1) / 2; a_mant <<= (128 - 4 - 112);` | softfp_template.h | left out | not translated yet |
-| `if (sqrtrem_u32(&a_mant, a_mant, 0))` | softfp_template.h | left out | not translated yet |
-| `if (sqrtrem_u64(&a_mant, a_mant, 0))` | softfp_template.h | left out | not translated yet |
-| `if (sqrtrem_u128(&a_mant, a_mant, 0))` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
-| `return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint32_t a_mant; a_sign = a >> (32 - 1); a_exp = (a >> 23) & ((…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_sign = a >> (64 - 1); a_exp = (a >> 52) & ((…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_sign = a >> (128 - 1); a_exp = (a >> 112) &…` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `a_exp -= ((1 << 8) - 1) / 2;` | softfp_template.h | exported | Unvalidated |
+| `a_exp -= ((1 << 11) - 1) / 2;` | softfp_template.h | exported | Unvalidated |
+| `a_exp -= ((1 << 15) - 1) / 2;` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp & 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp & 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp & 1)` | softfp_template.h | exported | Unvalidated |
+| `a_exp = (a_exp >> 1) + ((1 << 8) - 1) / 2; a_mant <<= (32 - 4 - 23);` | softfp_template.h | exported | Unvalidated |
+| `a_exp = (a_exp >> 1) + ((1 << 11) - 1) / 2; a_mant <<= (64 - 4 - 52);` | softfp_template.h | exported | Unvalidated |
+| `a_exp = (a_exp >> 1) + ((1 << 15) - 1) / 2; a_mant <<= (128 - 4 - 112);` | softfp_template.h | exported | Unvalidated |
+| `if (sqrtrem_u32(&a_mant, a_mant, 0))` | softfp_template.h | exported | Unvalidated |
+| `if (sqrtrem_u64(&a_mant, a_mant, 0))` | softfp_template.h | exported | Unvalidated |
+| `if (sqrtrem_u128(&a_mant, a_mant, 0))` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
+| `return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template.h | exported | Unvalidated |
 | `min_sf32` | softfp_template.h | left out | not translated yet |
 | `min_sf64` | softfp_template.h | left out | not translated yet |
 | `min_sf128` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
+| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
 | `max_sf32` | softfp_template.h | left out | not translated yet |
 | `max_sf64` | softfp_template.h | left out | not translated yet |
 | `max_sf128` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
+| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
 | `eq_quiet_sf32` | softfp_template.h | left out | not translated yet |
 | `eq_quiet_sf64` | softfp_template.h | left out | not translated yet |
 | `eq_quiet_sf128` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | left out | not translated yet |
-| `if ((uint32_t)((a | b) << 1) == 0)` | softfp_template.h | left out | not translated yet |
-| `if ((uint64_t)((a | b) << 1) == 0)` | softfp_template.h | left out | not translated yet |
-| `if ((uint128_t)((a | b) << 1) == 0)` | softfp_template.h | left out | not translated yet |
-| `return (a == b);` | softfp_template.h | left out | not translated yet |
-| `return (a == b);` | softfp_template.h | left out | not translated yet |
-| `return (a == b);` | softfp_template.h | left out | not translated yet |
+| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | exported | Unvalidated |
+| `if ((uint32_t)((a | b) << 1) == 0)` | softfp_template.h | exported | Unvalidated |
+| `if ((uint64_t)((a | b) << 1) == 0)` | softfp_template.h | exported | Unvalidated |
+| `if ((uint128_t)((a | b) << 1) == 0)` | softfp_template.h | exported | Unvalidated |
+| `return (a == b);` | softfp_template.h | exported | Unvalidated |
+| `return (a == b);` | softfp_template.h | exported | Unvalidated |
+| `return (a == b);` | softfp_template.h | exported | Unvalidated |
 | `le_sf32` | softfp_template.h | left out | not translated yet |
 | `le_sf64` | softfp_template.h | left out | not translated yet |
 | `le_sf128` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
+| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
 | `lt_sf32` | softfp_template.h | left out | not translated yet |
 | `lt_sf64` | softfp_template.h | left out | not translated yet |
 | `lt_sf128` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | left out | not translated yet |
-| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | left out | not translated yet |
-| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_sign != b_sign) … else` | softfp_template.h | left out | not translated yet |
+| `if (isnan_sf32(a) || isnan_sf32(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf64(a) || isnan_sf64(b))` | softfp_template.h | exported | Unvalidated |
+| `if (isnan_sf128(a) || isnan_sf128(b))` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (32 - 1); b_sign = b >> (32 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (64 - 1); b_sign = b >> (64 - 1);` | softfp_template.h | exported | Unvalidated |
+| `a_sign = a >> (128 - 1); b_sign = b >> (128 - 1);` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_sign != b_sign) … else` | softfp_template.h | exported | Unvalidated |
 | `fclass_sf32` | softfp_template.h | left out | not translated yet |
 | `fclass_sf64` | softfp_template.h | left out | not translated yet |
 | `fclass_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint32_t a_mant; uint32_t ret; a_sign = a >> (32 - 1); a_exp =…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; uint32_t ret; a_sign = a >> (64 - 1); a_exp =…` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; uint32_t ret; a_sign = a >> (128 - 1); a_exp…` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) … else` | softfp_template.h | left out | not translated yet |
-| `return ret;` | softfp_template.h | left out | not translated yet |
-| `return ret;` | softfp_template.h | left out | not translated yet |
-| `return ret;` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint32_t a_mant; uint32_t ret; a_sign = a >> (32 - 1); a_exp =…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; uint32_t ret; a_sign = a >> (64 - 1); a_exp =…` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; uint32_t ret; a_sign = a >> (128 - 1); a_exp…` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) … else` | softfp_template.h | exported | Unvalidated |
+| `return ret;` | softfp_template.h | exported | Unvalidated |
+| `return ret;` | softfp_template.h | exported | Unvalidated |
+| `return ret;` | softfp_template.h | exported | Unvalidated |
 | `cvt_sf32_sf64` | softfp_template.h | left out | not translated yet |
 | `cvt_sf32_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_mant = unpack_sf32(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf32(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0xff)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0xff)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0)` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - 0x7f + (((1 << 11) - 1) / 2); a_mant <<= (52 - 23); return pack_sf64(a_sign, a_…` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - 0x7f + (((1 << 15) - 1) / 2); a_mant <<= (112 - 23); return pack_sf128(a_sign,…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_mant = unpack_sf32(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf32(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0xff)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0xff)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0)` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - 0x7f + (((1 << 11) - 1) / 2); a_mant <<= (52 - 23); return pack_sf64(a_sign, a_…` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - 0x7f + (((1 << 15) - 1) / 2); a_mant <<= (112 - 23); return pack_sf128(a_sign,…` | softfp_template.h | exported | Unvalidated |
 | `cvt_sf64_sf32` | softfp_template.h | left out | not translated yet |
 | `cvt_sf128_sf32` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_mant = unpack_sf64(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf128(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - (((1 << 11) - 1) / 2) + 0x7f; a_mant = rshift_rnd64(a_mant, 52 - (32 - 2)); ret…` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - (((1 << 15) - 1) / 2) + 0x7f; a_mant = rshift_rnd128(a_mant, 112 - (32 - 2)); r…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint64_t a_mant; a_mant = unpack_sf64(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf128(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - (((1 << 11) - 1) / 2) + 0x7f; a_mant = rshift_rnd64(a_mant, 52 - (32 - 2)); ret…` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - (((1 << 15) - 1) / 2) + 0x7f; a_mant = rshift_rnd128(a_mant, 112 - (32 - 2)); r…` | softfp_template.h | exported | Unvalidated |
 | `cvt_sf64_sf128` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf64(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0x7ff)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0)` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - 0x3ff + (((1 << 15) - 1) / 2); a_mant <<= (112 - 52); return pack_sf128(a_sign,…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf64(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0x7ff)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0)` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - 0x3ff + (((1 << 15) - 1) / 2); a_mant <<= (112 - 52); return pack_sf128(a_sign,…` | softfp_template.h | exported | Unvalidated |
 | `cvt_sf128_sf64` | softfp_template.h | left out | not translated yet |
-| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf128(&a_sign, &a_exp, a);` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template.h | left out | not translated yet |
-| `a_exp = a_exp - (((1 << 15) - 1) / 2) + 0x3ff; a_mant = rshift_rnd128(a_mant, 112 - (64 - 2));…` | softfp_template.h | left out | not translated yet |
+| `uint32_t a_sign; int32_t a_exp; uint128_t a_mant; a_mant = unpack_sf128(&a_sign, &a_exp, a);` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1)` | softfp_template.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template.h | exported | Unvalidated |
+| `a_exp = a_exp - (((1 << 15) - 1) / 2) + 0x3ff; a_mant = rshift_rnd128(a_mant, 112 - (64 - 2));…` | softfp_template.h | exported | Unvalidated |
 | `internal_cvt_sf32_i32` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_sf32_i64` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_sf32_i128` | softfp_template_icvt.h | left out | not translated yet |
@@ -2877,78 +2877,78 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `internal_cvt_sf128_i32` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_sf128_i64` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_sf128_i128` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint128_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint128_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | left out | not translated yet |
-| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint128_t r, r_max; a_sign…` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp == 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (is_unsigned) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_exp >= 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (a_sign)` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
-| `return r;` | softfp_template_icvt.h | left out | not translated yet |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint128_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint64_t a_mant; uint128_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint32_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint64_t r, r_max; a_sign =…` | softfp_template_icvt.h | exported | Unvalidated |
+| `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint128_t a_mant; uint128_t r, r_max; a_sign…` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 8) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 11) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == ((1 << 15) - 1) && a_mant != 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp == 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((32 - 2) - 23); a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((64 - 2) - 52); a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant <<= ((128 - 2) - 112); a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (is_unsigned) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_exp >= 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (a_sign)` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
+| `return r;` | softfp_template_icvt.h | exported | Unvalidated |
 | `cvt_sf32_i32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf32_i64` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf32_i128` | softfp_template_icvt.h | left out | not translated yet |
@@ -2958,15 +2958,15 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `cvt_sf128_i32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf128_i64` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf128_i128` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
+| `return internal_cvt_sf32_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf32_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf32_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
 | `cvt_sf32_u32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf32_u64` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf32_u128` | softfp_template_icvt.h | left out | not translated yet |
@@ -2976,15 +2976,15 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `cvt_sf128_u32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf128_u64` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_sf128_u128` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf32_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf64_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_sf128_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
+| `return internal_cvt_sf32_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf32_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf32_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf64_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i32 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i64 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_sf128_i128 (a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
 | `internal_cvt_i32_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_i64_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_i128_sf32` | softfp_template_icvt.h | left out | not translated yet |
@@ -2994,42 +2994,42 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `internal_cvt_i32_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_i64_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `internal_cvt_i128_sf128` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 32 - clz32(r) - (32 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 64 - clz64(r) - (32 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 128 - clz128(r) - (32 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 32 - clz32(r) - (64 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 64 - clz64(r) - (64 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 128 - clz128(r) - (64 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 32 - clz32(r) - (128 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 64 - clz64(r) - (128 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 128 - clz128(r) - (128 - 1);` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `if (l > 0)` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
-| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | left out | not translated yet |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (!is_unsigned && a < 0) … else` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 32 - clz32(r) - (32 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 64 - clz64(r) - (32 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 8) - 1) / 2) + 32 - 2; l = 128 - clz128(r) - (32 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 32 - clz32(r) - (64 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 64 - clz64(r) - (64 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 11) - 1) / 2) + 64 - 2; l = 128 - clz128(r) - (64 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 32 - clz32(r) - (128 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 64 - clz64(r) - (128 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_exp = (((1 << 15) - 1) / 2) + 128 - 2; l = 128 - clz128(r) - (128 - 1);` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `if (l > 0)` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
+| `a_mant = r; return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);` | softfp_template_icvt.h | exported | Unvalidated |
 | `cvt_i32_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_i64_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_i128_sf32` | softfp_template_icvt.h | left out | not translated yet |
@@ -3039,15 +3039,15 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `cvt_i32_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_i64_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_i128_sf128` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | left out | not translated yet |
+| `return internal_cvt_i32_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf32(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i32_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf64(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i32_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf128(a, rm, pfflags, FALSE);` | softfp_template_icvt.h | exported | Unvalidated |
 | `cvt_u32_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_u64_sf32` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_u128_sf32` | softfp_template_icvt.h | left out | not translated yet |
@@ -3057,595 +3057,595 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `cvt_u32_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_u64_sf128` | softfp_template_icvt.h | left out | not translated yet |
 | `cvt_u128_sf128` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i32_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i64_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
-| `return internal_cvt_i128_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | left out | not translated yet |
+| `return internal_cvt_i32_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf32(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i32_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf64(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i32_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i64_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
+| `return internal_cvt_i128_sf128(a, rm, pfflags, TRUE);` | softfp_template_icvt.h | exported | Unvalidated |
 | `main` | splitimg.c | left out | not translated yet |
-| `if (optind + 1) >= argc)` | splitimg.c | left out | not translated yet |
-| `infilename = argv[optind++]; outpath = argv[optind++]; blocksize = 256;` | splitimg.c | left out | not translated yet |
-| `if (optind < argc)` | splitimg.c | left out | not translated yet |
-| `blocksize *= 1024; buf = malloc(blocksize); f = fopen(infilename, "rb");` | splitimg.c | left out | not translated yet |
-| `if (!f)` | splitimg.c | left out | not translated yet |
-| `i = 0;` | splitimg.c | left out | not translated yet |
-| `for (; ; )` | splitimg.c | left out | not translated yet |
-| `fclose(f); printf("%d blocks\n", i); snprintf(buf1, sizeof(buf1), "%s/blk.txt", outpath); fo =…` | splitimg.c | left out | not translated yet |
-| `if (!fo)` | splitimg.c | left out | not translated yet |
-| `fprintf(fo, "{\n"); fprintf(fo, " block_size: %d,\n", blocksize / 1024); fprintf(fo, " n_block:…` | splitimg.c | left out | not translated yet |
+| `if (optind + 1) >= argc)` | splitimg.c | exported | Unvalidated |
+| `infilename = argv[optind++]; outpath = argv[optind++]; blocksize = 256;` | splitimg.c | exported | Unvalidated |
+| `if (optind < argc)` | splitimg.c | exported | Unvalidated |
+| `blocksize *= 1024; buf = malloc(blocksize); f = fopen(infilename, "rb");` | splitimg.c | exported | Unvalidated |
+| `if (!f)` | splitimg.c | exported | Unvalidated |
+| `i = 0;` | splitimg.c | exported | Unvalidated |
+| `for (; ; )` | splitimg.c | exported | Unvalidated |
+| `fclose(f); printf("%d blocks\n", i); snprintf(buf1, sizeof(buf1), "%s/blk.txt", outpath); fo =…` | splitimg.c | exported | Unvalidated |
+| `if (!fo)` | splitimg.c | exported | Unvalidated |
+| `fprintf(fo, "{\n"); fprintf(fo, " block_size: %d,\n", blocksize / 1024); fprintf(fo, " n_block:…` | splitimg.c | exported | Unvalidated |
 | `term_exit` | temu.c | left out | not translated yet |
-| `tcsetattr (0, 0 , &oldtty); fcntl(0, 4 , old_fd0_flags);` | temu.c | left out | not translated yet |
+| `tcsetattr (0, 0 , &oldtty); fcntl(0, 4 , old_fd0_flags);` | temu.c | exported | Unvalidated |
 | `term_init` | temu.c | left out | not translated yet |
-| `struct termios tty; memset(&tty, 0, sizeof(tty)); tcgetattr (0, &tty); oldtty = tty; old_fd0_fl…` | temu.c | left out | not translated yet |
-| `if (!allow_ctrlc)` | temu.c | left out | not translated yet |
-| `tty.c_cflag &= ~( 0000060 | 0000400 ); tty.c_cflag |= 0000060 ; tty.c_cc[ 6 ] = 1; tty.c_cc[ 5…` | temu.c | left out | not translated yet |
+| `struct termios tty; memset(&tty, 0, sizeof(tty)); tcgetattr (0, &tty); oldtty = tty; old_fd0_fl…` | temu.c | exported | Unvalidated |
+| `if (!allow_ctrlc)` | temu.c | exported | Unvalidated |
+| `tty.c_cflag &= ~( 0000060 | 0000400 ); tty.c_cflag |= 0000060 ; tty.c_cc[ 6 ] = 1; tty.c_cc[ 5…` | temu.c | exported | Unvalidated |
 | `console_write` | temu.c | left out | not translated yet |
-| `fwrite(buf, 1, len, stdout ); fflush( stdout );` | temu.c | left out | not translated yet |
+| `fwrite(buf, 1, len, stdout ); fflush( stdout );` | temu.c | exported | Unvalidated |
 | `console_read` | temu.c | left out | not translated yet |
-| `if (len <= 0)` | temu.c | left out | not translated yet |
-| `ret = read(s->stdin_fd, buf, len);` | temu.c | left out | not translated yet |
-| `if (ret < 0)` | temu.c | left out | not translated yet |
-| `if (ret == 0)` | temu.c | left out | not translated yet |
-| `j = 0;` | temu.c | left out | not translated yet |
-| `for (i = 0; i < ret; i++)` | temu.c | left out | not translated yet |
-| `return j;` | temu.c | left out | not translated yet |
+| `if (len <= 0)` | temu.c | exported | Unvalidated |
+| `ret = read(s->stdin_fd, buf, len);` | temu.c | exported | Unvalidated |
+| `if (ret < 0)` | temu.c | exported | Unvalidated |
+| `if (ret == 0)` | temu.c | exported | Unvalidated |
+| `j = 0;` | temu.c | exported | Unvalidated |
+| `for (i = 0; i < ret; i++)` | temu.c | exported | Unvalidated |
+| `return j;` | temu.c | exported | Unvalidated |
 | `term_resize_handler` | temu.c | left out | not translated yet |
-| `if (global_stdio_device)` | temu.c | left out | not translated yet |
+| `if (global_stdio_device)` | temu.c | exported | Unvalidated |
 | `console_get_size` | temu.c | left out | not translated yet |
-| `struct winsize ws; int width, height; width = 80; height = 25;` | temu.c | left out | not translated yet |
-| `if (ioctl(s->stdin_fd, 0x5413 , &ws) == 0 && ws.ws_col >= 4 && ws.ws_row >= 4)` | temu.c | left out | not translated yet |
-| `*pw = width; *ph = height;` | temu.c | left out | not translated yet |
+| `struct winsize ws; int width, height; width = 80; height = 25;` | temu.c | exported | Unvalidated |
+| `if (ioctl(s->stdin_fd, 0x5413 , &ws) == 0 && ws.ws_col >= 4 && ws.ws_row >= 4)` | temu.c | exported | Unvalidated |
+| `*pw = width; *ph = height;` | temu.c | exported | Unvalidated |
 | `console_init` | temu.c | left out | not translated yet |
-| `CharacterDevice *dev; STDIODevice *s; struct sigaction sig; term_init(allow_ctrlc); dev = mallo…` | temu.c | left out | not translated yet |
+| `CharacterDevice *dev; STDIODevice *s; struct sigaction sig; term_init(allow_ctrlc); dev = mallo…` | temu.c | exported | Unvalidated |
 | `bf_get_sector_count` | temu.c | left out | not translated yet |
-| `BlockDeviceFile *bf = bs->opaque; return bf->nb_sectors;` | temu.c | left out | not translated yet |
+| `BlockDeviceFile *bf = bs->opaque; return bf->nb_sectors;` | temu.c | exported | Unvalidated |
 | `bf_read_async` | temu.c | left out | not translated yet |
-| `if (!bf->f)` | temu.c | left out | not translated yet |
-| `if (bf->mode == BF_MODE_SNAPSHOT) … else` | temu.c | left out | not translated yet |
-| `return 0;` | temu.c | left out | not translated yet |
+| `if (!bf->f)` | temu.c | exported | Unvalidated |
+| `if (bf->mode == BF_MODE_SNAPSHOT) … else` | temu.c | exported | Unvalidated |
+| `return 0;` | temu.c | exported | Unvalidated |
 | `bf_write_async` | temu.c | left out | not translated yet |
-| `switch (bf->mode)` | temu.c | left out | not translated yet |
-| `return ret;` | temu.c | left out | not translated yet |
+| `switch (bf->mode)` | temu.c | exported | Unvalidated |
+| `return ret;` | temu.c | exported | Unvalidated |
 | `block_device_init` | temu.c | left out | not translated yet |
-| `if (mode == BF_MODE_RW) … else` | temu.c | left out | not translated yet |
-| `f = fopen(filename, mode_str);` | temu.c | left out | not translated yet |
-| `if (!f)` | temu.c | left out | not translated yet |
-| `fseek(f, 0, 2 ); file_size = ftello(f); bs = mallocz(sizeof(*bs)); bf = mallocz(sizeof(*bf)); b…` | temu.c | left out | not translated yet |
-| `if (mode == BF_MODE_SNAPSHOT)` | temu.c | left out | not translated yet |
-| `bs->opaque = bf; bs->get_sector_count = bf_get_sector_count; bs->read_async = bf_read_async; bs…` | temu.c | left out | not translated yet |
+| `if (mode == BF_MODE_RW) … else` | temu.c | exported | Unvalidated |
+| `f = fopen(filename, mode_str);` | temu.c | exported | Unvalidated |
+| `if (!f)` | temu.c | exported | Unvalidated |
+| `fseek(f, 0, 2 ); file_size = ftello(f); bs = mallocz(sizeof(*bs)); bf = mallocz(sizeof(*bf)); b…` | temu.c | exported | Unvalidated |
+| `if (mode == BF_MODE_SNAPSHOT)` | temu.c | exported | Unvalidated |
+| `bs->opaque = bf; bs->get_sector_count = bf_get_sector_count; bs->read_async = bf_read_async; bs…` | temu.c | exported | Unvalidated |
 | `tun_write_packet` | temu.c | left out | not translated yet |
-| `TunState *s = net->opaque; write(s->fd, buf, len);` | temu.c | left out | not translated yet |
+| `TunState *s = net->opaque; write(s->fd, buf, len);` | temu.c | exported | Unvalidated |
 | `tun_select_fill` | temu.c | left out | not translated yet |
-| `TunState *s = net->opaque; int net_fd = s->fd; s->select_filled = net->device_can_write_packet(…` | temu.c | left out | not translated yet |
-| `if (s->select_filled)` | temu.c | left out | not translated yet |
+| `TunState *s = net->opaque; int net_fd = s->fd; s->select_filled = net->device_can_write_packet(…` | temu.c | exported | Unvalidated |
+| `if (s->select_filled)` | temu.c | exported | Unvalidated |
 | `tun_select_poll` | temu.c | left out | not translated yet |
-| `if (select_ret <= 0)` | temu.c | left out | not translated yet |
-| `if (s->select_filled && (((( rfds )->fds_bits)[(( net_fd ) / (8 * (int) sizeof (__fd_mask)))] &…` | temu.c | left out | not translated yet |
+| `if (select_ret <= 0)` | temu.c | exported | Unvalidated |
+| `if (s->select_filled && (((( rfds )->fds_bits)[(( net_fd ) / (8 * (int) sizeof (__fd_mask)))] &…` | temu.c | exported | Unvalidated |
 | `tun_open` | temu.c | left out | not translated yet |
-| `struct ifreq ifr; int fd, ret; EthernetDevice *net; TunState *s; fd = open("/dev/net/tun", 02 );` | temu.c | left out | not translated yet |
-| `if (fd < 0)` | temu.c | left out | not translated yet |
-| `memset(&ifr, 0, sizeof(ifr)); ifr. ifr_ifru.ifru_flags = 0x0002 | 0x1000 ; pstrcpy(ifr. ifr_ifr…` | temu.c | left out | not translated yet |
-| `if (ret != 0)` | temu.c | left out | not translated yet |
-| `fcntl(fd, 4 , 04000 ); net = mallocz(sizeof(*net)); net->mac_addr[0] = 0x02; net->mac_addr[1] =…` | temu.c | left out | not translated yet |
+| `struct ifreq ifr; int fd, ret; EthernetDevice *net; TunState *s; fd = open("/dev/net/tun", 02 );` | temu.c | exported | Unvalidated |
+| `if (fd < 0)` | temu.c | exported | Unvalidated |
+| `memset(&ifr, 0, sizeof(ifr)); ifr. ifr_ifru.ifru_flags = 0x0002 | 0x1000 ; pstrcpy(ifr. ifr_ifr…` | temu.c | exported | Unvalidated |
+| `if (ret != 0)` | temu.c | exported | Unvalidated |
+| `fcntl(fd, 4 , 04000 ); net = mallocz(sizeof(*net)); net->mac_addr[0] = 0x02; net->mac_addr[1] =…` | temu.c | exported | Unvalidated |
 | `slirp_write_packet` | temu.c | left out | not translated yet |
-| `Slirp *slirp_state = net->opaque; slirp_input(slirp_state, buf, len);` | temu.c | left out | not translated yet |
+| `Slirp *slirp_state = net->opaque; slirp_input(slirp_state, buf, len);` | temu.c | exported | Unvalidated |
 | `slirp_can_output` | temu.c | left out | not translated yet |
-| `EthernetDevice *net = opaque; return net->device_can_write_packet(net);` | temu.c | left out | not translated yet |
+| `EthernetDevice *net = opaque; return net->device_can_write_packet(net);` | temu.c | exported | Unvalidated |
 | `slirp_output` | temu.c | left out | not translated yet |
-| `EthernetDevice *net = opaque; return net->device_write_packet(net, pkt, pkt_len);` | temu.c | left out | not translated yet |
+| `EthernetDevice *net = opaque; return net->device_write_packet(net, pkt, pkt_len);` | temu.c | exported | Unvalidated |
 | `slirp_select_fill1` | temu.c | left out | not translated yet |
-| `Slirp *slirp_state = net->opaque; slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);` | temu.c | left out | not translated yet |
+| `Slirp *slirp_state = net->opaque; slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);` | temu.c | exported | Unvalidated |
 | `slirp_select_poll1` | temu.c | left out | not translated yet |
-| `Slirp *slirp_state = net->opaque; slirp_select_poll(slirp_state, rfds, wfds, efds, (select_ret…` | temu.c | left out | not translated yet |
+| `Slirp *slirp_state = net->opaque; slirp_select_poll(slirp_state, rfds, wfds, efds, (select_ret…` | temu.c | exported | Unvalidated |
 | `slirp_open` | temu.c | left out | not translated yet |
-| `if (slirp_state)` | temu.c | left out | not translated yet |
-| `net = mallocz(sizeof(*net)); slirp_state = slirp_init(restricted, net_addr, mask, host, vhostna…` | temu.c | left out | not translated yet |
+| `if (slirp_state)` | temu.c | exported | Unvalidated |
+| `net = mallocz(sizeof(*net)); slirp_state = slirp_init(restricted, net_addr, mask, host, vhostna…` | temu.c | exported | Unvalidated |
 | `virt_machine_run` | temu.c | left out | not translated yet |
-| `fd_set rfds, wfds, efds; int fd_max, ret, delay; struct timeval tv; int stdin_fd; delay = virt_…` | temu.c | left out | not translated yet |
-| `do … while (0)` | temu.c | left out | not translated yet |
-| `do … while (0)` | temu.c | left out | not translated yet |
-| `do … while (0)` | temu.c | left out | not translated yet |
-| `fd_max = -1;` | temu.c | left out | not translated yet |
-| `if (m->console_dev && virtio_console_can_write_data(m->console_dev))` | temu.c | left out | not translated yet |
-| `if (m->net)` | temu.c | left out | not translated yet |
-| `fs_net_set_fdset(&fd_max, &rfds, &wfds, &efds, &delay); tv.tv_sec = delay / 1000; tv.tv_usec =…` | temu.c | left out | not translated yet |
-| `if (m->net)` | temu.c | left out | not translated yet |
-| `if (ret > 0)` | temu.c | left out | not translated yet |
-| `sdl_refresh(m); virt_machine_interp(m, 500000);` | temu.c | left out | not translated yet |
+| `fd_set rfds, wfds, efds; int fd_max, ret, delay; struct timeval tv; int stdin_fd; delay = virt_…` | temu.c | exported | Unvalidated |
+| `do … while (0)` | temu.c | exported | Unvalidated |
+| `do … while (0)` | temu.c | exported | Unvalidated |
+| `do … while (0)` | temu.c | exported | Unvalidated |
+| `fd_max = -1;` | temu.c | exported | Unvalidated |
+| `if (m->console_dev && virtio_console_can_write_data(m->console_dev))` | temu.c | exported | Unvalidated |
+| `if (m->net)` | temu.c | exported | Unvalidated |
+| `fs_net_set_fdset(&fd_max, &rfds, &wfds, &efds, &delay); tv.tv_sec = delay / 1000; tv.tv_usec =…` | temu.c | exported | Unvalidated |
+| `if (m->net)` | temu.c | exported | Unvalidated |
+| `if (ret > 0)` | temu.c | exported | Unvalidated |
+| `sdl_refresh(m); virt_machine_interp(m, 500000);` | temu.c | exported | Unvalidated |
 | `help` | temu.c | left out | not translated yet |
-| `printf("temu version " "2019-02-10" ", Copyright (c) 2016-2018 Fabrice Bellard\n" "usage: temu…` | temu.c | left out | not translated yet |
+| `printf("temu version " "2019-02-10" ", Copyright (c) 2016-2018 Fabrice Bellard\n" "usage: temu…` | temu.c | exported | Unvalidated |
 | `net_start_cb` | temu.c | left out | not translated yet |
-| `net_completed = TRUE;` | temu.c | left out | not translated yet |
+| `net_completed = TRUE;` | temu.c | exported | Unvalidated |
 | `net_poll_cb` | temu.c | left out | not translated yet |
-| `return net_completed;` | temu.c | left out | not translated yet |
+| `return net_completed;` | temu.c | exported | Unvalidated |
 | `main` | temu.c | left out | not translated yet |
-| `VirtMachine *s; const char *path, *cmdline, *build_preload_file; int c, option_index, i, ram_si…` | temu.c | left out | not translated yet |
-| `for (; ; )` | temu.c | left out | not translated yet |
-| `if (optind >= argc)` | temu.c | left out | not translated yet |
-| `path = argv[optind++]; virt_machine_set_defaults(p); fs_wget_init(); virt_machine_load_config_f…` | temu.c | left out | not translated yet |
-| `if (ram_size > 0)` | temu.c | left out | not translated yet |
-| `if (accel_enable != -1)` | temu.c | left out | not translated yet |
-| `if (cmdline)` | temu.c | left out | not translated yet |
-| `for (i = 0; i < p->drive_count; i++)` | temu.c | left out | not translated yet |
-| `for (i = 0; i < p->fs_count; i++)` | temu.c | left out | not translated yet |
-| `for (i = 0; i < p->eth_count; i++)` | temu.c | left out | not translated yet |
-| `if (p->display_device) … else` | temu.c | left out | not translated yet |
-| `p->rtc_real_time = TRUE; s = virt_machine_init(p);` | temu.c | left out | not translated yet |
-| `if (!s)` | temu.c | left out | not translated yet |
-| `virt_machine_free_config(p);` | temu.c | left out | not translated yet |
-| `if (s->net)` | temu.c | left out | not translated yet |
-| `for (; ; )` | temu.c | left out | not translated yet |
-| `virt_machine_end(s); return 0;` | temu.c | left out | not translated yet |
+| `VirtMachine *s; const char *path, *cmdline, *build_preload_file; int c, option_index, i, ram_si…` | temu.c | exported | Unvalidated |
+| `for (; ; )` | temu.c | exported | Unvalidated |
+| `if (optind >= argc)` | temu.c | exported | Unvalidated |
+| `path = argv[optind++]; virt_machine_set_defaults(p); fs_wget_init(); virt_machine_load_config_f…` | temu.c | exported | Unvalidated |
+| `if (ram_size > 0)` | temu.c | exported | Unvalidated |
+| `if (accel_enable != -1)` | temu.c | exported | Unvalidated |
+| `if (cmdline)` | temu.c | exported | Unvalidated |
+| `for (i = 0; i < p->drive_count; i++)` | temu.c | exported | Unvalidated |
+| `for (i = 0; i < p->fs_count; i++)` | temu.c | exported | Unvalidated |
+| `for (i = 0; i < p->eth_count; i++)` | temu.c | left out | still being translated |
+| `if (p->display_device) … else` | temu.c | exported | Unvalidated |
+| `p->rtc_real_time = TRUE; s = virt_machine_init(p);` | temu.c | exported | Unvalidated |
+| `if (!s)` | temu.c | exported | Unvalidated |
+| `virt_machine_free_config(p);` | temu.c | exported | Unvalidated |
+| `if (s->net)` | temu.c | exported | Unvalidated |
+| `for (; ; )` | temu.c | exported | Unvalidated |
+| `virt_machine_end(s); return 0;` | temu.c | exported | Unvalidated |
 | `vga_draw_glyph8` | vga.c | left out | not translated yet |
-| `uint32_t font_data, xorcol; xorcol = bgcol ^ fgcol;` | vga.c | left out | not translated yet |
-| `do … while (--h)` | vga.c | left out | not translated yet |
+| `uint32_t font_data, xorcol; xorcol = bgcol ^ fgcol;` | vga.c | exported | Unvalidated |
+| `do … while (--h)` | vga.c | exported | Unvalidated |
 | `vga_draw_glyph9` | vga.c | left out | not translated yet |
-| `uint32_t font_data, xorcol, v; xorcol = bgcol ^ fgcol;` | vga.c | left out | not translated yet |
-| `do … while (--h)` | vga.c | left out | not translated yet |
+| `uint32_t font_data, xorcol, v; xorcol = bgcol ^ fgcol;` | vga.c | exported | Unvalidated |
+| `do … while (--h)` | vga.c | exported | Unvalidated |
 | `c6_to_8` | vga.c | left out | not translated yet |
-| `int b; v &= 0x3f; b = v & 1; return (v << 2) | (b << 1) | b;` | vga.c | left out | not translated yet |
+| `int b; v &= 0x3f; b = v & 1; return (v << 2) | (b << 1) | b;` | vga.c | exported | Unvalidated |
 | `update_palette16` | vga.c | left out | not translated yet |
-| `int full_update, i; uint32_t v, col; full_update = 0;` | vga.c | left out | not translated yet |
-| `for (i = 0; i < 16; i++)` | vga.c | left out | not translated yet |
-| `return full_update;` | vga.c | left out | not translated yet |
+| `int full_update, i; uint32_t v, col; full_update = 0;` | vga.c | exported | Unvalidated |
+| `for (i = 0; i < 16; i++)` | vga.c | exported | Unvalidated |
+| `return full_update;` | vga.c | exported | Unvalidated |
 | `vga_text_refresh` | vga.c | left out | not translated yet |
-| `FBDevice *fb_dev = s->fb_dev; int width, height, cwidth, cheight, cy, cx, x1, y1, width1, heigh…` | vga.c | left out | not translated yet |
-| `if (!(s->sr[1] & 0x01)` | vga.c | left out | not translated yet |
-| `width = (s->cr[0x01] + 1); height = s->cr[0x12] | ((s->cr[0x07] & 0x02) << 7) | ((s->cr[0x07] &…` | vga.c | left out | not translated yet |
-| `if (fb_dev->width < width1 || fb_dev->height < height1 || width > 132 || height > 60)` | vga.c | left out | not translated yet |
-| `if (s->last_line_offset != line_offset || s->last_start_addr != start_addr || s->last_width !=…` | vga.c | left out | not translated yet |
-| `cursor_offset = ((s->cr[0x0e] << 8) | s->cr[0x0f]) - start_addr; cursor_start = s->cr[0xa]; cur…` | vga.c | left out | not translated yet |
-| `if (cursor_offset != s->last_cursor_offset || cursor_start != s->last_cursor_start || cursor_en…` | vga.c | left out | not translated yet |
-| `ch_addr1 = 0x18000 + (start_addr * 2); cursor_offset = 0x18000 + (start_addr + cursor_offset) *…` | vga.c | left out | not translated yet |
-| `for (cy = 0; cy < height; cy++)` | vga.c | left out | not translated yet |
+| `FBDevice *fb_dev = s->fb_dev; int width, height, cwidth, cheight, cy, cx, x1, y1, width1, heigh…` | vga.c | exported | Unvalidated |
+| `if (!(s->sr[1] & 0x01)` | vga.c | exported | Unvalidated |
+| `width = (s->cr[0x01] + 1); height = s->cr[0x12] | ((s->cr[0x07] & 0x02) << 7) | ((s->cr[0x07] &…` | vga.c | exported | Unvalidated |
+| `if (fb_dev->width < width1 || fb_dev->height < height1 || width > 132 || height > 60)` | vga.c | exported | Unvalidated |
+| `if (s->last_line_offset != line_offset || s->last_start_addr != start_addr || s->last_width !=…` | vga.c | exported | Unvalidated |
+| `cursor_offset = ((s->cr[0x0e] << 8) | s->cr[0x0f]) - start_addr; cursor_start = s->cr[0xa]; cur…` | vga.c | exported | Unvalidated |
+| `if (cursor_offset != s->last_cursor_offset || cursor_start != s->last_cursor_start || cursor_en…` | vga.c | exported | Unvalidated |
+| `ch_addr1 = 0x18000 + (start_addr * 2); cursor_offset = 0x18000 + (start_addr + cursor_offset) *…` | vga.c | exported | Unvalidated |
+| `for (cy = 0; cy < height; cy++)` | vga.c | exported | Unvalidated |
 | `vga_refresh` | vga.c | left out | not translated yet |
-| `if (!(s->ar_index & 0x20) … else` | vga.c | left out | not translated yet |
+| `if (!(s->ar_index & 0x20) … else` | vga.c | exported | Unvalidated |
 | `vga_ioport_read` | vga.c | left out | not translated yet |
-| `if (addr >= 0x3b0 && addr <= 0x3bf && (s->msr & 0x01)) || (addr >= 0x3d0 && addr <= 0x3df && !(… … else` | vga.c | left out | not translated yet |
-| `return val;` | vga.c | left out | not translated yet |
+| `if (addr >= 0x3b0 && addr <= 0x3bf && (s->msr & 0x01)) || (addr >= 0x3d0 && addr <= 0x3df && !(… … else` | vga.c | exported | Unvalidated |
+| `return val;` | vga.c | exported | Unvalidated |
 | `vga_ioport_write` | vga.c | left out | not translated yet |
-| `if (addr >= 0x3b0 && addr <= 0x3bf && (s->msr & 0x01)) || (addr >= 0x3d0 && addr <= 0x3df && !(…` | vga.c | left out | not translated yet |
-| `switch (addr)` | vga.c | left out | not translated yet |
+| `if (addr >= 0x3b0 && addr <= 0x3bf && (s->msr & 0x01)) || (addr >= 0x3d0 && addr <= 0x3df && !(…` | vga.c | exported | Unvalidated |
+| `switch (addr)` | vga.c | exported | Unvalidated |
 | `vga_read_0x3c0` | vga.c | left out | not translated yet |
-| `return vga_ioport_read(opaque, 0x3c0 + addr);` | vga.c | left out | not translated yet |
+| `return vga_ioport_read(opaque, 0x3c0 + addr);` | vga.c | exported | Unvalidated |
 | `vga_write_0x3c0` | vga.c | left out | not translated yet |
-| `return vga_ioport_write(opaque, 0x3c0 + addr, val);` | vga.c | left out | not translated yet |
+| `return vga_ioport_write(opaque, 0x3c0 + addr, val);` | vga.c | exported | Unvalidated |
 | `vga_read_0x3b4` | vga.c | left out | not translated yet |
-| `return vga_ioport_read(opaque, 0x3b4 + addr);` | vga.c | left out | not translated yet |
+| `return vga_ioport_read(opaque, 0x3b4 + addr);` | vga.c | exported | Unvalidated |
 | `vga_write_0x3b4` | vga.c | left out | not translated yet |
-| `return vga_ioport_write(opaque, 0x3b4 + addr, val);` | vga.c | left out | not translated yet |
+| `return vga_ioport_write(opaque, 0x3b4 + addr, val);` | vga.c | exported | Unvalidated |
 | `vga_read_0x3d4` | vga.c | left out | not translated yet |
-| `return vga_ioport_read(opaque, 0x3d4 + addr);` | vga.c | left out | not translated yet |
+| `return vga_ioport_read(opaque, 0x3d4 + addr);` | vga.c | exported | Unvalidated |
 | `vga_write_0x3d4` | vga.c | left out | not translated yet |
-| `return vga_ioport_write(opaque, 0x3d4 + addr, val);` | vga.c | left out | not translated yet |
+| `return vga_ioport_write(opaque, 0x3d4 + addr, val);` | vga.c | exported | Unvalidated |
 | `vga_read_0x3ba` | vga.c | left out | not translated yet |
-| `return vga_ioport_read(opaque, 0x3ba + addr);` | vga.c | left out | not translated yet |
+| `return vga_ioport_read(opaque, 0x3ba + addr);` | vga.c | exported | Unvalidated |
 | `vga_write_0x3ba` | vga.c | left out | not translated yet |
-| `return vga_ioport_write(opaque, 0x3ba + addr, val);` | vga.c | left out | not translated yet |
+| `return vga_ioport_write(opaque, 0x3ba + addr, val);` | vga.c | exported | Unvalidated |
 | `vga_read_0x3da` | vga.c | left out | not translated yet |
-| `return vga_ioport_read(opaque, 0x3da + addr);` | vga.c | left out | not translated yet |
+| `return vga_ioport_read(opaque, 0x3da + addr);` | vga.c | exported | Unvalidated |
 | `vga_write_0x3da` | vga.c | left out | not translated yet |
-| `return vga_ioport_write(opaque, 0x3da + addr, val);` | vga.c | left out | not translated yet |
+| `return vga_ioport_write(opaque, 0x3da + addr, val);` | vga.c | exported | Unvalidated |
 | `vbe_write` | vga.c | left out | not translated yet |
-| `if (offset == 0) … else` | vga.c | left out | not translated yet |
+| `if (offset == 0) … else` | vga.c | exported | Unvalidated |
 | `vbe_read` | vga.c | left out | not translated yet |
-| `if (offset == 0) … else` | vga.c | left out | not translated yet |
-| `return val;` | vga.c | left out | not translated yet |
+| `if (offset == 0) … else` | vga.c | exported | Unvalidated |
+| `return val;` | vga.c | exported | Unvalidated |
 | `simplefb_bar_set` | vga.c | left out | not translated yet |
-| `if (bar_num == 0) … else` | vga.c | left out | not translated yet |
+| `if (bar_num == 0) … else` | vga.c | exported | Unvalidated |
 | `pci_vga_init` | vga.c | left out | not translated yet |
-| `VGAState *s; PCIDevice *d; uint32_t bar_size; PhysMemoryMap *mem_map, *port_map; d = pci_regist…` | vga.c | left out | not translated yet |
-| `while (bar_size < fb_dev->fb_size)` | vga.c | left out | not translated yet |
-| `pci_register_bar(d, 0, bar_size, 0x00, s, simplefb_bar_set);` | vga.c | left out | not translated yet |
-| `if (vga_rom_size > 0)` | vga.c | left out | not translated yet |
-| `s->mem_range2 = cpu_register_ram(mem_map, 0xa0000, 0x20000, 0); s->vga_ram = s->mem_range2->phy…` | vga.c | left out | not translated yet |
+| `VGAState *s; PCIDevice *d; uint32_t bar_size; PhysMemoryMap *mem_map, *port_map; d = pci_regist…` | vga.c | exported | Unvalidated |
+| `while (bar_size < fb_dev->fb_size)` | vga.c | exported | Unvalidated |
+| `pci_register_bar(d, 0, bar_size, 0x00, s, simplefb_bar_set);` | vga.c | exported | Unvalidated |
+| `if (vga_rom_size > 0)` | vga.c | exported | Unvalidated |
+| `s->mem_range2 = cpu_register_ram(mem_map, 0xa0000, 0x20000, 0); s->vga_ram = s->mem_range2->phy…` | vga.c | left out | still being translated |
 | `virtio_reset` | virtio.c | left out | not translated yet |
-| `int i; s->status = 0; s->queue_sel = 0; s->device_features_sel = 0; s->int_status = 0;` | virtio.c | left out | not translated yet |
-| `for (i = 0; i < 8; i++)` | virtio.c | left out | not translated yet |
+| `int i; s->status = 0; s->queue_sel = 0; s->device_features_sel = 0; s->int_status = 0;` | virtio.c | exported | Unvalidated |
+| `for (i = 0; i < 8; i++)` | virtio.c | exported | Unvalidated |
 | `virtio_pci_get_ram_ptr` | virtio.c | left out | not translated yet |
-| `return pci_device_get_dma_ptr(s->pci_dev, paddr, is_rw);` | virtio.c | left out | not translated yet |
+| `return pci_device_get_dma_ptr(s->pci_dev, paddr, is_rw);` | virtio.c | exported | Unvalidated |
 | `virtio_mmio_get_ram_ptr` | virtio.c | left out | not translated yet |
-| `return phys_mem_get_ram_ptr(s->mem_map, paddr, is_rw);` | virtio.c | left out | not translated yet |
+| `return phys_mem_get_ram_ptr(s->mem_map, paddr, is_rw);` | virtio.c | exported | Unvalidated |
 | `virtio_add_pci_capability` | virtio.c | left out | not translated yet |
-| `if (cfg_type == 2) … else` | virtio.c | left out | not translated yet |
-| `memset(cap, 0, cap_len); cap[0] = 0x09; cap[2] = cap_len; cap[3] = cfg_type; cap[4] = bar; put_…` | virtio.c | left out | not translated yet |
-| `if (cfg_type == 2)` | virtio.c | left out | not translated yet |
-| `pci_add_capability(s->pci_dev, cap, cap_len);` | virtio.c | left out | not translated yet |
+| `if (cfg_type == 2) … else` | virtio.c | exported | Unvalidated |
+| `memset(cap, 0, cap_len); cap[0] = 0x09; cap[2] = cap_len; cap[3] = cfg_type; cap[4] = bar; put_…` | virtio.c | exported | Unvalidated |
+| `if (cfg_type == 2)` | virtio.c | exported | Unvalidated |
+| `pci_add_capability(s->pci_dev, cap, cap_len);` | virtio.c | exported | Unvalidated |
 | `virtio_pci_bar_set` | virtio.c | left out | not translated yet |
-| `VIRTIODevice *s = opaque; phys_mem_set_addr(s->mem_range, addr, enabled);` | virtio.c | left out | not translated yet |
+| `VIRTIODevice *s = opaque; phys_mem_set_addr(s->mem_range, addr, enabled);` | virtio.c | exported | Unvalidated |
 | `virtio_init` | virtio.c | left out | not translated yet |
-| `memset(s, 0, sizeof(*s));` | virtio.c | left out | not translated yet |
-| `if (bus->pci_bus) … else` | virtio.c | left out | not translated yet |
-| `s->device_id = device_id; s->vendor_id = 0xffff; s->config_space_size = config_space_size; s->d…` | virtio.c | left out | not translated yet |
+| `memset(s, 0, sizeof(*s));` | virtio.c | exported | Unvalidated |
+| `if (bus->pci_bus) … else` | virtio.c | left out | still being translated |
+| `s->device_id = device_id; s->vendor_id = 0xffff; s->config_space_size = config_space_size; s->d…` | virtio.c | exported | Unvalidated |
 | `virtio_read16` | virtio.c | left out | not translated yet |
-| `if (addr & 1)` | virtio.c | left out | not translated yet |
-| `ptr = s->get_ram_ptr(s, addr, FALSE);` | virtio.c | left out | not translated yet |
-| `if (!ptr)` | virtio.c | left out | not translated yet |
-| `return *(uint16_t *)ptr;` | virtio.c | left out | not translated yet |
+| `if (addr & 1)` | virtio.c | exported | Unvalidated |
+| `ptr = s->get_ram_ptr(s, addr, FALSE);` | virtio.c | exported | Unvalidated |
+| `if (!ptr)` | virtio.c | exported | Unvalidated |
+| `return *(uint16_t *)ptr;` | virtio.c | exported | Unvalidated |
 | `virtio_write16` | virtio.c | left out | not translated yet |
-| `if (addr & 1)` | virtio.c | left out | not translated yet |
-| `ptr = s->get_ram_ptr(s, addr, TRUE);` | virtio.c | left out | not translated yet |
-| `if (!ptr)` | virtio.c | left out | not translated yet |
-| `*(uint16_t *)ptr = val;` | virtio.c | left out | not translated yet |
+| `if (addr & 1)` | virtio.c | exported | Unvalidated |
+| `ptr = s->get_ram_ptr(s, addr, TRUE);` | virtio.c | exported | Unvalidated |
+| `if (!ptr)` | virtio.c | exported | Unvalidated |
+| `*(uint16_t *)ptr = val;` | virtio.c | exported | Unvalidated |
 | `virtio_write32` | virtio.c | left out | not translated yet |
-| `if (addr & 3)` | virtio.c | left out | not translated yet |
-| `ptr = s->get_ram_ptr(s, addr, TRUE);` | virtio.c | left out | not translated yet |
-| `if (!ptr)` | virtio.c | left out | not translated yet |
-| `*(uint32_t *)ptr = val;` | virtio.c | left out | not translated yet |
+| `if (addr & 3)` | virtio.c | exported | Unvalidated |
+| `ptr = s->get_ram_ptr(s, addr, TRUE);` | virtio.c | exported | Unvalidated |
+| `if (!ptr)` | virtio.c | exported | Unvalidated |
+| `*(uint32_t *)ptr = val;` | virtio.c | exported | Unvalidated |
 | `virtio_memcpy_from_ram` | virtio.c | left out | not translated yet |
-| `while (count > 0)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `while (count > 0)` | virtio.c | exported | Unvalidated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `virtio_memcpy_to_ram` | virtio.c | left out | not translated yet |
-| `while (count > 0)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `while (count > 0)` | virtio.c | exported | Unvalidated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `get_desc` | virtio.c | left out | not translated yet |
-| `QueueState *qs = &s->queue[queue_idx]; return virtio_memcpy_from_ram(s, (void *)desc, qs->desc_…` | virtio.c | left out | not translated yet |
+| `QueueState *qs = &s->queue[queue_idx]; return virtio_memcpy_from_ram(s, (void *)desc, qs->desc_…` | virtio.c | exported | Unvalidated |
 | `memcpy_to_from_queue` | virtio.c | left out | not translated yet |
-| `if (count == 0)` | virtio.c | left out | not translated yet |
-| `get_desc(s, &desc, queue_idx, desc_idx);` | virtio.c | left out | not translated yet |
-| `if (to_queue) … else` | virtio.c | left out | not translated yet |
-| `for (; ; )` | virtio.c | left out | not translated yet |
-| `for (; ; )` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `if (count == 0)` | virtio.c | exported | Unvalidated |
+| `get_desc(s, &desc, queue_idx, desc_idx);` | virtio.c | exported | Unvalidated |
+| `if (to_queue) … else` | virtio.c | exported | Unvalidated |
+| `for (; ; )` | virtio.c | exported | Unvalidated |
+| `for (; ; )` | virtio.c | left out | still being translated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `memcpy_from_queue` | virtio.c | left out | not translated yet |
-| `return memcpy_to_from_queue(s, buf, queue_idx, desc_idx, offset, count, FALSE);` | virtio.c | left out | not translated yet |
+| `return memcpy_to_from_queue(s, buf, queue_idx, desc_idx, offset, count, FALSE);` | virtio.c | exported | Unvalidated |
 | `memcpy_to_queue` | virtio.c | left out | not translated yet |
-| `return memcpy_to_from_queue(s, (void *)buf, queue_idx, desc_idx, offset, count, TRUE);` | virtio.c | left out | not translated yet |
+| `return memcpy_to_from_queue(s, (void *)buf, queue_idx, desc_idx, offset, count, TRUE);` | virtio.c | exported | Unvalidated |
 | `virtio_consume_desc` | virtio.c | left out | not translated yet |
-| `QueueState *qs = &s->queue[queue_idx]; virtio_phys_addr_t addr; uint32_t index; addr = qs->used…` | virtio.c | left out | not translated yet |
+| `QueueState *qs = &s->queue[queue_idx]; virtio_phys_addr_t addr; uint32_t index; addr = qs->used…` | virtio.c | exported | Unvalidated |
 | `get_desc_rw_size` | virtio.c | left out | not translated yet |
-| `VIRTIODesc desc; int read_size, write_size; read_size = 0; write_size = 0; get_desc(s, &desc, q…` | virtio.c | left out | not translated yet |
-| `for (; ; )` | virtio.c | left out | not translated yet |
-| `for (; ; )` | virtio.c | left out | not translated yet |
-| `done: *pread_size = read_size;` | virtio.c | left out | not translated yet |
-| `*pwrite_size = write_size; return 0;` | virtio.c | left out | not translated yet |
+| `VIRTIODesc desc; int read_size, write_size; read_size = 0; write_size = 0; get_desc(s, &desc, q…` | virtio.c | exported | Unvalidated |
+| `for (; ; )` | virtio.c | exported | Unvalidated |
+| `for (; ; )` | virtio.c | exported | Unvalidated |
+| `done: *pread_size = read_size;` | virtio.c | exported | Unvalidated |
+| `*pwrite_size = write_size; return 0;` | virtio.c | exported | Unvalidated |
 | `queue_notify` | virtio.c | left out | not translated yet |
-| `if (qs->manual_recv)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | left out | not translated yet |
-| `while (qs->last_avail_idx != avail_idx)` | virtio.c | left out | not translated yet |
+| `if (qs->manual_recv)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | exported | Unvalidated |
+| `while (qs->last_avail_idx != avail_idx)` | virtio.c | exported | Unvalidated |
 | `virtio_config_read` | virtio.c | left out | not translated yet |
-| `switch (size_log2)` | virtio.c | left out | not translated yet |
-| `return val;` | virtio.c | left out | not translated yet |
+| `switch (size_log2)` | virtio.c | exported | Unvalidated |
+| `return val;` | virtio.c | exported | Unvalidated |
 | `virtio_config_write` | virtio.c | left out | not translated yet |
-| `switch (size_log2)` | virtio.c | left out | not translated yet |
+| `switch (size_log2)` | virtio.c | exported | Unvalidated |
 | `virtio_mmio_read` | virtio.c | left out | not translated yet |
-| `if (offset >= 0x100)` | virtio.c | left out | not translated yet |
-| `if (size_log2 == 2) … else` | virtio.c | left out | not translated yet |
-| `return val;` | virtio.c | left out | not translated yet |
+| `if (offset >= 0x100)` | virtio.c | exported | Unvalidated |
+| `if (size_log2 == 2) … else` | virtio.c | exported | Unvalidated |
+| `return val;` | virtio.c | exported | Unvalidated |
 | `set_low32` | virtio.c | left out | not translated yet |
-| `*paddr = (*paddr & ~(virtio_phys_addr_t)0xffffffff) | val;` | virtio.c | left out | not translated yet |
+| `*paddr = (*paddr & ~(virtio_phys_addr_t)0xffffffff) | val;` | virtio.c | exported | Unvalidated |
 | `set_high32` | virtio.c | left out | not translated yet |
-| `*paddr = (*paddr & 0xffffffff) | ((virtio_phys_addr_t)val << 32);` | virtio.c | left out | not translated yet |
+| `*paddr = (*paddr & 0xffffffff) | ((virtio_phys_addr_t)val << 32);` | virtio.c | exported | Unvalidated |
 | `virtio_mmio_write` | virtio.c | left out | not translated yet |
-| `if (offset >= 0x100)` | virtio.c | left out | not translated yet |
-| `if (size_log2 == 2)` | virtio.c | left out | not translated yet |
+| `if (offset >= 0x100)` | virtio.c | exported | Unvalidated |
+| `if (size_log2 == 2)` | virtio.c | exported | Unvalidated |
 | `virtio_pci_read` | virtio.c | left out | not translated yet |
-| `VIRTIODevice *s = opaque; uint32_t offset; uint32_t val = 0; offset = offset1 & 0xfff;` | virtio.c | left out | not translated yet |
-| `switch (offset1 >> 12)` | virtio.c | left out | not translated yet |
-| `return val;` | virtio.c | left out | not translated yet |
+| `VIRTIODevice *s = opaque; uint32_t offset; uint32_t val = 0; offset = offset1 & 0xfff;` | virtio.c | exported | Unvalidated |
+| `switch (offset1 >> 12)` | virtio.c | exported | Unvalidated |
+| `return val;` | virtio.c | exported | Unvalidated |
 | `virtio_pci_write` | virtio.c | left out | not translated yet |
-| `VIRTIODevice *s = opaque; uint32_t offset; offset = offset1 & 0xfff;` | virtio.c | left out | not translated yet |
-| `switch (offset1 >> 12)` | virtio.c | left out | not translated yet |
+| `VIRTIODevice *s = opaque; uint32_t offset; offset = offset1 & 0xfff;` | virtio.c | exported | Unvalidated |
+| `switch (offset1 >> 12)` | virtio.c | left out | still being translated |
 | `virtio_set_debug` | virtio.c | left out | not translated yet |
-| `s->debug = debug;` | virtio.c | left out | not translated yet |
+| `s->debug = debug;` | virtio.c | exported | Unvalidated |
 | `virtio_config_change_notify` | virtio.c | left out | not translated yet |
-| `s->int_status |= 2; set_irq(s->irq, 1);` | virtio.c | left out | not translated yet |
+| `s->int_status |= 2; set_irq(s->irq, 1);` | virtio.c | exported | Unvalidated |
 | `virtio_block_req_end` | virtio.c | left out | not translated yet |
-| `switch (s1->req.type)` | virtio.c | left out | not translated yet |
+| `switch (s1->req.type)` | virtio.c | left out | still being translated |
 | `virtio_block_req_cb` | virtio.c | left out | not translated yet |
-| `VIRTIODevice *s = opaque; VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s; virtio_block_req_end(…` | virtio.c | left out | not translated yet |
+| `VIRTIODevice *s = opaque; VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s; virtio_block_req_end(…` | virtio.c | exported | Unvalidated |
 | `virtio_block_recv_request` | virtio.c | left out | not translated yet |
-| `if (s1->req_in_progress)` | virtio.c | left out | not translated yet |
-| `if (memcpy_from_queue(s, &h, queue_idx, desc_idx, 0, sizeof(h)) < 0)` | virtio.c | left out | not translated yet |
-| `s1->req.type = h.type; s1->req.queue_idx = queue_idx; s1->req.desc_idx = desc_idx;` | virtio.c | left out | not translated yet |
-| `switch (h.type)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `if (s1->req_in_progress)` | virtio.c | exported | Unvalidated |
+| `if (memcpy_from_queue(s, &h, queue_idx, desc_idx, 0, sizeof(h)) < 0)` | virtio.c | exported | Unvalidated |
+| `s1->req.type = h.type; s1->req.queue_idx = queue_idx; s1->req.desc_idx = desc_idx;` | virtio.c | exported | Unvalidated |
+| `switch (h.type)` | virtio.c | left out | still being translated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `virtio_block_init` | virtio.c | left out | not translated yet |
-| `VIRTIOBlockDevice *s; uint64_t nb_sectors; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus…` | virtio.c | left out | not translated yet |
+| `VIRTIOBlockDevice *s; uint64_t nb_sectors; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus…` | virtio.c | left out | still being translated |
 | `virtio_net_recv_request` | virtio.c | left out | not translated yet |
-| `if (queue_idx == 1)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `if (queue_idx == 1)` | virtio.c | exported | Unvalidated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `virtio_net_can_write_packet` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2); return qs->last_avail_idx != avail_idx;` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2); return qs->last_avail_idx != avail_idx;` | virtio.c | exported | Unvalidated |
 | `virtio_net_write_packet` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | left out | not translated yet |
-| `if (qs->last_avail_idx == avail_idx)` | virtio.c | left out | not translated yet |
-| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2);` | virtio.c | left out | not translated yet |
-| `if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))` | virtio.c | left out | not translated yet |
-| `len = s1->header_size + buf_len;` | virtio.c | left out | not translated yet |
-| `if (len > write_size)` | virtio.c | left out | not translated yet |
-| `memset(&h, 0, s1->header_size); memcpy_to_queue(s, queue_idx, desc_idx, 0, &h, s1->header_size)…` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | exported | Unvalidated |
+| `if (qs->last_avail_idx == avail_idx)` | virtio.c | exported | Unvalidated |
+| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2);` | virtio.c | exported | Unvalidated |
+| `if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))` | virtio.c | exported | Unvalidated |
+| `len = s1->header_size + buf_len;` | virtio.c | exported | Unvalidated |
+| `if (len > write_size)` | virtio.c | exported | Unvalidated |
+| `memset(&h, 0, s1->header_size); memcpy_to_queue(s, queue_idx, desc_idx, 0, &h, s1->header_size)…` | virtio.c | left out | still being translated |
 | `virtio_net_set_carrier` | virtio.c | left out | not translated yet |
 | `virtio_net_init` | virtio.c | left out | not translated yet |
-| `VIRTIONetDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 1, 6 + 2, virtio_net_…` | virtio.c | left out | not translated yet |
+| `VIRTIONetDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 1, 6 + 2, virtio_net_…` | virtio.c | left out | still being translated |
 | `virtio_console_recv_request` | virtio.c | left out | not translated yet |
-| `if (queue_idx == 1)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `if (queue_idx == 1)` | virtio.c | exported | Unvalidated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `virtio_console_can_write_data` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2); return qs->last_avail_idx != avail_idx;` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2); return qs->last_avail_idx != avail_idx;` | virtio.c | exported | Unvalidated |
 | `virtio_console_get_write_len` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | left out | not translated yet |
-| `if (qs->last_avail_idx == avail_idx)` | virtio.c | left out | not translated yet |
-| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2);` | virtio.c | left out | not translated yet |
-| `if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))` | virtio.c | left out | not translated yet |
-| `return write_size;` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | exported | Unvalidated |
+| `if (qs->last_avail_idx == avail_idx)` | virtio.c | exported | Unvalidated |
+| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2);` | virtio.c | exported | Unvalidated |
+| `if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))` | virtio.c | exported | Unvalidated |
+| `return write_size;` | virtio.c | exported | Unvalidated |
 | `virtio_console_write_data` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | left out | not translated yet |
-| `if (qs->last_avail_idx == avail_idx)` | virtio.c | left out | not translated yet |
-| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2); mem…` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `avail_idx = virtio_read16(s, qs->avail_addr + 2);` | virtio.c | exported | Unvalidated |
+| `if (qs->last_avail_idx == avail_idx)` | virtio.c | exported | Unvalidated |
+| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2); mem…` | virtio.c | left out | still being translated |
 | `virtio_console_resize_event` | virtio.c | left out | not translated yet |
-| `put_le16(s->config_space + 0, width); put_le16(s->config_space + 2, height); virtio_config_chan…` | virtio.c | left out | not translated yet |
+| `put_le16(s->config_space + 0, width); put_le16(s->config_space + 2, height); virtio_config_chan…` | virtio.c | exported | Unvalidated |
 | `virtio_console_init` | virtio.c | left out | not translated yet |
-| `VIRTIOConsoleDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 3, 4, virtio_cons…` | virtio.c | left out | not translated yet |
+| `VIRTIOConsoleDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 3, 4, virtio_cons…` | virtio.c | left out | still being translated |
 | `virtio_input_recv_request` | virtio.c | left out | not translated yet |
-| `if (queue_idx == 1)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
+| `if (queue_idx == 1)` | virtio.c | exported | Unvalidated |
+| `return 0;` | virtio.c | exported | Unvalidated |
 | `virtio_input_queue_event` | virtio.c | left out | not translated yet |
-| `if (!qs->ready)` | virtio.c | left out | not translated yet |
-| `put_le16(buf, type); put_le16(buf + 2, code); put_le32(buf + 4, value); buf_len = 8; avail_idx…` | virtio.c | left out | not translated yet |
-| `if (qs->last_avail_idx == avail_idx)` | virtio.c | left out | not translated yet |
-| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2); mem…` | virtio.c | left out | not translated yet |
+| `if (!qs->ready)` | virtio.c | exported | Unvalidated |
+| `put_le16(buf, type); put_le16(buf + 2, code); put_le32(buf + 4, value); buf_len = 8; avail_idx…` | virtio.c | exported | Unvalidated |
+| `if (qs->last_avail_idx == avail_idx)` | virtio.c | exported | Unvalidated |
+| `desc_idx = virtio_read16(s, qs->avail_addr + 4 + (qs->last_avail_idx & (qs->num - 1)) * 2); mem…` | virtio.c | exported | Unvalidated |
 | `virtio_input_send_key_event` | virtio.c | left out | not translated yet |
-| `if (s1->type != VIRTIO_INPUT_TYPE_KEYBOARD)` | virtio.c | left out | not translated yet |
-| `ret = virtio_input_queue_event(s, 0x01, key_code, is_down);` | virtio.c | left out | not translated yet |
-| `if (ret)` | virtio.c | left out | not translated yet |
-| `return virtio_input_queue_event(s, 0x00, 0, 0);` | virtio.c | left out | not translated yet |
+| `if (s1->type != VIRTIO_INPUT_TYPE_KEYBOARD)` | virtio.c | exported | Unvalidated |
+| `ret = virtio_input_queue_event(s, 0x01, key_code, is_down);` | virtio.c | left out | still being translated |
+| `if (ret)` | virtio.c | exported | Unvalidated |
+| `return virtio_input_queue_event(s, 0x00, 0, 0);` | virtio.c | exported | Unvalidated |
 | `virtio_input_send_mouse_event` | virtio.c | left out | not translated yet |
-| `if (s1->type != VIRTIO_INPUT_TYPE_MOUSE && s1->type != VIRTIO_INPUT_TYPE_TABLET)` | virtio.c | left out | not translated yet |
-| `if (s1->type == VIRTIO_INPUT_TYPE_MOUSE) … else` | virtio.c | left out | not translated yet |
-| `if (dz != 0)` | virtio.c | left out | not translated yet |
-| `if (buttons != s1->buttons_state)` | virtio.c | left out | not translated yet |
-| `return virtio_input_queue_event(s, 0x00, 0, 0);` | virtio.c | left out | not translated yet |
+| `if (s1->type != VIRTIO_INPUT_TYPE_MOUSE && s1->type != VIRTIO_INPUT_TYPE_TABLET)` | virtio.c | exported | Unvalidated |
+| `if (s1->type == VIRTIO_INPUT_TYPE_MOUSE) … else` | virtio.c | exported | Unvalidated |
+| `if (dz != 0)` | virtio.c | exported | Unvalidated |
+| `if (buttons != s1->buttons_state)` | virtio.c | left out | still being translated |
+| `return virtio_input_queue_event(s, 0x00, 0, 0);` | virtio.c | left out | still being translated |
 | `set_bit` | virtio.c | left out | not translated yet |
-| `tab[k >> 3] |= 1 << (k & 7);` | virtio.c | left out | not translated yet |
+| `tab[k >> 3] |= 1 << (k & 7);` | virtio.c | exported | Unvalidated |
 | `virtio_input_config_write` | virtio.c | left out | not translated yet |
-| `switch (config[0])` | virtio.c | left out | not translated yet |
+| `switch (config[0])` | virtio.c | exported | Unvalidated |
 | `virtio_input_init` | virtio.c | left out | not translated yet |
-| `VIRTIOInputDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 18, 256, virtio_inp…` | virtio.c | left out | not translated yet |
+| `VIRTIOInputDevice *s; s = mallocz(sizeof(*s)); virtio_init(&s->common, bus, 18, 256, virtio_inp…` | virtio.c | left out | still being translated |
 | `fid_find1` | virtio.c | left out | not translated yet |
-| `for (el = (&s->fid_list)->next; el != (&s->fid_list; el = el->next)` | virtio.c | left out | not translated yet |
-| `return ((void *)0) ;` | virtio.c | left out | not translated yet |
+| `for (el = (&s->fid_list)->next; el != (&s->fid_list; el = el->next)` | virtio.c | exported | Unvalidated |
+| `return ((void *)0) ;` | virtio.c | exported | Unvalidated |
 | `fid_find` | virtio.c | left out | not translated yet |
-| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | left out | not translated yet |
-| `if (!f)` | virtio.c | left out | not translated yet |
-| `return f->fd;` | virtio.c | left out | not translated yet |
+| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | exported | Unvalidated |
+| `if (!f)` | virtio.c | exported | Unvalidated |
+| `return f->fd;` | virtio.c | exported | Unvalidated |
 | `fid_delete` | virtio.c | left out | not translated yet |
-| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | left out | not translated yet |
-| `if (f)` | virtio.c | left out | not translated yet |
+| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | exported | Unvalidated |
+| `if (f)` | virtio.c | exported | Unvalidated |
 | `fid_set` | virtio.c | left out | not translated yet |
-| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | left out | not translated yet |
-| `if (f) … else` | virtio.c | left out | not translated yet |
+| `FIDDesc *f; f = fid_find1(s, fid);` | virtio.c | exported | Unvalidated |
+| `if (f) … else` | virtio.c | exported | Unvalidated |
 | `virtio_9p_send_reply` | virtio.c | left out | not translated yet |
-| `uint8_t *buf1; int len; len = buf_len + 7; buf1 = malloc(len); put_le32(buf1, len); buf1[4] = i…` | virtio.c | left out | not translated yet |
+| `uint8_t *buf1; int len; len = buf_len + 7; buf1 = malloc(len); put_le32(buf1, len); buf1[4] = i…` | virtio.c | left out | still being translated |
 | `virtio_9p_send_error` | virtio.c | left out | not translated yet |
-| `uint8_t buf[4]; int buf_len; buf_len = marshall(s, buf, sizeof(buf), "w", -error); virtio_9p_se…` | virtio.c | left out | not translated yet |
+| `uint8_t buf[4]; int buf_len; buf_len = marshall(s, buf, sizeof(buf), "w", -error); virtio_9p_se…` | virtio.c | left out | still being translated |
 | `virtio_9p_open_reply` | virtio.c | left out | not translated yet |
-| `if (err < 0) … else` | virtio.c | left out | not translated yet |
-| `free(oi);` | virtio.c | left out | not translated yet |
+| `if (err < 0) … else` | virtio.c | left out | still being translated |
+| `free(oi);` | virtio.c | exported | Unvalidated |
 | `virtio_9p_open_cb` | virtio.c | left out | not translated yet |
-| `P9OpenInfo *oi = opaque; VIRTIO9PDevice *s = oi->dev; int queue_idx = oi->queue_idx; virtio_9p_…` | virtio.c | left out | not translated yet |
+| `P9OpenInfo *oi = opaque; VIRTIO9PDevice *s = oi->dev; int queue_idx = oi->queue_idx; virtio_9p_…` | virtio.c | left out | still being translated |
 | `virtio_9p_recv_request` | virtio.c | left out | not translated yet |
-| `if (queue_idx != 0)` | virtio.c | left out | not translated yet |
-| `if (s->req_in_progress)` | virtio.c | left out | not translated yet |
-| `offset = 0; header_len = 4 + 1 + 2;` | virtio.c | left out | not translated yet |
-| `if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, header_len))` | virtio.c | left out | not translated yet |
-| `id = buf[4]; tag = get_le16(buf + 5); offset += header_len;` | virtio.c | left out | not translated yet |
-| `switch (id)` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
-| `error: virtio_9p_send_error(s, queue_idx, desc_idx, tag, err);` | virtio.c | left out | not translated yet |
-| `return 0;` | virtio.c | left out | not translated yet |
-| `protocol_error: fid_not_found: err = -71;` | virtio.c | left out | not translated yet |
-| `goto error;` | virtio.c | left out | not translated yet |
+| `if (queue_idx != 0)` | virtio.c | exported | Unvalidated |
+| `if (s->req_in_progress)` | virtio.c | exported | Unvalidated |
+| `offset = 0; header_len = 4 + 1 + 2;` | virtio.c | exported | Unvalidated |
+| `if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, header_len))` | virtio.c | left out | still being translated |
+| `id = buf[4]; tag = get_le16(buf + 5); offset += header_len;` | virtio.c | exported | Unvalidated |
+| `switch (id)` | virtio.c | left out | still being translated |
+| `return 0;` | virtio.c | exported | Unvalidated |
+| `error: virtio_9p_send_error(s, queue_idx, desc_idx, tag, err);` | virtio.c | left out | still being translated |
+| `return 0;` | virtio.c | exported | Unvalidated |
+| `protocol_error: fid_not_found: err = -71;` | virtio.c | exported | Unvalidated |
+| `goto error;` | virtio.c | exported | Unvalidated |
 | `virtio_9p_init` | virtio.c | left out | not translated yet |
-| `VIRTIO9PDevice *s; int len; uint8_t *cfg; len = strlen(mount_tag); s = mallocz(sizeof(*s)); vir…` | virtio.c | left out | not translated yet |
+| `VIRTIO9PDevice *s; int len; uint8_t *cfg; len = strlen(mount_tag); s = mallocz(sizeof(*s)); vir…` | virtio.c | left out | still being translated |
 | `put_queue` | vmmouse.c | left out | not translated yet |
-| `if (s->fifo_count >= (4 * 16)` | vmmouse.c | left out | not translated yet |
-| `s->fifo_buf[s->fifo_windex] = val;` | vmmouse.c | left out | not translated yet |
-| `if (++s->fifo_windex == (4 * 16)` | vmmouse.c | left out | not translated yet |
-| `s->fifo_count++;` | vmmouse.c | left out | not translated yet |
+| `if (s->fifo_count >= (4 * 16)` | vmmouse.c | exported | Unvalidated |
+| `s->fifo_buf[s->fifo_windex] = val;` | vmmouse.c | exported | Unvalidated |
+| `if (++s->fifo_windex == (4 * 16)` | vmmouse.c | exported | Unvalidated |
+| `s->fifo_count++;` | vmmouse.c | exported | Unvalidated |
 | `read_data` | vmmouse.c | left out | not translated yet |
-| `if (size > 6 || size > s->fifo_count)` | vmmouse.c | left out | not translated yet |
-| `for (i = 0; i < size; i++)` | vmmouse.c | left out | not translated yet |
-| `s->fifo_count -= size;` | vmmouse.c | left out | not translated yet |
+| `if (size > 6 || size > s->fifo_count)` | vmmouse.c | exported | Unvalidated |
+| `for (i = 0; i < size; i++)` | vmmouse.c | exported | Unvalidated |
+| `s->fifo_count -= size;` | vmmouse.c | exported | Unvalidated |
 | `vmmouse_send_mouse_event` | vmmouse.c | left out | not translated yet |
-| `if (!s->enabled)` | vmmouse.c | left out | not translated yet |
-| `if (s->fifo_count + 4) > (4 * 16)` | vmmouse.c | left out | not translated yet |
-| `state = 0;` | vmmouse.c | left out | not translated yet |
-| `if (buttons & 1)` | vmmouse.c | left out | not translated yet |
-| `if (buttons & 2)` | vmmouse.c | left out | not translated yet |
-| `if (buttons & 4)` | vmmouse.c | left out | not translated yet |
-| `if (s->absolute)` | vmmouse.c | left out | not translated yet |
-| `put_queue(s, state); put_queue(s, x); put_queue(s, y); put_queue(s, -dz); ps2_mouse_event(s->ps…` | vmmouse.c | left out | not translated yet |
+| `if (!s->enabled)` | vmmouse.c | exported | Unvalidated |
+| `if (s->fifo_count + 4) > (4 * 16)` | vmmouse.c | exported | Unvalidated |
+| `state = 0;` | vmmouse.c | exported | Unvalidated |
+| `if (buttons & 1)` | vmmouse.c | exported | Unvalidated |
+| `if (buttons & 2)` | vmmouse.c | exported | Unvalidated |
+| `if (buttons & 4)` | vmmouse.c | exported | Unvalidated |
+| `if (s->absolute)` | vmmouse.c | exported | Unvalidated |
+| `put_queue(s, state); put_queue(s, x); put_queue(s, y); put_queue(s, -dz); ps2_mouse_event(s->ps…` | vmmouse.c | exported | Unvalidated |
 | `vmmouse_handler` | vmmouse.c | left out | not translated yet |
-| `uint32_t cmd; cmd = regs[2] & 0xff;` | vmmouse.c | left out | not translated yet |
-| `switch (cmd)` | vmmouse.c | left out | not translated yet |
+| `uint32_t cmd; cmd = regs[2] & 0xff;` | vmmouse.c | exported | Unvalidated |
+| `switch (cmd)` | vmmouse.c | exported | Unvalidated |
 | `vmmouse_is_absolute` | vmmouse.c | left out | not translated yet |
-| `return s->absolute;` | vmmouse.c | left out | not translated yet |
+| `return s->absolute;` | vmmouse.c | exported | Unvalidated |
 | `vmmouse_init` | vmmouse.c | left out | not translated yet |
-| `VMMouseState *s; s = mallocz(sizeof(*s)); s->ps2_mouse = ps2_mouse; return s;` | vmmouse.c | left out | not translated yet |
+| `VMMouseState *s; s = mallocz(sizeof(*s)); s->ps2_mouse = ps2_mouse; return s;` | vmmouse.c | exported | Unvalidated |
 | `x86_cpu_init` | x86_cpu.c | left out | not translated yet |
-| `fprintf( stderr , "x86 emulator is not supported\n"); exit(1);` | x86_cpu.c | left out | not translated yet |
+| `fprintf( stderr , "x86 emulator is not supported\n"); exit(1);` | x86_cpu.c | exported | Unvalidated |
 | `x86_cpu_end` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_interp` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_set_irq` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_set_reg` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_get_reg` | x86_cpu.c | left out | not translated yet |
-| `return 0;` | x86_cpu.c | left out | not translated yet |
+| `return 0;` | x86_cpu.c | exported | Unvalidated |
 | `x86_cpu_set_seg` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_set_get_hard_intno` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_set_get_tsc` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_set_port_io` | x86_cpu.c | left out | not translated yet |
 | `x86_cpu_get_cycles` | x86_cpu.c | left out | not translated yet |
-| `return 0;` | x86_cpu.c | left out | not translated yet |
+| `return 0;` | x86_cpu.c | exported | Unvalidated |
 | `x86_cpu_get_power_down` | x86_cpu.c | left out | not translated yet |
-| `return FALSE;` | x86_cpu.c | left out | not translated yet |
+| `return FALSE;` | x86_cpu.c | exported | Unvalidated |
 | `x86_cpu_flush_tlb_write_range_ram` | x86_cpu.c | left out | not translated yet |
 | `to_bcd` | x86_machine.c | left out | not translated yet |
-| `if (s->cmos_data[11] & 0x04) … else` | x86_machine.c | left out | not translated yet |
+| `if (s->cmos_data[11] & 0x04) … else` | x86_machine.c | exported | Unvalidated |
 | `cmos_update_time` | x86_machine.c | left out | not translated yet |
-| `struct timeval tv; struct tm tm; time_t ti; int val; gettimeofday(&tv, ((void *)0) ); ti = tv.t…` | x86_machine.c | left out | not translated yet |
-| `if (s->use_local_time) … else` | x86_machine.c | left out | not translated yet |
-| `s->cmos_data[0] = to_bcd(s, tm.tm_sec); s->cmos_data[2] = to_bcd(s, tm.tm_min);` | x86_machine.c | left out | not translated yet |
-| `if (s->cmos_data[11] & 0x02) … else` | x86_machine.c | left out | not translated yet |
-| `s->cmos_data[6] = to_bcd(s, tm.tm_wday); s->cmos_data[7] = to_bcd(s, tm.tm_mday); s->cmos_data[…` | x86_machine.c | left out | not translated yet |
-| `if (set_century)` | x86_machine.c | left out | not translated yet |
-| `if (tv.tv_usec < 244) … else` | x86_machine.c | left out | not translated yet |
+| `struct timeval tv; struct tm tm; time_t ti; int val; gettimeofday(&tv, ((void *)0) ); ti = tv.t…` | x86_machine.c | exported | Unvalidated |
+| `if (s->use_local_time) … else` | x86_machine.c | exported | Unvalidated |
+| `s->cmos_data[0] = to_bcd(s, tm.tm_sec); s->cmos_data[2] = to_bcd(s, tm.tm_min);` | x86_machine.c | exported | Unvalidated |
+| `if (s->cmos_data[11] & 0x02) … else` | x86_machine.c | exported | Unvalidated |
+| `s->cmos_data[6] = to_bcd(s, tm.tm_wday); s->cmos_data[7] = to_bcd(s, tm.tm_mday); s->cmos_data[…` | x86_machine.c | exported | Unvalidated |
+| `if (set_century)` | x86_machine.c | exported | Unvalidated |
+| `if (tv.tv_usec < 244) … else` | x86_machine.c | exported | Unvalidated |
 | `cmos_init` | x86_machine.c | left out | not translated yet |
-| `CMOSState *s; s = mallocz(sizeof(*s)); s->use_local_time = use_local_time; s->cmos_index = 0; s…` | x86_machine.c | left out | not translated yet |
+| `CMOSState *s; s = mallocz(sizeof(*s)); s->use_local_time = use_local_time; s->cmos_index = 0; s…` | x86_machine.c | left out | still being translated |
 | `cmos_get_timer` | x86_machine.c | left out | not translated yet |
-| `struct timespec ts; clock_gettime( 1 , &ts); return (uint32_t)ts.tv_sec * 32768 + ((uint64_t)ts…` | x86_machine.c | left out | not translated yet |
+| `struct timespec ts; clock_gettime( 1 , &ts); return (uint32_t)ts.tv_sec * 32768 + ((uint64_t)ts…` | x86_machine.c | exported | Unvalidated |
 | `cmos_update_timer` | x86_machine.c | left out | not translated yet |
-| `int period_code; period_code = s->cmos_data[10] & 0x0f;` | x86_machine.c | left out | not translated yet |
-| `if (s->cmos_data[11] & 0x40) && period_code != 0)` | x86_machine.c | left out | not translated yet |
+| `int period_code; period_code = s->cmos_data[10] & 0x0f;` | x86_machine.c | exported | Unvalidated |
+| `if (s->cmos_data[11] & 0x40) && period_code != 0)` | x86_machine.c | exported | Unvalidated |
 | `cmos_update_irq` | x86_machine.c | left out | not translated yet |
-| `if (s->cmos_data[11] & 0x40)` | x86_machine.c | left out | not translated yet |
+| `if (s->cmos_data[11] & 0x40)` | x86_machine.c | exported | Unvalidated |
 | `cmos_write` | x86_machine.c | left out | not translated yet |
-| `if (offset == 0) … else` | x86_machine.c | left out | not translated yet |
+| `if (offset == 0) … else` | x86_machine.c | exported | Unvalidated |
 | `cmos_read` | x86_machine.c | left out | not translated yet |
-| `if (offset == 0) … else` | x86_machine.c | left out | not translated yet |
+| `if (offset == 0) … else` | x86_machine.c | left out | still being translated |
 | `pic_init` | x86_machine.c | left out | not translated yet |
-| `PICState *s; s = mallocz(sizeof(*s)); s->elcr_mask = elcr_mask; s->update_irq = update_irq; s->…` | x86_machine.c | left out | not translated yet |
+| `PICState *s; s = mallocz(sizeof(*s)); s->elcr_mask = elcr_mask; s->update_irq = update_irq; s->…` | x86_machine.c | left out | still being translated |
 | `pic_reset` | x86_machine.c | left out | not translated yet |
-| `s->last_irr = 0; s->irr = 0; s->imr = 0; s->isr = 0; s->priority_add = 0; s->irq_base = 0; s->r…` | x86_machine.c | left out | not translated yet |
+| `s->last_irr = 0; s->irr = 0; s->imr = 0; s->isr = 0; s->priority_add = 0; s->irq_base = 0; s->r…` | x86_machine.c | exported | Unvalidated |
 | `pic_set_irq1` | x86_machine.c | left out | not translated yet |
-| `int mask; mask = 1 << irq;` | x86_machine.c | left out | not translated yet |
-| `if (s->elcr & mask) … else` | x86_machine.c | left out | not translated yet |
+| `int mask; mask = 1 << irq;` | x86_machine.c | exported | Unvalidated |
+| `if (s->elcr & mask) … else` | x86_machine.c | exported | Unvalidated |
 | `pic_get_priority` | x86_machine.c | left out | not translated yet |
-| `if (mask == 0)` | x86_machine.c | left out | not translated yet |
-| `priority = 7;` | x86_machine.c | left out | not translated yet |
-| `while (mask & (1 << ((priority + s->priority_add) & 7))) == 0)` | x86_machine.c | left out | not translated yet |
-| `return priority;` | x86_machine.c | left out | not translated yet |
+| `if (mask == 0)` | x86_machine.c | exported | Unvalidated |
+| `priority = 7;` | x86_machine.c | exported | Unvalidated |
+| `while (mask & (1 << ((priority + s->priority_add) & 7))) == 0)` | x86_machine.c | exported | Unvalidated |
+| `return priority;` | x86_machine.c | exported | Unvalidated |
 | `pic_get_irq` | x86_machine.c | left out | not translated yet |
-| `int mask, cur_priority, priority; mask = s->irr & ~s->imr; priority = pic_get_priority(s, mask);` | x86_machine.c | left out | not translated yet |
-| `if (priority < 0)` | x86_machine.c | left out | not translated yet |
-| `cur_priority = pic_get_priority(s, s->isr);` | x86_machine.c | left out | not translated yet |
-| `if (priority > cur_priority) … else` | x86_machine.c | left out | not translated yet |
+| `int mask, cur_priority, priority; mask = s->irr & ~s->imr; priority = pic_get_priority(s, mask);` | x86_machine.c | exported | Unvalidated |
+| `if (priority < 0)` | x86_machine.c | exported | Unvalidated |
+| `cur_priority = pic_get_priority(s, s->isr);` | x86_machine.c | exported | Unvalidated |
+| `if (priority > cur_priority) … else` | x86_machine.c | exported | Unvalidated |
 | `pic_intack` | x86_machine.c | left out | not translated yet |
-| `if (s->auto_eoi) … else` | x86_machine.c | left out | not translated yet |
-| `if (!(s->elcr & (1 << irq)` | x86_machine.c | left out | not translated yet |
+| `if (s->auto_eoi) … else` | x86_machine.c | exported | Unvalidated |
+| `if (!(s->elcr & (1 << irq)` | x86_machine.c | exported | Unvalidated |
 | `pic_write` | x86_machine.c | left out | not translated yet |
-| `PICState *s = opaque; int priority, addr; addr = offset & 1;` | x86_machine.c | left out | not translated yet |
-| `if (addr == 0) … else` | x86_machine.c | left out | not translated yet |
+| `PICState *s = opaque; int priority, addr; addr = offset & 1;` | x86_machine.c | exported | Unvalidated |
+| `if (addr == 0) … else` | x86_machine.c | left out | still being translated |
 | `pic_read` | x86_machine.c | left out | not translated yet |
-| `PICState *s = opaque; int addr, ret; addr = offset & 1;` | x86_machine.c | left out | not translated yet |
-| `if (addr == 0) … else` | x86_machine.c | left out | not translated yet |
-| `return ret;` | x86_machine.c | left out | not translated yet |
+| `PICState *s = opaque; int addr, ret; addr = offset & 1;` | x86_machine.c | exported | Unvalidated |
+| `if (addr == 0) … else` | x86_machine.c | exported | Unvalidated |
+| `return ret;` | x86_machine.c | exported | Unvalidated |
 | `pic_elcr_write` | x86_machine.c | left out | not translated yet |
-| `PICState *s = opaque; s->elcr = val & s->elcr_mask;` | x86_machine.c | left out | not translated yet |
+| `PICState *s = opaque; s->elcr = val & s->elcr_mask;` | x86_machine.c | exported | Unvalidated |
 | `pic_elcr_read` | x86_machine.c | left out | not translated yet |
-| `PICState *s = opaque; return s->elcr;` | x86_machine.c | left out | not translated yet |
+| `PICState *s = opaque; return s->elcr;` | x86_machine.c | exported | Unvalidated |
 | `pic2_init` | x86_machine.c | left out | not translated yet |
-| `PIC2State *s; int i; s = mallocz(sizeof(*s));` | x86_machine.c | left out | not translated yet |
-| `for (i = 0; i < 16; i++)` | x86_machine.c | left out | not translated yet |
-| `s->cpu_set_irq = cpu_set_irq; s->opaque = opaque; s->pics[0] = pic_init(port_map, addr0, elcr_a…` | x86_machine.c | left out | not translated yet |
+| `PIC2State *s; int i; s = mallocz(sizeof(*s));` | x86_machine.c | exported | Unvalidated |
+| `for (i = 0; i < 16; i++)` | x86_machine.c | left out | still being translated |
+| `s->cpu_set_irq = cpu_set_irq; s->opaque = opaque; s->pics[0] = pic_init(port_map, addr0, elcr_a…` | x86_machine.c | left out | still being translated |
 | `pic2_set_elcr` | x86_machine.c | left out | not translated yet |
-| `for (i = 0; i < 2; i++)` | x86_machine.c | left out | not translated yet |
+| `for (i = 0; i < 2; i++)` | x86_machine.c | exported | Unvalidated |
 | `pic2_update_irq` | x86_machine.c | left out | not translated yet |
-| `PIC2State *s = opaque; int irq2, irq; irq2 = pic_get_irq(s->pics[1]);` | x86_machine.c | left out | not translated yet |
-| `if (irq2 >= 0)` | x86_machine.c | left out | not translated yet |
-| `irq = pic_get_irq(s->pics[0]);` | x86_machine.c | left out | not translated yet |
-| `if (irq >= 0) … else` | x86_machine.c | left out | not translated yet |
+| `PIC2State *s = opaque; int irq2, irq; irq2 = pic_get_irq(s->pics[1]);` | x86_machine.c | left out | still being translated |
+| `if (irq2 >= 0)` | x86_machine.c | exported | Unvalidated |
+| `irq = pic_get_irq(s->pics[0]);` | x86_machine.c | exported | Unvalidated |
+| `if (irq >= 0) … else` | x86_machine.c | exported | Unvalidated |
 | `pic2_set_irq` | x86_machine.c | left out | not translated yet |
-| `PIC2State *s = opaque; pic_set_irq1(s->pics[irq >> 3], irq & 7, level); pic2_update_irq(s);` | x86_machine.c | left out | not translated yet |
+| `PIC2State *s = opaque; pic_set_irq1(s->pics[irq >> 3], irq & 7, level); pic2_update_irq(s);` | x86_machine.c | exported | Unvalidated |
 | `pic2_get_hard_intno` | x86_machine.c | left out | not translated yet |
-| `int irq, irq2, intno; irq = pic_get_irq(s->pics[0]);` | x86_machine.c | left out | not translated yet |
-| `if (irq >= 0) … else` | x86_machine.c | left out | not translated yet |
-| `pic2_update_irq(s); return intno;` | x86_machine.c | left out | not translated yet |
+| `int irq, irq2, intno; irq = pic_get_irq(s->pics[0]);` | x86_machine.c | exported | Unvalidated |
+| `if (irq >= 0) … else` | x86_machine.c | exported | Unvalidated |
+| `pic2_update_irq(s); return intno;` | x86_machine.c | left out | still being translated |
 | `pit_init` | x86_machine.c | left out | not translated yet |
-| `PITState *s; PITChannel *pc; int i; s = mallocz(sizeof(*s)); s->irq = irq; s->get_ticks = get_t…` | x86_machine.c | left out | not translated yet |
-| `for (i = 0; i < 3; i++)` | x86_machine.c | left out | not translated yet |
-| `s->speaker_data_on = 0; cpu_register_device(port_map, addr0, 4, s, pit_read, pit_write, (1 << 0…` | x86_machine.c | left out | not translated yet |
+| `PITState *s; PITChannel *pc; int i; s = mallocz(sizeof(*s)); s->irq = irq; s->get_ticks = get_t…` | x86_machine.c | exported | Unvalidated |
+| `for (i = 0; i < 3; i++)` | x86_machine.c | left out | still being translated |
+| `s->speaker_data_on = 0; cpu_register_device(port_map, addr0, 4, s, pit_read, pit_write, (1 << 0…` | x86_machine.c | left out | still being translated |
 | `pit_get_time` | x86_machine.c | left out | not translated yet |
-| `PITState *s = pc->pit_state; return s->get_ticks(s->opaque);` | x86_machine.c | left out | not translated yet |
+| `PITState *s = pc->pit_state; return s->get_ticks(s->opaque);` | x86_machine.c | exported | Unvalidated |
 | `pit_get_count` | x86_machine.c | left out | not translated yet |
-| `uint32_t counter; uint64_t d; d = pit_get_time(pc) - pc->count_load_time;` | x86_machine.c | left out | not translated yet |
-| `switch (pc->mode)` | x86_machine.c | left out | not translated yet |
-| `return counter;` | x86_machine.c | left out | not translated yet |
+| `uint32_t counter; uint64_t d; d = pit_get_time(pc) - pc->count_load_time;` | x86_machine.c | left out | still being translated |
+| `switch (pc->mode)` | x86_machine.c | exported | Unvalidated |
+| `return counter;` | x86_machine.c | exported | Unvalidated |
 | `pit_get_out` | x86_machine.c | left out | not translated yet |
-| `int out; int64_t d; d = pit_get_time(pc) - pc->count_load_time;` | x86_machine.c | left out | not translated yet |
-| `switch (pc->mode)` | x86_machine.c | left out | not translated yet |
-| `return out;` | x86_machine.c | left out | not translated yet |
+| `int out; int64_t d; d = pit_get_time(pc) - pc->count_load_time;` | x86_machine.c | exported | Unvalidated |
+| `switch (pc->mode)` | x86_machine.c | exported | Unvalidated |
+| `return out;` | x86_machine.c | exported | Unvalidated |
 | `pit_load_count` | x86_machine.c | left out | not translated yet |
-| `if (val == 0)` | x86_machine.c | left out | not translated yet |
-| `s->count_load_time = pit_get_time(s); s->last_irq_time = 0; s->count = val;` | x86_machine.c | left out | not translated yet |
+| `if (val == 0)` | x86_machine.c | exported | Unvalidated |
+| `s->count_load_time = pit_get_time(s); s->last_irq_time = 0; s->count = val;` | x86_machine.c | exported | Unvalidated |
 | `pit_write` | x86_machine.c | left out | not translated yet |
-| `PITState *pit = opaque; int channel, access, addr; PITChannel *s; addr = offset & 3;` | x86_machine.c | left out | not translated yet |
-| `if (addr == 3) … else` | x86_machine.c | left out | not translated yet |
+| `PITState *pit = opaque; int channel, access, addr; PITChannel *s; addr = offset & 3;` | x86_machine.c | exported | Unvalidated |
+| `if (addr == 3) … else` | x86_machine.c | left out | still being translated |
 | `pit_read` | x86_machine.c | left out | not translated yet |
-| `PITState *pit = opaque; PITChannel *s; int ret, count, addr; addr = offset & 3;` | x86_machine.c | left out | not translated yet |
-| `if (addr == 3)` | x86_machine.c | left out | not translated yet |
-| `s = &pit->pit_channels[addr];` | x86_machine.c | left out | not translated yet |
-| `switch (s->rw_state)` | x86_machine.c | left out | not translated yet |
-| `return ret;` | x86_machine.c | left out | not translated yet |
+| `PITState *pit = opaque; PITChannel *s; int ret, count, addr; addr = offset & 3;` | x86_machine.c | exported | Unvalidated |
+| `if (addr == 3)` | x86_machine.c | exported | Unvalidated |
+| `s = &pit->pit_channels[addr];` | x86_machine.c | exported | Unvalidated |
+| `switch (s->rw_state)` | x86_machine.c | left out | still being translated |
+| `return ret;` | x86_machine.c | exported | Unvalidated |
 | `speaker_write` | x86_machine.c | left out | not translated yet |
-| `PITState *pit = opaque; pit->speaker_data_on = (val >> 1) & 1; pit->pit_channels[2].gate = val…` | x86_machine.c | left out | not translated yet |
+| `PITState *pit = opaque; pit->speaker_data_on = (val >> 1) & 1; pit->pit_channels[2].gate = val…` | x86_machine.c | exported | Unvalidated |
 | `speaker_read` | x86_machine.c | left out | not translated yet |
-| `PITState *pit = opaque; PITChannel *s; int out, val; s = &pit->pit_channels[2]; out = pit_get_o…` | x86_machine.c | left out | not translated yet |
+| `PITState *pit = opaque; PITChannel *s; int out, val; s = &pit->pit_channels[2]; out = pit_get_o…` | x86_machine.c | exported | Unvalidated |
 | `pit_update_irq` | x86_machine.c | left out | not translated yet |
-| `PITChannel *s; int64_t d, delay; s = &pit->pit_channels[0]; delay = 1193182; d = pit_get_time(s…` | x86_machine.c | left out | not translated yet |
-| `switch (s->mode)` | x86_machine.c | left out | not translated yet |
-| `if (delay <= 0) … else` | x86_machine.c | left out | not translated yet |
+| `PITChannel *s; int64_t d, delay; s = &pit->pit_channels[0]; delay = 1193182; d = pit_get_time(s…` | x86_machine.c | exported | Unvalidated |
+| `switch (s->mode)` | x86_machine.c | left out | still being translated |
+| `if (delay <= 0) … else` | x86_machine.c | exported | Unvalidated |
 | `serial_init` | x86_machine.c | left out | not translated yet |
-| `SerialState *s; s = mallocz(sizeof(*s)); s->divider = 0; s->rbr = 0; s->ier = 0; s->iir = 0x01;…` | x86_machine.c | left out | not translated yet |
+| `SerialState *s; s = mallocz(sizeof(*s)); s->divider = 0; s->rbr = 0; s->ier = 0; s->iir = 0x01;…` | x86_machine.c | left out | still being translated |
 | `serial_update_irq` | x86_machine.c | left out | not translated yet |
-| `if (s->lsr & 0x01) && (s->ier & 0x01) … else` | x86_machine.c | left out | not translated yet |
-| `if (s->iir != 0x01) … else` | x86_machine.c | left out | not translated yet |
+| `if (s->lsr & 0x01) && (s->ier & 0x01) … else` | x86_machine.c | exported | Unvalidated |
+| `if (s->iir != 0x01) … else` | x86_machine.c | exported | Unvalidated |
 | `serial_write` | x86_machine.c | left out | not translated yet |
-| `SerialState *s = opaque; int addr; addr = offset & 7;` | x86_machine.c | left out | not translated yet |
-| `switch (addr)` | x86_machine.c | left out | not translated yet |
+| `SerialState *s = opaque; int addr; addr = offset & 7;` | x86_machine.c | exported | Unvalidated |
+| `switch (addr)` | x86_machine.c | left out | still being translated |
 | `serial_read` | x86_machine.c | left out | not translated yet |
-| `SerialState *s = opaque; int ret, addr; addr = offset & 7;` | x86_machine.c | left out | not translated yet |
-| `switch (addr)` | x86_machine.c | left out | not translated yet |
-| `return ret;` | x86_machine.c | left out | not translated yet |
+| `SerialState *s = opaque; int ret, addr; addr = offset & 7;` | x86_machine.c | exported | Unvalidated |
+| `switch (addr)` | x86_machine.c | left out | still being translated |
+| `return ret;` | x86_machine.c | exported | Unvalidated |
 | `serial_send_break` | x86_machine.c | left out | not translated yet |
-| `s->rbr = 0; s->lsr |= 0x10 | 0x01; serial_update_irq(s);` | x86_machine.c | left out | not translated yet |
+| `s->rbr = 0; s->lsr |= 0x10 | 0x01; serial_update_irq(s);` | x86_machine.c | exported | Unvalidated |
 | `port80_write` | x86_machine.c | left out | not translated yet |
 | `port80_read` | x86_machine.c | left out | not translated yet |
-| `return 0xff;` | x86_machine.c | left out | not translated yet |
+| `return 0xff;` | x86_machine.c | exported | Unvalidated |
 | `port92_write` | x86_machine.c | left out | not translated yet |
 | `port92_read` | x86_machine.c | left out | not translated yet |
-| `int a20 = 1; return a20 << 1;` | x86_machine.c | left out | not translated yet |
+| `int a20 = 1; return a20 << 1;` | x86_machine.c | exported | Unvalidated |
 | `vmport_read` | x86_machine.c | left out | not translated yet |
-| `if (s->kvm_enabled) … else` | x86_machine.c | left out | not translated yet |
-| `return regs[0];` | x86_machine.c | left out | not translated yet |
+| `if (s->kvm_enabled) … else` | x86_machine.c | left out | still being translated |
+| `return regs[0];` | x86_machine.c | exported | Unvalidated |
 | `vmport_write` | x86_machine.c | left out | not translated yet |
 | `pic_set_irq_cb` | x86_machine.c | left out | not translated yet |
-| `PCMachine *s = opaque; x86_cpu_set_irq(s->cpu_state, level);` | x86_machine.c | left out | not translated yet |
+| `PCMachine *s = opaque; x86_cpu_set_irq(s->cpu_state, level);` | x86_machine.c | left out | still being translated |
 | `serial_write_cb` | x86_machine.c | left out | not translated yet |
-| `if (s->common.console)` | x86_machine.c | left out | not translated yet |
+| `if (s->common.console)` | x86_machine.c | left out | still being translated |
 | `get_hard_intno_cb` | x86_machine.c | left out | not translated yet |
-| `PCMachine *s = opaque; return pic2_get_hard_intno(s->pic_state);` | x86_machine.c | left out | not translated yet |
+| `PCMachine *s = opaque; return pic2_get_hard_intno(s->pic_state);` | x86_machine.c | left out | still being translated |
 | `pit_get_ticks_cb` | x86_machine.c | left out | not translated yet |
-| `struct timespec ts; clock_gettime( 1 , &ts); return (uint64_t)ts.tv_sec * 1193182 + ((uint64_t)…` | x86_machine.c | left out | not translated yet |
+| `struct timespec ts; clock_gettime( 1 , &ts); return (uint64_t)ts.tv_sec * 1193182 + ((uint64_t)…` | x86_machine.c | left out | still being translated |
 | `get_ram_ptr` | x86_machine.c | left out | not translated yet |
-| `PhysMemoryRange *pr; pr = get_phys_mem_range(s->mem_map, paddr);` | x86_machine.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | x86_machine.c | left out | not translated yet |
-| `return pr->phys_mem + (uintptr_t)(paddr - pr->addr);` | x86_machine.c | left out | not translated yet |
+| `PhysMemoryRange *pr; pr = get_phys_mem_range(s->mem_map, paddr);` | x86_machine.c | left out | still being translated |
+| `if (!pr || !pr->is_ram)` | x86_machine.c | left out | still being translated |
+| `return pr->phys_mem + (uintptr_t)(paddr - pr->addr);` | x86_machine.c | left out | still being translated |
 | `st_port` | x86_machine.c | left out | not translated yet |
-| `PCMachine *s = opaque; PhysMemoryRange *pr; pr = get_phys_mem_range(s->port_map, port);` | x86_machine.c | left out | not translated yet |
-| `if (!pr)` | x86_machine.c | left out | not translated yet |
-| `port -= pr->addr;` | x86_machine.c | left out | not translated yet |
-| `if (pr->devio_flags >> size_log2) & 1) … else` | x86_machine.c | left out | not translated yet |
+| `PCMachine *s = opaque; PhysMemoryRange *pr; pr = get_phys_mem_range(s->port_map, port);` | x86_machine.c | left out | still being translated |
+| `if (!pr)` | x86_machine.c | left out | still being translated |
+| `port -= pr->addr;` | x86_machine.c | left out | still being translated |
+| `if (pr->devio_flags >> size_log2) & 1) … else` | x86_machine.c | left out | still being translated |
 | `ld_port` | x86_machine.c | left out | not translated yet |
-| `PCMachine *s = opaque; PhysMemoryRange *pr; uint32_t val, port; port = port1; pr = get_phys_mem…` | x86_machine.c | left out | not translated yet |
-| `if (!pr) … else` | x86_machine.c | left out | not translated yet |
-| `return val;` | x86_machine.c | left out | not translated yet |
+| `PCMachine *s = opaque; PhysMemoryRange *pr; uint32_t val, port; port = port1; pr = get_phys_mem…` | x86_machine.c | left out | still being translated |
+| `if (!pr) … else` | x86_machine.c | left out | still being translated |
+| `return val;` | x86_machine.c | left out | still being translated |
 | `pc_machine_set_defaults` | x86_machine.c | left out | not translated yet |
-| `p->accel_enable = TRUE;` | x86_machine.c | left out | not translated yet |
+| `p->accel_enable = TRUE;` | x86_machine.c | left out | still being translated |
 | `sigalrm_handler` | x86_machine.c | left out | not translated yet |
 | `kvm_set_cpuid` | x86_machine.c | left out | not translated yet |
-| `struct kvm_cpuid2 *kvm_cpuid; int n_ent_max, i; struct kvm_cpuid_entry2 *ent; n_ent_max = 128;…` | x86_machine.c | left out | not translated yet |
-| `if (ioctl(s->kvm_fd, (((2U|1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x05)) << 0) | (…` | x86_machine.c | left out | not translated yet |
-| `for (i = 0; i < kvm_cpuid->nent; i++)` | x86_machine.c | left out | not translated yet |
+| `struct kvm_cpuid2 *kvm_cpuid; int n_ent_max, i; struct kvm_cpuid_entry2 *ent; n_ent_max = 128;…` | x86_machine.c | left out | still being translated |
+| `if (ioctl(s->kvm_fd, (((2U|1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x05)) << 0) | (…` | x86_machine.c | left out | still being translated |
+| `for (i = 0; i < kvm_cpuid->nent; i++)` | x86_machine.c | left out | still being translated |
 | `if (ioctl(s->vcpu_fd, (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x90)) << 0) | (((…` | x86_machine.c | left out | not translated yet |
 | `free(kvm_cpuid);` | x86_machine.c | left out | not translated yet |
 | `kvm_map_ram` | x86_machine.c | left out | not translated yet |

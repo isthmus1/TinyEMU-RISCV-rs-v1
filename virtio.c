@@ -1,136 +1,3163 @@
-/*
- * VIRTIO driver
- * 
- * Copyright (c) 2016 Fabrice Bellard
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-#include <assert.h>
-#include <stdarg.h>
 
-#include "cutils.h"
-#include "list.h"
-#include "virtio.h"
 
-//#define DEBUG_VIRTIO
 
-/* MMIO addresses - from the Linux kernel */
-#define VIRTIO_MMIO_MAGIC_VALUE		0x000
-#define VIRTIO_MMIO_VERSION		0x004
-#define VIRTIO_MMIO_DEVICE_ID		0x008
-#define VIRTIO_MMIO_VENDOR_ID		0x00c
-#define VIRTIO_MMIO_DEVICE_FEATURES	0x010
-#define VIRTIO_MMIO_DEVICE_FEATURES_SEL	0x014
-#define VIRTIO_MMIO_DRIVER_FEATURES	0x020
-#define VIRTIO_MMIO_DRIVER_FEATURES_SEL	0x024
-#define VIRTIO_MMIO_GUEST_PAGE_SIZE	0x028 /* version 1 only */
-#define VIRTIO_MMIO_QUEUE_SEL		0x030
-#define VIRTIO_MMIO_QUEUE_NUM_MAX	0x034
-#define VIRTIO_MMIO_QUEUE_NUM		0x038
-#define VIRTIO_MMIO_QUEUE_ALIGN		0x03c /* version 1 only */
-#define VIRTIO_MMIO_QUEUE_PFN		0x040 /* version 1 only */
-#define VIRTIO_MMIO_QUEUE_READY		0x044
-#define VIRTIO_MMIO_QUEUE_NOTIFY	0x050
-#define VIRTIO_MMIO_INTERRUPT_STATUS	0x060
-#define VIRTIO_MMIO_INTERRUPT_ACK	0x064
-#define VIRTIO_MMIO_STATUS		0x070
-#define VIRTIO_MMIO_QUEUE_DESC_LOW	0x080
-#define VIRTIO_MMIO_QUEUE_DESC_HIGH	0x084
-#define VIRTIO_MMIO_QUEUE_AVAIL_LOW	0x090
-#define VIRTIO_MMIO_QUEUE_AVAIL_HIGH	0x094
-#define VIRTIO_MMIO_QUEUE_USED_LOW	0x0a0
-#define VIRTIO_MMIO_QUEUE_USED_HIGH	0x0a4
-#define VIRTIO_MMIO_CONFIG_GENERATION	0x0fc
-#define VIRTIO_MMIO_CONFIG		0x100
 
-/* PCI registers */
-#define VIRTIO_PCI_DEVICE_FEATURE_SEL	0x000
-#define VIRTIO_PCI_DEVICE_FEATURE	0x004
-#define VIRTIO_PCI_GUEST_FEATURE_SEL	0x008
-#define VIRTIO_PCI_GUEST_FEATURE	0x00c
-#define VIRTIO_PCI_MSIX_CONFIG          0x010
-#define VIRTIO_PCI_NUM_QUEUES           0x012
-#define VIRTIO_PCI_DEVICE_STATUS        0x014
-#define VIRTIO_PCI_CONFIG_GENERATION    0x015
-#define VIRTIO_PCI_QUEUE_SEL		0x016
-#define VIRTIO_PCI_QUEUE_SIZE	        0x018
-#define VIRTIO_PCI_QUEUE_MSIX_VECTOR    0x01a
-#define VIRTIO_PCI_QUEUE_ENABLE         0x01c
-#define VIRTIO_PCI_QUEUE_NOTIFY_OFF     0x01e
-#define VIRTIO_PCI_QUEUE_DESC_LOW	0x020
-#define VIRTIO_PCI_QUEUE_DESC_HIGH	0x024
-#define VIRTIO_PCI_QUEUE_AVAIL_LOW	0x028
-#define VIRTIO_PCI_QUEUE_AVAIL_HIGH	0x02c
-#define VIRTIO_PCI_QUEUE_USED_LOW	0x030
-#define VIRTIO_PCI_QUEUE_USED_HIGH	0x034
 
-#define VIRTIO_PCI_CFG_OFFSET          0x0000
-#define VIRTIO_PCI_ISR_OFFSET          0x1000
-#define VIRTIO_PCI_CONFIG_OFFSET       0x2000
-#define VIRTIO_PCI_NOTIFY_OFFSET       0x3000
 
-#define VIRTIO_PCI_CAP_LEN 16
+typedef long unsigned int size_t;
+typedef int wchar_t;
 
-#define MAX_QUEUE 8
-#define MAX_CONFIG_SPACE_SIZE 256
-#define MAX_QUEUE_NUM 16
+
+
+
+typedef struct
+  {
+    int quot;
+    int rem;
+  } div_t;
+
+
+
+typedef struct
+  {
+    long int quot;
+    long int rem;
+  } ldiv_t;
+
+
+
+
+
+__extension__ typedef struct
+  {
+    long long int quot;
+    long long int rem;
+  } lldiv_t;
+extern size_t __ctype_get_mb_cur_max (void) __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+
+extern double atof (const char *__nptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1))) ;
+
+extern int atoi (const char *__nptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1))) ;
+
+extern long int atol (const char *__nptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+__extension__ extern long long int atoll (const char *__nptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+extern double strtod (const char *__restrict __nptr,
+        char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern float strtof (const char *__restrict __nptr,
+       char **__restrict __endptr) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+extern long double strtold (const char *__restrict __nptr,
+       char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern _Float32 strtof32 (const char *__restrict __nptr,
+     char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern _Float64 strtof64 (const char *__restrict __nptr,
+     char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern _Float128 strtof128 (const char *__restrict __nptr,
+       char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern _Float32x strtof32x (const char *__restrict __nptr,
+       char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern _Float64x strtof64x (const char *__restrict __nptr,
+       char **__restrict __endptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern long int strtol (const char *__restrict __nptr,
+   char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+extern unsigned long int strtoul (const char *__restrict __nptr,
+      char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+__extension__
+extern long long int strtoq (const char *__restrict __nptr,
+        char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+__extension__
+extern unsigned long long int strtouq (const char *__restrict __nptr,
+           char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+__extension__
+extern long long int strtoll (const char *__restrict __nptr,
+         char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+__extension__
+extern unsigned long long int strtoull (const char *__restrict __nptr,
+     char **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern long int strtol (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtol") __attribute__ ((__nothrow__ , __leaf__))
+
+
+     __attribute__ ((__nonnull__ (1)));
+extern unsigned long int strtoul (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoul") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+     __attribute__ ((__nonnull__ (1)));
+
+__extension__
+extern long long int strtoq (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoll") __attribute__ ((__nothrow__ , __leaf__))
+
+
+     __attribute__ ((__nonnull__ (1)));
+__extension__
+extern unsigned long long int strtouq (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoull") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+     __attribute__ ((__nonnull__ (1)));
+
+__extension__
+extern long long int strtoll (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoll") __attribute__ ((__nothrow__ , __leaf__))
+
+
+     __attribute__ ((__nonnull__ (1)));
+__extension__
+extern unsigned long long int strtoull (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoull") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+     __attribute__ ((__nonnull__ (1)));
+extern int strfromd (char *__dest, size_t __size, const char *__format,
+       double __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+extern int strfromf (char *__dest, size_t __size, const char *__format,
+       float __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+extern int strfroml (char *__dest, size_t __size, const char *__format,
+       long double __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+extern int strfromf32 (char *__dest, size_t __size, const char * __format,
+         _Float32 __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+
+
+extern int strfromf64 (char *__dest, size_t __size, const char * __format,
+         _Float64 __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+
+
+extern int strfromf128 (char *__dest, size_t __size, const char * __format,
+   _Float128 __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+
+
+extern int strfromf32x (char *__dest, size_t __size, const char * __format,
+   _Float32x __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+
+
+
+extern int strfromf64x (char *__dest, size_t __size, const char * __format,
+   _Float64x __f)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3)));
+struct __locale_struct
+{
+
+  struct __locale_data *__locales[13];
+
+
+  const unsigned short int *__ctype_b;
+  const int *__ctype_tolower;
+  const int *__ctype_toupper;
+
+
+  const char *__names[13];
+};
+
+typedef struct __locale_struct *__locale_t;
+
+typedef __locale_t locale_t;
+
+extern long int strtol_l (const char *__restrict __nptr,
+     char **__restrict __endptr, int __base,
+     locale_t __loc) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 4)));
+
+extern unsigned long int strtoul_l (const char *__restrict __nptr,
+        char **__restrict __endptr,
+        int __base, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 4)));
+
+__extension__
+extern long long int strtoll_l (const char *__restrict __nptr,
+    char **__restrict __endptr, int __base,
+    locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 4)));
+
+__extension__
+extern unsigned long long int strtoull_l (const char *__restrict __nptr,
+       char **__restrict __endptr,
+       int __base, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 4)));
+
+
+
+
+
+extern long int strtol_l (const char *__restrict __nptr, char **__restrict __endptr, int __base, locale_t __loc) __asm__ ("" "__isoc23_strtol_l") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+     __attribute__ ((__nonnull__ (1, 4)));
+extern unsigned long int strtoul_l (const char *__restrict __nptr, char **__restrict __endptr, int __base, locale_t __loc) __asm__ ("" "__isoc23_strtoul_l") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+
+     __attribute__ ((__nonnull__ (1, 4)));
+__extension__
+extern long long int strtoll_l (const char *__restrict __nptr, char **__restrict __endptr, int __base, locale_t __loc) __asm__ ("" "__isoc23_strtoll_l") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+
+     __attribute__ ((__nonnull__ (1, 4)));
+__extension__
+extern unsigned long long int strtoull_l (const char *__restrict __nptr, char **__restrict __endptr, int __base, locale_t __loc) __asm__ ("" "__isoc23_strtoull_l") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+
+     __attribute__ ((__nonnull__ (1, 4)));
+extern double strtod_l (const char *__restrict __nptr,
+   char **__restrict __endptr, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+extern float strtof_l (const char *__restrict __nptr,
+         char **__restrict __endptr, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+extern long double strtold_l (const char *__restrict __nptr,
+         char **__restrict __endptr,
+         locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+extern _Float32 strtof32_l (const char *__restrict __nptr,
+       char **__restrict __endptr,
+       locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+
+
+extern _Float64 strtof64_l (const char *__restrict __nptr,
+       char **__restrict __endptr,
+       locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+
+
+extern _Float128 strtof128_l (const char *__restrict __nptr,
+         char **__restrict __endptr,
+         locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+
+
+extern _Float32x strtof32x_l (const char *__restrict __nptr,
+         char **__restrict __endptr,
+         locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+
+
+
+extern _Float64x strtof64x_l (const char *__restrict __nptr,
+         char **__restrict __endptr,
+         locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 3)));
+extern char *l64a (long int __n) __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+extern long int a64l (const char *__s)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+
+
+
+typedef unsigned char __u_char;
+typedef unsigned short int __u_short;
+typedef unsigned int __u_int;
+typedef unsigned long int __u_long;
+
+
+typedef signed char __int8_t;
+typedef unsigned char __uint8_t;
+typedef signed short int __int16_t;
+typedef unsigned short int __uint16_t;
+typedef signed int __int32_t;
+typedef unsigned int __uint32_t;
+
+typedef signed long int __int64_t;
+typedef unsigned long int __uint64_t;
+
+
+
+
+
+
+typedef __int8_t __int_least8_t;
+typedef __uint8_t __uint_least8_t;
+typedef __int16_t __int_least16_t;
+typedef __uint16_t __uint_least16_t;
+typedef __int32_t __int_least32_t;
+typedef __uint32_t __uint_least32_t;
+typedef __int64_t __int_least64_t;
+typedef __uint64_t __uint_least64_t;
+
+
+
+typedef long int __quad_t;
+typedef unsigned long int __u_quad_t;
+
+
+
+
+
+
+
+typedef long int __intmax_t;
+typedef unsigned long int __uintmax_t;
+
+
+typedef unsigned long int __dev_t;
+typedef unsigned int __uid_t;
+typedef unsigned int __gid_t;
+typedef unsigned long int __ino_t;
+typedef unsigned long int __ino64_t;
+typedef unsigned int __mode_t;
+typedef unsigned long int __nlink_t;
+typedef long int __off_t;
+typedef long int __off64_t;
+typedef int __pid_t;
+typedef struct { int __val[2]; } __fsid_t;
+typedef long int __clock_t;
+typedef unsigned long int __rlim_t;
+typedef unsigned long int __rlim64_t;
+typedef unsigned int __id_t;
+typedef long int __time_t;
+typedef unsigned int __useconds_t;
+typedef long int __suseconds_t;
+typedef long int __suseconds64_t;
+
+typedef int __daddr_t;
+typedef int __key_t;
+
+
+typedef int __clockid_t;
+
+
+typedef void * __timer_t;
+
+
+typedef long int __blksize_t;
+
+
+
+
+typedef long int __blkcnt_t;
+typedef long int __blkcnt64_t;
+
+
+typedef unsigned long int __fsblkcnt_t;
+typedef unsigned long int __fsblkcnt64_t;
+
+
+typedef unsigned long int __fsfilcnt_t;
+typedef unsigned long int __fsfilcnt64_t;
+
+
+typedef long int __fsword_t;
+
+typedef long int __ssize_t;
+
+
+typedef long int __syscall_slong_t;
+
+typedef unsigned long int __syscall_ulong_t;
+
+
+
+typedef __off64_t __loff_t;
+typedef char *__caddr_t;
+
+
+typedef long int __intptr_t;
+
+
+typedef unsigned int __socklen_t;
+
+
+
+
+typedef int __sig_atomic_t;
+
+
+
+typedef __u_char u_char;
+typedef __u_short u_short;
+typedef __u_int u_int;
+typedef __u_long u_long;
+typedef __quad_t quad_t;
+typedef __u_quad_t u_quad_t;
+typedef __fsid_t fsid_t;
+
+
+typedef __loff_t loff_t;
+
+
+
+
+
+
+typedef __ino64_t ino_t;
+
+
+
+
+typedef __ino64_t ino64_t;
+
+
+
+
+typedef __dev_t dev_t;
+
+
+
+
+typedef __gid_t gid_t;
+
+
+
+
+typedef __mode_t mode_t;
+
+
+
+
+typedef __nlink_t nlink_t;
+
+
+
+
+typedef __uid_t uid_t;
+
+
+
+
+
+
+
+typedef __off64_t off_t;
+
+
+
+
+typedef __off64_t off64_t;
+
+
+
+
+typedef __pid_t pid_t;
+
+
+
+
+
+typedef __id_t id_t;
+
+
+
+
+typedef __ssize_t ssize_t;
+
+
+
+
+
+typedef __daddr_t daddr_t;
+typedef __caddr_t caddr_t;
+
+
+
+
+
+typedef __key_t key_t;
+
+
+
+
+
+
+
+
+
+
+typedef __clock_t clock_t;
+
+
+
+
+
+
+
+typedef __clockid_t clockid_t;
+typedef __time_t time_t;
+
+
+
+
+
+
+typedef __timer_t timer_t;
+
+
+
+typedef __useconds_t useconds_t;
+
+
+
+typedef __suseconds_t suseconds_t;
+
+
+
+
+
+
+
+
+typedef unsigned long int ulong;
+typedef unsigned short int ushort;
+typedef unsigned int uint;
+
+
+
+
+typedef __int8_t int8_t;
+typedef __int16_t int16_t;
+typedef __int32_t int32_t;
+typedef __int64_t int64_t;
+
+
+typedef __uint8_t u_int8_t;
+typedef __uint16_t u_int16_t;
+typedef __uint32_t u_int32_t;
+typedef __uint64_t u_int64_t;
+
+
+typedef int register_t __attribute__ ((__mode__ (__word__)));
+static __inline __uint16_t
+__bswap_16 (__uint16_t __bsx)
+{
+
+  return __builtin_bswap16 (__bsx);
+
+
+
+}
+
+
+
+
+
+
+static __inline __uint32_t
+__bswap_32 (__uint32_t __bsx)
+{
+
+  return __builtin_bswap32 (__bsx);
+
+
+
+}
+__extension__ static __inline __uint64_t
+__bswap_64 (__uint64_t __bsx)
+{
+
+  return __builtin_bswap64 (__bsx);
+
+
+
+}
+static __inline __uint16_t
+__uint16_identity (__uint16_t __x)
+{
+  return __x;
+}
+
+static __inline __uint32_t
+__uint32_identity (__uint32_t __x)
+{
+  return __x;
+}
+
+static __inline __uint64_t
+__uint64_identity (__uint64_t __x)
+{
+  return __x;
+}
+
+
+
+
+
+
+
+
+
+
+
+typedef struct
+{
+  unsigned long int __val[(1024 / (8 * sizeof (unsigned long int)))];
+} __sigset_t;
+
+
+typedef __sigset_t sigset_t;
+
+
+
+
+
+
+
+
+
+
+struct timeval
+{
+
+
+
+
+  __time_t tv_sec;
+  __suseconds_t tv_usec;
+
+};
+
+struct timespec
+{
+
+
+
+  __time_t tv_sec;
+
+
+
+
+  __syscall_slong_t tv_nsec;
+};
+typedef long int __fd_mask;
+typedef struct
+  {
+
+
+
+    __fd_mask fds_bits[1024 / (8 * (int) sizeof (__fd_mask))];
+
+
+
+
+
+  } fd_set;
+
+
+
+
+
+
+typedef __fd_mask fd_mask;
+
+extern int select (int __nfds, fd_set *__restrict __readfds,
+     fd_set *__restrict __writefds,
+     fd_set *__restrict __exceptfds,
+     struct timeval *__restrict __timeout);
+extern int pselect (int __nfds, fd_set *__restrict __readfds,
+      fd_set *__restrict __writefds,
+      fd_set *__restrict __exceptfds,
+      const struct timespec *__restrict __timeout,
+      const __sigset_t *__restrict __sigmask);
+
+
+
+
+
+
+typedef __blksize_t blksize_t;
+typedef __blkcnt64_t blkcnt_t;
+
+
+
+typedef __fsblkcnt64_t fsblkcnt_t;
+
+
+
+typedef __fsfilcnt64_t fsfilcnt_t;
+
+
+
+
+
+typedef __blkcnt64_t blkcnt64_t;
+typedef __fsblkcnt64_t fsblkcnt64_t;
+typedef __fsfilcnt64_t fsfilcnt64_t;
+
+
+
+
+
+
+typedef union
+{
+  __extension__ unsigned long long int __value64;
+  struct
+  {
+    unsigned int __low;
+    unsigned int __high;
+  } __value32;
+} __atomic_wide_counter;
+
+
+
+
+typedef struct __pthread_internal_list
+{
+  struct __pthread_internal_list *__prev;
+  struct __pthread_internal_list *__next;
+} __pthread_list_t;
+
+typedef struct __pthread_internal_slist
+{
+  struct __pthread_internal_slist *__next;
+} __pthread_slist_t;
+struct __pthread_mutex_s
+{
+  int __lock;
+  unsigned int __count;
+  int __owner;
+
+  unsigned int __nusers;
+
+
+
+  int __kind;
+
+  short __spins;
+  short __glibc_reserved;
+  __pthread_list_t __list;
+};
+struct __pthread_rwlock_arch_t
+{
+  unsigned int __readers;
+  unsigned int __writers;
+  unsigned int __wrphase_futex;
+  unsigned int __writers_futex;
+  unsigned int __pad3;
+  unsigned int __pad4;
+
+  int __cur_writer;
+  int __shared;
+  unsigned long int __pad1;
+  unsigned long int __pad2;
+
+
+  unsigned int __flags;
+};
+
+
+
+
+struct __pthread_cond_s
+{
+  __atomic_wide_counter __wseq;
+  __atomic_wide_counter __g1_start;
+  unsigned int __g_size[2] ;
+  unsigned int __g1_orig_size;
+  unsigned int __wrefs;
+  unsigned int __g_signals[2];
+  unsigned int __unused_initialized_1;
+  unsigned int __unused_initialized_2;
+};
+
+typedef unsigned int __tss_t;
+typedef unsigned long int __thrd_t;
+
+typedef struct
+{
+  int __data ;
+} __once_flag;
+
+
+
+typedef unsigned long int pthread_t;
+
+
+
+
+typedef union
+{
+  char __size[4];
+  int __align;
+} pthread_mutexattr_t;
+
+
+
+
+typedef union
+{
+  char __size[4];
+  int __align;
+} pthread_condattr_t;
+
+
+
+typedef unsigned int pthread_key_t;
+
+
+
+typedef int pthread_once_t;
+
+
+union pthread_attr_t
+{
+  char __size[56];
+  long int __align;
+};
+
+typedef union pthread_attr_t pthread_attr_t;
+
+
+
+
+typedef union
+{
+  struct __pthread_mutex_s __data;
+  char __size[40];
+  long int __align;
+} pthread_mutex_t;
+
+
+typedef union
+{
+  struct __pthread_cond_s __data;
+  char __size[48];
+  __extension__ long long int __align;
+} pthread_cond_t;
+
+
+
+
+
+typedef union
+{
+  struct __pthread_rwlock_arch_t __data;
+  char __size[56];
+  long int __align;
+} pthread_rwlock_t;
+
+typedef union
+{
+  char __size[8];
+  long int __align;
+} pthread_rwlockattr_t;
+
+
+
+
+
+typedef volatile int pthread_spinlock_t;
+
+
+
+
+typedef union
+{
+  char __size[32];
+  long int __align;
+} pthread_barrier_t;
+
+typedef union
+{
+  char __size[4];
+  int __align;
+} pthread_barrierattr_t;
+
+
+
+
+
+
+
+
+
+extern long int random (void) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern void srandom (unsigned int __seed) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+extern char *initstate (unsigned int __seed, char *__statebuf,
+   size_t __statelen) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+
+
+extern char *setstate (char *__statebuf) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+struct random_data
+  {
+    int32_t *fptr;
+    int32_t *rptr;
+    int32_t *state;
+    int rand_type;
+    int rand_deg;
+    int rand_sep;
+    int32_t *end_ptr;
+  };
+
+extern int random_r (struct random_data *__restrict __buf,
+       int32_t *__restrict __result) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern int srandom_r (unsigned int __seed, struct random_data *__buf)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+extern int initstate_r (unsigned int __seed, char *__restrict __statebuf,
+   size_t __statelen,
+   struct random_data *__restrict __buf)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 4)));
+
+extern int setstate_r (char *__restrict __statebuf,
+         struct random_data *__restrict __buf)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+extern int rand (void) __attribute__ ((__nothrow__ , __leaf__));
+
+extern void srand (unsigned int __seed) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern int rand_r (unsigned int *__seed) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+
+
+extern double drand48 (void) __attribute__ ((__nothrow__ , __leaf__));
+extern double erand48 (unsigned short int __xsubi[3]) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern long int lrand48 (void) __attribute__ ((__nothrow__ , __leaf__));
+extern long int nrand48 (unsigned short int __xsubi[3])
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern long int mrand48 (void) __attribute__ ((__nothrow__ , __leaf__));
+extern long int jrand48 (unsigned short int __xsubi[3])
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern void srand48 (long int __seedval) __attribute__ ((__nothrow__ , __leaf__));
+extern unsigned short int *seed48 (unsigned short int __seed16v[3])
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern void lcong48 (unsigned short int __param[7]) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+struct drand48_data
+  {
+    unsigned short int __x[3];
+    unsigned short int __old_x[3];
+    unsigned short int __c;
+    unsigned short int __init;
+    __extension__ unsigned long long int __a;
+
+  };
+
+
+extern int drand48_r (struct drand48_data *__restrict __buffer,
+        double *__restrict __result) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern int erand48_r (unsigned short int __xsubi[3],
+        struct drand48_data *__restrict __buffer,
+        double *__restrict __result) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int lrand48_r (struct drand48_data *__restrict __buffer,
+        long int *__restrict __result)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern int nrand48_r (unsigned short int __xsubi[3],
+        struct drand48_data *__restrict __buffer,
+        long int *__restrict __result)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int mrand48_r (struct drand48_data *__restrict __buffer,
+        long int *__restrict __result)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern int jrand48_r (unsigned short int __xsubi[3],
+        struct drand48_data *__restrict __buffer,
+        long int *__restrict __result)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int srand48_r (long int __seedval, struct drand48_data *__buffer)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+extern int seed48_r (unsigned short int __seed16v[3],
+       struct drand48_data *__buffer) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern int lcong48_r (unsigned short int __param[7],
+        struct drand48_data *__buffer)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern __uint32_t arc4random (void)
+     __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+extern void arc4random_buf (void *__buf, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern __uint32_t arc4random_uniform (__uint32_t __upper_bound)
+     __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+
+
+extern void *malloc (size_t __size) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__))
+     __attribute__ ((__alloc_size__ (1))) ;
+
+extern void *calloc (size_t __nmemb, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__alloc_size__ (1, 2))) ;
+
+
+
+
+
+
+extern void *realloc (void *__ptr, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__warn_unused_result__)) __attribute__ ((__alloc_size__ (2)));
+
+
+extern void free (void *__ptr) __attribute__ ((__nothrow__ , __leaf__));
+extern void free_sized (void *__ptr, size_t __size) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+extern void free_aligned_sized (void *__ptr, size_t __alignment, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__));
+extern void *reallocarray (void *__ptr, size_t __nmemb, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__warn_unused_result__))
+     __attribute__ ((__alloc_size__ (2, 3)))
+    __attribute__ ((__malloc__ (__builtin_free, 1)));
+
+
+extern void *reallocarray (void *__ptr, size_t __nmemb, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__ (reallocarray, 1)));
+
+
+
+
+
+
+
+
+
+
+extern void *alloca (size_t __size) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+
+
+
+
+
+
+extern void *valloc (size_t __size) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__))
+     __attribute__ ((__alloc_size__ (1))) ;
+
+
+
+
+extern int posix_memalign (void **__memptr, size_t __alignment, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+extern void *aligned_alloc (size_t __alignment, size_t __size)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__alloc_align__ (1)))
+     __attribute__ ((__alloc_size__ (2))) ;
+
+
+
+extern void abort (void) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__)) __attribute__ ((__cold__));
+
+
+
+extern int atexit (void (*__func) (void)) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern int at_quick_exit (void (*__func) (void)) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern int on_exit (void (*__func) (int __status, void *__arg), void *__arg)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern void exit (int __status) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));
+
+
+
+
+
+extern void quick_exit (int __status) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));
+
+
+
+
+
+extern void _Exit (int __status) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__));
+
+
+
+
+extern char *getenv (const char *__name) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+extern char *secure_getenv (const char *__name)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+
+extern int putenv (char *__string) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern int setenv (const char *__name, const char *__value, int __replace)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+
+extern int unsetenv (const char *__name) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern int clearenv (void) __attribute__ ((__nothrow__ , __leaf__));
+extern char *mktemp (char *__template) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern int mkstemp (char *__template) __asm__ ("" "mkstemp64")
+     __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+extern int mkstemp64 (char *__template) __attribute__ ((__nonnull__ (1))) ;
+extern int mkstemps (char *__template, int __suffixlen) __asm__ ("" "mkstemps64")
+                     __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+extern int mkstemps64 (char *__template, int __suffixlen)
+     __attribute__ ((__nonnull__ (1))) ;
+extern char *mkdtemp (char *__template) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) ;
+extern int mkostemp (char *__template, int __flags) __asm__ ("" "mkostemp64")
+     __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+extern int mkostemp64 (char *__template, int __flags) __attribute__ ((__nonnull__ (1))) ;
+extern int mkostemps (char *__template, int __suffixlen, int __flags) __asm__ ("" "mkostemps64")
+
+     __attribute__ ((__nonnull__ (1))) ;
+
+
+
+
+
+extern int mkostemps64 (char *__template, int __suffixlen, int __flags)
+     __attribute__ ((__nonnull__ (1))) ;
+extern int system (const char *__command) ;
+
+
+
+
+
+extern char *canonicalize_file_name (const char *__name)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) __attribute__ ((__malloc__))
+     __attribute__ ((__malloc__ (__builtin_free, 1))) ;
+extern char *realpath (const char *__restrict __name,
+         char *__restrict __resolved) __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+
+
+
+
+typedef int (*__compar_fn_t) (const void *, const void *);
+
+
+typedef __compar_fn_t comparison_fn_t;
+
+
+
+typedef int (*__compar_d_fn_t) (const void *, const void *, void *);
+
+
+
+
+extern void *bsearch (const void *__key, const void *__base,
+        size_t __nmemb, size_t __size, __compar_fn_t __compar)
+     __attribute__ ((__nonnull__ (1, 2, 5))) ;
+extern void qsort (void *__base, size_t __nmemb, size_t __size,
+     __compar_fn_t __compar) __attribute__ ((__nonnull__ (1, 4)));
+
+extern void qsort_r (void *__base, size_t __nmemb, size_t __size,
+       __compar_d_fn_t __compar, void *__arg)
+  __attribute__ ((__nonnull__ (1, 4)));
+
+
+
+
+extern int abs (int __x) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+extern long int labs (long int __x) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+
+
+__extension__ extern long long int llabs (long long int __x)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+
+
+
+extern unsigned int uabs (int __x) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+extern unsigned long int ulabs (long int __x) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+__extension__ extern unsigned long long int ullabs (long long int __x)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+
+
+
+
+
+extern div_t div (int __numer, int __denom)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+extern ldiv_t ldiv (long int __numer, long int __denom)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+
+
+__extension__ extern lldiv_t lldiv (long long int __numer,
+        long long int __denom)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__)) ;
+extern char *ecvt (double __value, int __ndigit, int *__restrict __decpt,
+     int *__restrict __sign) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4))) ;
+
+
+
+
+extern char *fcvt (double __value, int __ndigit, int *__restrict __decpt,
+     int *__restrict __sign) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4))) ;
+
+
+
+
+extern char *gcvt (double __value, int __ndigit, char *__buf)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3))) ;
+
+
+
+
+extern char *qecvt (long double __value, int __ndigit,
+      int *__restrict __decpt, int *__restrict __sign)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4))) ;
+extern char *qfcvt (long double __value, int __ndigit,
+      int *__restrict __decpt, int *__restrict __sign)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4))) ;
+extern char *qgcvt (long double __value, int __ndigit, char *__buf)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3))) ;
+
+
+
+
+extern int ecvt_r (double __value, int __ndigit, int *__restrict __decpt,
+     int *__restrict __sign, char *__restrict __buf,
+     size_t __len) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4, 5)));
+extern int fcvt_r (double __value, int __ndigit, int *__restrict __decpt,
+     int *__restrict __sign, char *__restrict __buf,
+     size_t __len) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4, 5)));
+
+extern int qecvt_r (long double __value, int __ndigit,
+      int *__restrict __decpt, int *__restrict __sign,
+      char *__restrict __buf, size_t __len)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4, 5)));
+extern int qfcvt_r (long double __value, int __ndigit,
+      int *__restrict __decpt, int *__restrict __sign,
+      char *__restrict __buf, size_t __len)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (3, 4, 5)));
+
+
+
+
+
+extern int mblen (const char *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern int mbtowc (wchar_t *__restrict __pwc,
+     const char *__restrict __s, size_t __n) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern int wctomb (char *__s, wchar_t __wchar) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern size_t mbstowcs (wchar_t *__restrict __pwcs,
+   const char *__restrict __s, size_t __n) __attribute__ ((__nothrow__ , __leaf__))
+    __attribute__ ((__access__ (__read_only__, 2)));
+
+extern size_t wcstombs (char *__restrict __s,
+   const wchar_t *__restrict __pwcs, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__access__ (__write_only__, 1, 3)))
+  __attribute__ ((__access__ (__read_only__, 2)));
+
+
+
+
+
+
+extern int rpmatch (const char *__response) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) ;
+extern int getsubopt (char **__restrict __optionp,
+        char *const *__restrict __tokens,
+        char **__restrict __valuep)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2, 3))) ;
+
+
+
+
+
+
+
+extern int posix_openpt (int __oflag) ;
+
+
+
+
+
+
+
+extern int grantpt (int __fd) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern int unlockpt (int __fd) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+extern char *ptsname (int __fd) __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+
+
+
+
+extern int ptsname_r (int __fd, char *__buf, size_t __buflen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 2, 3)));
+
+
+extern int getpt (void);
+
+
+
+
+
+
+extern int getloadavg (double __loadavg[], int __nelem)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+typedef __once_flag once_flag;
+
+
+
+extern void call_once (once_flag *__flag, void (*__func)(void));
+
+
+
+extern size_t memalignment (const void *__p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef __builtin_va_list __gnuc_va_list;
+
+
+
+
+
+
+typedef struct
+{
+  int __count;
+  union
+  {
+    unsigned int __wch;
+    char __wchb[4];
+  } __value;
+} __mbstate_t;
+
+
+
+
+typedef struct _G_fpos_t
+{
+  __off_t __pos;
+  __mbstate_t __state;
+} __fpos_t;
+typedef struct _G_fpos64_t
+{
+  __off64_t __pos;
+  __mbstate_t __state;
+} __fpos64_t;
+
+
+
+struct _IO_FILE;
+typedef struct _IO_FILE __FILE;
+
+
+
+struct _IO_FILE;
+
+
+typedef struct _IO_FILE FILE;
+
+struct _IO_FILE;
+struct _IO_marker;
+struct _IO_codecvt;
+struct _IO_wide_data;
+
+
+
+
+typedef void _IO_lock_t;
+
+
+
+
+
+struct _IO_FILE
+{
+  int _flags;
+
+
+  char *_IO_read_ptr;
+  char *_IO_read_end;
+  char *_IO_read_base;
+  char *_IO_write_base;
+  char *_IO_write_ptr;
+  char *_IO_write_end;
+  char *_IO_buf_base;
+  char *_IO_buf_end;
+
+
+  char *_IO_save_base;
+  char *_IO_backup_base;
+  char *_IO_save_end;
+
+  struct _IO_marker *_markers;
+
+  struct _IO_FILE *_chain;
+
+  int _fileno;
+  int _flags2:24;
+
+  char _short_backupbuf[1];
+  __off_t _old_offset;
+
+
+  unsigned short _cur_column;
+  signed char _vtable_offset;
+  char _shortbuf[1];
+
+  _IO_lock_t *_lock;
+
+
+
+
+
+
+
+  __off64_t _offset;
+
+  struct _IO_codecvt *_codecvt;
+  struct _IO_wide_data *_wide_data;
+  struct _IO_FILE *_freeres_list;
+  void *_freeres_buf;
+  struct _IO_FILE **_prevchain;
+  int _mode;
+
+  int _unused3;
+
+  __uint64_t _total_written;
+
+
+
+
+  char _unused2[12 * sizeof (int) - 5 * sizeof (void *)];
+};
+
+
+typedef __ssize_t cookie_read_function_t (void *__cookie, char *__buf,
+                                          size_t __nbytes);
+
+
+
+
+
+
+
+typedef __ssize_t cookie_write_function_t (void *__cookie, const char *__buf,
+                                           size_t __nbytes);
+
+
+
+
+
+
+
+typedef int cookie_seek_function_t (void *__cookie, __off64_t *__pos, int __w);
+
+
+typedef int cookie_close_function_t (void *__cookie);
+
+
+
+
+
+
+typedef struct _IO_cookie_io_functions_t
+{
+  cookie_read_function_t *read;
+  cookie_write_function_t *write;
+  cookie_seek_function_t *seek;
+  cookie_close_function_t *close;
+} cookie_io_functions_t;
+
+
+
+
+
+typedef __gnuc_va_list va_list;
+typedef __fpos64_t fpos_t;
+
+
+typedef __fpos64_t fpos64_t;
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+
+
+
+
+
+
+extern int remove (const char *__filename) __attribute__ ((__nothrow__ , __leaf__));
+
+extern int rename (const char *__old, const char *__new) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern int renameat (int __oldfd, const char *__old, int __newfd,
+       const char *__new) __attribute__ ((__nothrow__ , __leaf__));
+extern int renameat2 (int __oldfd, const char *__old, int __newfd,
+        const char *__new, unsigned int __flags) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+
+extern int fclose (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+extern FILE *tmpfile (void) __asm__ ("" "tmpfile64")
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+
+
+
+
+
+
+extern FILE *tmpfile64 (void)
+   __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+
+
+
+extern char *tmpnam (char[20]) __attribute__ ((__nothrow__ , __leaf__)) ;
+
+
+
+
+extern char *tmpnam_r (char __s[20]) __attribute__ ((__nothrow__ , __leaf__)) ;
+extern char *tempnam (const char *__dir, const char *__pfx)
+   __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (__builtin_free, 1)));
+
+
+
+
+
+
+extern int fflush (FILE *__stream);
+extern int fflush_unlocked (FILE *__stream);
+extern int fcloseall (void);
+extern FILE *fopen (const char *__restrict __filename, const char *__restrict __modes) __asm__ ("" "fopen64")
+
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+extern FILE *freopen (const char *__restrict __filename, const char *__restrict __modes, FILE *__restrict __stream) __asm__ ("" "freopen64")
+
+
+  __attribute__ ((__nonnull__ (3)));
+
+
+
+
+
+
+extern FILE *fopen64 (const char *__restrict __filename,
+        const char *__restrict __modes)
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+extern FILE *freopen64 (const char *__restrict __filename,
+   const char *__restrict __modes,
+   FILE *__restrict __stream) __attribute__ ((__nonnull__ (3)));
+
+
+
+
+extern FILE *fdopen (int __fd, const char *__modes) __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+
+
+
+
+
+extern FILE *fopencookie (void *__restrict __magic_cookie,
+     const char *__restrict __modes,
+     cookie_io_functions_t __io_funcs) __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+
+
+
+
+extern FILE *fmemopen (void *__s, size_t __len, const char *__modes)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+
+
+
+
+extern FILE *open_memstream (char **__bufloc, size_t *__sizeloc) __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (fclose, 1))) ;
+extern void setbuf (FILE *__restrict __stream, char *__restrict __buf) __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__nonnull__ (1)));
+
+
+
+extern int setvbuf (FILE *__restrict __stream, char *__restrict __buf,
+      int __modes, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern void setbuffer (FILE *__restrict __stream, char *__restrict __buf,
+         size_t __size) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern void setlinebuf (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern int fprintf (FILE *__restrict __stream,
+      const char *__restrict __format, ...) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern int printf (const char *__restrict __format, ...);
+
+extern int sprintf (char *__restrict __s,
+      const char *__restrict __format, ...) __attribute__ ((__nothrow__));
+
+
+
+
+
+extern int vfprintf (FILE *__restrict __s, const char *__restrict __format,
+       __gnuc_va_list __arg) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern int vprintf (const char *__restrict __format, __gnuc_va_list __arg);
+
+extern int vsprintf (char *__restrict __s, const char *__restrict __format,
+       __gnuc_va_list __arg) __attribute__ ((__nothrow__));
+
+
+
+extern int snprintf (char *__restrict __s, size_t __maxlen,
+       const char *__restrict __format, ...)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 3, 4)));
+
+extern int vsnprintf (char *__restrict __s, size_t __maxlen,
+        const char *__restrict __format, __gnuc_va_list __arg)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 3, 0)));
+
+
+
+
+
+extern int vasprintf (char **__restrict __ptr, const char *__restrict __f,
+        __gnuc_va_list __arg)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 2, 0))) ;
+extern int __asprintf (char **__restrict __ptr,
+         const char *__restrict __fmt, ...)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 2, 3))) ;
+extern int asprintf (char **__restrict __ptr,
+       const char *__restrict __fmt, ...)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 2, 3))) ;
+
+
+
+
+extern int vdprintf (int __fd, const char *__restrict __fmt,
+       __gnuc_va_list __arg)
+     __attribute__ ((__format__ (__printf__, 2, 0)));
+extern int dprintf (int __fd, const char *__restrict __fmt, ...)
+     __attribute__ ((__format__ (__printf__, 2, 3)));
+
+
+
+
+
+
+
+extern int fscanf (FILE *__restrict __stream,
+     const char *__restrict __format, ...) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern int scanf (const char *__restrict __format, ...) ;
+
+extern int sscanf (const char *__restrict __s,
+     const char *__restrict __format, ...) __attribute__ ((__nothrow__ , __leaf__));
+extern int fscanf (FILE *__restrict __stream, const char *__restrict __format, ...) __asm__ ("" "__isoc23_fscanf")
+
+                                __attribute__ ((__nonnull__ (1)));
+extern int scanf (const char *__restrict __format, ...) __asm__ ("" "__isoc23_scanf")
+                              ;
+extern int sscanf (const char *__restrict __s, const char *__restrict __format, ...) __asm__ ("" "__isoc23_sscanf") __attribute__ ((__nothrow__ , __leaf__))
+
+                      ;
+extern int vfscanf (FILE *__restrict __s, const char *__restrict __format,
+      __gnuc_va_list __arg)
+     __attribute__ ((__format__ (__scanf__, 2, 0))) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern int vscanf (const char *__restrict __format, __gnuc_va_list __arg)
+     __attribute__ ((__format__ (__scanf__, 1, 0))) ;
+
+
+extern int vsscanf (const char *__restrict __s,
+      const char *__restrict __format, __gnuc_va_list __arg)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__format__ (__scanf__, 2, 0)));
+
+
+
+
+
+
+extern int vfscanf (FILE *__restrict __s, const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc23_vfscanf")
+
+
+
+     __attribute__ ((__format__ (__scanf__, 2, 0))) __attribute__ ((__nonnull__ (1)));
+extern int vscanf (const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc23_vscanf")
+
+     __attribute__ ((__format__ (__scanf__, 1, 0))) ;
+extern int vsscanf (const char *__restrict __s, const char *__restrict __format, __gnuc_va_list __arg) __asm__ ("" "__isoc23_vsscanf") __attribute__ ((__nothrow__ , __leaf__))
+
+
+
+     __attribute__ ((__format__ (__scanf__, 2, 0)));
+extern int fgetc (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+extern int getc (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern int getchar (void);
+
+
+
+
+
+
+extern int getc_unlocked (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+extern int getchar_unlocked (void);
+extern int fgetc_unlocked (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern int fputc (int __c, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+extern int putc (int __c, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+
+
+
+
+
+extern int putchar (int __c);
+extern int fputc_unlocked (int __c, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+
+
+
+
+
+
+
+extern int putc_unlocked (int __c, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+extern int putchar_unlocked (int __c);
+
+
+
+
+
+
+extern int getw (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+
+
+extern int putw (int __w, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+
+
+
+
+
+
+
+extern char *fgets (char *__restrict __s, int __n, FILE *__restrict __stream)
+     __attribute__ ((__access__ (__write_only__, 1, 2))) __attribute__ ((__nonnull__ (3)));
+extern char *fgets_unlocked (char *__restrict __s, int __n,
+        FILE *__restrict __stream)
+    __attribute__ ((__access__ (__write_only__, 1, 2))) __attribute__ ((__nonnull__ (3)));
+extern __ssize_t __getdelim (char **__restrict __lineptr,
+                             size_t *__restrict __n, int __delimiter,
+                             FILE *__restrict __stream) __attribute__ ((__nonnull__ (4)));
+extern __ssize_t getdelim (char **__restrict __lineptr,
+                           size_t *__restrict __n, int __delimiter,
+                           FILE *__restrict __stream) __attribute__ ((__nonnull__ (4)));
+
+
+extern __ssize_t getline (char **__restrict __lineptr,
+                          size_t *__restrict __n,
+                          FILE *__restrict __stream) __attribute__ ((__nonnull__ (3)));
+
+
+
+
+
+
+
+extern int fputs (const char *__restrict __s, FILE *__restrict __stream)
+  __attribute__ ((__nonnull__ (2)));
+
+
+
+
+
+extern int puts (const char *__s);
+
+
+
+
+
+
+extern int ungetc (int __c, FILE *__stream) __attribute__ ((__nonnull__ (2)));
+
+
+
+
+
+
+extern size_t fread (void *__restrict __ptr, size_t __size,
+       size_t __n, FILE *__restrict __stream)
+  __attribute__ ((__nonnull__ (4)));
+
+
+
+
+extern size_t fwrite (const void *__restrict __ptr, size_t __size,
+        size_t __n, FILE *__restrict __s) __attribute__ ((__nonnull__ (4)));
+extern int fputs_unlocked (const char *__restrict __s,
+      FILE *__restrict __stream) __attribute__ ((__nonnull__ (2)));
+extern size_t fread_unlocked (void *__restrict __ptr, size_t __size,
+         size_t __n, FILE *__restrict __stream)
+  __attribute__ ((__nonnull__ (4)));
+extern size_t fwrite_unlocked (const void *__restrict __ptr, size_t __size,
+          size_t __n, FILE *__restrict __stream)
+  __attribute__ ((__nonnull__ (4)));
+
+
+
+
+
+
+
+extern int fseek (FILE *__stream, long int __off, int __whence)
+  __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern long int ftell (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern void rewind (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+extern int fseeko (FILE *__stream, __off64_t __off, int __whence) __asm__ ("" "fseeko64")
+
+                   __attribute__ ((__nonnull__ (1)));
+extern __off64_t ftello (FILE *__stream) __asm__ ("" "ftello64")
+  __attribute__ ((__nonnull__ (1)));
+extern int fgetpos (FILE *__restrict __stream, fpos_t *__restrict __pos) __asm__ ("" "fgetpos64")
+
+  __attribute__ ((__nonnull__ (1)));
+extern int fsetpos (FILE *__stream, const fpos_t *__pos) __asm__ ("" "fsetpos64")
+
+  __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern int fseeko64 (FILE *__stream, __off64_t __off, int __whence)
+  __attribute__ ((__nonnull__ (1)));
+extern __off64_t ftello64 (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+extern int fgetpos64 (FILE *__restrict __stream, fpos64_t *__restrict __pos)
+  __attribute__ ((__nonnull__ (1)));
+extern int fsetpos64 (FILE *__stream, const fpos64_t *__pos) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern void clearerr (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+extern int feof (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+extern int ferror (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern void clearerr_unlocked (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern int feof_unlocked (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern int ferror_unlocked (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+
+extern void perror (const char *__s) __attribute__ ((__cold__));
+
+
+
+
+extern int fileno (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern int fileno_unlocked (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern int pclose (FILE *__stream) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern FILE *popen (const char *__command, const char *__modes)
+  __attribute__ ((__malloc__)) __attribute__ ((__malloc__ (pclose, 1))) ;
+
+
+
+
+
+
+extern char *ctermid (char *__s) __attribute__ ((__nothrow__ , __leaf__))
+  __attribute__ ((__access__ (__write_only__, 1)));
+
+
+
+
+
+extern char *cuserid (char *__s)
+  __attribute__ ((__access__ (__write_only__, 1)));
+
+
+
+
+struct obstack;
+
+
+extern int obstack_printf (struct obstack *__restrict __obstack,
+      const char *__restrict __format, ...)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 2, 3)));
+extern int obstack_vprintf (struct obstack *__restrict __obstack,
+       const char *__restrict __format,
+       __gnuc_va_list __args)
+     __attribute__ ((__nothrow__)) __attribute__ ((__format__ (__printf__, 2, 0)));
+
+
+
+
+
+
+
+extern void flockfile (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+extern int ftrylockfile (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern void funlockfile (FILE *__stream) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern int __uflow (FILE *);
+extern int __overflow (FILE *, int);
+
+
+
+extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+       size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void *memmove (void *__dest, const void *__src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+        int __c, size_t __n)
+    __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 4)));
+
+
+
+
+extern void *memset (void *__s, int __c, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern void *memset_explicit (void *__s, int __c, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern int memcmp (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern int __memcmpeq (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern void *memchr (const void *__s, int __c, size_t __n)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern void *rawmemchr (const void *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern void *memrchr (const void *__s, int __c, size_t __n)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)))
+      __attribute__ ((__access__ (__read_only__, 1, 3)));
+
+
+
+
+
+extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+        size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcoll (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern size_t strxfrm (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+    __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+
+
+
+extern int strcoll_l (const char *__s1, const char *__s2, locale_t __l)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+    locale_t __l) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 4)))
+     __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+
+
+extern char *strdup (const char *__s)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern char *strndup (const char *__string, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+extern char *strchr (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *strrchr (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *strchrnul (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern size_t strcspn (const char *__s, const char *__reject)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern size_t strspn (const char *__s, const char *__accept)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strpbrk (const char *__s, const char *__accept)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strstr (const char *__haystack, const char *__needle)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strtok (char *__restrict __s, const char *__restrict __delim)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+
+
+extern char *__strtok_r (char *__restrict __s,
+    const char *__restrict __delim,
+    char **__restrict __save_ptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 3)));
+
+extern char *strtok_r (char *__restrict __s, const char *__restrict __delim,
+         char **__restrict __save_ptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 3)));
+extern char *strcasestr (const char *__haystack, const char *__needle)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+
+
+extern void *memmem (const void *__haystack, size_t __haystacklen,
+       const void *__needle, size_t __needlelen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 3)))
+    __attribute__ ((__access__ (__read_only__, 1, 2)))
+    __attribute__ ((__access__ (__read_only__, 3, 4)));
+
+
+
+extern void *__mempcpy (void *__restrict __dest,
+   const void *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern void *mempcpy (void *__restrict __dest,
+        const void *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlen (const char *__s)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern size_t strnlen (const char *__string, size_t __maxlen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern char *strerror (int __errnum) __attribute__ ((__nothrow__ , __leaf__));
+extern char *strerror_r (int __errnum, char *__buf, size_t __buflen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 2, 3)));
+
+
+
+
+extern const char *strerrordesc_np (int __err) __attribute__ ((__nothrow__ , __leaf__));
+
+extern const char *strerrorname_np (int __err) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+extern char *strerror_l (int __errnum, locale_t __l) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern int bcmp (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bcopy (const void *__src, void *__dest, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bzero (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern char *index (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *rindex (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern int ffs (int __i) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+
+
+extern int ffsl (long int __l) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+__extension__ extern int ffsll (long long int __ll)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern int strcasecmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strncasecmp (const char *__s1, const char *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+
+extern int strcasecmp_l (const char *__s1, const char *__s2, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+
+extern int strncasecmp_l (const char *__s1, const char *__s2,
+     size_t __n, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 4)));
+
+
+
+
+
+
+extern void explicit_bzero (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__write_only__, 1, 2)));
+
+
+
+extern char *strsep (char **__restrict __stringp,
+       const char *__restrict __delim)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern char *strsignal (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern const char *sigabbrev_np (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern const char *sigdescr_np (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+extern char *__stpncpy (char *__restrict __dest,
+   const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlcpy (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern size_t strlcat (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__read_write__, 1, 3)));
+
+
+
+
+extern int strverscmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strfry (char *__string) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern void *memfrob (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__read_write__, 1, 2)));
+extern char *basename (const char *__filename) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+ 
+
+typedef __uint8_t uint8_t;
+typedef __uint16_t uint16_t;
+typedef __uint32_t uint32_t;
+typedef __uint64_t uint64_t;
+
+
+
+typedef __int_least8_t int_least8_t;
+typedef __int_least16_t int_least16_t;
+typedef __int_least32_t int_least32_t;
+typedef __int_least64_t int_least64_t;
+
+
+typedef __uint_least8_t uint_least8_t;
+typedef __uint_least16_t uint_least16_t;
+typedef __uint_least32_t uint_least32_t;
+typedef __uint_least64_t uint_least64_t;
+
+
+
+
+
+typedef signed char int_fast8_t;
+
+typedef long int int_fast16_t;
+typedef long int int_fast32_t;
+typedef long int int_fast64_t;
+typedef unsigned char uint_fast8_t;
+
+typedef unsigned long int uint_fast16_t;
+typedef unsigned long int uint_fast32_t;
+typedef unsigned long int uint_fast64_t;
+typedef long int intptr_t;
+
+
+typedef unsigned long int uintptr_t;
+typedef __intmax_t intmax_t;
+typedef __uintmax_t uintmax_t;
+
+
+
+
+
+
+typedef int __gwchar_t;
+
+
+
+
+
+typedef struct
+  {
+    long int quot;
+    long int rem;
+  } imaxdiv_t;
+extern intmax_t imaxabs (intmax_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern uintmax_t umaxabs (intmax_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern imaxdiv_t imaxdiv (intmax_t __numer, intmax_t __denom)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+extern intmax_t strtoimax (const char *__restrict __nptr,
+      char **__restrict __endptr, int __base) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern uintmax_t strtoumax (const char *__restrict __nptr,
+       char ** __restrict __endptr, int __base) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern intmax_t wcstoimax (const __gwchar_t *__restrict __nptr,
+      __gwchar_t **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern uintmax_t wcstoumax (const __gwchar_t *__restrict __nptr,
+       __gwchar_t ** __restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+extern intmax_t strtoimax (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoimax") __attribute__ ((__nothrow__ , __leaf__))
+
+                                         ;
+extern uintmax_t strtoumax (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoumax") __attribute__ ((__nothrow__ , __leaf__))
+
+                                          ;
+extern intmax_t wcstoimax (const __gwchar_t *__restrict __nptr, __gwchar_t **__restrict __endptr, int __base) __asm__ ("" "__isoc23_wcstoimax") __attribute__ ((__nothrow__ , __leaf__))
+
+
+                       ;
+extern uintmax_t wcstoumax (const __gwchar_t *__restrict __nptr, __gwchar_t **__restrict __endptr, int __base) __asm__ ("" "__isoc23_wcstoumax") __attribute__ ((__nothrow__ , __leaf__))
+
+
+                        ;
+
+
+
+
+extern void __assert_fail (const char *__assertion, const char *__file,
+      unsigned int __line, const char *__function)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__)) __attribute__ ((__cold__));
+
+
+extern void __assert_perror_fail (int __errnum, const char *__file,
+      unsigned int __line, const char *__function)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__)) __attribute__ ((__cold__));
+
+
+
+
+extern void __assert (const char *__assertion, const char *__file, int __line)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__noreturn__)) __attribute__ ((__cold__));
+
+
+
+
+
+
+extern _Bool __assert_single_arg (_Bool);
+
+
+
+
+
+typedef int BOOL;
+enum {
+    FALSE = 0,
+    TRUE = 1,
+};
+typedef __int128 int128_t;
+typedef unsigned __int128 uint128_t;
+
+
+static inline int max_int(int a, int b)
+{
+    if (a > b)
+        return a;
+    else
+        return b;
+}
+
+static inline int min_int(int a, int b)
+{
+    if (a < b)
+        return a;
+    else
+        return b;
+}
+
+void *mallocz(size_t size);
+
+
+static inline uint16_t get_le16(const uint8_t *ptr)
+{
+    return ptr[0] | (ptr[1] << 8);
+}
+
+static inline uint32_t get_le32(const uint8_t *ptr)
+{
+    return ptr[0] | (ptr[1] << 8) | (ptr[2] << 16) | (ptr[3] << 24);
+}
+
+static inline uint64_t get_le64(const uint8_t *ptr)
+{
+    return get_le32(ptr) | ((uint64_t)get_le32(ptr + 4) << 32);
+}
+
+static inline void put_le16(uint8_t *ptr, uint16_t v)
+{
+    ptr[0] = v;
+    ptr[1] = v >> 8;
+}
+
+static inline void put_le32(uint8_t *ptr, uint32_t v)
+{
+    ptr[0] = v;
+    ptr[1] = v >> 8;
+    ptr[2] = v >> 16;
+    ptr[3] = v >> 24;
+}
+
+static inline void put_le64(uint8_t *ptr, uint64_t v)
+{
+    put_le32(ptr, v);
+    put_le32(ptr + 4, v >> 32);
+}
+
+static inline uint32_t get_be32(const uint8_t *d)
+{
+    return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
+}
+
+static inline void put_be32(uint8_t *d, uint32_t v)
+{
+    d[0] = v >> 24;
+    d[1] = v >> 16;
+    d[2] = v >> 8;
+    d[3] = v >> 0;
+}
+
+static inline void put_be64(uint8_t *d, uint64_t v)
+{
+    put_be32(d, v >> 32);
+    put_be32(d + 4, v);
+}
+
+
+
+
+
+
+
+static inline uint32_t cpu_to_be32(uint32_t v)
+{
+    return 
+          __bswap_32 (
+          v
+          )
+                     ;
+}
+
+
+static inline int ctz32(uint32_t val)
+{
+
+    return val ? __builtin_ctz(val) : 32;
+}
+
+
+void *mallocz(size_t size);
+void pstrcpy(char *buf, int buf_size, const char *str);
+char *pstrcat(char *buf, int buf_size, const char *s);
+int strstart(const char *str, const char *val, const char **ptr);
 
 typedef struct {
-    uint32_t ready; /* 0 or 1 */
+    uint8_t *buf;
+    size_t size;
+    size_t allocated_size;
+} DynBuf;
+
+void dbuf_init(DynBuf *s);
+void dbuf_write(DynBuf *s, size_t offset, const uint8_t *data, size_t len);
+void dbuf_putc(DynBuf *s, uint8_t c);
+void dbuf_putstr(DynBuf *s, const char *str);
+void dbuf_free(DynBuf *s);
+struct list_head {
+    struct list_head *prev;
+    struct list_head *next;
+};
+
+
+
+
+
+static inline void init_list_head(struct list_head *head)
+{
+    head->prev = head;
+    head->next = head;
+}
+
+
+static inline void __list_add(struct list_head *el,
+                              struct list_head *prev, struct list_head *next)
+{
+    prev->next = el;
+    el->prev = prev;
+    el->next = next;
+    next->prev = el;
+}
+
+
+static inline void list_add(struct list_head *el, struct list_head *head)
+{
+    __list_add(el, head, head->next);
+}
+
+
+static inline void list_add_tail(struct list_head *el, struct list_head *head)
+{
+    __list_add(el, head->prev, head);
+}
+
+static inline void list_del(struct list_head *el)
+{
+    struct list_head *prev, *next;
+    prev = el->prev;
+    next = el->next;
+    prev->next = next;
+    next->prev = prev;
+    el->prev = 
+              ((void *)0)
+                  ;
+    el->next = 
+              ((void *)0)
+                  ;
+}
+
+static inline int list_empty(struct list_head *el)
+{
+    return el->next == el;
+}
+typedef void DeviceWriteFunc(void *opaque, uint32_t offset,
+                             uint32_t val, int size_log2);
+typedef uint32_t DeviceReadFunc(void *opaque, uint32_t offset, int size_log2);
+typedef struct PhysMemoryMap PhysMemoryMap;
+
+typedef struct {
+    PhysMemoryMap *map;
+    uint64_t addr;
+    uint64_t org_size;
+    uint64_t size;
+    BOOL is_ram;
+
+    int devram_flags;
+    uint8_t *phys_mem;
+    int dirty_bits_size;
+    uint32_t *dirty_bits;
+    uint32_t *dirty_bits_tab[2];
+    int dirty_bits_index;
+
+    void *opaque;
+    DeviceReadFunc *read_func;
+    DeviceWriteFunc *write_func;
+    int devio_flags;
+} PhysMemoryRange;
+
+
+
+struct PhysMemoryMap {
+    int n_phys_mem_range;
+    PhysMemoryRange phys_mem_range[32];
+    PhysMemoryRange *(*register_ram)(PhysMemoryMap *s, uint64_t addr,
+                                     uint64_t size, int devram_flags);
+    void (*free_ram)(PhysMemoryMap *s, PhysMemoryRange *pr);
+    const uint32_t *(*get_dirty_bits)(PhysMemoryMap *s, PhysMemoryRange *pr);
+    void (*set_ram_addr)(PhysMemoryMap *s, PhysMemoryRange *pr, uint64_t addr,
+                         BOOL enabled);
+    void *opaque;
+    void (*flush_tlb_write_range)(void *opaque, uint8_t *ram_addr,
+                                  size_t ram_size);
+};
+
+
+PhysMemoryMap *phys_mem_map_init(void);
+void phys_mem_map_end(PhysMemoryMap *s);
+PhysMemoryRange *register_ram_entry(PhysMemoryMap *s, uint64_t addr,
+                                    uint64_t size, int devram_flags);
+static inline PhysMemoryRange *cpu_register_ram(PhysMemoryMap *s, uint64_t addr,
+                                  uint64_t size, int devram_flags)
+{
+    return s->register_ram(s, addr, size, devram_flags);
+}
+PhysMemoryRange *cpu_register_device(PhysMemoryMap *s, uint64_t addr,
+                                     uint64_t size, void *opaque,
+                                     DeviceReadFunc *read_func, DeviceWriteFunc *write_func,
+                                     int devio_flags);
+PhysMemoryRange *get_phys_mem_range(PhysMemoryMap *s, uint64_t paddr);
+void phys_mem_set_addr(PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
+
+static inline const uint32_t *phys_mem_get_dirty_bits(PhysMemoryRange *pr)
+{
+    PhysMemoryMap *map = pr->map;
+    return map->get_dirty_bits(map, pr);
+}
+
+static inline void phys_mem_set_dirty_bit(PhysMemoryRange *pr, size_t offset)
+{
+    size_t page_index;
+    uint32_t mask, *dirty_bits_ptr;
+    if (pr->dirty_bits) {
+        page_index = offset >> 12;
+        mask = 1 << (page_index & 0x1f);
+        dirty_bits_ptr = pr->dirty_bits + (page_index >> 5);
+        *dirty_bits_ptr |= mask;
+    }
+}
+
+static inline BOOL phys_mem_is_dirty_bit(PhysMemoryRange *pr, size_t offset)
+{
+    size_t page_index;
+    uint32_t *dirty_bits_ptr;
+    if (!pr->dirty_bits)
+        return TRUE;
+    page_index = offset >> 12;
+    dirty_bits_ptr = pr->dirty_bits + (page_index >> 5);
+    return (*dirty_bits_ptr >> (page_index & 0x1f)) & 1;
+}
+
+void phys_mem_reset_dirty_bit(PhysMemoryRange *pr, size_t offset);
+uint8_t *phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw);
+
+
+
+typedef void SetIRQFunc(void *opaque, int irq_num, int level);
+
+typedef struct {
+    SetIRQFunc *set_irq;
+    void *opaque;
+    int irq_num;
+} IRQSignal;
+
+void irq_init(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num);
+
+static inline void set_irq(IRQSignal *irq, int level)
+{
+    irq->set_irq(irq->opaque, irq->irq_num, level);
+}
+typedef struct PCIBus PCIBus;
+typedef struct PCIDevice PCIDevice;
+typedef void PCIBarSetFunc(void *opaque, int bar_num, uint32_t addr,
+                           BOOL enabled);
+
+PCIDevice *pci_register_device(PCIBus *b, const char *name, int devfn,
+                               uint16_t vendor_id, uint16_t device_id,
+                               uint8_t revision, uint16_t class_id);
+PhysMemoryMap *pci_device_get_mem_map(PCIDevice *d);
+PhysMemoryMap *pci_device_get_port_map(PCIDevice *d);
+void pci_register_bar(PCIDevice *d, unsigned int bar_num,
+                      uint32_t size, int type,
+                      void *opaque, PCIBarSetFunc *bar_set);
+IRQSignal *pci_device_get_irq(PCIDevice *d, unsigned int irq_num);
+uint8_t *pci_device_get_dma_ptr(PCIDevice *d, uint64_t addr, BOOL is_rw);
+void pci_device_set_config8(PCIDevice *d, uint8_t addr, uint8_t val);
+void pci_device_set_config16(PCIDevice *d, uint8_t addr, uint16_t val);
+int pci_device_get_devfn(PCIDevice *d);
+int pci_add_capability(PCIDevice *d, const uint8_t *buf, int size);
+
+typedef struct I440FXState I440FXState;
+
+I440FXState *i440fx_init(PCIBus **pbus, int *ppiix3_devfn,
+                         PhysMemoryMap *mem_map, PhysMemoryMap *port_map,
+                         IRQSignal *pic_irqs);
+void i440fx_map_interrupts(I440FXState *s, uint8_t *elcr,
+                           const uint8_t *pci_irqs);
+typedef uint64_t virtio_phys_addr_t;
+
+
+
+
+typedef struct {
+
+    PCIBus *pci_bus;
+
+    PhysMemoryMap *mem_map;
+    uint64_t addr;
+    IRQSignal *irq;
+} VIRTIOBusDef;
+
+typedef struct VIRTIODevice VIRTIODevice;
+
+
+
+
+void virtio_set_debug(VIRTIODevice *s, int debug_flags);
+
+
+
+typedef void BlockDeviceCompletionFunc(void *opaque, int ret);
+
+typedef struct BlockDevice BlockDevice;
+
+struct BlockDevice {
+    int64_t (*get_sector_count)(BlockDevice *bs);
+    int (*read_async)(BlockDevice *bs,
+                      uint64_t sector_num, uint8_t *buf, int n,
+                      BlockDeviceCompletionFunc *cb, void *opaque);
+    int (*write_async)(BlockDevice *bs,
+                       uint64_t sector_num, const uint8_t *buf, int n,
+                       BlockDeviceCompletionFunc *cb, void *opaque);
+    void *opaque;
+};
+
+VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs);
+
+
+
+typedef struct EthernetDevice EthernetDevice;
+
+struct EthernetDevice {
+    uint8_t mac_addr[6];
+    void (*write_packet)(EthernetDevice *net,
+                         const uint8_t *buf, int len);
+    void *opaque;
+
+    void (*select_fill)(EthernetDevice *net, int *pfd_max,
+                        fd_set *rfds, fd_set *wfds, fd_set *efds,
+                        int *pdelay);
+    void (*select_poll)(EthernetDevice *net,
+                        fd_set *rfds, fd_set *wfds, fd_set *efds,
+                        int select_ret);
+
+
+    void *device_opaque;
+    BOOL (*device_can_write_packet)(EthernetDevice *net);
+    void (*device_write_packet)(EthernetDevice *net,
+                                const uint8_t *buf, int len);
+    void (*device_set_carrier)(EthernetDevice *net, BOOL carrier_state);
+};
+
+VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es);
+
+
+
+typedef struct {
+    void *opaque;
+    void (*write_data)(void *opaque, const uint8_t *buf, int len);
+    int (*read_data)(void *opaque, uint8_t *buf, int len);
+} CharacterDevice;
+
+VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs);
+BOOL virtio_console_can_write_data(VIRTIODevice *s);
+int virtio_console_get_write_len(VIRTIODevice *s);
+int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len);
+void virtio_console_resize_event(VIRTIODevice *s, int width, int height);
+
+
+
+typedef enum {
+    VIRTIO_INPUT_TYPE_KEYBOARD,
+    VIRTIO_INPUT_TYPE_MOUSE,
+    VIRTIO_INPUT_TYPE_TABLET,
+} VirtioInputTypeEnum;
+
+
+
+int virtio_input_send_key_event(VIRTIODevice *s, BOOL is_down,
+                                uint16_t key_code);
+int virtio_input_send_mouse_event(VIRTIODevice *s, int dx, int dy, int dz,
+                                  unsigned int buttons);
+
+VIRTIODevice *virtio_input_init(VIRTIOBusDef *bus, VirtioInputTypeEnum type);
+
+
+
+typedef struct FSDevice FSDevice;
+typedef struct FSFile FSFile;
+
+typedef struct {
+    uint32_t f_bsize;
+    uint64_t f_blocks;
+    uint64_t f_bfree;
+    uint64_t f_bavail;
+    uint64_t f_files;
+    uint64_t f_ffree;
+} FSStatFS;
+
+typedef struct {
+    uint8_t type;
+    uint32_t version;
+    uint64_t path;
+} FSQID;
+
+typedef struct {
+    FSQID qid;
+    uint32_t st_mode;
+    uint32_t st_uid;
+    uint32_t st_gid;
+    uint64_t st_nlink;
+    uint64_t st_rdev;
+    uint64_t st_size;
+    uint64_t st_blksize;
+    uint64_t st_blocks;
+    uint64_t st_atime_sec;
+    uint32_t st_atime_nsec;
+    uint64_t st_mtime_sec;
+    uint32_t st_mtime_nsec;
+    uint64_t st_ctime_sec;
+    uint32_t st_ctime_nsec;
+} FSStat;
+typedef struct {
+    uint8_t type;
+    uint32_t flags;
+    uint64_t start;
+    uint64_t length;
+    uint32_t proc_id;
+    char *client_id;
+} FSLock;
+
+typedef void FSOpenCompletionFunc(FSDevice *fs, FSQID *qid, int err,
+                                  void *opaque);
+
+struct FSDevice {
+    void (*fs_end)(FSDevice *s);
+    void (*fs_delete)(FSDevice *s, FSFile *f);
+    void (*fs_statfs)(FSDevice *fs, FSStatFS *st);
+    int (*fs_attach)(FSDevice *fs, FSFile **pf, FSQID *qid, uint32_t uid,
+                     const char *uname, const char *aname);
+    int (*fs_walk)(FSDevice *fs, FSFile **pf, FSQID *qids,
+                   FSFile *f, int n, char **names);
+    int (*fs_mkdir)(FSDevice *fs, FSQID *qid, FSFile *f,
+                    const char *name, uint32_t mode, uint32_t gid);
+    int (*fs_open)(FSDevice *fs, FSQID *qid, FSFile *f, uint32_t flags,
+                   FSOpenCompletionFunc *cb, void *opaque);
+    int (*fs_create)(FSDevice *fs, FSQID *qid, FSFile *f, const char *name,
+                     uint32_t flags, uint32_t mode, uint32_t gid);
+    int (*fs_stat)(FSDevice *fs, FSFile *f, FSStat *st);
+    int (*fs_setattr)(FSDevice *fs, FSFile *f, uint32_t mask,
+                      uint32_t mode, uint32_t uid, uint32_t gid,
+                      uint64_t size, uint64_t atime_sec, uint64_t atime_nsec,
+                      uint64_t mtime_sec, uint64_t mtime_nsec);
+    void (*fs_close)(FSDevice *fs, FSFile *f);
+    int (*fs_readdir)(FSDevice *fs, FSFile *f, uint64_t offset,
+                      uint8_t *buf, int count);
+    int (*fs_read)(FSDevice *fs, FSFile *f, uint64_t offset,
+            uint8_t *buf, int count);
+    int (*fs_write)(FSDevice *fs, FSFile *f, uint64_t offset,
+             const uint8_t *buf, int count);
+    int (*fs_link)(FSDevice *fs, FSFile *df, FSFile *f, const char *name);
+    int (*fs_symlink)(FSDevice *fs, FSQID *qid,
+                      FSFile *f, const char *name, const char *symgt, uint32_t gid);
+    int (*fs_mknod)(FSDevice *fs, FSQID *qid,
+                    FSFile *f, const char *name, uint32_t mode, uint32_t major,
+                    uint32_t minor, uint32_t gid);
+    int (*fs_readlink)(FSDevice *fs, char *buf, int buf_size, FSFile *f);
+    int (*fs_renameat)(FSDevice *fs, FSFile *f, const char *name,
+                       FSFile *new_f, const char *new_name);
+    int (*fs_unlinkat)(FSDevice *fs, FSFile *f, const char *name);
+    int (*fs_lock)(FSDevice *fs, FSFile *f, const FSLock *lock);
+    int (*fs_getlock)(FSDevice *fs, FSFile *f, FSLock *lock);
+};
+
+FSDevice *fs_disk_init(const char *root_path);
+FSDevice *fs_mem_init(void);
+FSDevice *fs_net_init(const char *url, void (*start)(void *opaque), void *opaque);
+void fs_net_set_pwd(FSDevice *fs, const char *pwd);
+
+
+
+void fs_export_file(const char *filename,
+                    const uint8_t *buf, int buf_len);
+void fs_end(FSDevice *fs);
+void fs_dump_cache_load(FSDevice *fs1, const char *filename);
+
+FSFile *fs_dup(FSDevice *fs, FSFile *f);
+FSFile *fs_walk_path1(FSDevice *fs, FSFile *f, const char *path,
+                      char **pname);
+FSFile *fs_walk_path(FSDevice *fs, FSFile *f, const char *path);
+
+VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
+                             const char *mount_tag);
+typedef struct {
+    uint32_t ready;
     uint32_t num;
     uint16_t last_avail_idx;
     virtio_phys_addr_t desc_addr;
     virtio_phys_addr_t avail_addr;
     virtio_phys_addr_t used_addr;
-    BOOL manual_recv; /* if TRUE, the device_recv() callback is not called */
+    BOOL manual_recv;
 } QueueState;
 
-#define VRING_DESC_F_NEXT	1
-#define VRING_DESC_F_WRITE	2
-#define VRING_DESC_F_INDIRECT	4
+
+
+
 
 typedef struct {
     uint64_t addr;
     uint32_t len;
-    uint16_t flags; /* VRING_DESC_F_x */
+    uint16_t flags;
     uint16_t next;
 } VIRTIODesc;
 
-/* return < 0 to stop the notification (it must be manually restarted
-   later), 0 if OK */
+
+
 typedef int VIRTIODeviceRecvFunc(VIRTIODevice *s1, int queue_idx,
                                  int desc_idx, int read_size,
                                  int write_size);
 
-/* return NULL if no RAM at this address. The mapping is valid for one page */
+
 typedef uint8_t *VIRTIOGetRAMPtrFunc(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
 
 struct VIRTIODevice {
     PhysMemoryMap *mem_map;
     PhysMemoryRange *mem_range;
-    /* PCI only */
+
     PCIDevice *pci_dev;
-    /* MMIO only */
+
     IRQSignal *irq;
     VIRTIOGetRAMPtrFunc *get_ram_ptr;
     int debug;
@@ -138,18 +3165,18 @@ struct VIRTIODevice {
     uint32_t int_status;
     uint32_t status;
     uint32_t device_features_sel;
-    uint32_t queue_sel; /* currently selected queue */
-    QueueState queue[MAX_QUEUE];
+    uint32_t queue_sel;
+    QueueState queue[8];
 
-    /* device specific */
+
     uint32_t device_id;
     uint32_t vendor_id;
     uint32_t device_features;
     VIRTIODeviceRecvFunc *device_recv;
-    void (*config_write)(VIRTIODevice *s); /* called after the config
-                                              is written */
-    uint32_t config_space_size; /* in bytes, must be multiple of 4 */
-    uint8_t config_space[MAX_CONFIG_SPACE_SIZE];
+    void (*config_write)(VIRTIODevice *s);
+
+    uint32_t config_space_size;
+    uint8_t config_space[256];
 };
 
 static uint32_t virtio_mmio_read(void *opaque, uint32_t offset1, int size_log2);
@@ -161,31 +3188,28 @@ static void virtio_pci_write(void *opaque, uint32_t offset,
 
 static void virtio_reset(VIRTIODevice *s)
 {
+    void virtio_reset__part3699(VIRTIODevice *s);
+
     int i;
 
-    s->status = 0;
-    s->queue_sel = 0;
-    s->device_features_sel = 0;
-    s->int_status = 0;
-    for(i = 0; i < MAX_QUEUE; i++) {
-        QueueState *qs = &s->queue[i];
-        qs->ready = 0;
-        qs->num = MAX_QUEUE_NUM;
-        qs->desc_addr = 0;
-        qs->avail_addr = 0;
-        qs->used_addr = 0;
-        qs->last_avail_idx = 0;
-    }
+    virtio_reset__part3699(s);
+
+    void virtio_reset__part3700(QueueState *qs);
+    virtio_reset__part3700(&s->queue[0]);
+
 }
 
 static uint8_t *virtio_pci_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw)
 {
-    return pci_device_get_dma_ptr(s->pci_dev, paddr, is_rw);
+    uint8_t *virtio_pci_get_ram_ptr__part3702(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
+    return virtio_pci_get_ram_ptr__part3702(s, paddr, is_rw);
 }
 
 static uint8_t *virtio_mmio_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw)
 {
-    return phys_mem_get_ram_ptr(s->mem_map, paddr, is_rw);
+        uint8_t *virtio_mmio_get_ram_ptr__part3704(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
+    return virtio_mmio_get_ram_ptr__part3704(s, paddr, is_rw);
+
 }
 
 static void virtio_add_pci_capability(VIRTIODevice *s, int cfg_type,
@@ -194,59 +3218,60 @@ static void virtio_add_pci_capability(VIRTIODevice *s, int cfg_type,
 {
     uint8_t cap[20];
     int cap_len;
-    if (cfg_type == 2)
-        cap_len = 20;
-    else
-        cap_len = 16;
-    memset(cap, 0, cap_len);
-    cap[0] = 0x09; /* vendor specific */
-    cap[2] = cap_len; /* set by pci_add_capability() */
-    cap[3] = cfg_type;
-    cap[4] = bar;
-    put_le32(cap + 8, offset);
-    put_le32(cap + 12, len);
-    if (cfg_type == 2)
-        put_le32(cap + 16, mult);
-    pci_add_capability(s->pci_dev, cap, cap_len);
+        int virtio_add_pci_capability__part3706(int cfg_type);
+    cap_len = virtio_add_pci_capability__part3706(cfg_type);
+
+    void virtio_add_pci_capability__part3707(uint8_t *cap, int cap_len, int cfg_type, int bar, uint32_t offset, uint32_t len);
+    virtio_add_pci_capability__part3707(cap, cap_len, cfg_type, bar, offset, len);
+
+    void virtio_add_pci_capability__part3708(int cfg_type, uint8_t *cap, uint32_t mult);
+    virtio_add_pci_capability__part3708(cfg_type, cap, mult);
+
+        void virtio_add_pci_capability__part3709(VIRTIODevice *s, const uint8_t *cap, int cap_len);
+    virtio_add_pci_capability__part3709(s, cap, cap_len);
+
 }
 
 static void virtio_pci_bar_set(void *opaque, int bar_num,
                                uint32_t addr, BOOL enabled)
 {
-    VIRTIODevice *s = opaque;
-    phys_mem_set_addr(s->mem_range, addr, enabled);
+    void virtio_pci_bar_set__part3711(void *opaque, int bar_num, uint32_t addr, int enabled);
+    virtio_pci_bar_set__part3711(opaque, bar_num, addr, enabled);
+
 }
 
 static void virtio_init(VIRTIODevice *s, VIRTIOBusDef *bus,
                         uint32_t device_id, int config_space_size,
                         VIRTIODeviceRecvFunc *device_recv)
 {
-    memset(s, 0, sizeof(*s));
+    void virtio_init__part3713(void *s, size_t size);
+virtio_init__part3713(s, sizeof(*s));
+
 
     if (bus->pci_bus) {
         uint16_t pci_device_id, class_id;
         char name[32];
         int bar_num;
-        
+
         switch(device_id) {
         case 1:
-            pci_device_id = 0x1000; /* net */
+            pci_device_id = 0x1000;
             class_id = 0x0200;
             break;
         case 2:
-            pci_device_id = 0x1001; /* block */
-            class_id = 0x0100; /* XXX: check it */
+            pci_device_id = 0x1001;
+            class_id = 0x0100;
             break;
         case 3:
-            pci_device_id = 0x1003; /* console */
+            pci_device_id = 0x1003;
             class_id = 0x0780;
             break;
         case 9:
-            pci_device_id = 0x1040 + device_id; /* use new device ID */
+            pci_device_id = 0x1040 + device_id;
             class_id = 0x2;
             break;
         case 18:
-            pci_device_id = 0x1040 + device_id; /* use new device ID */
+            pci_device_id = 0x1040 + device_id;
             class_id = 0x0980;
             break;
         default:
@@ -258,76 +3283,100 @@ static void virtio_init(VIRTIODevice *s, VIRTIOBusDef *bus,
                                          class_id);
         pci_device_set_config16(s->pci_dev, 0x2c, 0x1af4);
         pci_device_set_config16(s->pci_dev, 0x2e, device_id);
-        pci_device_set_config8(s->pci_dev, PCI_INTERRUPT_PIN, 1);
+        pci_device_set_config8(s->pci_dev, 0x3d, 1);
 
         bar_num = 4;
         virtio_add_pci_capability(s, 1, bar_num,
-                              VIRTIO_PCI_CFG_OFFSET, 0x1000, 0); /* common */
+                              0x0000, 0x1000, 0);
         virtio_add_pci_capability(s, 3, bar_num,
-                              VIRTIO_PCI_ISR_OFFSET, 0x1000, 0); /* isr */
+                              0x1000, 0x1000, 0);
         virtio_add_pci_capability(s, 4, bar_num,
-                              VIRTIO_PCI_CONFIG_OFFSET, 0x1000, 0); /* config */
+                              0x2000, 0x1000, 0);
         virtio_add_pci_capability(s, 2, bar_num,
-                              VIRTIO_PCI_NOTIFY_OFFSET, 0x1000, 0); /* notify */
-        
+                              0x3000, 0x1000, 0);
+
         s->get_ram_ptr = virtio_pci_get_ram_ptr;
         s->irq = pci_device_get_irq(s->pci_dev, 0);
         s->mem_map = pci_device_get_mem_map(s->pci_dev);
         s->mem_range = cpu_register_device(s->mem_map, 0, 0x4000, s,
                                            virtio_pci_read, virtio_pci_write,
-                                           DEVIO_SIZE8 | DEVIO_SIZE16 | DEVIO_SIZE32 | DEVIO_DISABLED);
-        pci_register_bar(s->pci_dev, bar_num, 0x4000, PCI_ADDRESS_SPACE_MEM,
+                                           (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4));
+        pci_register_bar(s->pci_dev, bar_num, 0x4000, 0x00,
                          s, virtio_pci_bar_set);
     } else {
-        /* MMIO case */
+
         s->mem_map = bus->mem_map;
         s->irq = bus->irq;
-        s->mem_range = cpu_register_device(s->mem_map, bus->addr, VIRTIO_PAGE_SIZE,
+        s->mem_range = cpu_register_device(s->mem_map, bus->addr, 4096,
                                            s, virtio_mmio_read, virtio_mmio_write,
-                                           DEVIO_SIZE8 | DEVIO_SIZE16 | DEVIO_SIZE32);
+                                           (1 << 0) | (1 << 1) | (1 << 2));
         s->get_ram_ptr = virtio_mmio_get_ram_ptr;
     }
 
-    s->device_id = device_id;
-    s->vendor_id = 0xffff;
-    s->config_space_size = config_space_size;
-    s->device_recv = device_recv;
-    virtio_reset(s);
+        void virtio_init__part3715(VIRTIODevice *s, uint32_t device_id, int config_space_size, VIRTIODeviceRecvFunc *device_recv);
+    virtio_init__part3715(s, device_id, config_space_size, device_recv);
+
 }
 
 static uint16_t virtio_read16(VIRTIODevice *s, virtio_phys_addr_t addr)
 {
     uint8_t *ptr;
-    if (addr & 1)
-        return 0; /* unaligned access are not supported */
-    ptr = s->get_ram_ptr(s, addr, FALSE);
-    if (!ptr)
+    extern int virtio_read16__part3717(uint64_t addr);
+    if (virtio_read16__part3717(addr))
         return 0;
-    return *(uint16_t *)ptr;
+
+        uint8_t *virtio_read16__part3718(VIRTIODevice *s, virtio_phys_addr_t addr);
+    ptr = virtio_read16__part3718(s, addr);
+        int virtio_read16__part3719(const uint8_t *ptr);
+    if (virtio_read16__part3719(ptr))
+        return 0;
+
+        {
+        uint16_t virtio_read16__part3720(const uint8_t *ptr);
+        return virtio_read16__part3720(ptr);
+    }
+
 }
 
 static void virtio_write16(VIRTIODevice *s, virtio_phys_addr_t addr,
                            uint16_t val)
 {
     uint8_t *ptr;
-    if (addr & 1)
-        return; /* unaligned access are not supported */
-    ptr = s->get_ram_ptr(s, addr, TRUE);
-    if (!ptr)
+    extern int virtio_write16__part3722(uint64_t addr);
+    if (virtio_write16__part3722(addr))
         return;
-    *(uint16_t *)ptr = val;
+        uint8_t *virtio_write16__part3723(VIRTIODevice *s, virtio_phys_addr_t addr);
+    ptr = virtio_write16__part3723(s, addr);
+
+        int virtio_write16__part3724(uint8_t *ptr);
+    if (virtio_write16__part3724(ptr))
+        return;
+    void virtio_write16__part3725(uint8_t *ptr, uint16_t val);
+virtio_write16__part3725(ptr, val);
+
 }
 
 static void virtio_write32(VIRTIODevice *s, virtio_phys_addr_t addr,
                            uint32_t val)
 {
     uint8_t *ptr;
-    if (addr & 3)
-        return; /* unaligned access are not supported */
-    ptr = s->get_ram_ptr(s, addr, TRUE);
-    if (!ptr)
+        {
+        int virtio_write32__part3727(uint64_t addr);
+        if (virtio_write32__part3727(addr))
+            return;
+    }
+
+    uint8_t *virtio_write32__part3728(VIRTIODevice *s, virtio_phys_addr_t addr);
+    ptr = virtio_write32__part3728(s, addr);
+    {
+    int virtio_write32__part3729(uint8_t *ptr);
+    if (virtio_write32__part3729(ptr))
         return;
-    *(uint32_t *)ptr = val;
+}
+
+    void virtio_write32__part3730(uint8_t *ptr, uint32_t val);
+    virtio_write32__part3730(ptr, val);
+
 }
 
 static int virtio_memcpy_from_ram(VIRTIODevice *s, uint8_t *buf,
@@ -336,45 +3385,44 @@ static int virtio_memcpy_from_ram(VIRTIODevice *s, uint8_t *buf,
     uint8_t *ptr;
     int l;
 
-    while (count > 0) {
-        l = min_int(count, VIRTIO_PAGE_SIZE - (addr & (VIRTIO_PAGE_SIZE - 1)));
-        ptr = s->get_ram_ptr(s, addr, FALSE);
-        if (!ptr)
+        {
+        extern int virtio_memcpy_from_ram__part3732(VIRTIODevice *s, uint8_t *buf,
+                                                   virtio_phys_addr_t addr, int count);
+        int part_ret;
+        (void)l;
+        (void)ptr;
+        part_ret = virtio_memcpy_from_ram__part3732(s, buf, addr, count);
+        if (part_ret < 0)
             return -1;
-        memcpy(buf, ptr, l);
-        addr += l;
-        buf += l;
-        count -= l;
     }
-    return 0;
+
+    int virtio_memcpy_from_ram__part3733(void);
+return virtio_memcpy_from_ram__part3733();
+
 }
 
-static int virtio_memcpy_to_ram(VIRTIODevice *s, virtio_phys_addr_t addr, 
+static int virtio_memcpy_to_ram(VIRTIODevice *s, virtio_phys_addr_t addr,
                                 const uint8_t *buf, int count)
 {
     uint8_t *ptr;
     int l;
 
-    while (count > 0) {
-        l = min_int(count, VIRTIO_PAGE_SIZE - (addr & (VIRTIO_PAGE_SIZE - 1)));
-        ptr = s->get_ram_ptr(s, addr, TRUE);
-        if (!ptr)
+        {
+        int virtio_memcpy_to_ram__part3735(VIRTIODevice *s, virtio_phys_addr_t addr,
+                                           const uint8_t *buf, int count);
+        if (virtio_memcpy_to_ram__part3735(s, addr, buf, count) < 0)
             return -1;
-        memcpy(ptr, buf, l);
-        addr += l;
-        buf += l;
-        count -= l;
     }
-    return 0;
+    int virtio_memcpy_to_ram__part3736(void);
+    return virtio_memcpy_to_ram__part3736();
+
 }
 
-static int get_desc(VIRTIODevice *s, VIRTIODesc *desc,  
+static int get_desc(VIRTIODevice *s, VIRTIODesc *desc,
                     int queue_idx, int desc_idx)
 {
-    QueueState *qs = &s->queue[queue_idx];
-    return virtio_memcpy_from_ram(s, (void *)desc, qs->desc_addr +
-                                  desc_idx * sizeof(VIRTIODesc),
-                                  sizeof(VIRTIODesc));
+    int get_desc__part3738(VIRTIODevice *s, VIRTIODesc *desc, int queue_idx, int desc_idx);
+    return get_desc__part3738(s, desc, queue_idx, desc_idx);
 }
 
 static int memcpy_to_from_queue(VIRTIODevice *s, uint8_t *buf,
@@ -384,38 +3432,38 @@ static int memcpy_to_from_queue(VIRTIODevice *s, uint8_t *buf,
     VIRTIODesc desc;
     int l, f_write_flag;
 
-    if (count == 0)
+    int memcpy_to_from_queue__part3740(int count);
+
+    if (memcpy_to_from_queue__part3740(count))
         return 0;
 
-    get_desc(s, &desc, queue_idx, desc_idx);
 
-    if (to_queue) {
-        f_write_flag = VRING_DESC_F_WRITE;
-        /* find the first write descriptor */
-        for(;;) {
-            if ((desc.flags & VRING_DESC_F_WRITE) == f_write_flag)
-                break;
-            if (!(desc.flags & VRING_DESC_F_NEXT))
-                return -1;
-            desc_idx = desc.next;
-            get_desc(s, &desc, queue_idx, desc_idx);
-        }
-    } else {
-        f_write_flag = 0;
+        {
+        int memcpy_to_from_queue__part3741(VIRTIODevice *s, VIRTIODesc *desc, int queue_idx, int desc_idx);
+        (void)memcpy_to_from_queue__part3741(s, &desc, queue_idx, desc_idx);
     }
 
-    /* find the descriptor at offset */
-    for(;;) {
-        if ((desc.flags & VRING_DESC_F_WRITE) != f_write_flag)
-            return -1;
-        if (offset < desc.len)
-            break;
-        if (!(desc.flags & VRING_DESC_F_NEXT))
-            return -1;
-        desc_idx = desc.next;
-        offset -= desc.len;
-        get_desc(s, &desc, queue_idx, desc_idx);
+
+        {
+        int memcpy_to_from_queue__part3742(VIRTIODevice *s, int queue_idx,
+                                           int *desc_idx, VIRTIODesc *desc,
+                                           BOOL to_queue, int *f_write_flag);
+        int part_ret = memcpy_to_from_queue__part3742(s, queue_idx, &desc_idx,
+                                                      &desc, to_queue,
+                                                      &f_write_flag);
+        if (part_ret != 0)
+            return part_ret;
     }
+
+
+        /* part3743: descriptor advance loop ported to Rust */
+    {
+        extern int memcpy_to_from_queue__part3743(VIRTIODevice *, VIRTIODesc *, int *, int *, int, int);
+        int part3743_rc = memcpy_to_from_queue__part3743(s, &desc, &offset, &desc_idx, queue_idx, f_write_flag);
+        if (part3743_rc != 0)
+            return -1;
+    }
+
 
     for(;;) {
         l = min_int(count, desc.len - offset);
@@ -429,178 +3477,141 @@ static int memcpy_to_from_queue(VIRTIODevice *s, uint8_t *buf,
         offset += l;
         buf += l;
         if (offset == desc.len) {
-            if (!(desc.flags & VRING_DESC_F_NEXT))
+            if (!(desc.flags & 1))
                 return -1;
             desc_idx = desc.next;
             get_desc(s, &desc, queue_idx, desc_idx);
-            if ((desc.flags & VRING_DESC_F_WRITE) != f_write_flag)
+            if ((desc.flags & 2) != f_write_flag)
                 return -1;
             offset = 0;
         }
     }
-    return 0;
+        {
+        int memcpy_to_from_queue__part3745(void);
+        return memcpy_to_from_queue__part3745();
+    }
 }
 
 static int memcpy_from_queue(VIRTIODevice *s, void *buf,
                              int queue_idx, int desc_idx,
                              int offset, int count)
 {
-    return memcpy_to_from_queue(s, buf, queue_idx, desc_idx, offset, count,
-                                FALSE);
+        {
+        int memcpy_from_queue__part3747(VIRTIODevice *s, void *buf,
+                                        int queue_idx, int desc_idx,
+                                        int offset, int count);
+        return memcpy_from_queue__part3747(s, buf, queue_idx, desc_idx, offset,
+                                           count);
+    }
+
 }
 
 static int memcpy_to_queue(VIRTIODevice *s,
                            int queue_idx, int desc_idx,
                            int offset, const void *buf, int count)
 {
-    return memcpy_to_from_queue(s, (void *)buf, queue_idx, desc_idx, offset,
-                                count, TRUE);
+        int memcpy_to_queue__part3749(VIRTIODevice *s, int queue_idx, int desc_idx, int offset, const void *buf, int count);
+    return memcpy_to_queue__part3749(s, queue_idx, desc_idx, offset, buf, count);
+
 }
 
-/* signal that the descriptor has been consumed */
+
 static void virtio_consume_desc(VIRTIODevice *s,
                                 int queue_idx, int desc_idx, int desc_len)
 {
-    QueueState *qs = &s->queue[queue_idx];
-    virtio_phys_addr_t addr;
-    uint32_t index;
+        void virtio_consume_desc__part3751(VIRTIODevice *s, int queue_idx, int desc_idx, int desc_len);
+    virtio_consume_desc__part3751(s, queue_idx, desc_idx, desc_len);
 
-    addr = qs->used_addr + 2;
-    index = virtio_read16(s, addr);
-    virtio_write16(s, addr, index + 1);
-
-    addr = qs->used_addr + 4 + (index & (qs->num - 1)) * 8;
-    virtio_write32(s, addr, desc_idx);
-    virtio_write32(s, addr + 4, desc_len);
-
-    s->int_status |= 1;
-    set_irq(s->irq, 1);
 }
 
-static int get_desc_rw_size(VIRTIODevice *s, 
+static int get_desc_rw_size(VIRTIODevice *s,
                              int *pread_size, int *pwrite_size,
                              int queue_idx, int desc_idx)
 {
+    void get_desc_rw_size__part3753(VIRTIODevice *s, int queue_idx, int desc_idx,
+                                VIRTIODesc *pdesc, int *pread_size, int *pwrite_size);
     VIRTIODesc desc;
     int read_size, write_size;
 
-    read_size = 0;
-    write_size = 0;
-    get_desc(s, &desc, queue_idx, desc_idx);
+    get_desc_rw_size__part3753(s, queue_idx, desc_idx, &desc, &read_size, &write_size);
 
-    for(;;) {
-        if (desc.flags & VRING_DESC_F_WRITE)
-            break;
-        read_size += desc.len;
-        if (!(desc.flags & VRING_DESC_F_NEXT))
-            goto done;
-        desc_idx = desc.next;
-        get_desc(s, &desc, queue_idx, desc_idx);
-    }
-    
-    for(;;) {
-        if (!(desc.flags & VRING_DESC_F_WRITE))
-            return -1;
-        write_size += desc.len;
-        if (!(desc.flags & VRING_DESC_F_NEXT))
-            break;
-        desc_idx = desc.next;
-        get_desc(s, &desc, queue_idx, desc_idx);
+
+    int get_desc_rw_size__part3754(VIRTIODevice *s, VIRTIODesc *desc,
+                               int *pread_size, int queue_idx, int *pdesc_idx);
+    if (get_desc_rw_size__part3754(s, &desc, &read_size, queue_idx, &desc_idx))
+        goto done;
+
+        {
+        extern int get_desc_rw_size__part3755(VIRTIODevice *s, VIRTIODesc *desc,
+                                              int *write_size, int *desc_idx,
+                                              int queue_idx);
+        int part3755_ret;
+
+        part3755_ret = get_desc_rw_size__part3755(s, &desc, &write_size,
+                                                 &desc_idx, queue_idx);
+        if (part3755_ret)
+            return part3755_ret;
     }
 
- done:
-    *pread_size = read_size;
-    *pwrite_size = write_size;
-    return 0;
+
+  done:
+    void get_desc_rw_size__part3756(int *pread_size, int read_size);
+    get_desc_rw_size__part3756(pread_size, read_size);
+
+        {
+        int get_desc_rw_size__part3757(int *pwrite_size, int write_size);
+        return get_desc_rw_size__part3757(pwrite_size, write_size);
+    }
+
 }
 
-/* XXX: test if the queue is ready ? */
+
 static void queue_notify(VIRTIODevice *s, int queue_idx)
 {
     QueueState *qs = &s->queue[queue_idx];
     uint16_t avail_idx;
     int desc_idx, read_size, write_size;
 
-    if (qs->manual_recv)
+    int queue_notify__part3759(QueueState *qs);
+
+    if (queue_notify__part3759(qs))
         return;
 
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    while (qs->last_avail_idx != avail_idx) {
-        desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
-                                 (qs->last_avail_idx & (qs->num - 1)) * 2);
-        if (!get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx)) {
-#ifdef DEBUG_VIRTIO
-            if (s->debug & VIRTIO_DEBUG_IO) {
-                printf("queue_notify: idx=%d read_size=%d write_size=%d\n",
-                       queue_idx, read_size, write_size);
-            }
-#endif
-            if (s->device_recv(s, queue_idx, desc_idx,
-                               read_size, write_size) < 0)
-                break;
-        }
-        qs->last_avail_idx++;
-    }
+        uint16_t queue_notify__part3760(VIRTIODevice *s, virtio_phys_addr_t addr);
+    avail_idx = queue_notify__part3760(s, qs->avail_addr + 2);
+    void queue_notify__part3761(VIRTIODevice *s, int queue_idx, uint16_t avail_idx);
+    queue_notify__part3761(s, queue_idx, avail_idx);
 }
 
 static uint32_t virtio_config_read(VIRTIODevice *s, uint32_t offset,
                                    int size_log2)
 {
     uint32_t val;
-    switch(size_log2) {
-    case 0:
-        if (offset < s->config_space_size) {
-            val = s->config_space[offset];
-        } else {
-            val = 0;
-        }
-        break;
-    case 1:
-        if (offset < (s->config_space_size - 1)) {
-            val = get_le16(&s->config_space[offset]);
-        } else {
-            val = 0;
-        }
-        break;
-    case 2:
-        if (offset < (s->config_space_size - 3)) {
-            val = get_le32(s->config_space + offset);
-        } else {
-            val = 0;
-        }
-        break;
-    default:
-        abort();
+        uint32_t virtio_config_read__part3763(const uint8_t *config_space,
+                                          uint32_t config_space_size,
+                                          uint32_t offset, int size_log2);
+    val = virtio_config_read__part3763(s->config_space, s->config_space_size,
+                                       offset, size_log2);
+
+        {
+        uint32_t virtio_config_read__part3764(uint32_t val);
+        return virtio_config_read__part3764(val);
     }
-    return val;
+
 }
 
 static void virtio_config_write(VIRTIODevice *s, uint32_t offset,
                                 uint32_t val, int size_log2)
 {
-    switch(size_log2) {
-    case 0:
-        if (offset < s->config_space_size) {
-            s->config_space[offset] = val;
-            if (s->config_write)
-                s->config_write(s);
-        }
-        break;
-    case 1:
-        if (offset < s->config_space_size - 1) {
-            put_le16(s->config_space + offset, val);
-            if (s->config_write)
-                s->config_write(s);
-        }
-        break;
-    case 2:
-        if (offset < s->config_space_size - 3) {
-            put_le32(s->config_space + offset, val);
-            if (s->config_write)
-                s->config_write(s);
-        }
-        break;
-    }
+        void virtio_config_write__part3766(uint8_t *config_space,
+                                       uint32_t config_space_size,
+                                       void (*config_write)(VIRTIODevice *s),
+                                       VIRTIODevice *s,
+                                       uint32_t offset, uint32_t val,
+                                       int size_log2);
+    virtio_config_write__part3766(s->config_space, s->config_space_size,
+                                  s->config_write, s, offset, val, size_log2);
+
 }
 
 static uint32_t virtio_mmio_read(void *opaque, uint32_t offset, int size_log2)
@@ -608,346 +3619,140 @@ static uint32_t virtio_mmio_read(void *opaque, uint32_t offset, int size_log2)
     VIRTIODevice *s = opaque;
     uint32_t val;
 
-    if (offset >= VIRTIO_MMIO_CONFIG) {
-        return virtio_config_read(s, offset - VIRTIO_MMIO_CONFIG, size_log2);
+    uint32_t virtio_mmio_read__part3768(void *opaque, uint32_t offset, int size_log2);
+    if (offset >= 0x100) {
+        return virtio_mmio_read__part3768(opaque, offset, size_log2);
     }
 
-    if (size_log2 == 2) {
-        switch(offset) {
-        case VIRTIO_MMIO_MAGIC_VALUE:
-            val = 0x74726976;
-            break;
-        case VIRTIO_MMIO_VERSION:
-            val = 2;
-            break;
-        case VIRTIO_MMIO_DEVICE_ID:
-            val = s->device_id;
-            break;
-        case VIRTIO_MMIO_VENDOR_ID:
-            val = s->vendor_id;
-            break;
-        case VIRTIO_MMIO_DEVICE_FEATURES:
-            switch(s->device_features_sel) {
-            case 0:
-                val = s->device_features;
-                break;
-            case 1:
-                val = 1; /* version 1 */
-                break;
-            default:
-                val = 0;
-                break;
-            }
-            break;
-        case VIRTIO_MMIO_DEVICE_FEATURES_SEL:
-            val = s->device_features_sel;
-            break;
-        case VIRTIO_MMIO_QUEUE_SEL:
-            val = s->queue_sel;
-            break;
-        case VIRTIO_MMIO_QUEUE_NUM_MAX:
-            val = MAX_QUEUE_NUM;
-            break;
-        case VIRTIO_MMIO_QUEUE_NUM:
-            val = s->queue[s->queue_sel].num;
-            break;
-        case VIRTIO_MMIO_QUEUE_DESC_LOW:
-            val = s->queue[s->queue_sel].desc_addr;
-            break;
-        case VIRTIO_MMIO_QUEUE_AVAIL_LOW:
-            val = s->queue[s->queue_sel].avail_addr;
-            break;
-        case VIRTIO_MMIO_QUEUE_USED_LOW:
-            val = s->queue[s->queue_sel].used_addr;
-            break;
-#if VIRTIO_ADDR_BITS == 64
-        case VIRTIO_MMIO_QUEUE_DESC_HIGH:
-            val = s->queue[s->queue_sel].desc_addr >> 32;
-            break;
-        case VIRTIO_MMIO_QUEUE_AVAIL_HIGH:
-            val = s->queue[s->queue_sel].avail_addr >> 32;
-            break;
-        case VIRTIO_MMIO_QUEUE_USED_HIGH:
-            val = s->queue[s->queue_sel].used_addr >> 32;
-            break;
-#endif
-        case VIRTIO_MMIO_QUEUE_READY:
-            val = s->queue[s->queue_sel].ready;
-            break;
-        case VIRTIO_MMIO_INTERRUPT_STATUS:
-            val = s->int_status;
-            break;
-        case VIRTIO_MMIO_STATUS:
-            val = s->status;
-            break;
-        case VIRTIO_MMIO_CONFIG_GENERATION:
-            val = 0;
-            break;
-        default:
-            val = 0;
-            break;
-        }
-    } else {
-        val = 0;
-    }
-#ifdef DEBUG_VIRTIO
-    if (s->debug & VIRTIO_DEBUG_IO) {
-        printf("virto_mmio_read: offset=0x%x val=0x%x size=%d\n", 
-               offset, val, 1 << size_log2);
-    }
-#endif
-    return val;
+
+        uint32_t virtio_mmio_read__part3769(VIRTIODevice *s, uint32_t offset, int size_log2);
+    val = virtio_mmio_read__part3769(s, offset, size_log2);
+
+
+
+
+
+
+
+        uint32_t virtio_mmio_read__part3770(uint32_t val);
+    return virtio_mmio_read__part3770(val);
+
 }
 
-#if VIRTIO_ADDR_BITS == 64
+
 static void set_low32(virtio_phys_addr_t *paddr, uint32_t val)
 {
-    *paddr = (*paddr & ~(virtio_phys_addr_t)0xffffffff) | val;
+        extern void set_low32__part3772(virtio_phys_addr_t *paddr, uint32_t val);
+    set_low32__part3772(paddr, val);
 }
 
 static void set_high32(virtio_phys_addr_t *paddr, uint32_t val)
 {
-    *paddr = (*paddr & 0xffffffff) | ((virtio_phys_addr_t)val << 32);
+        void set_high32__part3774(uint64_t *paddr, uint32_t val);
+    set_high32__part3774(paddr, val);
 }
-#else
-static void set_low32(virtio_phys_addr_t *paddr, uint32_t val)
-{
-    *paddr = val;
-}
-#endif
+
+
+
+
+
+
 
 static void virtio_mmio_write(void *opaque, uint32_t offset,
                               uint32_t val, int size_log2)
 {
     VIRTIODevice *s = opaque;
-    
-#ifdef DEBUG_VIRTIO
-    if (s->debug & VIRTIO_DEBUG_IO) {
-        printf("virto_mmio_write: offset=0x%x val=0x%x size=%d\n",
-               offset, val, 1 << size_log2);
-    }
-#endif
-
-    if (offset >= VIRTIO_MMIO_CONFIG) {
-        virtio_config_write(s, offset - VIRTIO_MMIO_CONFIG, val, size_log2);
+    int virtio_mmio_write__part3776(VIRTIODevice *s, uint32_t offset,
+                               uint32_t val, int size_log2);
+    if (virtio_mmio_write__part3776(s, offset, val, size_log2))
         return;
-    }
 
-    if (size_log2 == 2) {
-        switch(offset) {
-        case VIRTIO_MMIO_DEVICE_FEATURES_SEL:
-            s->device_features_sel = val;
-            break;
-        case VIRTIO_MMIO_QUEUE_SEL:
-            if (val < MAX_QUEUE)
-                s->queue_sel = val;
-            break;
-        case VIRTIO_MMIO_QUEUE_NUM:
-            if ((val & (val - 1)) == 0 && val > 0) {
-                s->queue[s->queue_sel].num = val;
-            }
-            break;
-        case VIRTIO_MMIO_QUEUE_DESC_LOW:
-            set_low32(&s->queue[s->queue_sel].desc_addr, val);
-            break;
-        case VIRTIO_MMIO_QUEUE_AVAIL_LOW:
-            set_low32(&s->queue[s->queue_sel].avail_addr, val);
-            break;
-        case VIRTIO_MMIO_QUEUE_USED_LOW:
-            set_low32(&s->queue[s->queue_sel].used_addr, val);
-            break;
-#if VIRTIO_ADDR_BITS == 64
-        case VIRTIO_MMIO_QUEUE_DESC_HIGH:
-            set_high32(&s->queue[s->queue_sel].desc_addr, val);
-            break;
-        case VIRTIO_MMIO_QUEUE_AVAIL_HIGH:
-            set_high32(&s->queue[s->queue_sel].avail_addr, val);
-            break;
-        case VIRTIO_MMIO_QUEUE_USED_HIGH:
-            set_high32(&s->queue[s->queue_sel].used_addr, val);
-            break;
-#endif
-        case VIRTIO_MMIO_STATUS:
-            s->status = val;
-            if (val == 0) {
-                /* reset */
-                set_irq(s->irq, 0);
-                virtio_reset(s);
-            }
-            break;
-        case VIRTIO_MMIO_QUEUE_READY:
-            s->queue[s->queue_sel].ready = val & 1;
-            break;
-        case VIRTIO_MMIO_QUEUE_NOTIFY:
-            if (val < MAX_QUEUE)
-                queue_notify(s, val);
-            break;
-        case VIRTIO_MMIO_INTERRUPT_ACK:
-            s->int_status &= ~val;
-            if (s->int_status == 0) {
-                set_irq(s->irq, 0);
-            }
-            break;
-        }
-    }
+
+        void virtio_mmio_write__part3777(void *opaque, uint32_t offset, uint32_t val, int size_log2);
+    virtio_mmio_write__part3777(opaque, offset, val, size_log2);
 }
 
 static uint32_t virtio_pci_read(void *opaque, uint32_t offset1, int size_log2)
 {
+    uint32_t virtio_pci_read__part3779(void *opaque, uint32_t offset1, uint32_t *val_out);
     VIRTIODevice *s = opaque;
     uint32_t offset;
-    uint32_t val = 0;
+    uint32_t val;
+    offset = virtio_pci_read__part3779(opaque, offset1, &val);
 
-    offset = offset1 & 0xfff;
-    switch(offset1 >> 12) {
-    case VIRTIO_PCI_CFG_OFFSET >> 12:
-        if (size_log2 == 2) {
-            switch(offset) {
-            case VIRTIO_PCI_DEVICE_FEATURE:
-                switch(s->device_features_sel) {
-                case 0:
-                    val = s->device_features;
-                    break;
-                case 1:
-                    val = 1; /* version 1 */
-                    break;
-                default:
-                    val = 0;
-                    break;
-                }
-                break;
-            case VIRTIO_PCI_DEVICE_FEATURE_SEL:
-                val = s->device_features_sel;
-                break;
-            case VIRTIO_PCI_QUEUE_DESC_LOW:
-                val = s->queue[s->queue_sel].desc_addr;
-                break;
-            case VIRTIO_PCI_QUEUE_AVAIL_LOW:
-                val = s->queue[s->queue_sel].avail_addr;
-                break;
-            case VIRTIO_PCI_QUEUE_USED_LOW:
-                val = s->queue[s->queue_sel].used_addr;
-                break;
-#if VIRTIO_ADDR_BITS == 64
-            case VIRTIO_PCI_QUEUE_DESC_HIGH:
-                val = s->queue[s->queue_sel].desc_addr >> 32;
-                break;
-            case VIRTIO_PCI_QUEUE_AVAIL_HIGH:
-                val = s->queue[s->queue_sel].avail_addr >> 32;
-                break;
-            case VIRTIO_PCI_QUEUE_USED_HIGH:
-                val = s->queue[s->queue_sel].used_addr >> 32;
-                break;
-#endif
-            }
-        } else if (size_log2 == 1) {
-            switch(offset) {
-            case VIRTIO_PCI_NUM_QUEUES:
-                val = MAX_QUEUE_NUM;
-                break;
-            case VIRTIO_PCI_QUEUE_SEL:
-                val = s->queue_sel;
-                break;
-            case VIRTIO_PCI_QUEUE_SIZE:
-                val = s->queue[s->queue_sel].num;
-                break;
-            case VIRTIO_PCI_QUEUE_ENABLE:
-                val = s->queue[s->queue_sel].ready;
-                break;
-            case VIRTIO_PCI_QUEUE_NOTIFY_OFF:
-                val = 0;
-                break;
-            }
-        } else if (size_log2 == 0) {
-            switch(offset) {
-            case VIRTIO_PCI_DEVICE_STATUS:
-                val = s->status;
-                break;
-            }
-        }
-        break;
-    case VIRTIO_PCI_ISR_OFFSET >> 12:
-        if (offset == 0 && size_log2 == 0) {
-            val = s->int_status;
-            s->int_status = 0;
-            set_irq(s->irq, 0);
-        }
-        break;
-    case VIRTIO_PCI_CONFIG_OFFSET >> 12:
-        val = virtio_config_read(s, offset, size_log2);
-        break;
-    }
-#ifdef DEBUG_VIRTIO
-    if (s->debug & VIRTIO_DEBUG_IO) {
-        printf("virto_pci_read: offset=0x%x val=0x%x size=%d\n", 
-               offset1, val, 1 << size_log2);
-    }
-#endif
-    return val;
+    {
+    uint32_t virtio_pci_read__part3780(void *opaque, uint32_t offset1, int size_log2);
+    val = virtio_pci_read__part3780(opaque, offset1, size_log2);
+}
+
+
+
+
+
+
+
+    uint32_t virtio_pci_read__part3781(uint32_t val);
+    return virtio_pci_read__part3781(val);
 }
 
 static void virtio_pci_write(void *opaque, uint32_t offset1,
                              uint32_t val, int size_log2)
 {
-    VIRTIODevice *s = opaque;
+        VIRTIODevice *s = opaque;
     uint32_t offset;
-    
-#ifdef DEBUG_VIRTIO
-    if (s->debug & VIRTIO_DEBUG_IO) {
-        printf("virto_pci_write: offset=0x%x val=0x%x size=%d\n",
-               offset1, val, 1 << size_log2);
-    }
-#endif
-    offset = offset1 & 0xfff;
+    uint32_t virtio_pci_write__part3783(uint32_t offset1);
+
+    offset = virtio_pci_write__part3783(offset1);
+
     switch(offset1 >> 12) {
-    case VIRTIO_PCI_CFG_OFFSET >> 12:
+    case 0x0000 >> 12:
         if (size_log2 == 2) {
             switch(offset) {
-            case VIRTIO_PCI_DEVICE_FEATURE_SEL:
+            case 0x000:
                 s->device_features_sel = val;
                 break;
-            case VIRTIO_PCI_QUEUE_DESC_LOW:
+            case 0x020:
                 set_low32(&s->queue[s->queue_sel].desc_addr, val);
                 break;
-            case VIRTIO_PCI_QUEUE_AVAIL_LOW:
+            case 0x028:
                 set_low32(&s->queue[s->queue_sel].avail_addr, val);
                 break;
-            case VIRTIO_PCI_QUEUE_USED_LOW:
+            case 0x030:
                 set_low32(&s->queue[s->queue_sel].used_addr, val);
                 break;
-#if VIRTIO_ADDR_BITS == 64
-            case VIRTIO_PCI_QUEUE_DESC_HIGH:
+
+            case 0x024:
                 set_high32(&s->queue[s->queue_sel].desc_addr, val);
                 break;
-            case VIRTIO_PCI_QUEUE_AVAIL_HIGH:
+            case 0x02c:
                 set_high32(&s->queue[s->queue_sel].avail_addr, val);
                 break;
-            case VIRTIO_PCI_QUEUE_USED_HIGH:
+            case 0x034:
                 set_high32(&s->queue[s->queue_sel].used_addr, val);
                 break;
-#endif
+
             }
         } else if (size_log2 == 1) {
             switch(offset) {
-            case VIRTIO_PCI_QUEUE_SEL:
-                if (val < MAX_QUEUE)
+            case 0x016:
+                if (val < 8)
                     s->queue_sel = val;
                 break;
-            case VIRTIO_PCI_QUEUE_SIZE:
+            case 0x018:
                 if ((val & (val - 1)) == 0 && val > 0) {
                     s->queue[s->queue_sel].num = val;
                 }
                 break;
-            case VIRTIO_PCI_QUEUE_ENABLE:
+            case 0x01c:
                 s->queue[s->queue_sel].ready = val & 1;
                 break;
             }
         } else if (size_log2 == 0) {
             switch(offset) {
-            case VIRTIO_PCI_DEVICE_STATUS:
+            case 0x014:
                 s->status = val;
                 if (val == 0) {
-                    /* reset */
+
                     set_irq(s->irq, 0);
                     virtio_reset(s);
                 }
@@ -955,11 +3760,11 @@ static void virtio_pci_write(void *opaque, uint32_t offset1,
             }
         }
         break;
-    case VIRTIO_PCI_CONFIG_OFFSET >> 12:
+    case 0x2000 >> 12:
         virtio_config_write(s, offset, val, size_log2);
         break;
-    case VIRTIO_PCI_NOTIFY_OFFSET >> 12:
-        if (val < MAX_QUEUE)
+    case 0x3000 >> 12:
+        if (val < 8)
             queue_notify(s, val);
         break;
     }
@@ -967,18 +3772,20 @@ static void virtio_pci_write(void *opaque, uint32_t offset1,
 
 void virtio_set_debug(VIRTIODevice *s, int debug)
 {
-    s->debug = debug;
+    void virtio_set_debug__part3786(VIRTIODevice *s, int debug);
+virtio_set_debug__part3786(s, debug);
+
 }
 
 static void virtio_config_change_notify(VIRTIODevice *s)
 {
-    /* INT_CONFIG interrupt */
-    s->int_status |= 2;
-    set_irq(s->irq, 1);
+
+    void virtio_config_change_notify__part3788(VIRTIODevice *s);
+    virtio_config_change_notify__part3788(s);
 }
 
-/*********************************************************************/
-/* block device */
+
+
 
 typedef struct {
     uint32_t type;
@@ -993,7 +3800,7 @@ typedef struct VIRTIOBlockDevice {
     BlockDevice *bs;
 
     BOOL req_in_progress;
-    BlockRequest req; /* request in progress */
+    BlockRequest req;
 } VIRTIOBlockDevice;
 
 typedef struct {
@@ -1001,18 +3808,6 @@ typedef struct {
     uint32_t ioprio;
     uint64_t sector_num;
 } BlockRequestHeader;
-
-#define VIRTIO_BLK_T_IN          0
-#define VIRTIO_BLK_T_OUT         1
-#define VIRTIO_BLK_T_FLUSH       4
-#define VIRTIO_BLK_T_FLUSH_OUT   5
-
-#define VIRTIO_BLK_S_OK     0
-#define VIRTIO_BLK_S_IOERR  1
-#define VIRTIO_BLK_S_UNSUPP 2
-
-#define SECTOR_SIZE 512
-
 static void virtio_block_req_end(VIRTIODevice *s, int ret)
 {
     VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s;
@@ -1022,23 +3817,23 @@ static void virtio_block_req_end(VIRTIODevice *s, int ret)
     uint8_t *buf, buf1[1];
 
     switch(s1->req.type) {
-    case VIRTIO_BLK_T_IN:
+    case 0:
         write_size = s1->req.write_size;
         buf = s1->req.buf;
         if (ret < 0) {
-            buf[write_size - 1] = VIRTIO_BLK_S_IOERR;
+            buf[write_size - 1] = 1;
         } else {
-            buf[write_size - 1] = VIRTIO_BLK_S_OK;
+            buf[write_size - 1] = 0;
         }
         memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, write_size);
         free(buf);
         virtio_consume_desc(s, queue_idx, desc_idx, write_size);
         break;
-    case VIRTIO_BLK_T_OUT:
+    case 1:
         if (ret < 0)
-            buf1[0] = VIRTIO_BLK_S_IOERR;
+            buf1[0] = 1;
         else
-            buf1[0] = VIRTIO_BLK_S_OK;
+            buf1[0] = 0;
         memcpy_to_queue(s, queue_idx, desc_idx, 0, buf1, sizeof(buf1));
         virtio_consume_desc(s, queue_idx, desc_idx, 1);
         break;
@@ -1049,18 +3844,13 @@ static void virtio_block_req_end(VIRTIODevice *s, int ret)
 
 static void virtio_block_req_cb(void *opaque, int ret)
 {
-    VIRTIODevice *s = opaque;
-    VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s;
+        void virtio_block_req_cb__part3798(void *opaque, int ret);
 
-    virtio_block_req_end(s, ret);
-    
-    s1->req_in_progress = FALSE;
+    virtio_block_req_cb__part3798(opaque, ret);
 
-    /* handle next requests */
-    queue_notify((VIRTIODevice *)s, s1->req.queue_idx);
 }
 
-/* XXX: handle async I/O */
+
 static int virtio_block_recv_request(VIRTIODevice *s, int queue_idx,
                                      int desc_idx, int read_size,
                                      int write_size)
@@ -1071,38 +3861,55 @@ static int virtio_block_recv_request(VIRTIODevice *s, int queue_idx,
     uint8_t *buf;
     int len, ret;
 
-    if (s1->req_in_progress)
+    extern int virtio_block_recv_request__part3800(VIRTIOBlockDevice *s1);
+    if (virtio_block_recv_request__part3800(s1))
         return -1;
-    
-    if (memcpy_from_queue(s, &h, queue_idx, desc_idx, 0, sizeof(h)) < 0)
-        return 0;
-    s1->req.type = h.type;
-    s1->req.queue_idx = queue_idx;
-    s1->req.desc_idx = desc_idx;
+
+
+        {
+        int virtio_block_recv_request__part3801(void *s, void *h, int queue_idx, int desc_idx);
+        if (virtio_block_recv_request__part3801(s, &h, queue_idx, desc_idx))
+            return 0;
+    }
+
+    {
+        void virtio_block_recv_request__part3802(BlockRequest *req,
+                                                 const BlockRequestHeader *h,
+                                                 int queue_idx, int desc_idx);
+        virtio_block_recv_request__part3802(&s1->req, &h, queue_idx, desc_idx);
+    }
     switch(h.type) {
-    case VIRTIO_BLK_T_IN:
+    case 0:
         s1->req.buf = malloc(write_size);
         s1->req.write_size = write_size;
-        ret = bs->read_async(bs, h.sector_num, s1->req.buf, 
-                             (write_size - 1) / SECTOR_SIZE,
+        ret = bs->read_async(bs, h.sector_num, s1->req.buf,
+                             (write_size - 1) / 512,
                              virtio_block_req_cb, s);
         if (ret > 0) {
-            /* asyncronous read */
+
             s1->req_in_progress = TRUE;
         } else {
             virtio_block_req_end(s, ret);
         }
         break;
-    case VIRTIO_BLK_T_OUT:
-        assert(write_size >= 1);
+    case 1:
+        
+       ((void) sizeof (__assert_single_arg (
+       write_size >= 1
+       )), __extension__ ({ if (
+       write_size >= 1
+       ) ; else __assert_fail (
+       "write_size >= 1"
+       , "virtio.c", 1097, __extension__ __PRETTY_FUNCTION__); }))
+                              ;
         len = read_size - sizeof(h);
         buf = malloc(len);
         memcpy_from_queue(s, buf, queue_idx, desc_idx, sizeof(h), len);
-        ret = bs->write_async(bs, h.sector_num, buf, len / SECTOR_SIZE,
+        ret = bs->write_async(bs, h.sector_num, buf, len / 512,
                               virtio_block_req_cb, s);
         free(buf);
         if (ret > 0) {
-            /* asyncronous write */
+
             s1->req_in_progress = TRUE;
         } else {
             virtio_block_req_end(s, ret);
@@ -1111,7 +3918,8 @@ static int virtio_block_recv_request(VIRTIODevice *s, int queue_idx,
     default:
         break;
     }
-    return 0;
+    int virtio_block_recv_request__part3804(void);
+    return virtio_block_recv_request__part3804();
 }
 
 VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs)
@@ -1123,7 +3931,7 @@ VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs)
     virtio_init(&s->common, bus,
                 2, 8, virtio_block_recv_request);
     s->bs = bs;
-    
+
     nb_sectors = bs->get_sector_count(bs);
     put_le32(s->common.config_space, nb_sectors);
     put_le32(s->common.config_space + 4, nb_sectors >> 32);
@@ -1131,8 +3939,8 @@ VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs)
     return (VIRTIODevice *)s;
 }
 
-/*********************************************************************/
-/* network device */
+
+
 
 typedef struct VIRTIONetDevice {
     VIRTIODevice common;
@@ -1160,18 +3968,18 @@ static int virtio_net_recv_request(VIRTIODevice *s, int queue_idx,
     uint8_t *buf;
     int len;
 
-    if (queue_idx == 1) {
-        /* send to network */
-        if (memcpy_from_queue(s, &h, queue_idx, desc_idx, 0, s1->header_size) < 0)
+        if (queue_idx == 1) {
+        extern int virtio_net_recv_request__part3812(VIRTIODevice *s, int queue_idx,
+                                                     int desc_idx, int read_size,
+                                                     int write_size);
+        if (virtio_net_recv_request__part3812(s, queue_idx, desc_idx,
+                                              read_size, write_size))
             return 0;
-        len = read_size - s1->header_size;
-        buf = malloc(len);
-        memcpy_from_queue(s, buf, queue_idx, desc_idx, s1->header_size, len);
-        es->write_packet(es, buf, len);
-        free(buf);
-        virtio_consume_desc(s, queue_idx, desc_idx, 0);
     }
-    return 0;
+
+        int virtio_net_recv_request__part3813(void);
+    return virtio_net_recv_request__part3813();
+
 }
 
 static BOOL virtio_net_can_write_packet(EthernetDevice *es)
@@ -1180,10 +3988,13 @@ static BOOL virtio_net_can_write_packet(EthernetDevice *es)
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
-    if (!qs->ready)
+        int virtio_net_can_write_packet__part3815(const QueueState *qs);
+    if (!virtio_net_can_write_packet__part3815(qs))
         return FALSE;
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    return qs->last_avail_idx != avail_idx;
+
+    BOOL virtio_net_can_write_packet__part3816(VIRTIODevice *s, QueueState *qs);
+    return virtio_net_can_write_packet__part3816(s, qs);
+
 }
 
 static void virtio_net_write_packet(EthernetDevice *es, const uint8_t *buf, int buf_len)
@@ -1197,18 +4008,27 @@ static void virtio_net_write_packet(EthernetDevice *es, const uint8_t *buf, int 
     int len, read_size, write_size;
     uint16_t avail_idx;
 
-    if (!qs->ready)
+    int virtio_net_write_packet__part3818(const QueueState *qs);
+    if (virtio_net_write_packet__part3818(qs))
         return;
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    if (qs->last_avail_idx == avail_idx)
+    uint16_t virtio_net_write_packet__part3819(VIRTIODevice *s, virtio_phys_addr_t addr);
+avail_idx = virtio_net_write_packet__part3819(s, qs->avail_addr + 2);
+    int virtio_net_write_packet__part3820(const QueueState *qs, uint16_t avail_idx);
+    if (virtio_net_write_packet__part3820(qs, avail_idx))
         return;
-    desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
-                             (qs->last_avail_idx & (qs->num - 1)) * 2);
-    if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))
+
+    uint16_t virtio_net_write_packet__part3821(VIRTIODevice *s, QueueState *qs);
+desc_idx = virtio_net_write_packet__part3821(s, qs);
+        int virtio_net_write_packet__part3822(VIRTIODevice *s, int *pread_size, int *pwrite_size, int queue_idx, int desc_idx);
+    if (virtio_net_write_packet__part3822(s, &read_size, &write_size, queue_idx, desc_idx))
         return;
-    len = s1->header_size + buf_len; 
-    if (len > write_size)
+    int virtio_net_write_packet__part3823(int header_size, int buf_len);
+    len = virtio_net_write_packet__part3823(s1->header_size, buf_len);
+
+    int virtio_net_write_packet__part3824(int len, int write_size);
+    if (virtio_net_write_packet__part3824(len, write_size))
         return;
+
     memset(&h, 0, s1->header_size);
     memcpy_to_queue(s, queue_idx, desc_idx, 0, &h, s1->header_size);
     memcpy_to_queue(s, queue_idx, desc_idx, s1->header_size, buf, buf_len);
@@ -1218,18 +4038,6 @@ static void virtio_net_write_packet(EthernetDevice *es, const uint8_t *buf, int 
 
 static void virtio_net_set_carrier(EthernetDevice *es, BOOL carrier_state)
 {
-#if 0
-    VIRTIODevice *s1 = es->device_opaque;
-    VIRTIONetDevice *s = (VIRTIONetDevice *)s1;
-    int cur_carrier_state;
-
-    //    printf("virtio_net_set_carrier: %d\n", carrier_state);
-    cur_carrier_state = s->common.config_space[6] & 1;
-    if (cur_carrier_state != carrier_state) {
-        s->common.config_space[6] = (carrier_state << 0);
-        virtio_config_change_notify(s1);
-    }
-#endif
 }
 
 VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es)
@@ -1239,17 +4047,17 @@ VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es)
     s = mallocz(sizeof(*s));
     virtio_init(&s->common, bus,
                 1, 6 + 2, virtio_net_recv_request);
-    /* VIRTIO_NET_F_MAC, VIRTIO_NET_F_STATUS */
-    s->common.device_features = (1 << 5) /* | (1 << 16) */;
+
+    s->common.device_features = (1 << 5) ;
     s->common.queue[0].manual_recv = TRUE;
     s->es = es;
     memcpy(s->common.config_space, es->mac_addr, 6);
-    /* status */
+
     s->common.config_space[6] = 0;
     s->common.config_space[7] = 0;
 
     s->header_size = sizeof(VIRTIONetHeader);
-    
+
     es->device_opaque = s;
     es->device_can_write_packet = virtio_net_can_write_packet;
     es->device_write_packet = virtio_net_write_packet;
@@ -1257,8 +4065,8 @@ VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es)
     return (VIRTIODevice *)s;
 }
 
-/*********************************************************************/
-/* console device */
+
+
 
 typedef struct VIRTIOConsoleDevice {
     VIRTIODevice common;
@@ -1273,15 +4081,13 @@ static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
     CharacterDevice *cs = s1->cs;
     uint8_t *buf;
 
-    if (queue_idx == 1) {
-        /* send to console */
-        buf = malloc(read_size);
-        memcpy_from_queue(s, buf, queue_idx, desc_idx, 0, read_size);
-        cs->write_data(cs->opaque, buf, read_size);
-        free(buf);
-        virtio_consume_desc(s, queue_idx, desc_idx, 0);
-    }
-    return 0;
+    void virtio_console_recv_request__part3832(VIRTIODevice *s, CharacterDevice *cs,
+                                           int queue_idx, int desc_idx,
+                                           int read_size);
+    virtio_console_recv_request__part3832(s, cs, queue_idx, desc_idx, read_size);
+
+    int virtio_console_recv_request__part3833(void);
+    return virtio_console_recv_request__part3833();
 }
 
 BOOL virtio_console_can_write_data(VIRTIODevice *s)
@@ -1289,10 +4095,14 @@ BOOL virtio_console_can_write_data(VIRTIODevice *s)
     QueueState *qs = &s->queue[0];
     uint16_t avail_idx;
 
-    if (!qs->ready)
+    {
+    int virtio_console_can_write_data__part3835(const QueueState *qs);
+    if (virtio_console_can_write_data__part3835(qs))
         return FALSE;
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    return qs->last_avail_idx != avail_idx;
+}
+    BOOL virtio_console_can_write_data__part3836(VIRTIODevice *s, QueueState *qs);
+    return virtio_console_can_write_data__part3836(s, qs);
+
 }
 
 int virtio_console_get_write_len(VIRTIODevice *s)
@@ -1303,16 +4113,25 @@ int virtio_console_get_write_len(VIRTIODevice *s)
     int read_size, write_size;
     uint16_t avail_idx;
 
-    if (!qs->ready)
+    extern int virtio_console_get_write_len__part3838(uint32_t ready);
+    if (virtio_console_get_write_len__part3838(qs->ready))
         return 0;
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    if (qs->last_avail_idx == avail_idx)
+
+        uint16_t virtio_console_get_write_len__part3839(VIRTIODevice *s, QueueState *qs);
+    avail_idx = virtio_console_get_write_len__part3839(s, qs);
+    int virtio_console_get_write_len__part3840(const QueueState *qs, uint16_t avail_idx);
+    if (virtio_console_get_write_len__part3840(qs, avail_idx))
         return 0;
-    desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
-                             (qs->last_avail_idx & (qs->num - 1)) * 2);
-    if (get_desc_rw_size(s, &read_size, &write_size, queue_idx, desc_idx))
+
+    uint16_t virtio_console_get_write_len__part3841(VIRTIODevice *s, QueueState *qs);
+    desc_idx = virtio_console_get_write_len__part3841(s, qs);
+
+        int virtio_console_get_write_len__part3842(VIRTIODevice *s, int *pread_size, int *pwrite_size, int queue_idx, int desc_idx);
+    if (virtio_console_get_write_len__part3842(s, &read_size, &write_size, queue_idx, desc_idx))
         return 0;
-    return write_size;
+        int virtio_console_get_write_len__part3843(int write_size);
+    return virtio_console_get_write_len__part3843(write_size);
+
 }
 
 int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
@@ -1322,12 +4141,17 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     int desc_idx;
     uint16_t avail_idx;
 
-    if (!qs->ready)
+    int virtio_console_write_data__part3845(const QueueState *qs);
+    if (virtio_console_write_data__part3845(qs))
         return 0;
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    if (qs->last_avail_idx == avail_idx)
+
+    uint16_t virtio_console_write_data__part3846(VIRTIODevice *s, QueueState *qs);
+    avail_idx = virtio_console_write_data__part3846(s, qs);
+    int virtio_console_write_data__part3847(uint16_t last_avail_idx, uint16_t avail_idx);
+    if (virtio_console_write_data__part3847(qs->last_avail_idx, avail_idx))
         return 0;
-    desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
+
+    desc_idx = virtio_read16(s, qs->avail_addr + 4 +
                              (qs->last_avail_idx & (qs->num - 1)) * 2);
     memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, buf_len);
     virtio_consume_desc(s, queue_idx, desc_idx, buf_len);
@@ -1335,14 +4159,13 @@ int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
     return buf_len;
 }
 
-/* send a resize event */
+
 void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
 {
-    /* indicate the console size */
-    put_le16(s->config_space + 0, width);
-    put_le16(s->config_space + 2, height);
 
-    virtio_config_change_notify(s);
+    void virtio_console_resize_event__part3850(VIRTIODevice *s, int width, int height);
+    virtio_console_resize_event__part3850(s, width, height);
+
 }
 
 VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
@@ -1352,47 +4175,25 @@ VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
     s = mallocz(sizeof(*s));
     virtio_init(&s->common, bus,
                 3, 4, virtio_console_recv_request);
-    s->common.device_features = (1 << 0); /* VIRTIO_CONSOLE_F_SIZE */
+    s->common.device_features = (1 << 0);
     s->common.queue[0].manual_recv = TRUE;
-    
+
     s->cs = cs;
     return (VIRTIODevice *)s;
 }
 
-/*********************************************************************/
-/* input device */
+
+
 
 enum {
-    VIRTIO_INPUT_CFG_UNSET      = 0x00,
-    VIRTIO_INPUT_CFG_ID_NAME    = 0x01,
-    VIRTIO_INPUT_CFG_ID_SERIAL  = 0x02,
-    VIRTIO_INPUT_CFG_ID_DEVIDS  = 0x03,
-    VIRTIO_INPUT_CFG_PROP_BITS  = 0x10,
-    VIRTIO_INPUT_CFG_EV_BITS    = 0x11,
-    VIRTIO_INPUT_CFG_ABS_INFO   = 0x12,
+    VIRTIO_INPUT_CFG_UNSET = 0x00,
+    VIRTIO_INPUT_CFG_ID_NAME = 0x01,
+    VIRTIO_INPUT_CFG_ID_SERIAL = 0x02,
+    VIRTIO_INPUT_CFG_ID_DEVIDS = 0x03,
+    VIRTIO_INPUT_CFG_PROP_BITS = 0x10,
+    VIRTIO_INPUT_CFG_EV_BITS = 0x11,
+    VIRTIO_INPUT_CFG_ABS_INFO = 0x12,
 };
-
-#define VIRTIO_INPUT_EV_SYN 0x00
-#define VIRTIO_INPUT_EV_KEY 0x01
-#define VIRTIO_INPUT_EV_REL 0x02
-#define VIRTIO_INPUT_EV_ABS 0x03
-#define VIRTIO_INPUT_EV_REP 0x14
-
-#define BTN_LEFT         0x110
-#define BTN_RIGHT        0x111
-#define BTN_MIDDLE       0x112
-#define BTN_GEAR_DOWN    0x150
-#define BTN_GEAR_UP      0x151
-
-#define REL_X 0x00
-#define REL_Y 0x01
-#define REL_Z 0x02
-#define REL_WHEEL 0x08
-
-#define ABS_X 0x00
-#define ABS_Y 0x01
-#define ABS_Z 0x02
-
 typedef struct VIRTIOInputDevice {
     VIRTIODevice common;
     VirtioInputTypeEnum type;
@@ -1400,22 +4201,22 @@ typedef struct VIRTIOInputDevice {
 } VIRTIOInputDevice;
 
 static const uint16_t buttons_list[] = {
-    BTN_LEFT, BTN_RIGHT, BTN_MIDDLE
+    0x110, 0x111, 0x112
 };
 
 static int virtio_input_recv_request(VIRTIODevice *s, int queue_idx,
                                       int desc_idx, int read_size,
                                       int write_size)
 {
-    if (queue_idx == 1) {
-        /* led & keyboard updates */
-        //        printf("%s: write_size=%d\n", __func__, write_size);
-        virtio_consume_desc(s, queue_idx, desc_idx, 0);
-    }
-    return 0;
+    void virtio_input_recv_request__part3858(VIRTIODevice *s, int queue_idx, int desc_idx);
+    virtio_input_recv_request__part3858(s, queue_idx, desc_idx);
+
+        int virtio_input_recv_request__part3859(void);
+    return virtio_input_recv_request__part3859();
+
 }
 
-/* return < 0 if could not send key event */
+
 static int virtio_input_queue_event(VIRTIODevice *s,
                                     uint16_t type, uint16_t code,
                                     uint32_t value)
@@ -1426,24 +4227,26 @@ static int virtio_input_queue_event(VIRTIODevice *s,
     uint16_t avail_idx;
     uint8_t buf[8];
 
-    if (!qs->ready)
+    extern int virtio_input_queue_event__part3861(const uint32_t *ready);
+    if (virtio_input_queue_event__part3861(&qs->ready))
         return -1;
 
-    put_le16(buf, type);
-    put_le16(buf + 2, code);
-    put_le32(buf + 4, value);
-    buf_len = 8;
-    
-    avail_idx = virtio_read16(s, qs->avail_addr + 2);
-    if (qs->last_avail_idx == avail_idx)
+
+        void virtio_input_queue_event__part3862(VIRTIODevice *s, QueueState *qs,
+                                            uint16_t type, uint16_t code,
+                                            uint32_t value, uint8_t *buf,
+                                            int *buf_len, uint16_t *avail_idx);
+    virtio_input_queue_event__part3862(s, qs, type, code, value, buf,
+                                       &buf_len, &avail_idx);
+
+    int virtio_input_queue_event__part3863(uint16_t last_avail_idx, uint16_t avail_idx);
+    if (virtio_input_queue_event__part3863(qs->last_avail_idx, avail_idx))
         return -1;
-    desc_idx = virtio_read16(s, qs->avail_addr + 4 + 
-                             (qs->last_avail_idx & (qs->num - 1)) * 2);
-    //    printf("send: queue_idx=%d desc_idx=%d\n", queue_idx, desc_idx);
-    memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, buf_len);
-    virtio_consume_desc(s, queue_idx, desc_idx, buf_len);
-    qs->last_avail_idx++;
-    return 0;
+
+        int virtio_input_queue_event__part3864(VIRTIODevice *s, int queue_idx,
+                                           const uint8_t *buf, int buf_len);
+    return virtio_input_queue_event__part3864(s, queue_idx, buf, buf_len);
+
 }
 
 int virtio_input_send_key_event(VIRTIODevice *s, BOOL is_down,
@@ -1451,52 +4254,54 @@ int virtio_input_send_key_event(VIRTIODevice *s, BOOL is_down,
 {
     VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
     int ret;
-    
-    if (s1->type != VIRTIO_INPUT_TYPE_KEYBOARD)
+
+    int virtio_input_send_key_event__part3866(int type);
+    if (virtio_input_send_key_event__part3866(s1->type))
         return -1;
-    ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_KEY, key_code, is_down);
-    if (ret)
+
+    ret = virtio_input_queue_event(s, 0x01, key_code, is_down);
+    int virtio_input_send_key_event__part3868(int ret);
+    if (virtio_input_send_key_event__part3868(ret))
         return ret;
-    return virtio_input_queue_event(s, VIRTIO_INPUT_EV_SYN, 0, 0);
+
+    int virtio_input_send_key_event__part3869(VIRTIODevice *s);
+    return virtio_input_send_key_event__part3869(s);
 }
 
-/* also used for the tablet */
+
 int virtio_input_send_mouse_event(VIRTIODevice *s, int dx, int dy, int dz,
                                   unsigned int buttons)
 {
     VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
     int ret, i, b, last_b;
 
-    if (s1->type != VIRTIO_INPUT_TYPE_MOUSE &&
-        s1->type != VIRTIO_INPUT_TYPE_TABLET)
+    {
+    int virtio_input_send_mouse_event__part3871(int input_type);
+    if (virtio_input_send_mouse_event__part3871((int)s1->type) != 0)
         return -1;
-    if (s1->type == VIRTIO_INPUT_TYPE_MOUSE) {
-        ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_REL, REL_X, dx);
-        if (ret != 0)
-            return ret;
-        ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_REL, REL_Y, dy);
-        if (ret != 0)
-            return ret;
-    } else {
-        ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_ABS, ABS_X, dx);
-        if (ret != 0)
-            return ret;
-        ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_ABS, ABS_Y, dy);
-        if (ret != 0)
-            return ret;
-    }
-    if (dz != 0) {
-        ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_REL, REL_WHEEL, dz);
+}
+
+    {
+        int virtio_input_send_mouse_event__part3872(VIRTIODevice *s, int dx, int dy);
+        ret = virtio_input_send_mouse_event__part3872(s, dx, dy);
         if (ret != 0)
             return ret;
     }
 
+    {
+    int virtio_input_send_mouse_event__part3873(VIRTIODevice *s, int dz);
+    ret = virtio_input_send_mouse_event__part3873(s, dz);
+    if (ret != 0)
+        return ret;
+}
+
+
     if (buttons != s1->buttons_state) {
-        for(i = 0; i < countof(buttons_list); i++) {
+        for(i = 0; i < (sizeof(buttons_list) / sizeof(buttons_list[0])); i++) {
             b = (buttons >> i) & 1;
             last_b = (s1->buttons_state >> i) & 1;
             if (b != last_b) {
-                ret = virtio_input_queue_event(s, VIRTIO_INPUT_EV_KEY,
+                ret = virtio_input_queue_event(s, 0x01,
                                                buttons_list[i], b);
                 if (ret != 0)
                     return ret;
@@ -1505,12 +4310,14 @@ int virtio_input_send_mouse_event(VIRTIODevice *s, int dx, int dy, int dz,
         s1->buttons_state = buttons;
     }
 
-    return virtio_input_queue_event(s, VIRTIO_INPUT_EV_SYN, 0, 0);
+    return virtio_input_queue_event(s, 0x00, 0, 0);
 }
 
 static void set_bit(uint8_t *tab, int k)
 {
-    tab[k >> 3] |= 1 << (k & 7);
+    void set_bit__part3877(uint8_t *tab, int k);
+    set_bit__part3877(tab, k);
+
 }
 
 static void virtio_input_config_write(VIRTIODevice *s)
@@ -1518,115 +4325,11 @@ static void virtio_input_config_write(VIRTIODevice *s)
     VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
     uint8_t *config = s->config_space;
     int i;
-    
-    //    printf("config_write: %02x %02x\n", config[0], config[1]);
-    switch(config[0]) {
-    case VIRTIO_INPUT_CFG_UNSET:
-        break;
-    case VIRTIO_INPUT_CFG_ID_NAME:
-        {
-            const char *name;
-            int len;
-            switch(s1->type) {
-            case VIRTIO_INPUT_TYPE_KEYBOARD:
-                name = "virtio_keyboard";
-                break;
-            case VIRTIO_INPUT_TYPE_MOUSE:
-                name = "virtio_mouse";
-                break;
-            case VIRTIO_INPUT_TYPE_TABLET:
-                name = "virtio_tablet";
-                break;
-            default:
-                abort();
-            }
-            len = strlen(name);
-            config[2] = len;
-            memcpy(config + 8, name, len);
-        }
-        break;
-    default:
-    case VIRTIO_INPUT_CFG_ID_SERIAL:
-    case VIRTIO_INPUT_CFG_ID_DEVIDS:
-    case VIRTIO_INPUT_CFG_PROP_BITS:
-        config[2] = 0; /* size of reply */
-        break;
-    case VIRTIO_INPUT_CFG_EV_BITS:
-        config[2] = 0;
-        switch(s1->type) {
-        case VIRTIO_INPUT_TYPE_KEYBOARD:
-            switch(config[1]) {
-            case VIRTIO_INPUT_EV_KEY:
-                config[2] = 128 / 8;
-                memset(config + 8, 0xff, 128 / 8); /* bitmap */
-                break;
-            case VIRTIO_INPUT_EV_REP: /* allow key repetition */
-                config[2] = 1;
-                break;
-            default:
-                break;
-            }
-            break;
-        case VIRTIO_INPUT_TYPE_MOUSE:
-            switch(config[1]) {
-            case VIRTIO_INPUT_EV_KEY:
-                config[2] = 512 / 8;
-                memset(config + 8, 0, 512 / 8); /* bitmap */
-                for(i = 0; i < countof(buttons_list); i++)
-                    set_bit(config + 8, buttons_list[i]);
-                break;
-            case VIRTIO_INPUT_EV_REL:
-                config[2] = 2;
-                config[8] = 0;
-                config[9] = 0;
-                set_bit(config + 8, REL_X);
-                set_bit(config + 8, REL_Y);
-                set_bit(config + 8, REL_WHEEL);
-                break;
-            default:
-                break;
-            }
-            break;
-        case VIRTIO_INPUT_TYPE_TABLET:
-            switch(config[1]) {
-            case VIRTIO_INPUT_EV_KEY:
-                config[2] = 512 / 8;
-                memset(config + 8, 0, 512 / 8); /* bitmap */
-                for(i = 0; i < countof(buttons_list); i++)
-                    set_bit(config + 8, buttons_list[i]);
-                break;
-            case VIRTIO_INPUT_EV_REL:
-                config[2] = 2;
-                config[8] = 0;
-                config[9] = 0;
-                set_bit(config + 8, REL_WHEEL);
-                break;
-            case VIRTIO_INPUT_EV_ABS:
-                config[2] = 1;
-                config[8] = 0;
-                set_bit(config + 8, ABS_X);
-                set_bit(config + 8, ABS_Y);
-                break;
-            default:
-                break;
-            }
-            break;
-        default:
-            abort();
-        }
-        break;
-    case VIRTIO_INPUT_CFG_ABS_INFO:
-        if (s1->type == VIRTIO_INPUT_TYPE_TABLET && config[1] <= 1) {
-            /* for ABS_X and ABS_Y */
-            config[2] = 5 * 4;
-            put_le32(config + 8, 0); /* min */
-            put_le32(config + 12, VIRTIO_INPUT_ABS_SCALE - 1) ; /* max */
-            put_le32(config + 16, 0); /* fuzz */
-            put_le32(config + 20, 0); /* flat */
-            put_le32(config + 24, 0); /* res */
-        }
-        break;
-    }
+
+
+        void virtio_input_config_write__part3879(uint8_t *config, int s1_type);
+    virtio_input_config_write__part3879(config, (int)s1->type);
+
 }
 
 VIRTIODevice *virtio_input_init(VIRTIOBusDef *bus, VirtioInputTypeEnum type)
@@ -1643,8 +4346,8 @@ VIRTIODevice *virtio_input_init(VIRTIOBusDef *bus, VirtioInputTypeEnum type)
     return (VIRTIODevice *)s;
 }
 
-/*********************************************************************/
-/* 9p filesystem device */
+
+
 
 typedef struct {
     struct list_head link;
@@ -1655,8 +4358,8 @@ typedef struct {
 typedef struct VIRTIO9PDevice {
     VIRTIODevice common;
     FSDevice *fs;
-    int msize; /* maximum message size */
-    struct list_head fid_list; /* list of FIDDesc */
+    int msize;
+    struct list_head fid_list;
     BOOL req_in_progress;
 } VIRTIO9PDevice;
 
@@ -1665,100 +4368,57 @@ static FIDDesc *fid_find1(VIRTIO9PDevice *s, uint32_t fid)
     struct list_head *el;
     FIDDesc *f;
 
-    list_for_each(el, &s->fid_list) {
-        f = list_entry(el, FIDDesc, link);
-        if (f->fid == fid)
-            return f;
+        FIDDesc *fid_find1__part3887(struct list_head *head, struct list_head **el_out, uint32_t fid);
+    f = fid_find1__part3887(&s->fid_list, &el, fid);
+    if (f)
+        return f;
+
+        {
+        FIDDesc *(*fid_find1__part3888)(void);
+        return fid_find1__part3888();
     }
-    return NULL;
 }
 
 static FSFile *fid_find(VIRTIO9PDevice *s, uint32_t fid)
 {
     FIDDesc *f;
+    FIDDesc *fid_find__part3890(VIRTIO9PDevice *s, uint32_t fid);
 
-    f = fid_find1(s, fid);
-    if (!f)
-        return NULL;
-    return f->fd;
+    f = fid_find__part3890(s, fid);
+    int fid_find__part3891(const void *f);
+    if (fid_find__part3891(f))
+        return ((void *)0);
+
+    void *fid_find__part3892(FIDDesc *f);
+return fid_find__part3892(f);
+
 }
 
 static void fid_delete(VIRTIO9PDevice *s, uint32_t fid)
 {
     FIDDesc *f;
 
-    f = fid_find1(s, fid);
-    if (f) {
-        s->fs->fs_delete(s->fs, f->fd);
-        list_del(&f->link);
-        free(f);
-    }
+    FIDDesc *fid_delete__part3894(VIRTIO9PDevice *s, uint32_t fid);
+    f = fid_delete__part3894(s, fid);
+    void fid_delete__part3895(VIRTIO9PDevice *s, FIDDesc *f);
+    fid_delete__part3895(s, f);
 }
 
 static void fid_set(VIRTIO9PDevice *s, uint32_t fid, FSFile *fd)
 {
+    FIDDesc *fid_set__part3897(VIRTIO9PDevice *s, uint32_t fid);
+
     FIDDesc *f;
 
-    f = fid_find1(s, fid);
-    if (f) {
-        s->fs->fs_delete(s->fs, f->fd);
-        f->fd = fd;
-    } else {
-        f = malloc(sizeof(*f));
-        f->fid = fid;
-        f->fd = fd;
-        list_add(&f->link, &s->fid_list);
-    }
+    f = fid_set__part3897(s, fid);
+
+    FIDDesc *fid_set__part3898(FSDevice *fs, struct list_head *fid_list,
+                           uint32_t fid, FSFile *fd, FIDDesc *f);
+
+    f = fid_set__part3898(s->fs, &s->fid_list, fid, fd, f);
+
 }
-
-#ifdef DEBUG_VIRTIO
-
-typedef struct {
-    uint8_t tag;
-    const char *name;
-} Virtio9POPName;
-
-static const Virtio9POPName virtio_9p_op_names[] = {
-    { 8, "statfs" },
-    { 12, "lopen" },
-    { 14, "lcreate" },
-    { 16, "symlink" },
-    { 18, "mknod" },
-    { 22, "readlink" },
-    { 24, "getattr" },
-    { 26, "setattr" },
-    { 30, "xattrwalk" },
-    { 40, "readdir" },
-    { 50, "fsync" },
-    { 52, "lock" },
-    { 54, "getlock" },
-    { 70, "link" },
-    { 72, "mkdir" },
-    { 74, "renameat" },
-    { 76, "unlinkat" },
-    { 100, "version" },
-    { 104, "attach" },
-    { 108, "flush" },
-    { 110, "walk" },
-    { 116, "read" },
-    { 118, "write" },
-    { 120, "clunk" },
-    { 0, NULL },
-};
-
-static const char *get_9p_op_name(int tag)
-{
-    const Virtio9POPName *p;
-    for(p = virtio_9p_op_names; p->name != NULL; p++) {
-        if (p->tag == tag)
-            return p->name;
-    }
-    return NULL;
-}
-
-#endif /* DEBUG_VIRTIO */
-
-static int marshall(VIRTIO9PDevice *s, 
+static int marshall(VIRTIO9PDevice *s,
                     uint8_t *buf1, int max_len, const char *fmt, ...)
 {
     va_list ap;
@@ -1767,11 +4427,15 @@ static int marshall(VIRTIO9PDevice *s,
     uint64_t val64;
     uint8_t *buf, *buf_end;
 
-#ifdef DEBUG_VIRTIO
-    if (s->common.debug & VIRTIO_DEBUG_9P)
-        printf(" ->");
-#endif
-    va_start(ap, fmt);
+
+
+
+
+    
+   __builtin_c23_va_start(
+   ap, fmt
+   )
+                    ;
     buf = buf1;
     buf_end = buf1 + max_len;
     for(;;) {
@@ -1780,42 +4444,98 @@ static int marshall(VIRTIO9PDevice *s,
             break;
         switch(c) {
         case 'b':
-            assert(buf + 1 <= buf_end);
-            val = va_arg(ap, int);
-#ifdef DEBUG_VIRTIO
-            if (s->common.debug & VIRTIO_DEBUG_9P)
-                printf(" b=%d", val);
-#endif
+            
+           ((void) sizeof (__assert_single_arg (
+           buf + 1 <= buf_end
+           )), __extension__ ({ if (
+           buf + 1 <= buf_end
+           ) ; else __assert_fail (
+           "buf + 1 <= buf_end"
+           , "virtio.c", 1783, __extension__ __PRETTY_FUNCTION__); }))
+                                     ;
+            val = 
+                 __builtin_va_arg(
+                 ap
+                 ,
+                 int
+                 )
+                                ;
+
+
+
+
             buf[0] = val;
             buf += 1;
             break;
         case 'h':
-            assert(buf + 2 <= buf_end);
-            val = va_arg(ap, int);
-#ifdef DEBUG_VIRTIO
-            if (s->common.debug & VIRTIO_DEBUG_9P)
-                printf(" h=%d", val);
-#endif
+            
+           ((void) sizeof (__assert_single_arg (
+           buf + 2 <= buf_end
+           )), __extension__ ({ if (
+           buf + 2 <= buf_end
+           ) ; else __assert_fail (
+           "buf + 2 <= buf_end"
+           , "virtio.c", 1793, __extension__ __PRETTY_FUNCTION__); }))
+                                     ;
+            val = 
+                 __builtin_va_arg(
+                 ap
+                 ,
+                 int
+                 )
+                                ;
+
+
+
+
             put_le16(buf, val);
             buf += 2;
             break;
         case 'w':
-            assert(buf + 4 <= buf_end);
-            val = va_arg(ap, int);
-#ifdef DEBUG_VIRTIO
-            if (s->common.debug & VIRTIO_DEBUG_9P)
-                printf(" w=%d", val);
-#endif
+            
+           ((void) sizeof (__assert_single_arg (
+           buf + 4 <= buf_end
+           )), __extension__ ({ if (
+           buf + 4 <= buf_end
+           ) ; else __assert_fail (
+           "buf + 4 <= buf_end"
+           , "virtio.c", 1803, __extension__ __PRETTY_FUNCTION__); }))
+                                     ;
+            val = 
+                 __builtin_va_arg(
+                 ap
+                 ,
+                 int
+                 )
+                                ;
+
+
+
+
             put_le32(buf, val);
             buf += 4;
             break;
         case 'd':
-            assert(buf + 8 <= buf_end);
-            val64 = va_arg(ap, uint64_t);
-#ifdef DEBUG_VIRTIO
-            if (s->common.debug & VIRTIO_DEBUG_9P)
-                printf(" d=%" PRId64, val64);
-#endif
+            
+           ((void) sizeof (__assert_single_arg (
+           buf + 8 <= buf_end
+           )), __extension__ ({ if (
+           buf + 8 <= buf_end
+           ) ; else __assert_fail (
+           "buf + 8 <= buf_end"
+           , "virtio.c", 1813, __extension__ __PRETTY_FUNCTION__); }))
+                                     ;
+            val64 = 
+                   __builtin_va_arg(
+                   ap
+                   ,
+                   uint64_t
+                   )
+                                       ;
+
+
+
+
             put_le64(buf, val64);
             buf += 8;
             break;
@@ -1823,14 +4543,36 @@ static int marshall(VIRTIO9PDevice *s,
             {
                 char *str;
                 int len;
-                str = va_arg(ap, char *);
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" s=\"%s\"", str);
-#endif
+                str = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     char *
+                     )
+                                       ;
+
+
+
+
                 len = strlen(str);
-                assert(len <= 65535);
-                assert(buf + 2 + len <= buf_end);
+                
+               ((void) sizeof (__assert_single_arg (
+               len <= 65535
+               )), __extension__ ({ if (
+               len <= 65535
+               ) ; else __assert_fail (
+               "len <= 65535"
+               , "virtio.c", 1832, __extension__ __PRETTY_FUNCTION__); }))
+                                   ;
+                
+               ((void) sizeof (__assert_single_arg (
+               buf + 2 + len <= buf_end
+               )), __extension__ ({ if (
+               buf + 2 + len <= buf_end
+               ) ; else __assert_fail (
+               "buf + 2 + len <= buf_end"
+               , "virtio.c", 1833, __extension__ __PRETTY_FUNCTION__); }))
+                                               ;
                 put_le16(buf, len);
                 buf += 2;
                 memcpy(buf, str, len);
@@ -1840,12 +4582,26 @@ static int marshall(VIRTIO9PDevice *s,
         case 'Q':
             {
                 FSQID *qid;
-                assert(buf + 13 <= buf_end);
-                qid = va_arg(ap, FSQID *);
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" Q=%d:%d:%" PRIu64, qid->type, qid->version, qid->path);
-#endif
+                
+               ((void) sizeof (__assert_single_arg (
+               buf + 13 <= buf_end
+               )), __extension__ ({ if (
+               buf + 13 <= buf_end
+               ) ; else __assert_fail (
+               "buf + 13 <= buf_end"
+               , "virtio.c", 1843, __extension__ __PRETTY_FUNCTION__); }))
+                                          ;
+                qid = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     FSQID *
+                     )
+                                        ;
+
+
+
+
                 buf[0] = qid->type;
                 put_le32(buf + 1, qid->version);
                 put_le64(buf + 5, qid->path);
@@ -1856,12 +4612,16 @@ static int marshall(VIRTIO9PDevice *s,
             abort();
         }
     }
-    va_end(ap);
+    
+   __builtin_va_end(
+   ap
+   )
+             ;
     return buf - buf1;
 }
 
-/* return < 0 if error */
-/* XXX: free allocated strings in case of error */
+
+
 static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                       int desc_idx, int *poffset, const char *fmt, ...)
 {
@@ -1871,7 +4631,11 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
     uint8_t buf[16];
 
     offset = *poffset;
-    va_start(ap, fmt);
+    
+   __builtin_c23_va_start(
+   ap, fmt
+   )
+                    ;
     for(;;) {
         c = *fmt++;
         if (c == '\0')
@@ -1882,13 +4646,19 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                 uint8_t *ptr;
                 if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, 1))
                     return -1;
-                ptr = va_arg(ap, uint8_t *);
+                ptr = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     uint8_t *
+                     )
+                                          ;
                 *ptr = buf[0];
                 offset += 1;
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" b=%d", *ptr);
-#endif
+
+
+
+
             }
             break;
         case 'h':
@@ -1896,13 +4666,19 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                 uint16_t *ptr;
                 if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, 2))
                     return -1;
-                ptr = va_arg(ap, uint16_t *);
+                ptr = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     uint16_t *
+                     )
+                                           ;
                 *ptr = get_le16(buf);
                 offset += 2;
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" h=%d", *ptr);
-#endif
+
+
+
+
             }
             break;
         case 'w':
@@ -1910,13 +4686,19 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                 uint32_t *ptr;
                 if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, 4))
                     return -1;
-                ptr = va_arg(ap, uint32_t *);
+                ptr = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     uint32_t *
+                     )
+                                           ;
                 *ptr = get_le32(buf);
                 offset += 4;
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" w=%d", *ptr);
-#endif
+
+
+
+
             }
             break;
         case 'd':
@@ -1924,13 +4706,19 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                 uint64_t *ptr;
                 if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, 8))
                     return -1;
-                ptr = va_arg(ap, uint64_t *);
+                ptr = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     uint64_t *
+                     )
+                                           ;
                 *ptr = get_le64(buf);
                 offset += 8;
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" d=%" PRId64, *ptr);
-#endif
+
+
+
+
             }
             break;
         case 's':
@@ -1947,37 +4735,39 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
                     return -1;
                 str[len] = '\0';
                 offset += len;
-                ptr = va_arg(ap, char **);
+                ptr = 
+                     __builtin_va_arg(
+                     ap
+                     ,
+                     char **
+                     )
+                                        ;
                 *ptr = str;
-#ifdef DEBUG_VIRTIO
-                if (s->common.debug & VIRTIO_DEBUG_9P)
-                    printf(" s=\"%s\"", *ptr);
-#endif
+
+
+
+
             }
             break;
         default:
             abort();
         }
     }
-    va_end(ap);
+    
+   __builtin_va_end(
+   ap
+   )
+             ;
     *poffset = offset;
     return 0;
 }
 
 static void virtio_9p_send_reply(VIRTIO9PDevice *s, int queue_idx,
-                                 int desc_idx, uint8_t id, uint16_t tag, 
+                                 int desc_idx, uint8_t id, uint16_t tag,
                                  uint8_t *buf, int buf_len)
 {
     uint8_t *buf1;
     int len;
-
-#ifdef DEBUG_VIRTIO
-    if (s->common.debug & VIRTIO_DEBUG_9P) {
-        if (id == 6)
-            printf(" (error)");
-        printf("\n");
-    }
-#endif
     len = buf_len + 7;
     buf1 = malloc(len);
     put_le32(buf1, len);
@@ -2012,7 +4802,7 @@ static void virtio_9p_open_reply(FSDevice *fs, FSQID *qid, int err,
     VIRTIO9PDevice *s = oi->dev;
     uint8_t buf[32];
     int buf_len;
-    
+
     if (err < 0) {
         virtio_9p_send_error(s, oi->queue_idx, oi->desc_idx, oi->tag, err);
     } else {
@@ -2021,7 +4811,9 @@ static void virtio_9p_open_reply(FSDevice *fs, FSQID *qid, int err,
         virtio_9p_send_reply(s, oi->queue_idx, oi->desc_idx, 12, oi->tag,
                              buf, buf_len);
     }
-    free(oi);
+    void virtio_9p_open_reply__part3909(void *oi);
+    virtio_9p_open_reply__part3909(oi);
+
 }
 
 static void virtio_9p_open_cb(FSDevice *fs, FSQID *qid, int err,
@@ -2030,12 +4822,12 @@ static void virtio_9p_open_cb(FSDevice *fs, FSQID *qid, int err,
     P9OpenInfo *oi = opaque;
     VIRTIO9PDevice *s = oi->dev;
     int queue_idx = oi->queue_idx;
-    
+
     virtio_9p_open_reply(fs, qid, err, oi);
 
     s->req_in_progress = FALSE;
 
-    /* handle next requests */
+
     queue_notify((VIRTIODevice *)s, queue_idx);
 }
 
@@ -2051,43 +4843,34 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
     int buf_len, err;
     FSDevice *fs = s->fs;
 
-    if (queue_idx != 0)
+    int virtio_9p_recv_request__part3913(int queue_idx);
+    if (virtio_9p_recv_request__part3913(queue_idx))
         return 0;
-    
-    if (s->req_in_progress)
+
+
+        int virtio_9p_recv_request__part3914(int req_in_progress);
+    if (virtio_9p_recv_request__part3914(s->req_in_progress))
         return -1;
-    
-    offset = 0;
-    header_len = 4 + 1 + 2;
+
+    void virtio_9p_recv_request__part3915(int *offset, int *header_len);
+    virtio_9p_recv_request__part3915(&offset, &header_len);
+
     if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, header_len)) {
         tag = 0;
         goto protocol_error;
     }
-    //size = get_le32(buf);
-    id = buf[4];
-    tag = get_le16(buf + 5);
-    offset += header_len;
-    
-#ifdef DEBUG_VIRTIO
-    if (s1->debug & VIRTIO_DEBUG_9P) {
-        const char *name;
-        name = get_9p_op_name(id);
-        printf("9p: op=");
-        if (name)
-            printf("%s", name);
-        else
-            printf("%d", id);
-    }
-#endif
-    /* Note: same subset as JOR1K */
+
+    void virtio_9p_recv_request__part3917(const uint8_t *buf, int header_len, uint8_t *id, uint16_t *tag, int *offset);
+    virtio_9p_recv_request__part3917(buf, header_len, &id, &tag, &offset);
+
     switch(id) {
-    case 8: /* statfs */
+    case 8:
         {
             FSStatFS st;
 
             fs->fs_statfs(fs, &st);
             buf_len = marshall(s, buf, sizeof(buf),
-                               "wwddddddw", 
+                               "wwddddddw",
                                0,
                                st.f_bsize,
                                st.f_blocks,
@@ -2095,19 +4878,19 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                                st.f_bavail,
                                st.f_files,
                                st.f_ffree,
-                               0, /* id */
-                               256 /* max filename length */
+                               0,
+                               256
                                );
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 12: /* lopen */
+    case 12:
         {
             uint32_t fid, flags;
             FSFile *f;
             FSQID qid;
             P9OpenInfo *oi;
-            
+
             if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "ww", &fid, &flags))
                 goto protocol_error;
@@ -2127,7 +4910,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             }
         }
         break;
-    case 14: /* lcreate */
+    case 14:
         {
             uint32_t fid, flags, mode, gid;
             char *name;
@@ -2139,19 +4922,19 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_create(fs, &qid, f, name, flags, mode, gid);
             }
             free(name);
-            if (err) 
+            if (err)
                 goto error;
             buf_len = marshall(s, buf, sizeof(buf),
                                "Qw", &qid, s->msize - 24);
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 16: /* symlink */
+    case 16:
         {
             uint32_t fid, gid;
             char *name, *symgt;
@@ -2163,7 +4946,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_symlink(fs, &qid, f, name, symgt, gid);
             }
@@ -2176,7 +4959,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 18: /* mknod */
+    case 18:
         {
             uint32_t fid, mode, major, minor, gid;
             char *name;
@@ -2188,7 +4971,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_mknod(fs, &qid, f, name, mode, major, minor, gid);
             }
@@ -2200,7 +4983,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 22: /* readlink */
+    case 22:
         {
             uint32_t fid;
             char buf1[1024];
@@ -2211,7 +4994,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_readlink(fs, buf1, sizeof(buf1), f);
             }
@@ -2221,7 +5004,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 24: /* getattr */
+    case 24:
         {
             uint32_t fid;
             uint64_t mask;
@@ -2239,7 +5022,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto error;
 
             buf_len = marshall(s, buf, sizeof(buf),
-                               "dQwwwddddddddddddddd", 
+                               "dQwwwddddddddddddddd",
                                mask, &st.qid,
                                st.st_mode, st.st_uid, st.st_gid,
                                st.st_nlink, st.st_rdev, st.st_size,
@@ -2252,7 +5035,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 26: /* setattr */
+    case 26:
         {
             uint32_t fid, mask, mode, uid, gid;
             uint64_t size, atime_sec, atime_nsec, mtime_sec, mtime_nsec;
@@ -2260,7 +5043,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
 
             if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "wwwwwddddd", &fid, &mask, &mode, &uid, &gid,
-                           &size, &atime_sec, &atime_nsec, 
+                           &size, &atime_sec, &atime_nsec,
                            &mtime_sec, &mtime_nsec))
                 goto protocol_error;
             f = fid_find(s, fid);
@@ -2270,17 +5053,19 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                                  atime_nsec, mtime_sec, mtime_nsec);
             if (err)
                 goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 30: /* xattrwalk */
+    case 30:
         {
-            /* not supported yet */
-            err = -P9_ENOTSUP;
+
+            err = -524;
             goto error;
         }
         break;
-    case 40: /* readdir */
+    case 40:
         {
             uint32_t fid, count;
             uint64_t offs;
@@ -2305,22 +5090,24 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             free(buf);
         }
         break;
-    case 50: /* fsync */
+    case 50:
         {
             uint32_t fid;
             if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "w", &fid))
                 goto protocol_error;
-            /* ignored */
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 52: /* lock */
+    case 52:
         {
             uint32_t fid;
             FSFile *f;
             FSLock lock;
-            
+
             if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "wbwddws", &fid, &lock.type, &lock.flags,
                            &lock.start, &lock.length,
@@ -2328,7 +5115,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f)
-                err = -P9_EPROTO;
+                err = -71;
             else
                 err = fs->fs_lock(fs, f, &lock);
             free(lock.client_id);
@@ -2338,12 +5125,12 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 54: /* getlock */
+    case 54:
         {
             uint32_t fid;
             FSFile *f;
             FSLock lock;
-            
+
             if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "wbddws", &fid, &lock.type,
                            &lock.start, &lock.length,
@@ -2351,7 +5138,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f)
-                err = -P9_EPROTO;
+                err = -71;
             else
                 err = fs->fs_getlock(fs, f, &lock);
             if (err < 0) {
@@ -2366,7 +5153,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 70: /* link */
+    case 70:
         {
             uint32_t dfid, fid;
             char *name;
@@ -2378,17 +5165,19 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             df = fid_find(s, dfid);
             f = fid_find(s, fid);
             if (!df || !f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_link(fs, df, f, name);
             }
             free(name);
             if (err)
                 goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 72: /* mkdir */
+    case 72:
         {
             uint32_t fid, mode, gid;
             char *name;
@@ -2408,7 +5197,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 74: /* renameat */
+    case 74:
         {
             uint32_t fid, new_fid;
             char *name, *new_name;
@@ -2420,7 +5209,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             f = fid_find(s, fid);
             new_f = fid_find(s, new_fid);
             if (!f || !new_f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_renameat(fs, f, name, new_f, new_name);
             }
@@ -2428,10 +5217,12 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             free(new_name);
             if (err != 0)
                 goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 76: /* unlinkat */
+    case 76:
         {
             uint32_t fid, flags;
             char *name;
@@ -2442,38 +5233,40 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                 goto protocol_error;
             f = fid_find(s, fid);
             if (!f) {
-                err = -P9_EPROTO;
+                err = -71;
             } else {
                 err = fs->fs_unlinkat(fs, f, name);
             }
             free(name);
             if (err != 0)
                 goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 100: /* version */
+    case 100:
         {
             uint32_t msize;
             char *version;
-            if (unmarshall(s, queue_idx, desc_idx, &offset, 
+            if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "ws", &msize, &version))
                 goto protocol_error;
             s->msize = msize;
-            //            printf("version: msize=%d version=%s\n", msize, version);
+
             free(version);
             buf_len = marshall(s, buf, sizeof(buf), "ws", s->msize, "9P2000.L");
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 104: /* attach */
+    case 104:
         {
             uint32_t fid, afid, uid;
             char *uname, *aname;
             FSQID qid;
             FSFile *f;
-            
-            if (unmarshall(s, queue_idx, desc_idx, &offset, 
+
+            if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "wwssw", &fid, &afid, &uname, &aname, &uid))
                 goto protocol_error;
             err = fs->fs_attach(fs, &f, &qid, uid, uname, aname);
@@ -2486,17 +5279,19 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 108: /* flush */
+    case 108:
         {
             uint16_t oldtag;
-            if (unmarshall(s, queue_idx, desc_idx, &offset, 
+            if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "h", &oldtag))
                 goto protocol_error;
-            /* ignored */
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
-    case 110: /* walk */
+    case 110:
         {
             uint32_t fid, newfid;
             uint16_t nwname;
@@ -2505,7 +5300,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             FSFile *f;
             int i;
 
-            if (unmarshall(s, queue_idx, desc_idx, &offset, 
+            if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "wwh", &fid, &newfid, &nwname))
                 goto protocol_error;
             f = fid_find(s, fid);
@@ -2514,9 +5309,9 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             names = mallocz(sizeof(names[0]) * nwname);
             qids = malloc(sizeof(qids[0]) * nwname);
             for(i = 0; i < nwname; i++) {
-                if (unmarshall(s, queue_idx, desc_idx, &offset, 
+                if (unmarshall(s, queue_idx, desc_idx, &offset,
                                "s", &names[i])) {
-                    err = -P9_EPROTO;
+                    err = -71;
                     goto walk_done;
                 }
             }
@@ -2540,7 +5335,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 116: /* read */
+    case 116:
         {
             uint32_t fid, count;
             uint64_t offs;
@@ -2566,7 +5361,7 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             free(buf);
         }
         break;
-    case 118: /* write */
+    case 118:
         {
             uint32_t fid, count;
             uint64_t offs;
@@ -2596,29 +5391,46 @@ static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
             virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
         }
         break;
-    case 120: /* clunk */
+    case 120:
         {
             uint32_t fid;
-            
-            if (unmarshall(s, queue_idx, desc_idx, &offset, 
+
+            if (unmarshall(s, queue_idx, desc_idx, &offset,
                            "w", &fid))
                 goto protocol_error;
             fid_delete(s, fid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, NULL, 0);
+            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
+                                                                 ((void *)0)
+                                                                     , 0);
         }
         break;
     default:
         printf("9p: unsupported operation id=%d\n", id);
         goto protocol_error;
     }
-    return 0;
+        {
+        int virtio_9p_recv_request__part3919(void);
+        return virtio_9p_recv_request__part3919();
+    }
+
  error:
     virtio_9p_send_error(s, queue_idx, desc_idx, tag, err);
-    return 0;
- protocol_error:
+    int virtio_9p_recv_request__part3921(void);
+    return virtio_9p_recv_request__part3921();
+  protocol_error:
  fid_not_found:
-    err = -P9_EPROTO;
+    {
+        void virtio_9p_recv_request__part3922(int *err);
+        virtio_9p_recv_request__part3922(&err);
+    }
     goto error;
+
+        {
+        int virtio_9p_recv_request__part3923(void);
+        if (virtio_9p_recv_request__part3923())
+            goto error;
+    }
+
 }
 
 VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
@@ -2635,7 +5447,7 @@ VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
                 9, 2 + len, virtio_9p_recv_request);
     s->common.device_features = 1 << 0;
 
-    /* set the mount tag */
+
     cfg = s->common.config_space;
     cfg[0] = len;
     cfg[1] = len >> 8;
@@ -2644,7 +5456,6 @@ VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
     s->fs = fs;
     s->msize = 8192;
     init_list_head(&s->fid_list);
-    
+
     return (VIRTIODevice *)s;
 }
-

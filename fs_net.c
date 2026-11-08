@@ -10656,140 +10656,24 @@ static int filelist_load_rec(FSDevice *fs1, const char **pp, FSINode *dir,
     const char *filelist_load_rec__part930(const char **pp);
     p = filelist_load_rec__part930(pp);
 
-    for(;;) {
+        {
+        extern int filelist_load_rec__part931(FSDevice *fs1, const char **pp,
+                                              FSINode *dir, const char *path,
+                                              FSINode *(*c_inode_new)(FSDevice *, FSINodeTypeEnum, uint32_t, uint32_t, uint32_t),
+                                              FSINode *(*c_inode_incref)(FSDevice *, FSINode *),
+                                              FSDirEntry *(*c_inode_dir_add)(FSDevice *, FSINode *, const char *, FSINode *),
+                                              int (*c_fs_net_set_url)(FSDevice *, FSINode *, const char *, FSFileID, uint64_t),
+                                              int (*c_filelist_load_rec)(FSDevice *, const char **, FSINode *, const char *),
+                                              const int *dump_cache_load);
 
-        if (*p == '\0')
-            break;
-        if (*p == '#') {
-            skip_line(&p);
-            continue;
-        }
-
-        if (*p == '.') {
-            p++;
-            skip_line(&p);
-            break;
-        }
-        if (parse_uint32_base(&mode, &p, 8) < 0) {
-            fprintf(
-                   stderr
-                         , "invalid mode\n");
-            return -1;
-        }
-        type = mode >> 12;
-        mode &= 0xfff;
-
-        if (parse_uint32(&uid, &p) < 0) {
-            fprintf(
-                   stderr
-                         , "invalid uid\n");
-            return -1;
-        }
-
-        if (parse_uint32(&gid, &p) < 0) {
-            fprintf(
-                   stderr
-                         , "invalid gid\n");
-            return -1;
-        }
-
-        n = inode_new(fs1, type, mode, uid, gid);
-
-        size = 0;
-        switch(type) {
-        case FT_CHR:
-        case FT_BLK:
-            if (parse_uint32(&n->u.dev.major, &p) < 0) {
-                fprintf(
-                       stderr
-                             , "invalid major\n");
-                return -1;
-            }
-            if (parse_uint32(&n->u.dev.minor, &p) < 0) {
-                fprintf(
-                       stderr
-                             , "invalid minor\n");
-                return -1;
-            }
-            break;
-        case FT_REG:
-            if (parse_uint64(&size, &p) < 0) {
-                fprintf(
-                       stderr
-                             , "invalid size\n");
-                return -1;
-            }
-            break;
-        case FT_DIR:
-            inode_dir_add(fs1, n, ".", inode_incref(fs1, n));
-            inode_dir_add(fs1, n, "..", inode_incref(fs1, dir));
-            break;
-        default:
-            break;
-        }
-
-
-        if (parse_time(&n->mtime_sec, &n->mtime_nsec, &p) < 0) {
-            fprintf(
-                   stderr
-                         , "invalid mtime\n");
-            return -1;
-        }
-
-        if (parse_fname(fname, sizeof(fname), &p) < 0) {
-            fprintf(
-                   stderr
-                         , "invalid filename\n");
-            return -1;
-        }
-        inode_dir_add(fs1, dir, fname, n);
-
-        if (type == FT_LNK) {
-            if (parse_fname(lname, sizeof(lname), &p) < 0) {
-                fprintf(
-                       stderr
-                             , "invalid symlink name\n");
-                return -1;
-            }
-            n->u.symlink.name = strdup(lname);
-        } else if (type == FT_REG && size > 0) {
-            FSFileID file_id;
-            if (parse_file_id(&file_id, &p) < 0) {
-                fprintf(
-                       stderr
-                             , "invalid file id\n");
-                return -1;
-            }
-            fs_net_set_url(fs1, n, "/", file_id, size);
-
-            {
-                FSDeviceMem *fs = (FSDeviceMem *)fs1;
-                if (fs->dump_cache_load
-
-
-
-                    ) {
-                    n->u.reg.filename = compose_path(path, fname);
-                } else {
-                    n->u.reg.filename = 
-                                       ((void *)0)
-                                           ;
-                }
-            }
-
-        }
-
-        skip_line(&p);
-
-        if (type == FT_DIR) {
-            char *path1;
-            path1 = compose_path(path, fname);
-            ret = filelist_load_rec(fs1, &p, n, path1);
-            free(path1);
-            if (ret)
-                return ret;
-        }
+        ret = filelist_load_rec__part931(fs1, &p, dir, path,
+                                         inode_new, inode_incref, inode_dir_add,
+                                         fs_net_set_url, filelist_load_rec,
+                                         &((FSDeviceMem *)fs1)->dump_cache_load);
+        if (ret)
+            return ret;
     }
+
     int filelist_load_rec__part932(const char **pp, const char *p);
     return filelist_load_rec__part932(pp, p);
 }

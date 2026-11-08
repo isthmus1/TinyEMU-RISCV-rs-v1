@@ -24312,6 +24312,418 @@ pub extern "C" fn filelist_load_rec__part930(pp: *const *const c_char) -> *const
 }
 }
 
+// ── `for (; ; )` · fs_net.c:1912-2023 · chunk 931 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     for(;;) {
+//     
+//             if (*p == '\0')
+//                 break;
+//             if (*p == '#') {
+//                 skip_line(&p);
+//                 continue;
+//             }
+//     
+//             if (*p == '.') {
+//                 p++;
+//                 skip_line(&p);
+//                 break;
+//             }
+//             if (parse_uint32_base(&mode, &p, 8) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid mode\n");
+//                 return -1;
+//             }
+//             type = mode >> 12;
+//             mode &= 0xfff;
+//     
+//             if (parse_uint32(&uid, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid uid\n");
+//                 return -1;
+//             }
+//     
+//             if (parse_uint32(&gid, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid gid\n");
+//                 return -1;
+//             }
+//     
+//             n = inode_new(fs1, type, mode, uid, gid);
+//     
+//             size = 0;
+//             switch(type) {
+//             case FT_CHR:
+//             case FT_BLK:
+//                 if (parse_uint32(&n->u.dev.major, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid major\n");
+//                     return -1;
+//                 }
+//                 if (parse_uint32(&n->u.dev.minor, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid minor\n");
+//                     return -1;
+//                 }
+//                 break;
+//             case FT_REG:
+//                 if (parse_uint64(&size, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid size\n");
+//                     return -1;
+//                 }
+//                 break;
+//             case FT_DIR:
+//                 inode_dir_add(fs1, n, ".", inode_incref(fs1, n));
+//                 inode_dir_add(fs1, n, "..", inode_incref(fs1, dir));
+//                 break;
+//             default:
+//                 break;
+//             }
+//     
+//     
+//             if (parse_time(&n->mtime_sec, &n->mtime_nsec, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid mtime\n");
+//                 return -1;
+//             }
+//     
+//             if (parse_fname(fname, sizeof(fname), &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid filename\n");
+//                 return -1;
+//             }
+//             inode_dir_add(fs1, dir, fname, n);
+//     
+//             if (type == FT_LNK) {
+//                 if (parse_fname(lname, sizeof(lname), &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid symlink name\n");
+//                     return -1;
+//                 }
+//                 n->u.symlink.name = strdup(lname);
+//             } else if (type == FT_REG && size > 0) {
+//                 FSFileID file_id;
+//                 if (parse_file_id(&file_id, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid file id\n");
+//                     return -1;
+//                 }
+//                 fs_net_set_url(fs1, n, "/", file_id, size);
+//     
+//                 {
+//                     FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//                     if (fs->dump_cache_load
+//     
+//     
+//     
+//                         ) {
+//                         n->u.reg.filename = compose_path(path, fname);
+//                     } else {
+//                         n->u.reg.filename = 
+//                                            ((void *)0)
+//                                                ;
+//                     }
+//                 }
+//     
+//             }
+//     
+//             skip_line(&p);
+//     
+//             if (type == FT_DIR) {
+//                 char *path1;
+//                 path1 = compose_path(path, fname);
+//                 ret = filelist_load_rec(fs1, &p, n, path1);
+//                 free(path1);
+//                 if (ret)
+//                     return ret;
+//             }
+//         }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk931 {
+// Rust port of the record-parsing loop of filelist_load_rec (fs_net.c).
+// The static C helpers (inode_new, inode_dir_add, inode_incref, fs_net_set_url)
+// and the recursion are reached through function pointers supplied by the C
+// caller, which still owns those definitions.
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type BOOL = c_int;
+
+// FSINodeTypeEnum values (C enum, int-sized)
+const FT_CHR: c_int = 2;
+const FT_DIR: c_int = 4;
+const FT_BLK: c_int = 6;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void, // FSBaseURL *
+    pub file_id: u64,          // FSFileID
+    pub link: list_head,
+    pub open_info: *mut c_void, // struct FSOpenInfo *
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: list_head,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDirEntry {
+    pub link: list_head,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+// Opaque here; only used behind pointers.
+#[repr(C)]
+pub struct FSDevice {
+    pub _opaque: [u8; 0],
+}
+
+extern "C" {
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn skip_line(pp: *mut *const c_char);
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32_base(pval: *mut u32, pp: *mut *const c_char, base: c_int) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_time(psec: *mut u32, pnsec: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn free(p: *mut c_void);
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    static mut stderr: *mut c_void;
+}
+
+unsafe fn report(msg: *const u8) {
+    fprintf(stderr, msg as *const c_char);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn filelist_load_rec__part931(
+    fs1: *mut FSDevice,
+    pp: *mut *const c_char,
+    dir: *mut FSINode,
+    path: *const c_char,
+    c_inode_new: extern "C" fn(*mut FSDevice, c_int, u32, u32, u32) -> *mut FSINode,
+    c_inode_incref: extern "C" fn(*mut FSDevice, *mut FSINode) -> *mut FSINode,
+    c_inode_dir_add: extern "C" fn(
+        *mut FSDevice,
+        *mut FSINode,
+        *const c_char,
+        *mut FSINode,
+    ) -> *mut FSDirEntry,
+    c_fs_net_set_url: extern "C" fn(*mut FSDevice, *mut FSINode, *const c_char, u64, u64) -> c_int,
+    c_filelist_load_rec: extern "C" fn(
+        *mut FSDevice,
+        *mut *const c_char,
+        *mut FSINode,
+        *const c_char,
+    ) -> c_int,
+    dump_cache_load: *const c_int,
+) -> c_int {
+    let mut fname = [0 as c_char; 1024];
+    let mut lname = [0 as c_char; 1024];
+
+    loop {
+        let c = *pp;
+        let ch = *c;
+        if ch == 0 {
+            break;
+        }
+        if ch == b'#' as c_char {
+            skip_line(pp);
+            continue;
+        }
+        if ch == b'.' as c_char {
+            *pp = (*pp).add(1);
+            skip_line(pp);
+            break;
+        }
+
+        let mut mode: u32 = 0;
+        if parse_uint32_base(&mut mode, pp, 8) < 0 {
+            report(b"invalid mode\n\0".as_ptr());
+            return -1;
+        }
+        let ty: c_int = (mode >> 12) as c_int;
+        mode &= 0xfff;
+
+        let mut uid: u32 = 0;
+        if parse_uint32(&mut uid, pp) < 0 {
+            report(b"invalid uid\n\0".as_ptr());
+            return -1;
+        }
+
+        let mut gid: u32 = 0;
+        if parse_uint32(&mut gid, pp) < 0 {
+            report(b"invalid gid\n\0".as_ptr());
+            return -1;
+        }
+
+        let n = c_inode_new(fs1, ty, mode, uid, gid);
+
+        let mut size: u64 = 0;
+        match ty {
+            FT_CHR | FT_BLK => {
+                let pmajor: *mut u32 = &mut (*n).u.dev.major;
+                if parse_uint32(pmajor, pp) < 0 {
+                    report(b"invalid major\n\0".as_ptr());
+                    return -1;
+                }
+                let pminor: *mut u32 = &mut (*n).u.dev.minor;
+                if parse_uint32(pminor, pp) < 0 {
+                    report(b"invalid minor\n\0".as_ptr());
+                    return -1;
+                }
+            }
+            FT_REG => {
+                if parse_uint64(&mut size, pp) < 0 {
+                    report(b"invalid size\n\0".as_ptr());
+                    return -1;
+                }
+            }
+            FT_DIR => {
+                let ln = c_inode_incref(fs1, n);
+                c_inode_dir_add(fs1, n, b".\0".as_ptr() as *const c_char, ln);
+                let ld = c_inode_incref(fs1, dir);
+                c_inode_dir_add(fs1, n, b"..\0".as_ptr() as *const c_char, ld);
+            }
+            _ => {}
+        }
+
+        let pmsec: *mut u32 = &mut (*n).mtime_sec;
+        let pmnsec: *mut u32 = &mut (*n).mtime_nsec;
+        if parse_time(pmsec, pmnsec, pp) < 0 {
+            report(b"invalid mtime\n\0".as_ptr());
+            return -1;
+        }
+
+        if parse_fname(fname.as_mut_ptr(), 1024, pp) < 0 {
+            report(b"invalid filename\n\0".as_ptr());
+            return -1;
+        }
+        c_inode_dir_add(fs1, dir, fname.as_ptr(), n);
+
+        if ty == FT_LNK {
+            if parse_fname(lname.as_mut_ptr(), 1024, pp) < 0 {
+                report(b"invalid symlink name\n\0".as_ptr());
+                return -1;
+            }
+            (*n).u.symlink.name = strdup(lname.as_ptr());
+        } else if ty == FT_REG && size > 0 {
+            let mut file_id: u64 = 0;
+            if parse_file_id(&mut file_id, pp) < 0 {
+                report(b"invalid file id\n\0".as_ptr());
+                return -1;
+            }
+            c_fs_net_set_url(
+                fs1,
+                n,
+                b"/\0".as_ptr() as *const c_char,
+                file_id,
+                size,
+            );
+
+            if *dump_cache_load != 0 {
+                (*n).u.reg.filename = compose_path(path, fname.as_ptr());
+            } else {
+                (*n).u.reg.filename = core::ptr::null_mut();
+            }
+        }
+
+        skip_line(pp);
+
+        if ty == FT_DIR {
+            let path1 = compose_path(path, fname.as_ptr());
+            let ret = c_filelist_load_rec(fs1, pp, n, path1);
+            free(path1 as *mut c_void);
+            if ret != 0 {
+                return ret;
+            }
+        }
+    }
+    0
+}
+}
+
 // ── `*pp = p; return 0;` · fs_net.c:2024-2025 · chunk 932 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
