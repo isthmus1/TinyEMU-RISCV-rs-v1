@@ -1,0 +1,11 @@
+[package]
+name = "argo_rewrite"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+# Its own workspace, so it builds wherever it is written.
+[workspace]

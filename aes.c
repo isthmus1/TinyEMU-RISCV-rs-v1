@@ -1,69 +1,602 @@
-/**
- *
- * aes.c - integrated in QEMU by Fabrice Bellard from the OpenSSL project.
- */
-/*
- * rijndael-alg-fst.c
- *
- * @version 3.0 (December 2000)
- *
- * Optimised ANSI C code for the Rijndael cipher (now AES)
- *
- * @author Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>
- * @author Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>
- * @author Paulo Barreto <paulo.barreto@terra.com.br>
- *
- * This code is hereby placed in the public domain.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-#include <string.h>
-#include <inttypes.h>
-#include "aes.h"
 
-#ifndef NDEBUG
-#define NDEBUG
-#endif
 
-#include <assert.h>
+
+typedef long unsigned int size_t;
+extern void *memcpy (void *__restrict __dest, const void *__restrict __src,
+       size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void *memmove (void *__dest, const void *__src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+extern void *memccpy (void *__restrict __dest, const void *__restrict __src,
+        int __c, size_t __n)
+    __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 4)));
+
+
+
+
+extern void *memset (void *__s, int __c, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern void *memset_explicit (void *__s, int __c, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern int memcmp (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern int __memcmpeq (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern void *memchr (const void *__s, int __c, size_t __n)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern void *rawmemchr (const void *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern void *memrchr (const void *__s, int __c, size_t __n)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)))
+      __attribute__ ((__access__ (__read_only__, 1, 3)));
+
+
+
+
+
+extern char *strcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strcat (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern char *strncat (char *__restrict __dest, const char *__restrict __src,
+        size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strcoll (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+extern size_t strxfrm (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+    __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+struct __locale_struct
+{
+
+  struct __locale_data *__locales[13];
+
+
+  const unsigned short int *__ctype_b;
+  const int *__ctype_tolower;
+  const int *__ctype_toupper;
+
+
+  const char *__names[13];
+};
+
+typedef struct __locale_struct *__locale_t;
+
+typedef __locale_t locale_t;
+
+
+extern int strcoll_l (const char *__s1, const char *__s2, locale_t __l)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+extern size_t strxfrm_l (char *__dest, const char *__src, size_t __n,
+    locale_t __l) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 4)))
+     __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+
+
+extern char *strdup (const char *__s)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern char *strndup (const char *__string, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__malloc__)) __attribute__ ((__nonnull__ (1)));
+extern char *strchr (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *strrchr (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *strchrnul (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+extern size_t strcspn (const char *__s, const char *__reject)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern size_t strspn (const char *__s, const char *__accept)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strpbrk (const char *__s, const char *__accept)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strstr (const char *__haystack, const char *__needle)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *strtok (char *__restrict __s, const char *__restrict __delim)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2)));
+
+
+
+extern char *__strtok_r (char *__restrict __s,
+    const char *__restrict __delim,
+    char **__restrict __save_ptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 3)));
+
+extern char *strtok_r (char *__restrict __s, const char *__restrict __delim,
+         char **__restrict __save_ptr)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2, 3)));
+extern char *strcasestr (const char *__haystack, const char *__needle)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+
+
+extern void *memmem (const void *__haystack, size_t __haystacklen,
+       const void *__needle, size_t __needlelen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 3)))
+    __attribute__ ((__access__ (__read_only__, 1, 2)))
+    __attribute__ ((__access__ (__read_only__, 3, 4)));
+
+
+
+extern void *__mempcpy (void *__restrict __dest,
+   const void *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern void *mempcpy (void *__restrict __dest,
+        const void *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlen (const char *__s)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern size_t strnlen (const char *__string, size_t __maxlen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+extern char *strerror (int __errnum) __attribute__ ((__nothrow__ , __leaf__));
+extern char *strerror_r (int __errnum, char *__buf, size_t __buflen)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (2))) __attribute__ ((__access__ (__write_only__, 2, 3)));
+
+
+
+
+extern const char *strerrordesc_np (int __err) __attribute__ ((__nothrow__ , __leaf__));
+
+extern const char *strerrorname_np (int __err) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+extern char *strerror_l (int __errnum, locale_t __l) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+
+
+
+
+
+
+
+
+extern int bcmp (const void *__s1, const void *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bcopy (const void *__src, void *__dest, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern void bzero (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+extern char *index (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+extern char *rindex (const char *__s, int __c)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1)));
+
+
+
+
+
+
+extern int ffs (int __i) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+
+
+extern int ffsl (long int __l) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+__extension__ extern int ffsll (long long int __ll)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern int strcasecmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern int strncasecmp (const char *__s1, const char *__s2, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+
+
+extern int strcasecmp_l (const char *__s1, const char *__s2, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 3)));
+
+
+
+extern int strncasecmp_l (const char *__s1, const char *__s2,
+     size_t __n, locale_t __loc)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2, 4)));
+
+
+
+
+
+
+extern void explicit_bzero (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__write_only__, 1, 2)));
+
+
+
+extern char *strsep (char **__restrict __stringp,
+       const char *__restrict __delim)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern char *strsignal (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern const char *sigabbrev_np (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern const char *sigdescr_np (int __sig) __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+extern char *__stpcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpcpy (char *__restrict __dest, const char *__restrict __src)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+extern char *__stpncpy (char *__restrict __dest,
+   const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+extern char *stpncpy (char *__restrict __dest,
+        const char *__restrict __src, size_t __n)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+
+
+extern size_t strlcpy (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__write_only__, 1, 3)));
+
+
+
+extern size_t strlcat (char *__restrict __dest,
+         const char *__restrict __src, size_t __n)
+  __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1, 2))) __attribute__ ((__access__ (__read_write__, 1, 3)));
+
+
+
+
+extern int strverscmp (const char *__s1, const char *__s2)
+     __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__pure__)) __attribute__ ((__nonnull__ (1, 2)));
+
+
+extern char *strfry (char *__string) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+
+extern void *memfrob (void *__s, size_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)))
+    __attribute__ ((__access__ (__read_write__, 1, 2)));
+extern char *basename (const char *__filename) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__nonnull__ (1)));
+
+ 
+
+
+typedef unsigned char __u_char;
+typedef unsigned short int __u_short;
+typedef unsigned int __u_int;
+typedef unsigned long int __u_long;
+
+
+typedef signed char __int8_t;
+typedef unsigned char __uint8_t;
+typedef signed short int __int16_t;
+typedef unsigned short int __uint16_t;
+typedef signed int __int32_t;
+typedef unsigned int __uint32_t;
+
+typedef signed long int __int64_t;
+typedef unsigned long int __uint64_t;
+
+
+
+
+
+
+typedef __int8_t __int_least8_t;
+typedef __uint8_t __uint_least8_t;
+typedef __int16_t __int_least16_t;
+typedef __uint16_t __uint_least16_t;
+typedef __int32_t __int_least32_t;
+typedef __uint32_t __uint_least32_t;
+typedef __int64_t __int_least64_t;
+typedef __uint64_t __uint_least64_t;
+
+
+
+typedef long int __quad_t;
+typedef unsigned long int __u_quad_t;
+
+
+
+
+
+
+
+typedef long int __intmax_t;
+typedef unsigned long int __uintmax_t;
+
+
+typedef unsigned long int __dev_t;
+typedef unsigned int __uid_t;
+typedef unsigned int __gid_t;
+typedef unsigned long int __ino_t;
+typedef unsigned long int __ino64_t;
+typedef unsigned int __mode_t;
+typedef unsigned long int __nlink_t;
+typedef long int __off_t;
+typedef long int __off64_t;
+typedef int __pid_t;
+typedef struct { int __val[2]; } __fsid_t;
+typedef long int __clock_t;
+typedef unsigned long int __rlim_t;
+typedef unsigned long int __rlim64_t;
+typedef unsigned int __id_t;
+typedef long int __time_t;
+typedef unsigned int __useconds_t;
+typedef long int __suseconds_t;
+typedef long int __suseconds64_t;
+
+typedef int __daddr_t;
+typedef int __key_t;
+
+
+typedef int __clockid_t;
+
+
+typedef void * __timer_t;
+
+
+typedef long int __blksize_t;
+
+
+
+
+typedef long int __blkcnt_t;
+typedef long int __blkcnt64_t;
+
+
+typedef unsigned long int __fsblkcnt_t;
+typedef unsigned long int __fsblkcnt64_t;
+
+
+typedef unsigned long int __fsfilcnt_t;
+typedef unsigned long int __fsfilcnt64_t;
+
+
+typedef long int __fsword_t;
+
+typedef long int __ssize_t;
+
+
+typedef long int __syscall_slong_t;
+
+typedef unsigned long int __syscall_ulong_t;
+
+
+
+typedef __off64_t __loff_t;
+typedef char *__caddr_t;
+
+
+typedef long int __intptr_t;
+
+
+typedef unsigned int __socklen_t;
+
+
+
+
+typedef int __sig_atomic_t;
+typedef __int8_t int8_t;
+typedef __int16_t int16_t;
+typedef __int32_t int32_t;
+typedef __int64_t int64_t;
+
+
+typedef __uint8_t uint8_t;
+typedef __uint16_t uint16_t;
+typedef __uint32_t uint32_t;
+typedef __uint64_t uint64_t;
+
+
+
+typedef __int_least8_t int_least8_t;
+typedef __int_least16_t int_least16_t;
+typedef __int_least32_t int_least32_t;
+typedef __int_least64_t int_least64_t;
+
+
+typedef __uint_least8_t uint_least8_t;
+typedef __uint_least16_t uint_least16_t;
+typedef __uint_least32_t uint_least32_t;
+typedef __uint_least64_t uint_least64_t;
+
+
+
+
+
+typedef signed char int_fast8_t;
+
+typedef long int int_fast16_t;
+typedef long int int_fast32_t;
+typedef long int int_fast64_t;
+typedef unsigned char uint_fast8_t;
+
+typedef unsigned long int uint_fast16_t;
+typedef unsigned long int uint_fast32_t;
+typedef unsigned long int uint_fast64_t;
+typedef long int intptr_t;
+
+
+typedef unsigned long int uintptr_t;
+typedef __intmax_t intmax_t;
+typedef __uintmax_t uintmax_t;
+
+
+
+
+
+
+typedef int __gwchar_t;
+
+
+
+
+
+typedef struct
+  {
+    long int quot;
+    long int rem;
+  } imaxdiv_t;
+extern intmax_t imaxabs (intmax_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern uintmax_t umaxabs (intmax_t __n) __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+
+extern imaxdiv_t imaxdiv (intmax_t __numer, intmax_t __denom)
+      __attribute__ ((__nothrow__ , __leaf__)) __attribute__ ((__const__));
+
+
+extern intmax_t strtoimax (const char *__restrict __nptr,
+      char **__restrict __endptr, int __base) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern uintmax_t strtoumax (const char *__restrict __nptr,
+       char ** __restrict __endptr, int __base) __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern intmax_t wcstoimax (const __gwchar_t *__restrict __nptr,
+      __gwchar_t **__restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__));
+
+
+extern uintmax_t wcstoumax (const __gwchar_t *__restrict __nptr,
+       __gwchar_t ** __restrict __endptr, int __base)
+     __attribute__ ((__nothrow__ , __leaf__));
+
+
+
+
+
+extern intmax_t strtoimax (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoimax") __attribute__ ((__nothrow__ , __leaf__))
+
+                                         ;
+extern uintmax_t strtoumax (const char *__restrict __nptr, char **__restrict __endptr, int __base) __asm__ ("" "__isoc23_strtoumax") __attribute__ ((__nothrow__ , __leaf__))
+
+                                          ;
+extern intmax_t wcstoimax (const __gwchar_t *__restrict __nptr, __gwchar_t **__restrict __endptr, int __base) __asm__ ("" "__isoc23_wcstoimax") __attribute__ ((__nothrow__ , __leaf__))
+
+
+                       ;
+extern uintmax_t wcstoumax (const __gwchar_t *__restrict __nptr, __gwchar_t **__restrict __endptr, int __base) __asm__ ("" "__isoc23_wcstoumax") __attribute__ ((__nothrow__ , __leaf__))
+
+
+                        ;
+
+
+struct aes_key_st {
+    uint32_t rd_key[4 *(14 + 1)];
+    int rounds;
+};
+typedef struct aes_key_st AES_KEY;
+
+int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
+ AES_KEY *key);
+int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
+ AES_KEY *key);
+
+void AES_encrypt(const unsigned char *in, unsigned char *out,
+ const AES_KEY *key);
+void AES_decrypt(const unsigned char *in, unsigned char *out,
+ const AES_KEY *key);
+void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
+       const unsigned long length, const AES_KEY *key,
+       unsigned char *ivec, const int enc);
+
+
+
+
+
 
 typedef uint32_t u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
-
-#define MAXKC   (256/32)
-#define MAXKB   (256/8)
-#define MAXNR   14
-
-/* This controls loop-unrolling in aes_core.c */
-#undef FULL_UNROLL
-# define GETU32(pt) (((u32)(pt)[0] << 24) ^ ((u32)(pt)[1] << 16) ^ ((u32)(pt)[2] <<  8) ^ ((u32)(pt)[3]))
-# define PUTU32(ct, st) { (ct)[0] = (u8)((st) >> 24); (ct)[1] = (u8)((st) >> 16); (ct)[2] = (u8)((st) >>  8); (ct)[3] = (u8)(st); }
-
-/*
-Te0[x] = S [x].[02, 01, 01, 03];
-Te1[x] = S [x].[03, 02, 01, 01];
-Te2[x] = S [x].[01, 03, 02, 01];
-Te3[x] = S [x].[01, 01, 03, 02];
-Te4[x] = S [x].[01, 01, 01, 01];
-
-Td0[x] = Si[x].[0e, 09, 0d, 0b];
-Td1[x] = Si[x].[0b, 0e, 09, 0d];
-Td2[x] = Si[x].[0d, 0b, 0e, 09];
-Td3[x] = Si[x].[09, 0d, 0b, 0e];
-Td4[x] = Si[x].[01, 01, 01, 01];
-*/
-
 static const u32 Te0[256] = {
     0xc66363a5U, 0xf87c7c84U, 0xee777799U, 0xf67b7b8dU,
     0xfff2f20dU, 0xd66b6bbdU, 0xde6f6fb1U, 0x91c5c554U,
@@ -727,479 +1260,232 @@ static const u32 Td4[256] = {
     0x55555555U, 0x21212121U, 0x0c0c0c0cU, 0x7d7d7d7dU,
 };
 static const u32 rcon[] = {
-	0x01000000, 0x02000000, 0x04000000, 0x08000000,
-	0x10000000, 0x20000000, 0x40000000, 0x80000000,
-	0x1B000000, 0x36000000, /* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
+ 0x01000000, 0x02000000, 0x04000000, 0x08000000,
+ 0x10000000, 0x20000000, 0x40000000, 0x80000000,
+ 0x1B000000, 0x36000000,
 };
 
-/**
- * Expand the cipher key into the encryption key schedule.
- */
+
+
+
 int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
-			AES_KEY *key) {
+   AES_KEY *key) {
 
-	u32 *rk;
-   	int i = 0;
-	u32 temp;
+ u32 *rk;
+    int i = 0;
+ u32 temp;
 
-	if (!userKey || !key)
-		return -1;
-	if (bits != 128 && bits != 192 && bits != 256)
-		return -2;
+ int AES_set_encrypt_key__part67(const unsigned char *userKey, void *key);
+int ret = AES_set_encrypt_key__part67(userKey, key);
+if (ret != 0) return ret;
+ int AES_set_encrypt_key__part68(int bits);
+return AES_set_encrypt_key__part68(bits);
 
-	rk = key->rd_key;
+ u32 *AES_set_encrypt_key__part69(u32 *rk, u32 *key_rd_key);
+rk = AES_set_encrypt_key__part69(rk, key->rd_key);
 
-	if (bits==128)
-		key->rounds = 10;
-	else if (bits==192)
-		key->rounds = 12;
-	else
-		key->rounds = 14;
+ void AES_set_encrypt_key__part70(int bits, AES_KEY *key);
+AES_set_encrypt_key__part70(bits, key);
 
-	rk[0] = GETU32(userKey     );
-	rk[1] = GETU32(userKey +  4);
-	rk[2] = GETU32(userKey +  8);
-	rk[3] = GETU32(userKey + 12);
-	if (bits == 128) {
-		while (1) {
-			temp  = rk[3];
-			rk[4] = rk[0] ^
-				(Te4[(temp >> 16) & 0xff] & 0xff000000) ^
-				(Te4[(temp >>  8) & 0xff] & 0x00ff0000) ^
-				(Te4[(temp      ) & 0xff] & 0x0000ff00) ^
-				(Te4[(temp >> 24)       ] & 0x000000ff) ^
-				rcon[i];
-			rk[5] = rk[1] ^ rk[4];
-			rk[6] = rk[2] ^ rk[5];
-			rk[7] = rk[3] ^ rk[6];
-			if (++i == 10) {
-				return 0;
-			}
-			rk += 4;
-		}
-	}
-	rk[4] = GETU32(userKey + 16);
-	rk[5] = GETU32(userKey + 20);
-	if (bits == 192) {
-		while (1) {
-			temp = rk[ 5];
-			rk[ 6] = rk[ 0] ^
-				(Te4[(temp >> 16) & 0xff] & 0xff000000) ^
-				(Te4[(temp >>  8) & 0xff] & 0x00ff0000) ^
-				(Te4[(temp      ) & 0xff] & 0x0000ff00) ^
-				(Te4[(temp >> 24)       ] & 0x000000ff) ^
-				rcon[i];
-			rk[ 7] = rk[ 1] ^ rk[ 6];
-			rk[ 8] = rk[ 2] ^ rk[ 7];
-			rk[ 9] = rk[ 3] ^ rk[ 8];
-			if (++i == 8) {
-				return 0;
-			}
-			rk[10] = rk[ 4] ^ rk[ 9];
-			rk[11] = rk[ 5] ^ rk[10];
-			rk += 6;
-		}
-	}
-	rk[6] = GETU32(userKey + 24);
-	rk[7] = GETU32(userKey + 28);
-	if (bits == 256) {
-		while (1) {
-			temp = rk[ 7];
-			rk[ 8] = rk[ 0] ^
-				(Te4[(temp >> 16) & 0xff] & 0xff000000) ^
-				(Te4[(temp >>  8) & 0xff] & 0x00ff0000) ^
-				(Te4[(temp      ) & 0xff] & 0x0000ff00) ^
-				(Te4[(temp >> 24)       ] & 0x000000ff) ^
-				rcon[i];
-			rk[ 9] = rk[ 1] ^ rk[ 8];
-			rk[10] = rk[ 2] ^ rk[ 9];
-			rk[11] = rk[ 3] ^ rk[10];
-			if (++i == 7) {
-				return 0;
-			}
-			temp = rk[11];
-			rk[12] = rk[ 4] ^
-				(Te4[(temp >> 24)       ] & 0xff000000) ^
-				(Te4[(temp >> 16) & 0xff] & 0x00ff0000) ^
-				(Te4[(temp >>  8) & 0xff] & 0x0000ff00) ^
-				(Te4[(temp      ) & 0xff] & 0x000000ff);
-			rk[13] = rk[ 5] ^ rk[12];
-			rk[14] = rk[ 6] ^ rk[13];
-			rk[15] = rk[ 7] ^ rk[14];
+ int AES_set_encrypt_key__part71(u32 *rk, const unsigned char *userKey);
+AES_set_encrypt_key__part71(rk, userKey);
+ if (bits == 128) {
+  while (1) {
+   temp = rk[3];
+   rk[4] = rk[0] ^
+    (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
+    (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
+    (Te4[(temp ) & 0xff] & 0x0000ff00) ^
+    (Te4[(temp >> 24) ] & 0x000000ff) ^
+    rcon[i];
+   rk[5] = rk[1] ^ rk[4];
+   rk[6] = rk[2] ^ rk[5];
+   rk[7] = rk[3] ^ rk[6];
+   if (++i == 10) {
+    return 0;
+   }
+   rk += 4;
+  }
+ }
+ void AES_set_encrypt_key__part73(u32 *rk, const unsigned char *user_key);
+AES_set_encrypt_key__part73(rk, userKey);
+ int AES_set_encrypt_key__part74(u32 *rk, int *i, u32 *Te4, u32 *rcon);
 
-			rk += 8;
-        	}
-	}
-	return 0;
+if (bits == 192) {
+  while (1) {
+    int result = AES_set_encrypt_key__part74(rk, &i, Te4, rcon);
+    if (result == 0) {
+      return 0;
+    }
+    rk += 6;
+  }
+}
+ extern void AES_set_encrypt_key__part75(const unsigned char *userKey, unsigned int *rk);
+AES_set_encrypt_key__part75(userKey, rk);
+ int AES_set_encrypt_key__part76(u32 *rk, int *i, const u32 *Te4, const u32 *rcon);
+return AES_set_encrypt_key__part76(rk, &i, Te4, rcon);
+ int AES_set_encrypt_key__part77(void);
+return AES_set_encrypt_key__part77();
 }
 
-/**
- * Expand the cipher key into the decryption key schedule.
- */
+
+
+
 int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
-			 AES_KEY *key) {
+    AES_KEY *key) {
 
-        u32 *rk;
-	int i, j, status;
-	u32 temp;
+        int AES_set_decrypt_key__part79(const unsigned char *userKey, const int bits, AES_KEY *key);
+u32 *rk;
+ int i, j, status;
+ u32 temp;
 
-	/* first, start with an encryption schedule */
-	status = AES_set_encrypt_key(userKey, bits, key);
-	if (status < 0)
-		return status;
 
-	rk = key->rd_key;
+status = AES_set_decrypt_key__part79(userKey, bits, key);
+ int AES_set_decrypt_key__part80(int status);
+return AES_set_decrypt_key__part80(status);
 
-	/* invert the order of the round keys: */
-	for (i = 0, j = 4*(key->rounds); i < j; i += 4, j -= 4) {
-		temp = rk[i    ]; rk[i    ] = rk[j    ]; rk[j    ] = temp;
-		temp = rk[i + 1]; rk[i + 1] = rk[j + 1]; rk[j + 1] = temp;
-		temp = rk[i + 2]; rk[i + 2] = rk[j + 2]; rk[j + 2] = temp;
-		temp = rk[i + 3]; rk[i + 3] = rk[j + 3]; rk[j + 3] = temp;
-	}
-	/* apply the inverse MixColumn transform to all round keys but the first and the last: */
-	for (i = 1; i < (key->rounds); i++) {
-		rk += 4;
-		rk[0] =
-			Td0[Te4[(rk[0] >> 24)       ] & 0xff] ^
-			Td1[Te4[(rk[0] >> 16) & 0xff] & 0xff] ^
-			Td2[Te4[(rk[0] >>  8) & 0xff] & 0xff] ^
-			Td3[Te4[(rk[0]      ) & 0xff] & 0xff];
-		rk[1] =
-			Td0[Te4[(rk[1] >> 24)       ] & 0xff] ^
-			Td1[Te4[(rk[1] >> 16) & 0xff] & 0xff] ^
-			Td2[Te4[(rk[1] >>  8) & 0xff] & 0xff] ^
-			Td3[Te4[(rk[1]      ) & 0xff] & 0xff];
-		rk[2] =
-			Td0[Te4[(rk[2] >> 24)       ] & 0xff] ^
-			Td1[Te4[(rk[2] >> 16) & 0xff] & 0xff] ^
-			Td2[Te4[(rk[2] >>  8) & 0xff] & 0xff] ^
-			Td3[Te4[(rk[2]      ) & 0xff] & 0xff];
-		rk[3] =
-			Td0[Te4[(rk[3] >> 24)       ] & 0xff] ^
-			Td1[Te4[(rk[3] >> 16) & 0xff] & 0xff] ^
-			Td2[Te4[(rk[3] >>  8) & 0xff] & 0xff] ^
-			Td3[Te4[(rk[3]      ) & 0xff] & 0xff];
-	}
-	return 0;
+ u32 *AES_set_decrypt_key__part81(const AES_KEY *key);
+rk = AES_set_decrypt_key__part81(key);
+
+
+ extern void AES_set_decrypt_key__part82(u32 *rk, int rounds);
+AES_set_decrypt_key__part82(rk, key->rounds);
+
+ for (i = 1; i < (key->rounds); i++) {
+  rk += 4;
+  rk[0] =
+   Td0[Te4[(rk[0] >> 24) ] & 0xff] ^
+   Td1[Te4[(rk[0] >> 16) & 0xff] & 0xff] ^
+   Td2[Te4[(rk[0] >> 8) & 0xff] & 0xff] ^
+   Td3[Te4[(rk[0] ) & 0xff] & 0xff];
+  rk[1] =
+   Td0[Te4[(rk[1] >> 24) ] & 0xff] ^
+   Td1[Te4[(rk[1] >> 16) & 0xff] & 0xff] ^
+   Td2[Te4[(rk[1] >> 8) & 0xff] & 0xff] ^
+   Td3[Te4[(rk[1] ) & 0xff] & 0xff];
+  rk[2] =
+   Td0[Te4[(rk[2] >> 24) ] & 0xff] ^
+   Td1[Te4[(rk[2] >> 16) & 0xff] & 0xff] ^
+   Td2[Te4[(rk[2] >> 8) & 0xff] & 0xff] ^
+   Td3[Te4[(rk[2] ) & 0xff] & 0xff];
+  rk[3] =
+   Td0[Te4[(rk[3] >> 24) ] & 0xff] ^
+   Td1[Te4[(rk[3] >> 16) & 0xff] & 0xff] ^
+   Td2[Te4[(rk[3] >> 8) & 0xff] & 0xff] ^
+   Td3[Te4[(rk[3] ) & 0xff] & 0xff];
+ }
+ int AES_set_decrypt_key__part84(const unsigned char *userKey, const int bits, AES_KEY *key);
+return AES_set_decrypt_key__part84(userKey, bits, key);
 }
 
-#ifndef AES_ASM
-/*
- * Encrypt a single block
- * in and out can overlap
- */
+
+
+
+
+
 void AES_encrypt(const unsigned char *in, unsigned char *out,
-		 const AES_KEY *key) {
+   const AES_KEY *key) {
 
-	const u32 *rk;
-	u32 s0, s1, s2, s3, t0, t1, t2, t3;
-#ifndef FULL_UNROLL
-	int r;
-#endif /* ?FULL_UNROLL */
+ const u32 *rk;
+ u32 s0, s1, s2, s3, t0, t1, t2, t3;
 
-	assert(in && out && key);
-	rk = key->rd_key;
+ int r;
 
-	/*
-	 * map byte array block to cipher state
-	 * and add initial round key:
-	 */
-	s0 = GETU32(in     ) ^ rk[0];
-	s1 = GETU32(in +  4) ^ rk[1];
-	s2 = GETU32(in +  8) ^ rk[2];
-	s3 = GETU32(in + 12) ^ rk[3];
-#ifdef FULL_UNROLL
-	/* round 1: */
-   	t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[ 4];
-   	t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[ 5];
-   	t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[ 6];
-   	t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[ 7];
-   	/* round 2: */
-   	s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[ 8];
-   	s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[ 9];
-   	s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[10];
-   	s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[11];
-	/* round 3: */
-   	t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[12];
-   	t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[13];
-   	t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[14];
-   	t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[15];
-   	/* round 4: */
-   	s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[16];
-   	s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[17];
-   	s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[18];
-   	s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[19];
-	/* round 5: */
-   	t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[20];
-   	t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[21];
-   	t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[22];
-   	t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[23];
-   	/* round 6: */
-   	s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[24];
-   	s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[25];
-   	s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[26];
-   	s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[27];
-	/* round 7: */
-   	t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[28];
-   	t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[29];
-   	t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[30];
-   	t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[31];
-   	/* round 8: */
-   	s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[32];
-   	s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[33];
-   	s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[34];
-   	s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[35];
-	/* round 9: */
-   	t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[36];
-   	t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[37];
-   	t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[38];
-   	t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[39];
-    if (key->rounds > 10) {
-        /* round 10: */
-        s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[40];
-        s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[41];
-        s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[42];
-        s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[43];
-        /* round 11: */
-        t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[44];
-        t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[45];
-        t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[46];
-        t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[47];
-        if (key->rounds > 12) {
-            /* round 12: */
-            s0 = Te0[t0 >> 24] ^ Te1[(t1 >> 16) & 0xff] ^ Te2[(t2 >>  8) & 0xff] ^ Te3[t3 & 0xff] ^ rk[48];
-            s1 = Te0[t1 >> 24] ^ Te1[(t2 >> 16) & 0xff] ^ Te2[(t3 >>  8) & 0xff] ^ Te3[t0 & 0xff] ^ rk[49];
-            s2 = Te0[t2 >> 24] ^ Te1[(t3 >> 16) & 0xff] ^ Te2[(t0 >>  8) & 0xff] ^ Te3[t1 & 0xff] ^ rk[50];
-            s3 = Te0[t3 >> 24] ^ Te1[(t0 >> 16) & 0xff] ^ Te2[(t1 >>  8) & 0xff] ^ Te3[t2 & 0xff] ^ rk[51];
-            /* round 13: */
-            t0 = Te0[s0 >> 24] ^ Te1[(s1 >> 16) & 0xff] ^ Te2[(s2 >>  8) & 0xff] ^ Te3[s3 & 0xff] ^ rk[52];
-            t1 = Te0[s1 >> 24] ^ Te1[(s2 >> 16) & 0xff] ^ Te2[(s3 >>  8) & 0xff] ^ Te3[s0 & 0xff] ^ rk[53];
-            t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >>  8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[54];
-            t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >>  8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[55];
-        }
-    }
-    rk += key->rounds << 2;
-#else  /* !FULL_UNROLL */
-    /*
-     * Nr - 1 full rounds:
-     */
+
+ 
+((void) (0))
+                        ;
+ rk = key->rd_key;
+
+
+
+
+
+ s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+ s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+ s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+ s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
     r = key->rounds >> 1;
-    for (;;) {
-        t0 =
-            Te0[(s0 >> 24)       ] ^
-            Te1[(s1 >> 16) & 0xff] ^
-            Te2[(s2 >>  8) & 0xff] ^
-            Te3[(s3      ) & 0xff] ^
-            rk[4];
-        t1 =
-            Te0[(s1 >> 24)       ] ^
-            Te1[(s2 >> 16) & 0xff] ^
-            Te2[(s3 >>  8) & 0xff] ^
-            Te3[(s0      ) & 0xff] ^
-            rk[5];
-        t2 =
-            Te0[(s2 >> 24)       ] ^
-            Te1[(s3 >> 16) & 0xff] ^
-            Te2[(s0 >>  8) & 0xff] ^
-            Te3[(s1      ) & 0xff] ^
-            rk[6];
-        t3 =
-            Te0[(s3 >> 24)       ] ^
-            Te1[(s0 >> 16) & 0xff] ^
-            Te2[(s1 >>  8) & 0xff] ^
-            Te3[(s2      ) & 0xff] ^
-            rk[7];
+    void AES_encrypt__part87(
+    u32 *s0, u32 *s1, u32 *s2, u32 *s3,
+    int *r,
+    const u32 *rk,
+    const u32 *te0, const u32 *te1, const u32 *te2, const u32 *te3,
+    u32 *t0, u32 *t1, u32 *t2, u32 *t3
+);
+AES_encrypt__part87(&s0, &s1, &s2, &s3, &r, rk, Te0, Te1, Te2, Te3, &t0, &t1, &t2, &t3);
 
-        rk += 8;
-        if (--r == 0) {
-            break;
-        }
 
-        s0 =
-            Te0[(t0 >> 24)       ] ^
-            Te1[(t1 >> 16) & 0xff] ^
-            Te2[(t2 >>  8) & 0xff] ^
-            Te3[(t3      ) & 0xff] ^
-            rk[0];
-        s1 =
-            Te0[(t1 >> 24)       ] ^
-            Te1[(t2 >> 16) & 0xff] ^
-            Te2[(t3 >>  8) & 0xff] ^
-            Te3[(t0      ) & 0xff] ^
-            rk[1];
-        s2 =
-            Te0[(t2 >> 24)       ] ^
-            Te1[(t3 >> 16) & 0xff] ^
-            Te2[(t0 >>  8) & 0xff] ^
-            Te3[(t1      ) & 0xff] ^
-            rk[2];
-        s3 =
-            Te0[(t3 >> 24)       ] ^
-            Te1[(t0 >> 16) & 0xff] ^
-            Te2[(t1 >>  8) & 0xff] ^
-            Te3[(t2      ) & 0xff] ^
-            rk[3];
-    }
-#endif /* ?FULL_UNROLL */
-    /*
-	 * apply last round and
-	 * map cipher state to byte array block:
-	 */
-	s0 =
-		(Te4[(t0 >> 24)       ] & 0xff000000) ^
-		(Te4[(t1 >> 16) & 0xff] & 0x00ff0000) ^
-		(Te4[(t2 >>  8) & 0xff] & 0x0000ff00) ^
-		(Te4[(t3      ) & 0xff] & 0x000000ff) ^
-		rk[0];
-	PUTU32(out     , s0);
-	s1 =
-		(Te4[(t1 >> 24)       ] & 0xff000000) ^
-		(Te4[(t2 >> 16) & 0xff] & 0x00ff0000) ^
-		(Te4[(t3 >>  8) & 0xff] & 0x0000ff00) ^
-		(Te4[(t0      ) & 0xff] & 0x000000ff) ^
-		rk[1];
-	PUTU32(out +  4, s1);
-	s2 =
-		(Te4[(t2 >> 24)       ] & 0xff000000) ^
-		(Te4[(t3 >> 16) & 0xff] & 0x00ff0000) ^
-		(Te4[(t0 >>  8) & 0xff] & 0x0000ff00) ^
-		(Te4[(t1      ) & 0xff] & 0x000000ff) ^
-		rk[2];
-	PUTU32(out +  8, s2);
-	s3 =
-		(Te4[(t3 >> 24)       ] & 0xff000000) ^
-		(Te4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
-		(Te4[(t1 >>  8) & 0xff] & 0x0000ff00) ^
-		(Te4[(t2      ) & 0xff] & 0x000000ff) ^
-		rk[3];
-	PUTU32(out + 12, s3);
+
+
+
+ extern u32 AES_encrypt__part88(u32 t0, u32 t1, u32 t2, u32 t3, const u32 *rk);
+s0 = AES_encrypt__part88(t0, t1, t2, t3, rk);
+ void AES_encrypt__part89(unsigned char *out, u32 s0);
+AES_encrypt__part89(out, s0);void AES_encrypt__part90(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk1, u8 *out);
+AES_encrypt__part90(t0, t1, t2, t3, rk[1], out + 4);
+ void AES_encrypt__part91(unsigned int s1, unsigned char *out);
+AES_encrypt__part91(s1, out + 4);u32 AES_encrypt__part92(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk2);
+s2 = AES_encrypt__part92(t0, t1, t2, t3, rk[2]);
+ void AES_encrypt__part93(u32 s2, unsigned char *out);
+AES_encrypt__part93(s2, out);u32 AES_encrypt__part94(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk3);
+s3 = AES_encrypt__part94(t0, t1, t2, t3, rk[3]);
+ void AES_encrypt__part95(u32 s3, unsigned char *out);
+AES_encrypt__part95(s3, out + 12);void AES_encrypt__part96(void);
+AES_encrypt__part96();
 }
 
-/*
- * Decrypt a single block
- * in and out can overlap
- */
+
+
+
+
 void AES_decrypt(const unsigned char *in, unsigned char *out,
-		 const AES_KEY *key) {
+   const AES_KEY *key) {
 
-	const u32 *rk;
-	u32 s0, s1, s2, s3, t0, t1, t2, t3;
-#ifndef FULL_UNROLL
-	int r;
-#endif /* ?FULL_UNROLL */
+ const u32 *rk;
+ u32 s0, s1, s2, s3, t0, t1, t2, t3;
 
-	assert(in && out && key);
-	rk = key->rd_key;
+ int r;
 
-	/*
-	 * map byte array block to cipher state
-	 * and add initial round key:
-	 */
-    s0 = GETU32(in     ) ^ rk[0];
-    s1 = GETU32(in +  4) ^ rk[1];
-    s2 = GETU32(in +  8) ^ rk[2];
-    s3 = GETU32(in + 12) ^ rk[3];
-#ifdef FULL_UNROLL
-    /* round 1: */
-    t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[ 4];
-    t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[ 5];
-    t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[ 6];
-    t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[ 7];
-    /* round 2: */
-    s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[ 8];
-    s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[ 9];
-    s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[10];
-    s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[11];
-    /* round 3: */
-    t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[12];
-    t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[13];
-    t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[14];
-    t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[15];
-    /* round 4: */
-    s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[16];
-    s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[17];
-    s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[18];
-    s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[19];
-    /* round 5: */
-    t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[20];
-    t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[21];
-    t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[22];
-    t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[23];
-    /* round 6: */
-    s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[24];
-    s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[25];
-    s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[26];
-    s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[27];
-    /* round 7: */
-    t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[28];
-    t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[29];
-    t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[30];
-    t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[31];
-    /* round 8: */
-    s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[32];
-    s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[33];
-    s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[34];
-    s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[35];
-    /* round 9: */
-    t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[36];
-    t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[37];
-    t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[38];
-    t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[39];
-    if (key->rounds > 10) {
-        /* round 10: */
-        s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[40];
-        s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[41];
-        s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[42];
-        s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[43];
-        /* round 11: */
-        t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[44];
-        t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[45];
-        t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[46];
-        t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[47];
-        if (key->rounds > 12) {
-            /* round 12: */
-            s0 = Td0[t0 >> 24] ^ Td1[(t3 >> 16) & 0xff] ^ Td2[(t2 >>  8) & 0xff] ^ Td3[t1 & 0xff] ^ rk[48];
-            s1 = Td0[t1 >> 24] ^ Td1[(t0 >> 16) & 0xff] ^ Td2[(t3 >>  8) & 0xff] ^ Td3[t2 & 0xff] ^ rk[49];
-            s2 = Td0[t2 >> 24] ^ Td1[(t1 >> 16) & 0xff] ^ Td2[(t0 >>  8) & 0xff] ^ Td3[t3 & 0xff] ^ rk[50];
-            s3 = Td0[t3 >> 24] ^ Td1[(t2 >> 16) & 0xff] ^ Td2[(t1 >>  8) & 0xff] ^ Td3[t0 & 0xff] ^ rk[51];
-            /* round 13: */
-            t0 = Td0[s0 >> 24] ^ Td1[(s3 >> 16) & 0xff] ^ Td2[(s2 >>  8) & 0xff] ^ Td3[s1 & 0xff] ^ rk[52];
-            t1 = Td0[s1 >> 24] ^ Td1[(s0 >> 16) & 0xff] ^ Td2[(s3 >>  8) & 0xff] ^ Td3[s2 & 0xff] ^ rk[53];
-            t2 = Td0[s2 >> 24] ^ Td1[(s1 >> 16) & 0xff] ^ Td2[(s0 >>  8) & 0xff] ^ Td3[s3 & 0xff] ^ rk[54];
-            t3 = Td0[s3 >> 24] ^ Td1[(s2 >> 16) & 0xff] ^ Td2[(s1 >>  8) & 0xff] ^ Td3[s0 & 0xff] ^ rk[55];
-        }
-    }
-	rk += key->rounds << 2;
-#else  /* !FULL_UNROLL */
-    /*
-     * Nr - 1 full rounds:
-     */
+
+ 
+((void) (0))
+                        ;
+ rk = key->rd_key;
+
+
+
+
+
+    s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+    s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+    s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+    s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
     r = key->rounds >> 1;
     for (;;) {
         t0 =
-            Td0[(s0 >> 24)       ] ^
+            Td0[(s0 >> 24) ] ^
             Td1[(s3 >> 16) & 0xff] ^
-            Td2[(s2 >>  8) & 0xff] ^
-            Td3[(s1      ) & 0xff] ^
+            Td2[(s2 >> 8) & 0xff] ^
+            Td3[(s1 ) & 0xff] ^
             rk[4];
         t1 =
-            Td0[(s1 >> 24)       ] ^
+            Td0[(s1 >> 24) ] ^
             Td1[(s0 >> 16) & 0xff] ^
-            Td2[(s3 >>  8) & 0xff] ^
-            Td3[(s2      ) & 0xff] ^
+            Td2[(s3 >> 8) & 0xff] ^
+            Td3[(s2 ) & 0xff] ^
             rk[5];
         t2 =
-            Td0[(s2 >> 24)       ] ^
+            Td0[(s2 >> 24) ] ^
             Td1[(s1 >> 16) & 0xff] ^
-            Td2[(s0 >>  8) & 0xff] ^
-            Td3[(s3      ) & 0xff] ^
+            Td2[(s0 >> 8) & 0xff] ^
+            Td3[(s3 ) & 0xff] ^
             rk[6];
         t3 =
-            Td0[(s3 >> 24)       ] ^
+            Td0[(s3 >> 24) ] ^
             Td1[(s2 >> 16) & 0xff] ^
-            Td2[(s1 >>  8) & 0xff] ^
-            Td3[(s0      ) & 0xff] ^
+            Td2[(s1 >> 8) & 0xff] ^
+            Td3[(s0 ) & 0xff] ^
             rk[7];
 
         rk += 8;
@@ -1208,114 +1494,107 @@ void AES_decrypt(const unsigned char *in, unsigned char *out,
         }
 
         s0 =
-            Td0[(t0 >> 24)       ] ^
+            Td0[(t0 >> 24) ] ^
             Td1[(t3 >> 16) & 0xff] ^
-            Td2[(t2 >>  8) & 0xff] ^
-            Td3[(t1      ) & 0xff] ^
+            Td2[(t2 >> 8) & 0xff] ^
+            Td3[(t1 ) & 0xff] ^
             rk[0];
         s1 =
-            Td0[(t1 >> 24)       ] ^
+            Td0[(t1 >> 24) ] ^
             Td1[(t0 >> 16) & 0xff] ^
-            Td2[(t3 >>  8) & 0xff] ^
-            Td3[(t2      ) & 0xff] ^
+            Td2[(t3 >> 8) & 0xff] ^
+            Td3[(t2 ) & 0xff] ^
             rk[1];
         s2 =
-            Td0[(t2 >> 24)       ] ^
+            Td0[(t2 >> 24) ] ^
             Td1[(t1 >> 16) & 0xff] ^
-            Td2[(t0 >>  8) & 0xff] ^
-            Td3[(t3      ) & 0xff] ^
+            Td2[(t0 >> 8) & 0xff] ^
+            Td3[(t3 ) & 0xff] ^
             rk[2];
         s3 =
-            Td0[(t3 >> 24)       ] ^
+            Td0[(t3 >> 24) ] ^
             Td1[(t2 >> 16) & 0xff] ^
-            Td2[(t1 >>  8) & 0xff] ^
-            Td3[(t0      ) & 0xff] ^
+            Td2[(t1 >> 8) & 0xff] ^
+            Td3[(t0 ) & 0xff] ^
             rk[3];
     }
-#endif /* ?FULL_UNROLL */
-    /*
-	 * apply last round and
-	 * map cipher state to byte array block:
-	 */
-   	s0 =
-   		(Td4[(t0 >> 24)       ] & 0xff000000) ^
-   		(Td4[(t3 >> 16) & 0xff] & 0x00ff0000) ^
-   		(Td4[(t2 >>  8) & 0xff] & 0x0000ff00) ^
-   		(Td4[(t1      ) & 0xff] & 0x000000ff) ^
-   		rk[0];
-	PUTU32(out     , s0);
-   	s1 =
-   		(Td4[(t1 >> 24)       ] & 0xff000000) ^
-   		(Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
-   		(Td4[(t3 >>  8) & 0xff] & 0x0000ff00) ^
-   		(Td4[(t2      ) & 0xff] & 0x000000ff) ^
-   		rk[1];
-	PUTU32(out +  4, s1);
-   	s2 =
-   		(Td4[(t2 >> 24)       ] & 0xff000000) ^
-   		(Td4[(t1 >> 16) & 0xff] & 0x00ff0000) ^
-   		(Td4[(t0 >>  8) & 0xff] & 0x0000ff00) ^
-   		(Td4[(t3      ) & 0xff] & 0x000000ff) ^
-   		rk[2];
-	PUTU32(out +  8, s2);
-   	s3 =
-   		(Td4[(t3 >> 24)       ] & 0xff000000) ^
-   		(Td4[(t2 >> 16) & 0xff] & 0x00ff0000) ^
-   		(Td4[(t1 >>  8) & 0xff] & 0x0000ff00) ^
-   		(Td4[(t0      ) & 0xff] & 0x000000ff) ^
-   		rk[3];
-	PUTU32(out + 12, s3);
+
+
+
+
+
+    void AES_decrypt__part100(unsigned int t0, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int rk0, unsigned char *out);
+
+AES_decrypt__part100(t0, t1, t2, t3, rk[0], out);
+ void AES_decrypt__part101(unsigned char *out, unsigned int s0);
+AES_decrypt__part101(out, s0);;
+    s1 =
+     (Td4[(t1 >> 24) ] & 0xff000000) ^
+     (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
+     (Td4[(t3 >> 8) & 0xff] & 0x0000ff00) ^
+     (Td4[(t2 ) & 0xff] & 0x000000ff) ^
+     rk[1];
+ void AES_decrypt__part103(u32 s1, unsigned char *out);
+AES_decrypt__part103(s1, out + 4);void AES_decrypt__part104(unsigned int t0, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int rk2, unsigned char *out);
+AES_decrypt__part104(t0, t1, t2, t3, rk[2], out + 8);
+ void AES_decrypt__part105(u8 *out, u32 s2);
+AES_decrypt__part105(out + 8, s2);void AES_decrypt__part106_Rust(void);
+void AES_decrypt__part106_Rust(void);
+ void AES_decrypt__part107(unsigned int s3, unsigned char *out);
+AES_decrypt__part107(s3, out + 12);extern void AES_decrypt__part108();
+AES_decrypt__part108();
 }
 
-#endif /* AES_ASM */
+
 
 void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
-		     const unsigned long length, const AES_KEY *key,
-		     unsigned char *ivec, const int enc)
+       const unsigned long length, const AES_KEY *key,
+       unsigned char *ivec, const int enc)
 {
 
-	unsigned long n;
-	unsigned long len = length;
-	unsigned char tmp[AES_BLOCK_SIZE];
+ typedef struct { unsigned long n; unsigned long len; unsigned char tmp[16]; } AES_cbc_encrypt__part110_result;
+AES_cbc_encrypt__part110_result AES_cbc_encrypt__part110(unsigned long length);
+AES_cbc_encrypt__part110_result r = AES_cbc_encrypt__part110(length);
+unsigned long n = r.n;
+unsigned long len = r.len;
+unsigned char tmp[16] = {r.tmp[0], r.tmp[1], r.tmp[2], r.tmp[3], r.tmp[4], r.tmp[5], r.tmp[6], r.tmp[7], r.tmp[8], r.tmp[9], r.tmp[10], r.tmp[11], r.tmp[12], r.tmp[13], r.tmp[14], r.tmp[15]};
 
-	assert(in && out && key && ivec);
-
-	if (enc) {
-		while (len >= AES_BLOCK_SIZE) {
-			for(n=0; n < AES_BLOCK_SIZE; ++n)
-				tmp[n] = in[n] ^ ivec[n];
-			AES_encrypt(tmp, out, key);
-			memcpy(ivec, out, AES_BLOCK_SIZE);
-			len -= AES_BLOCK_SIZE;
-			in += AES_BLOCK_SIZE;
-			out += AES_BLOCK_SIZE;
-		}
-		if (len) {
-			for(n=0; n < len; ++n)
-				tmp[n] = in[n] ^ ivec[n];
-			for(n=len; n < AES_BLOCK_SIZE; ++n)
-				tmp[n] = ivec[n];
-			AES_encrypt(tmp, tmp, key);
-			memcpy(out, tmp, AES_BLOCK_SIZE);
-			memcpy(ivec, tmp, AES_BLOCK_SIZE);
-		}
-	} else {
-		while (len >= AES_BLOCK_SIZE) {
-			memcpy(tmp, in, AES_BLOCK_SIZE);
-			AES_decrypt(in, out, key);
-			for(n=0; n < AES_BLOCK_SIZE; ++n)
-				out[n] ^= ivec[n];
-			memcpy(ivec, tmp, AES_BLOCK_SIZE);
-			len -= AES_BLOCK_SIZE;
-			in += AES_BLOCK_SIZE;
-			out += AES_BLOCK_SIZE;
-		}
-		if (len) {
-			memcpy(tmp, in, AES_BLOCK_SIZE);
-			AES_decrypt(tmp, tmp, key);
-			for(n=0; n < len; ++n)
-				out[n] = tmp[n] ^ ivec[n];
-			memcpy(ivec, tmp, AES_BLOCK_SIZE);
-		}
-	}
+ if (enc) {
+  while (len >= 16) {
+   for(n=0; n < 16; ++n)
+    tmp[n] = in[n] ^ ivec[n];
+   AES_encrypt(tmp, out, key);
+   memcpy(ivec, out, 16);
+   len -= 16;
+   in += 16;
+   out += 16;
+  }
+  if (len) {
+   for(n=0; n < len; ++n)
+    tmp[n] = in[n] ^ ivec[n];
+   for(n=len; n < 16; ++n)
+    tmp[n] = ivec[n];
+   AES_encrypt(tmp, tmp, key);
+   memcpy(out, tmp, 16);
+   memcpy(ivec, tmp, 16);
+  }
+ } else {
+  while (len >= 16) {
+   memcpy(tmp, in, 16);
+   AES_decrypt(in, out, key);
+   for(n=0; n < 16; ++n)
+    out[n] ^= ivec[n];
+   memcpy(ivec, tmp, 16);
+   len -= 16;
+   in += 16;
+   out += 16;
+  }
+  if (len) {
+   memcpy(tmp, in, 16);
+   AES_decrypt(tmp, tmp, key);
+   for(n=0; n < len; ++n)
+    out[n] = tmp[n] ^ ivec[n];
+   memcpy(ivec, tmp, 16);
+  }
+ }
 }
