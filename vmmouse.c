@@ -2875,100 +2875,15 @@ struct VMMouseState {
     uint32_t fifo_buf[(4 * 16)];
 };
 
-static void put_queue(VMMouseState *s, uint32_t val)
-{
-    int put_queue__part3929(VMMouseState *s);
-    if (put_queue__part3929(s))
-        return;
+static void put_queue(VMMouseState *s, uint32_t val);
 
-    void put_queue__part3930(VMMouseState *s, uint32_t val);
-    put_queue__part3930(s, val);
-
-    void put_queue__part3931(VMMouseState *s);
-    put_queue__part3931(s);
-
-    void put_queue__part3932(VMMouseState *s);
-    put_queue__part3932(s);
-
-}
-
-static void read_data(VMMouseState *s, uint32_t *regs, int size)
-{
-    int i;
-    {
-    int read_data__part3934(VMMouseState *s, int size);
-    if (read_data__part3934(s, size))
-        return;
-}
-
-    {
-        void read_data__part3935(VMMouseState *s, uint32_t *regs, int size);
-        read_data__part3935(s, regs, size);
-    }
-
-    void read_data__part3936(VMMouseState *s, int size);
-read_data__part3936(s, size);
-}
+static void read_data(VMMouseState *s, uint32_t *regs, int size);
 
 void vmmouse_send_mouse_event(VMMouseState *s, int x, int y, int dz,
-                              int buttons)
-{
-    int state;
+                              int buttons);
 
-    {
-        int vmmouse_send_mouse_event__part3938(VMMouseState *s, int x, int y, int dz, int buttons);
-        if (vmmouse_send_mouse_event__part3938(s, x, y, dz, buttons))
-            return;
-    }
+void vmmouse_handler(VMMouseState *s, uint32_t *regs);
 
-    int vmmouse_send_mouse_event__part3939(VMMouseState *s);
-    if (vmmouse_send_mouse_event__part3939(s))
-        return;
+BOOL vmmouse_is_absolute(VMMouseState *s);
 
-
-    void vmmouse_send_mouse_event__part3940(int *state);
-    vmmouse_send_mouse_event__part3940(&state);
-
-    void vmmouse_send_mouse_event__part3941(int buttons, int *state);
-    vmmouse_send_mouse_event__part3941(buttons, &state);
-
-    void vmmouse_send_mouse_event__part3942(int buttons, int *state);
-    vmmouse_send_mouse_event__part3942(buttons, &state);
-    void vmmouse_send_mouse_event__part3943(int *state, int buttons);
-    vmmouse_send_mouse_event__part3943(&state, buttons);
-
-    void vmmouse_send_mouse_event__part3944(VMMouseState *s, int *x, int *y);
-    vmmouse_send_mouse_event__part3944(s, &x, &y);
-
-
-    void vmmouse_send_mouse_event__part3945(VMMouseState *s, int state, int x, int y, int dz);
-    vmmouse_send_mouse_event__part3945(s, state, x, y, dz);
-
-}
-
-void vmmouse_handler(VMMouseState *s, uint32_t *regs)
-{
-    uint32_t vmmouse_handler__part3947(const uint32_t *regs);
-    uint32_t cmd;
-
-    cmd = vmmouse_handler__part3947(regs);
-
-    void vmmouse_handler__part3948(VMMouseState *s, uint32_t *regs, uint32_t cmd);
-    vmmouse_handler__part3948(s, regs, cmd);
-
-}
-
-BOOL vmmouse_is_absolute(VMMouseState *s)
-{
-    int vmmouse_is_absolute__part3950(VMMouseState *s);
-    return vmmouse_is_absolute__part3950(s);
-}
-
-VMMouseState *vmmouse_init(PS2MouseState *ps2_mouse)
-{
-    VMMouseState *vmmouse_init__part3952(PS2MouseState *ps2_mouse);
-    VMMouseState *s;
-    s = vmmouse_init__part3952(ps2_mouse);
-    return s;
-
-}
+VMMouseState *vmmouse_init(PS2MouseState *ps2_mouse);

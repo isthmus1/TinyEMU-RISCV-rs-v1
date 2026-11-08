@@ -1,5 +1,75 @@
 //! From `temu.c`.
 
+// ── `term_exit` · temu.c:73-77 · chunk 3510 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void term_exit(void)
+//     {
+//         tcsetattr (0, 
+//                      0
+//                             , &oldtty);
+//         fcntl(0, 
+//                 4
+//                        , old_fd0_flags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3510 {
+// Rust rewrite of temu.c: static void term_exit(void)
+//
+//   tcsetattr(0, TCSANOW, &oldtty);
+//   fcntl(0, F_SETFL, old_fd0_flags);
+//
+// `oldtty` and `old_fd0_flags` are file-scope `static` objects in the C
+// translation unit, so they have no linker symbol; they are mirrored here as
+// private Rust statics.
+
+use core::ffi::c_int;
+
+// Mirror of glibc's `struct termios` (bits/termios-struct.h).
+#[repr(C)]
+pub struct Termios {
+    pub c_iflag: u32, // tcflag_t (unsigned int)
+    pub c_oflag: u32, // tcflag_t
+    pub c_cflag: u32, // tcflag_t
+    pub c_lflag: u32, // tcflag_t
+    pub c_line: u8,   // cc_t (unsigned char)
+    pub c_cc: [u8; 32],
+    pub c_ispeed: u32, // speed_t (unsigned int)
+    pub c_ospeed: u32, // speed_t
+}
+
+const ZERO_TERMIOS: Termios = Termios {
+    c_iflag: 0,
+    c_oflag: 0,
+    c_cflag: 0,
+    c_lflag: 0,
+    c_line: 0,
+    c_cc: [0; 32],
+    c_ispeed: 0,
+    c_ospeed: 0,
+};
+
+static mut OLDTTY: Termios = ZERO_TERMIOS;
+static mut OLD_FD0_FLAGS: c_int = 0;
+
+extern "C" {
+    fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
+    // In the C translation unit `fcntl` carries `__asm__("fcntl64")`.
+    #[link_name = "fcntl64"]
+    fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn term_exit() {
+    // TCSANOW == 0
+    let oldtty_ptr: *const Termios = core::ptr::addr_of!(OLDTTY);
+    tcsetattr(0, 0, oldtty_ptr);
+    // F_SETFL == 4
+    let old_flags: c_int = core::ptr::read_volatile(core::ptr::addr_of!(OLD_FD0_FLAGS));
+    fcntl(0, 4, old_flags);
+}
+}
+
 // ── `tcsetattr (0, 0 , &oldtty); fcntl(0, 4 , old_fd0_flags);` · temu.c:75-76 · chunk 3511 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -29,6 +99,193 @@ pub unsafe extern "C" fn term_exit__part3511(tty: *const c_void, fd0_flags: c_in
     let _ = tcsetattr(0, 0, tty);
     // fcntl(0, 4 /* F_SETFL */, old_fd0_flags);
     let _ = fcntl(0, 4, fd0_flags);
+}
+}
+
+// ── `term_init` · temu.c:79-102 · chunk 3512 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void term_init(BOOL allow_ctrlc)
+//     {
+//         struct termios tty;
+//     
+//         memset(&tty, 0, sizeof(tty));
+//         tcgetattr (0, &tty);
+//         oldtty = tty;
+//         old_fd0_flags = fcntl(0, 
+//                                 3
+//                                        );
+//     
+//         tty.c_iflag &= ~(
+//                         0000001
+//                               |
+//                                0000002
+//                                      |
+//                                       0000010
+//                                             |
+//                                              0000040
+//                               
+//                              |
+//                               0000100
+//                                    |
+//                                     0000200
+//                                          |
+//                                           0000400
+//                                                |
+//                                                 0002000
+//                                                     );
+//         tty.c_oflag |= 
+//                       0000001
+//                            ;
+//         tty.c_lflag &= ~(
+//                         0000010
+//                             |
+//                              0000100
+//                                    |
+//                                     0000002
+//                                           |
+//                                            0100000
+//                                                  );
+//         if (!allow_ctrlc)
+//             tty.c_lflag &= ~
+//                            0000001
+//                                ;
+//         tty.c_cflag &= ~(
+//                         0000060
+//                              |
+//                               0000400
+//                                     );
+//         tty.c_cflag |= 
+//                       0000060
+//                          ;
+//         tty.c_cc[
+//                 6
+//                     ] = 1;
+//         tty.c_cc[
+//                 5
+//                      ] = 0;
+//     
+//         tcsetattr (0, 
+//                      0
+//                             , &tty);
+//     
+//         atexit(term_exit);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3512 {
+// Port of temu.c: term_init(BOOL allow_ctrlc)
+// Puts fd 0 into raw-ish mode, saving the previous settings so they can be
+// restored when the process exits (the C file's static term_exit/oldtty are
+// file-local and therefore not reachable from here, so the saved state and the
+// atexit handler live in this object instead).
+
+use std::os::raw::{c_int, c_uchar, c_uint};
+
+// struct termios as laid out by glibc on Linux (tcflag_t == unsigned int,
+// cc_t == unsigned char, speed_t == unsigned int).
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct Termios {
+    c_iflag: c_uint,
+    c_oflag: c_uint,
+    c_cflag: c_uint,
+    c_lflag: c_uint,
+    c_line: c_uchar,
+    c_cc: [c_uchar; 32],
+    c_ispeed: c_uint,
+    c_ospeed: c_uint,
+}
+
+const ZERO_TERMIOS: Termios = Termios {
+    c_iflag: 0,
+    c_oflag: 0,
+    c_cflag: 0,
+    c_lflag: 0,
+    c_line: 0,
+    c_cc: [0u8; 32],
+    c_ispeed: 0,
+    c_ospeed: 0,
+};
+
+static mut OLDTTY: Termios = ZERO_TERMIOS;
+static mut OLD_FD0_FLAGS: c_int = 0;
+
+// fcntl commands / tcsetattr actions
+const F_GETFL: c_int = 3;
+const F_SETFL: c_int = 4;
+const TCSANOW: c_int = 0;
+
+// termios flag bits (Linux)
+const IGNBRK: c_uint = 0o000001;
+const BRKINT: c_uint = 0o000002;
+const PARMRK: c_uint = 0o000010;
+const ISTRIP: c_uint = 0o000040;
+const INLCR: c_uint = 0o000100;
+const IGNCR: c_uint = 0o000200;
+const ICRNL: c_uint = 0o000400;
+const IXON: c_uint = 0o002000;
+
+const OPOST: c_uint = 0o000001;
+
+const ISIG: c_uint = 0o000001;
+const ICANON: c_uint = 0o000002;
+const ECHO: c_uint = 0o000010;
+const ECHONL: c_uint = 0o000100;
+const IEXTEN: c_uint = 0o100000;
+
+const CSIZE: c_uint = 0o000060;
+const PARENB: c_uint = 0o000400;
+const CS8: c_uint = 0o000060;
+
+// indexes into c_cc
+const VTIME: usize = 5;
+const VMIN: usize = 6;
+
+extern "C" {
+    fn tcgetattr(fd: c_int, termios_p: *mut Termios) -> c_int;
+    fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
+    // glibc declares fcntl as an alias of fcntl64, so that is the real symbol
+    #[link_name = "fcntl64"]
+    fn fcntl64(fd: c_int, cmd: c_int, ...) -> c_int;
+    fn atexit(func: extern "C" fn()) -> c_int;
+}
+
+extern "C" fn term_exit_port() {
+    unsafe {
+        let old: *const Termios = std::ptr::addr_of!(OLDTTY);
+        tcsetattr(0, TCSANOW, old);
+        fcntl64(0, F_SETFL, OLD_FD0_FLAGS);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn term_init(allow_ctrlc: c_int) {
+    unsafe {
+        let mut tty: Termios = ZERO_TERMIOS;
+
+        tcgetattr(0, &mut tty as *mut Termios);
+        OLDTTY = tty;
+        OLD_FD0_FLAGS = fcntl64(0, F_GETFL);
+
+        tty.c_iflag &= !(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+        tty.c_oflag |= OPOST;
+        tty.c_lflag &= !(ECHO | ECHONL | ICANON | IEXTEN);
+        if allow_ctrlc == 0 {
+            tty.c_lflag &= !ISIG;
+        }
+        tty.c_cflag &= !(CSIZE | PARENB);
+        tty.c_cflag |= CS8;
+        if let Some(slot) = tty.c_cc.get_mut(VMIN) {
+            *slot = 1;
+        }
+        if let Some(slot) = tty.c_cc.get_mut(VTIME) {
+            *slot = 0;
+        }
+
+        tcsetattr(0, TCSANOW, &tty as *const Termios);
+
+        atexit(term_exit_port);
+    }
 }
 }
 
@@ -227,6 +484,50 @@ pub extern "C" fn term_init__part3515(tty: *mut Termios, term_exit_fn: extern "C
 }
 }
 
+// ── `console_write` · temu.c:104-108 · chunk 3516 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void console_write(void *opaque, const uint8_t *buf, int len)
+//     {
+//         fwrite(buf, 1, len, 
+//                            stdout
+//                                  );
+//         fflush(
+//               stdout
+//                     );
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3516 {
+// Rust reimplementation of temu.c's static console_write().
+//
+//   static void console_write(void *opaque, const uint8_t *buf, int len)
+//   {
+//       fwrite(buf, 1, len, stdout);
+//       fflush(stdout);
+//   }
+
+use core::ffi::{c_int, c_void};
+use core::ptr;
+
+extern "C" {
+    // glibc data symbol: FILE *stdout;
+    static mut stdout: *mut c_void;
+
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fflush(stream: *mut c_void) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn console_write(_opaque: *mut c_void, buf: *const u8, len: c_int) {
+    unsafe {
+        // Read the current value of the stdout global exactly like C does.
+        let stream: *mut c_void = ptr::read(ptr::addr_of!(stdout));
+        fwrite(buf as *const c_void, 1, len as usize, stream);
+        fflush(stream);
+    }
+}
+}
+
 // ── `fwrite(buf, 1, len, stdout ); fflush( stdout );` · temu.c:106-107 · chunk 3517 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -254,6 +555,133 @@ pub extern "C" fn console_write__part3517(buf: *const u8, len: c_int) {
         fwrite(buf as *const c_void, 1usize, len as usize, f);
         fflush(f);
     }
+}
+}
+
+// ── `console_read` · temu.c:110-158 · chunk 3518 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int console_read(void *opaque, uint8_t *buf, int len)
+//     {
+//         STDIODevice *s = opaque;
+//         int ret, i, j;
+//         uint8_t ch;
+//     
+//         if (len <= 0)
+//             return 0;
+//     
+//         ret = read(s->stdin_fd, buf, len);
+//         if (ret < 0)
+//             return 0;
+//         if (ret == 0) {
+//     
+//             exit(1);
+//         }
+//     
+//         j = 0;
+//         for(i = 0; i < ret; i++) {
+//             ch = buf[i];
+//             if (s->console_esc_state) {
+//                 s->console_esc_state = 0;
+//                 switch(ch) {
+//                 case 'x':
+//                     printf("Terminated\n");
+//                     exit(0);
+//                 case 'h':
+//                     printf("\n"
+//                            "C-a h   print this help\n"
+//                            "C-a x   exit emulator\n"
+//                            "C-a C-a send C-a\n"
+//                            );
+//                     break;
+//                 case 1:
+//                     goto output_char;
+//                 default:
+//                     break;
+//                 }
+//             } else {
+//                 if (ch == 1) {
+//                     s->console_esc_state = 1;
+//                 } else {
+//                 output_char:
+//                     buf[j++] = ch;
+//                 }
+//             }
+//         }
+//         return j;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3518 {
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct STDIODevice {
+    pub stdin_fd: c_int,
+    pub console_esc_state: c_int,
+    pub resize_pending: c_int, /* BOOL == int */
+}
+
+extern "C" {
+    fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+    fn exit(status: c_int) -> !;
+    fn printf(fmt: *const c_char, ...) -> c_int;
+}
+
+static TERMINATED_MSG: &[u8] = b"Terminated\n\0";
+static HELP_MSG: &[u8] = b"\nC-a h   print this help\nC-a x   exit emulator\nC-a C-a send C-a\n\0";
+
+#[no_mangle]
+pub extern "C" fn console_read(opaque: *mut c_void, buf: *mut u8, len: c_int) -> c_int {
+    let s = opaque as *mut STDIODevice;
+
+    if len <= 0 {
+        return 0;
+    }
+
+    let ret_raw = unsafe { read((*s).stdin_fd, buf as *mut c_void, len as usize) };
+    if ret_raw < 0 {
+        return 0;
+    }
+    if ret_raw == 0 {
+        /* EOF */
+        unsafe { exit(1) }
+    }
+    let ret = ret_raw as c_int;
+
+    let mut j: c_int = 0;
+    let mut i: c_int = 0;
+    while i < ret {
+        let ch: u8 = unsafe { *buf.offset(i as isize) };
+        let mut output_char = false;
+
+        if unsafe { (*s).console_esc_state } != 0 {
+            unsafe { (*s).console_esc_state = 0 };
+            if ch == b'x' {
+                unsafe {
+                    printf(TERMINATED_MSG.as_ptr() as *const c_char);
+                    exit(0)
+                }
+            } else if ch == b'h' {
+                unsafe { printf(HELP_MSG.as_ptr() as *const c_char) };
+            } else if ch == 1 {
+                /* goto output_char */
+                output_char = true;
+            }
+        } else if ch == 1 {
+            unsafe { (*s).console_esc_state = 1 };
+        } else {
+            /* output_char: */
+            output_char = true;
+        }
+
+        if output_char {
+            unsafe { *buf.offset(j as isize) = ch };
+            j += 1;
+        }
+        i += 1;
+    }
+
+    j
 }
 }
 
@@ -483,6 +911,71 @@ pub extern "C" fn console_read__part3525(j: c_int) -> c_int {
 }
 }
 
+// ── `term_resize_handler` · temu.c:160-164 · chunk 3526 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void term_resize_handler(int sig)
+//     {
+//         if (global_stdio_device)
+//             global_stdio_device->resize_pending = TRUE;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3526 {
+// Port of the C function:
+//
+//   static void term_resize_handler(int sig)
+//   {
+//       if (global_stdio_device)
+//           global_stdio_device->resize_pending = TRUE;
+//   }
+//
+// `global_stdio_device` has internal linkage in the C translation unit, so it
+// has no linker symbol: its state is mirrored here in a private Rust static
+// (never exported, no #[no_mangle]) and the original logic lives in the
+// private helper `set_resize_pending` below.
+
+use core::ffi::c_int;
+use core::ptr;
+
+// Mirror of the C struct STDIODevice:
+//     typedef struct {
+//         int stdin_fd;
+//         int console_esc_state;
+//         BOOL resize_pending;   /* BOOL is typedef int */
+//     } STDIODevice;
+#[repr(C)]
+pub struct STDIODevice {
+    pub stdin_fd: c_int,
+    pub console_esc_state: c_int,
+    pub resize_pending: c_int,
+}
+
+// Mirror of `static STDIODevice *global_stdio_device;` (private, no symbol).
+#[allow(non_upper_case_globals)]
+static mut global_stdio_device: *mut STDIODevice = ptr::null_mut();
+
+// TRUE == 1 in the C enum { FALSE = 0, TRUE = 1 }.
+const TRUE: c_int = 1;
+
+// Ported logic of the handler body as a private Rust function.
+fn set_resize_pending() {
+    unsafe {
+        let s = global_stdio_device;
+        // if (global_stdio_device) ...
+        if !s.is_null() {
+            (*s).resize_pending = TRUE;
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn term_resize_handler(sig: c_int) {
+    // `sig` is unused by the original code.
+    let _ = sig;
+    set_resize_pending();
+}
+}
+
 // ── `if (global_stdio_device)` · temu.c:162-163 · chunk 3527 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -510,6 +1003,73 @@ pub extern "C" fn term_resize_handler__part3527(dev: *mut STDIODevice) {
         if !dev.is_null() {
             (*dev).resize_pending = 1; // TRUE == 1
         }
+    }
+}
+}
+
+// ── `console_get_size` · temu.c:169-183 · chunk 3528 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void console_get_size(STDIODevice *s, int *pw, int *ph)
+//     {
+//         struct winsize ws;
+//         int width, height;
+//     
+//         width = 80;
+//         height = 25;
+//         if (ioctl(s->stdin_fd, 
+//                               0x5413
+//                                         , &ws) == 0 &&
+//             ws.ws_col >= 4 && ws.ws_row >= 4) {
+//             width = ws.ws_col;
+//             height = ws.ws_row;
+//         }
+//         *pw = width;
+//         *ph = height;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3528 {
+use core::ffi::{c_int, c_ulong};
+
+#[repr(C)]
+struct StdioDevice {
+    stdin_fd: c_int,
+    console_esc_state: c_int,
+    resize_pending: c_int,
+}
+
+#[repr(C)]
+struct Winsize {
+    ws_row: u16,
+    ws_col: u16,
+    ws_xpixel: u16,
+    ws_ypixel: u16,
+}
+
+extern "C" {
+    fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+}
+
+const TIOCGWINSZ: c_ulong = 0x5413;
+
+#[no_mangle]
+pub unsafe extern "C" fn console_get_size(s: *mut StdioDevice, pw: *mut c_int, ph: *mut c_int) {
+    let mut ws: Winsize = core::mem::zeroed();
+    let mut width: c_int = 80;
+    let mut height: c_int = 25;
+    let fd = if s.is_null() { 0 } else { (*s).stdin_fd };
+    if ioctl(fd, TIOCGWINSZ, &mut ws as *mut Winsize) == 0
+        && ws.ws_col >= 4
+        && ws.ws_row >= 4
+    {
+        width = ws.ws_col as c_int;
+        height = ws.ws_row as c_int;
+    }
+    if !pw.is_null() {
+        *pw = width;
+    }
+    if !ph.is_null() {
+        *ph = height;
     }
 }
 }
@@ -610,6 +1170,340 @@ pub extern "C" fn console_get_size__part3531(
         if !ph.is_null() {
             *ph = height;
         }
+    }
+}
+}
+
+// ── `console_init` · temu.c:186-214 · chunk 3532 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     CharacterDevice *console_init(BOOL allow_ctrlc)
+//     {
+//         CharacterDevice *dev;
+//         STDIODevice *s;
+//         struct sigaction sig;
+//     
+//         term_init(allow_ctrlc);
+//     
+//         dev = mallocz(sizeof(*dev));
+//         s = mallocz(sizeof(*s));
+//         s->stdin_fd = 0;
+//     
+//     
+//         fcntl(s->stdin_fd, 
+//                           4
+//                                  , 
+//                                    04000
+//                                              );
+//     
+//         s->resize_pending = TRUE;
+//         global_stdio_device = s;
+//     
+//     
+//         sig.
+//            __sigaction_handler.sa_handler 
+//                       = term_resize_handler;
+//         sigemptyset(&sig.sa_mask);
+//         sig.sa_flags = 0;
+//         sigaction(
+//                  28
+//                          , &sig, 
+//                                  ((void *)0)
+//                                      );
+//     
+//         dev->opaque = s;
+//         dev->write_data = console_write;
+//         dev->read_data = console_read;
+//         return dev;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3532 {
+// Rust rewrite of console_init() from temu.c (TinyEMU), plus the private
+// equivalents of the file-static helpers it uses (term_init, term_exit,
+// console_write, console_read, term_resize_handler, global_stdio_device).
+
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_ulong, c_void};
+use core::sync::atomic::{AtomicPtr, Ordering};
+
+pub type BOOL = c_int;
+const TRUE: BOOL = 1;
+
+/* ------------------------------------------------------------------ */
+/* structs (mirrors of the C layout)                                   */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+pub struct CharacterDevice {
+    pub opaque: *mut c_void,
+    pub write_data: Option<extern "C" fn(*mut c_void, *const u8, c_int)>,
+    pub read_data: Option<extern "C" fn(*mut c_void, *mut u8, c_int) -> c_int>,
+}
+
+#[repr(C)]
+pub struct STDIODevice {
+    pub stdin_fd: c_int,
+    pub console_esc_state: c_int,
+    pub resize_pending: BOOL,
+}
+
+/* struct termios (glibc, x86-64) */
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Termios {
+    pub c_iflag: u32,
+    pub c_oflag: u32,
+    pub c_cflag: u32,
+    pub c_lflag: u32,
+    pub c_line: u8,
+    pub c_cc: [u8; 32],
+    pub c_ispeed: u32,
+    pub c_ospeed: u32,
+}
+
+const TERMIOS_ZERO: Termios = Termios {
+    c_iflag: 0,
+    c_oflag: 0,
+    c_cflag: 0,
+    c_lflag: 0,
+    c_line: 0,
+    c_cc: [0u8; 32],
+    c_ispeed: 0,
+    c_ospeed: 0,
+};
+
+/* __sigset_t: unsigned long __val[1024 / (8 * sizeof(unsigned long))] */
+#[repr(C)]
+pub struct CSigSet {
+    pub val: [c_ulong; 16],
+}
+
+/* struct sigaction (glibc, x86-64) */
+#[repr(C)]
+pub struct CSigAction {
+    pub sa_handler: Option<extern "C" fn(c_int)>,
+    pub sa_mask: CSigSet,
+    pub sa_flags: c_int,
+    pub sa_restorer: Option<extern "C" fn()>,
+}
+
+/* ------------------------------------------------------------------ */
+/* libc / cutils entry points                                          */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+
+    /* the preprocessed C code calls the "fcntl64" symbol */
+    #[link_name = "fcntl64"]
+    fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
+
+    fn tcgetattr(fd: c_int, termios_p: *mut Termios) -> c_int;
+    fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
+
+    fn atexit(func: Option<extern "C" fn()>) -> c_int;
+
+    fn sigemptyset(set: *mut CSigSet) -> c_int;
+    fn sigaction(sig: c_int, act: *const CSigAction, oact: *mut CSigAction) -> c_int;
+
+    fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+    fn exit(status: c_int) -> !;
+
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fflush(stream: *mut c_void) -> c_int;
+    fn printf(fmt: *const c_char, ...) -> c_int;
+
+    static mut stdout: *mut c_void;
+}
+
+/* ------------------------------------------------------------------ */
+/* constants                                                           */
+/* ------------------------------------------------------------------ */
+
+const IGNBRK: u32 = 0o000001;
+const BRKINT: u32 = 0o000002;
+const PARMRK: u32 = 0o000010;
+const ISTRIP: u32 = 0o000040;
+const INLCR: u32 = 0o000100;
+const IGNCR: u32 = 0o000200;
+const ICRNL: u32 = 0o000400;
+const IXON: u32 = 0o002000;
+
+const OPOST: u32 = 0o000001;
+
+const ECHO: u32 = 0o000010;
+const ECHONL: u32 = 0o000100;
+const ICANON: u32 = 0o000002;
+const IEXTEN: u32 = 0o100000;
+const ISIG: u32 = 0o000001;
+
+const CSIZE: u32 = 0o000060;
+const PARENB: u32 = 0o000400;
+const CS8: u32 = 0o000060;
+
+const VMIN: usize = 6;
+const VTIME: usize = 5;
+const TCSANOW: c_int = 0;
+
+const F_GETFL: c_int = 3;
+const F_SETFL: c_int = 4;
+const O_NONBLOCK: c_int = 0o004000;
+
+const SIGWINCH: c_int = 28;
+
+static TERMINATED_MSG: &[u8] = b"Terminated\n\0";
+static HELP_MSG: &[u8] = b"\nC-a h   print this help\nC-a x   exit emulator\nC-a C-a send C-a\n\0";
+
+/* ------------------------------------------------------------------ */
+/* file-static state of temu.c                                         */
+/* ------------------------------------------------------------------ */
+
+static mut OLD_TTY: Termios = TERMIOS_ZERO;
+static mut OLD_FD0_FLAGS: c_int = 0;
+static GLOBAL_STDIO_DEVICE: AtomicPtr<STDIODevice> = AtomicPtr::new(core::ptr::null_mut());
+
+/* ------------------------------------------------------------------ */
+/* helpers (were static in temu.c)                                     */
+/* ------------------------------------------------------------------ */
+
+extern "C" fn term_exit() {
+    unsafe {
+        tcsetattr(0, TCSANOW, core::ptr::addr_of!(OLD_TTY));
+        fcntl(0, F_SETFL, OLD_FD0_FLAGS);
+    }
+}
+
+extern "C" fn term_resize_handler(_sig: c_int) {
+    let p = GLOBAL_STDIO_DEVICE.load(Ordering::Relaxed);
+    if !p.is_null() {
+        unsafe {
+            (*p).resize_pending = TRUE;
+        }
+    }
+}
+
+unsafe fn term_init(allow_ctrlc: BOOL) {
+    let mut tty: Termios = TERMIOS_ZERO;
+
+    tcgetattr(0, &mut tty);
+    OLD_TTY = tty;
+    OLD_FD0_FLAGS = fcntl(0, F_GETFL);
+
+    tty.c_iflag &= !(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    tty.c_oflag |= OPOST;
+    tty.c_lflag &= !(ECHO | ECHONL | ICANON | IEXTEN);
+    if allow_ctrlc == 0 {
+        tty.c_lflag &= !ISIG;
+    }
+    tty.c_cflag &= !(CSIZE | PARENB);
+    tty.c_cflag |= CS8;
+    tty.c_cc[VMIN] = 1;
+    tty.c_cc[VTIME] = 0;
+
+    tcsetattr(0, TCSANOW, &tty);
+
+    atexit(Some(term_exit));
+}
+
+extern "C" fn console_write(_opaque: *mut c_void, buf: *const u8, len: c_int) {
+    unsafe {
+        let out = stdout;
+        fwrite(buf as *const c_void, 1, len as usize, out);
+        fflush(out);
+    }
+}
+
+extern "C" fn console_read(opaque: *mut c_void, buf: *mut u8, len: c_int) -> c_int {
+    let s = opaque as *mut STDIODevice;
+    let ret: c_int;
+    let mut i: c_int;
+    let mut j: c_int;
+    let mut ch: u8;
+    let mut output_char: bool;
+
+    unsafe {
+        if len <= 0 {
+            return 0;
+        }
+
+        ret = read((*s).stdin_fd, buf as *mut c_void, len as usize) as c_int;
+        if ret < 0 {
+            return 0;
+        }
+        if ret == 0 {
+            /* EOF */
+            exit(1);
+        }
+
+        j = 0;
+        i = 0;
+        while i < ret {
+            ch = *buf.offset(i as isize);
+            if (*s).console_esc_state != 0 {
+                (*s).console_esc_state = 0;
+                output_char = false;
+                match ch {
+                    b'x' => {
+                        printf(TERMINATED_MSG.as_ptr() as *const c_char);
+                        exit(0);
+                    }
+                    b'h' => {
+                        printf(HELP_MSG.as_ptr() as *const c_char);
+                    }
+                    1 => {
+                        output_char = true;
+                    }
+                    _ => {}
+                }
+                if output_char {
+                    *buf.offset(j as isize) = ch;
+                    j += 1;
+                }
+            } else {
+                if ch == 1 {
+                    (*s).console_esc_state = 1;
+                } else {
+                    *buf.offset(j as isize) = ch;
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+        j
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* the target function                                                 */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub extern "C" fn console_init(allow_ctrlc: BOOL) -> *mut CharacterDevice {
+    unsafe {
+        term_init(allow_ctrlc);
+
+        let dev = mallocz(core::mem::size_of::<CharacterDevice>()) as *mut CharacterDevice;
+        let s = mallocz(core::mem::size_of::<STDIODevice>()) as *mut STDIODevice;
+        (*s).stdin_fd = 0;
+        /* Note: the glibc does not properly tests the return value of
+           write() in printf, so some messages on stdout may be lost */
+        fcntl((*s).stdin_fd, F_SETFL, O_NONBLOCK);
+
+        (*s).resize_pending = TRUE;
+        GLOBAL_STDIO_DEVICE.store(s, Ordering::Relaxed);
+
+        /* use a signal to get the host terminal resize events */
+        let mut sig: CSigAction = core::mem::zeroed();
+        sig.sa_handler = Some(term_resize_handler);
+        sigemptyset(&mut sig.sa_mask);
+        sig.sa_flags = 0;
+        sigaction(SIGWINCH, &sig, core::ptr::null_mut());
+
+        (*dev).opaque = s as *mut c_void;
+        (*dev).write_data = Some(console_write);
+        (*dev).read_data = Some(console_read);
+        dev
     }
 }
 }
@@ -1065,6 +1959,259 @@ pub extern "C" fn bf_write_async__part3546(ret: core::ffi::c_int) -> core::ffi::
 }
 }
 
+// ── `block_device_init` · temu.c:316-356 · chunk 3547 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static BlockDevice *block_device_init(const char *filename,
+//                                           BlockDeviceModeEnum mode)
+//     {
+//         BlockDevice *bs;
+//         BlockDeviceFile *bf;
+//         int64_t file_size;
+//         FILE *f;
+//         const char *mode_str;
+//     
+//         if (mode == BF_MODE_RW) {
+//             mode_str = "r+b";
+//         } else {
+//             mode_str = "rb";
+//         }
+//     
+//         f = fopen(filename, mode_str);
+//         if (!f) {
+//             perror(filename);
+//             exit(1);
+//         }
+//         fseek(f, 0, 
+//                    2
+//                            );
+//         file_size = ftello(f);
+//     
+//         bs = mallocz(sizeof(*bs));
+//         bf = mallocz(sizeof(*bf));
+//     
+//         bf->mode = mode;
+//         bf->nb_sectors = file_size / 512;
+//         bf->f = f;
+//     
+//         if (mode == BF_MODE_SNAPSHOT) {
+//             bf->sector_table = mallocz(sizeof(bf->sector_table[0]) *
+//                                        bf->nb_sectors);
+//         }
+//     
+//         bs->opaque = bf;
+//         bs->get_sector_count = bf_get_sector_count;
+//         bs->read_async = bf_read_async;
+//         bs->write_async = bf_write_async;
+//         return bs;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3547 {
+// Port of temu.c: block_device_init (plus the static bf_* callbacks it installs,
+// which have no linker symbol and are therefore re-implemented here).
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::mem::size_of;
+use core::ptr;
+
+const SECTOR_SIZE: i64 = 512;
+
+const BF_MODE_RO: c_int = 0;
+const BF_MODE_RW: c_int = 1;
+const BF_MODE_SNAPSHOT: c_int = 2;
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+// typedef void BlockDeviceCompletionFunc(void *opaque, int ret);
+// Function pointers are passed through as plain pointers (ABI identical).
+type BlockDeviceFunc = Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>;
+type BlockDeviceReadFunc = Option<
+    unsafe extern "C" fn(
+        *mut BlockDevice,
+        u64,
+        *mut u8,
+        c_int,
+        *mut c_void,
+        *mut c_void,
+    ) -> c_int,
+>;
+type BlockDeviceWriteFunc = Option<
+    unsafe extern "C" fn(
+        *mut BlockDevice,
+        u64,
+        *const u8,
+        c_int,
+        *mut c_void,
+        *mut c_void,
+    ) -> c_int,
+>;
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: BlockDeviceFunc,
+    pub read_async: BlockDeviceReadFunc,
+    pub write_async: BlockDeviceWriteFunc,
+    pub opaque: *mut c_void,
+}
+
+// typedef enum { BF_MODE_RO, BF_MODE_RW, BF_MODE_SNAPSHOT } BlockDeviceModeEnum;
+// An enum with values 0,1,2 has the representation of `int`.
+#[repr(C)]
+pub struct BlockDeviceFile {
+    pub f: *mut c_void, /* FILE * */
+    pub nb_sectors: i64,
+    pub mode: c_int, /* BlockDeviceModeEnum */
+    pub sector_table: *mut *mut u8,
+}
+
+extern "C" {
+    fn fopen64(filename: *const c_char, modes: *const c_char) -> *mut c_void;
+    fn fseek(stream: *mut c_void, off: c_long, whence: c_int) -> c_int;
+    fn ftello64(stream: *mut c_void) -> i64;
+    fn fread(ptr: *mut c_void, size: usize, n: usize, stream: *mut c_void) -> usize;
+    fn fwrite(ptr: *const c_void, size: usize, n: usize, stream: *mut c_void) -> usize;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+    fn abort() -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn mallocz(size: usize) -> *mut c_void;
+}
+
+unsafe extern "C" fn bf_get_sector_count(bs: *mut BlockDevice) -> i64 {
+    let bf = (*bs).opaque as *mut BlockDeviceFile;
+    (*bf).nb_sectors
+}
+
+unsafe extern "C" fn bf_read_async(
+    bs: *mut BlockDevice,
+    mut sector_num: u64,
+    mut buf: *mut u8,
+    n: c_int,
+    _cb: *mut c_void,
+    _opaque: *mut c_void,
+) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceFile;
+
+    if (*bf).f.is_null() {
+        return -1;
+    }
+    if (*bf).mode == BF_MODE_SNAPSHOT {
+        let mut i: c_int = 0;
+        while i < n {
+            let entry = *(*bf).sector_table.add(sector_num as usize);
+            if entry.is_null() {
+                fseek((*bf).f, sector_num.wrapping_mul(SECTOR_SIZE as u64) as c_long, SEEK_SET);
+                fread(buf as *mut c_void, 1, SECTOR_SIZE as usize, (*bf).f);
+            } else {
+                ptr::copy_nonoverlapping(entry, buf, SECTOR_SIZE as usize);
+            }
+            sector_num = sector_num.wrapping_add(1);
+            buf = buf.add(SECTOR_SIZE as usize);
+            i += 1;
+        }
+    } else {
+        fseek((*bf).f, sector_num.wrapping_mul(SECTOR_SIZE as u64) as c_long, SEEK_SET);
+        fread(
+            buf as *mut c_void,
+            1,
+            n.wrapping_mul(SECTOR_SIZE as c_int) as usize,
+            (*bf).f,
+        );
+    }
+
+    0
+}
+
+unsafe extern "C" fn bf_write_async(
+    bs: *mut BlockDevice,
+    mut sector_num: u64,
+    mut buf: *const u8,
+    n: c_int,
+    _cb: *mut c_void,
+    _opaque: *mut c_void,
+) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceFile;
+    let ret: c_int;
+
+    match (*bf).mode {
+        BF_MODE_RO => {
+            ret = -1;
+        }
+        BF_MODE_RW => {
+            fseek((*bf).f, sector_num.wrapping_mul(SECTOR_SIZE as u64) as c_long, SEEK_SET);
+            fwrite(
+                buf as *const c_void,
+                1,
+                n.wrapping_mul(SECTOR_SIZE as c_int) as usize,
+                (*bf).f,
+            );
+            ret = 0;
+        }
+        BF_MODE_SNAPSHOT => {
+            if sector_num.wrapping_add(n as u64) > (*bf).nb_sectors as u64 {
+                return -1;
+            }
+            let mut i: c_int = 0;
+            while i < n {
+                let slot = (*bf).sector_table.add(sector_num as usize);
+                if (*slot).is_null() {
+                    *slot = malloc(SECTOR_SIZE as usize) as *mut u8;
+                }
+                ptr::copy_nonoverlapping(buf, *slot, SECTOR_SIZE as usize);
+                sector_num = sector_num.wrapping_add(1);
+                buf = buf.add(SECTOR_SIZE as usize);
+                i += 1;
+            }
+            ret = 0;
+        }
+        _ => abort(),
+    }
+
+    ret
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn block_device_init(
+    filename: *const c_char,
+    mode: c_int,
+) -> *mut BlockDevice {
+    let mode_str: *const c_char = if mode == BF_MODE_RW {
+        b"r+b\0".as_ptr() as *const c_char
+    } else {
+        b"rb\0".as_ptr() as *const c_char
+    };
+
+    let f = fopen64(filename, mode_str);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    let file_size: i64 = ftello64(f);
+
+    let bs = mallocz(size_of::<BlockDevice>()) as *mut BlockDevice;
+    let bf = mallocz(size_of::<BlockDeviceFile>()) as *mut BlockDeviceFile;
+
+    (*bf).mode = mode;
+    (*bf).nb_sectors = file_size / SECTOR_SIZE;
+    (*bf).f = f;
+
+    if mode == BF_MODE_SNAPSHOT {
+        (*bf).sector_table = mallocz(
+            size_of::<*mut u8>() * ((*bf).nb_sectors as usize),
+        ) as *mut *mut u8;
+    }
+
+    (*bs).opaque = bf as *mut c_void;
+    (*bs).get_sector_count = Some(bf_get_sector_count);
+    (*bs).read_async = Some(bf_read_async);
+    (*bs).write_async = Some(bf_write_async);
+    bs
+}
+}
+
 // ── `if (mode == BF_MODE_RW) … else` · temu.c:325-329 · chunk 3548 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1328,6 +2475,78 @@ pub extern "C" fn block_device_init__part3553(
 }
 }
 
+// ── `tun_write_packet` · temu.c:365-370 · chunk 3556 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void tun_write_packet(EthernetDevice *net,
+//                                  const uint8_t *buf, int len)
+//     {
+//         TunState *s = net->opaque;
+//         write(s->fd, buf, len);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3556 {
+// Rust rewrite of tun_write_packet from temu.c
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            pfd_max: *mut c_int,
+            rfds: *mut c_void,
+            wfds: *mut c_void,
+            efds: *mut c_void,
+            pdelay: *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            rfds: *mut c_void,
+            wfds: *mut c_void,
+            efds: *mut c_void,
+            select_ret: c_int,
+        ),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(net: *mut EthernetDevice) -> c_int>,
+    pub device_write_packet:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub device_set_carrier:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, carrier_state: c_int)>,
+}
+
+#[repr(C)]
+struct TunState {
+    fd: c_int,
+    select_filled: c_int,
+}
+
+extern "C" {
+    fn write(fd: c_int, buf: *const c_void, n: usize) -> isize;
+}
+
+#[allow(unused_variables)]
+#[no_mangle]
+pub unsafe extern "C" fn tun_write_packet(net: *mut EthernetDevice, buf: *const u8, len: c_int) {
+    let _ = core::marker::PhantomData::<c_char>;
+    if net.is_null() {
+        return;
+    }
+    let s = (*net).opaque as *mut TunState;
+    if s.is_null() {
+        return;
+    }
+    write((*s).fd, buf as *const c_void, len as usize);
+}
+}
+
 // ── `TunState *s = net->opaque; write(s->fd, buf, len);` · temu.c:368-369 · chunk 3557 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1379,6 +2598,129 @@ pub unsafe extern "C" fn tun_write_packet__part3557(
 ) {
     let s = (*net).opaque as *mut TunState;
     write((*s).fd, buf as *const c_void, len as usize);
+}
+}
+
+// ── `tun_select_fill` · temu.c:372-384 · chunk 3558 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void tun_select_fill(EthernetDevice *net, int *pfd_max,
+//                                 fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                                 int *pdelay)
+//     {
+//         TunState *s = net->opaque;
+//         int net_fd = s->fd;
+//     
+//         s->select_filled = net->device_can_write_packet(net);
+//         if (s->select_filled) {
+//             
+//            ((void) (((
+//            rfds
+//            )->fds_bits)[((
+//            net_fd
+//            ) / (8 * (int) sizeof (__fd_mask)))] |= ((__fd_mask) (1UL << ((
+//            net_fd
+//            ) % (8 * (int) sizeof (__fd_mask)))))))
+//                                ;
+//             *pfd_max = max_int(*pfd_max, net_fd);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3558 {
+// Port of the static C function tun_select_fill() from temu.c.
+// The C definition is replaced by this Rust one; the rest of the program is C.
+
+use core::ffi::{c_int, c_long, c_void};
+
+/// Mirror of glibc's `fd_set` (1024 / (8 * sizeof(long)) longs).
+#[repr(C)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+/// Mirror of linux's `__fd_mask`.
+type FdMask = c_long;
+
+/// Mirror of `BOOL` (an `int`).
+type Bool = c_int;
+
+/// Mirror of the `EthernetDevice` struct from the TARGET's translation unit.
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            pfd_max: *mut c_int,
+            rfds: *mut FdSet,
+            wfds: *mut FdSet,
+            efds: *mut FdSet,
+            pdelay: *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            rfds: *mut FdSet,
+            wfds: *mut FdSet,
+            efds: *mut FdSet,
+            select_ret: c_int,
+        ),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(net: *mut EthernetDevice) -> Bool>,
+    pub device_write_packet:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub device_set_carrier:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, carrier_state: Bool)>,
+}
+
+/// Mirror of the file-local C struct `TunState` (`int fd; BOOL select_filled;`).
+#[repr(C)]
+struct TunState {
+    fd: c_int,
+    select_filled: Bool,
+}
+
+#[inline]
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tun_select_fill(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    pdelay: *mut c_int,
+) {
+    let _ = (wfds, efds, pdelay);
+
+    let s = (*net).opaque as *mut TunState;
+    let net_fd: c_int = (*s).fd;
+
+    let filled: Bool = match (*net).device_can_write_packet {
+        Some(f) => f(net),
+        None => 0,
+    };
+    (*s).select_filled = filled;
+    if (*s).select_filled != 0 {
+        // FD_SET(net_fd, rfds)
+        let bits_per_mask = 8 * core::mem::size_of::<FdMask>() as c_int;
+        if let Some(word) = (*rfds).fds_bits.get_mut((net_fd / bits_per_mask) as usize) {
+            *word |= (1u64 << ((net_fd % bits_per_mask) as u32)) as FdMask;
+        }
+        *pfd_max = max_int(*pfd_max, net_fd);
+    }
 }
 }
 
@@ -1488,6 +2830,136 @@ pub extern "C" fn tun_select_fill__part3560(
         let slot = bits.offset(idx);
         *slot |= mask;
         *pfd_max = max_int(*pfd_max, net_fd);
+    }
+}
+}
+
+// ── `tun_select_poll` · temu.c:386-403 · chunk 3561 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void tun_select_poll(EthernetDevice *net,
+//                                 fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                                 int select_ret)
+//     {
+//         TunState *s = net->opaque;
+//         int net_fd = s->fd;
+//         uint8_t buf[2048];
+//         int ret;
+//     
+//         if (select_ret <= 0)
+//             return;
+//         if (s->select_filled && 
+//                                ((((
+//                                rfds
+//                                )->fds_bits)[((
+//                                net_fd
+//                                ) / (8 * (int) sizeof (__fd_mask)))] & ((__fd_mask) (1UL << ((
+//                                net_fd
+//                                ) % (8 * (int) sizeof (__fd_mask)))))) != 0)
+//                                                      ) {
+//             ret = read(net_fd, buf, sizeof(buf));
+//             if (ret > 0)
+//                 net->device_write_packet(net, buf, ret);
+//         }
+//     
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3561 {
+// Rust rewrite of temu.c:tun_select_poll
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
+use core::ffi::{c_int, c_long, c_void};
+
+// typedef int BOOL;
+type BOOL = c_int;
+
+// typedef struct { __fd_mask fds_bits[1024 / (8 * (int) sizeof(__fd_mask))]; } fd_set;
+// with typedef long int __fd_mask;
+#[repr(C)]
+pub struct fd_set {
+    pub fds_bits: [c_long; 1024 / (8 * core::mem::size_of::<c_long>())],
+}
+
+type WritePacketFn = unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int);
+type SelectFillFn = unsafe extern "C" fn(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut fd_set,
+    wfds: *mut fd_set,
+    efds: *mut fd_set,
+    pdelay: *mut c_int,
+);
+type SelectPollFn = unsafe extern "C" fn(
+    net: *mut EthernetDevice,
+    rfds: *mut fd_set,
+    wfds: *mut fd_set,
+    efds: *mut fd_set,
+    select_ret: c_int,
+);
+type CanWritePacketFn = unsafe extern "C" fn(net: *mut EthernetDevice) -> BOOL;
+type SetCarrierFn = unsafe extern "C" fn(net: *mut EthernetDevice, carrier_state: BOOL);
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<WritePacketFn>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<SelectFillFn>,
+    pub select_poll: Option<SelectPollFn>,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<CanWritePacketFn>,
+    pub device_write_packet: Option<WritePacketFn>,
+    pub device_set_carrier: Option<SetCarrierFn>,
+}
+
+#[repr(C)]
+pub struct TunState {
+    pub fd: c_int,
+    pub select_filled: BOOL,
+}
+
+extern "C" {
+    fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+}
+
+#[inline]
+unsafe fn fd_isset(fd: c_int, set: *mut fd_set) -> bool {
+    let bits_per: c_int = (8 * core::mem::size_of::<c_long>()) as c_int;
+    // mirror the C macros: (set)->fds_bits[(fd) / (8*sizeof(__fd_mask))] & ((__fd_mask)(1UL << ((fd) % (8*sizeof(__fd_mask)))))
+    let idx = (fd / bits_per) as usize;
+    let shift = (fd % bits_per) as u32;
+    let mask = (1usize.wrapping_shl(shift)) as c_long;
+    let set_ref = &*set;
+    let word = match set_ref.fds_bits.get(idx) {
+        Some(w) => *w,
+        None => return false,
+    };
+    (word & mask) != 0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tun_select_poll(
+    net: *mut EthernetDevice,
+    rfds: *mut fd_set,
+    _wfds: *mut fd_set,
+    _efds: *mut fd_set,
+    select_ret: c_int,
+) {
+    let s = (*net).opaque as *mut TunState;
+    let net_fd = (*s).fd;
+    let mut buf = [0u8; 2048];
+
+    if select_ret <= 0 {
+        return;
+    }
+    if (*s).select_filled != 0 && !rfds.is_null() && fd_isset(net_fd, rfds) {
+        let ret = read(net_fd, buf.as_mut_ptr() as *mut c_void, buf.len());
+        if ret > 0 {
+            if let Some(write_packet) = (*net).device_write_packet {
+                write_packet(net, buf.as_ptr(), ret as c_int);
+            }
+        }
     }
 }
 }
@@ -1605,6 +3077,351 @@ pub unsafe extern "C" fn tun_select_poll__part3563(
                 f(net, buf as *const u8, ret_i);
             }
         }
+    }
+}
+}
+
+// ── `tun_open` · temu.c:423-460 · chunk 3564 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static EthernetDevice *tun_open(const char *ifname)
+//     {
+//         struct ifreq ifr;
+//         int fd, ret;
+//         EthernetDevice *net;
+//         TunState *s;
+//     
+//         fd = open("/dev/net/tun", 
+//                                  02
+//                                        );
+//         if (fd < 0) {
+//             fprintf(
+//                    stderr
+//                          , "Error: could not open /dev/net/tun\n");
+//             return 
+//                   ((void *)0)
+//                       ;
+//         }
+//         memset(&ifr, 0, sizeof(ifr));
+//         ifr.
+//            ifr_ifru.ifru_flags 
+//                      = 
+//                        0x0002 
+//                                | 
+//                                  0x1000
+//                                           ;
+//         pstrcpy(ifr.
+//                    ifr_ifrn.ifrn_name
+//                            , sizeof(ifr.
+//                                         ifr_ifrn.ifrn_name
+//                                                 ), ifname);
+//         ret = ioctl(fd, 
+//                        (((1U) << (((0 +8)+8)+14)) | ((('T')) << (0 +8)) | (((202)) << 0) | ((((sizeof(int)))) << ((0 +8)+8)))
+//                                 , (void *) &ifr);
+//         if (ret != 0) {
+//             fprintf(
+//                    stderr
+//                          , "Error: could not configure /dev/net/tun\n");
+//             close(fd);
+//             return 
+//                   ((void *)0)
+//                       ;
+//         }
+//         fcntl(fd, 
+//                  4
+//                         , 
+//                           04000
+//                                     );
+//     
+//         net = mallocz(sizeof(*net));
+//         net->mac_addr[0] = 0x02;
+//         net->mac_addr[1] = 0x00;
+//         net->mac_addr[2] = 0x00;
+//         net->mac_addr[3] = 0x00;
+//         net->mac_addr[4] = 0x00;
+//         net->mac_addr[5] = 0x01;
+//         s = mallocz(sizeof(*s));
+//         s->fd = fd;
+//         net->opaque = s;
+//         net->write_packet = tun_write_packet;
+//         net->select_fill = tun_select_fill;
+//         net->select_poll = tun_select_poll;
+//         return net;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3564 {
+// Rust port of tun_open() from temu.c, together with the file-static helpers
+// (tun_write_packet / tun_select_fill / tun_select_poll) it installs into the
+// EthernetDevice.  Those helpers have internal linkage on the C side, so they
+// are re-implemented here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_long, c_short, c_uchar, c_ulong, c_ushort, c_void};
+
+// C: typedef int BOOL;
+type Bool = c_int;
+
+// number of bits in one __fd_mask (long) entry of fd_set
+const BITS_PER_MASK: c_int = 8 * core::mem::size_of::<c_long>() as c_int;
+
+// struct _IO_FILE is opaque here
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Sockaddr {
+    pub sa_family: c_ushort,
+    pub sa_data: [c_char; 14],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Ifmap {
+    pub mem_start: c_ulong,
+    pub mem_end: c_ulong,
+    pub base_addr: c_ushort,
+    pub irq: c_uchar,
+    pub dma: c_uchar,
+    pub port: c_uchar,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union Ifru {
+    pub ifru_addr: Sockaddr,
+    pub ifru_dstaddr: Sockaddr,
+    pub ifru_broadaddr: Sockaddr,
+    pub ifru_netmask: Sockaddr,
+    pub ifru_hwaddr: Sockaddr,
+    pub ifru_flags: c_short,
+    pub ifru_ivalue: c_int,
+    pub ifru_mtu: c_int,
+    pub ifru_map: Ifmap,
+    pub ifru_slave: [c_char; 16],
+    pub ifru_newname: [c_char; 16],
+    pub ifru_data: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union Ifrn {
+    pub ifrn_name: [c_char; 16],
+}
+
+#[repr(C)]
+pub struct Ifreq {
+    pub ifr_ifrn: Ifrn,
+    pub ifr_ifru: Ifru,
+}
+
+// glibc: typedef struct { __fd_mask fds_bits[1024 / (8 * sizeof(__fd_mask))]; } fd_set;
+#[repr(C)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+// C: typedef struct { int fd; BOOL select_filled; } TunState;
+#[repr(C)]
+pub struct TunState {
+    pub fd: c_int,
+    pub select_filled: Bool,
+}
+
+type WritePacketFn = extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int);
+type SelectFillFn = extern "C" fn(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    pdelay: *mut c_int,
+);
+type SelectPollFn = extern "C" fn(
+    net: *mut EthernetDevice,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    select_ret: c_int,
+);
+type CanWriteFn = extern "C" fn(net: *mut EthernetDevice) -> Bool;
+type SetCarrierFn = extern "C" fn(net: *mut EthernetDevice, carrier_state: Bool);
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<WritePacketFn>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<SelectFillFn>,
+    pub select_poll: Option<SelectPollFn>,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<CanWriteFn>,
+    pub device_write_packet: Option<WritePacketFn>,
+    pub device_set_carrier: Option<SetCarrierFn>,
+}
+
+extern "C" {
+    static mut stderr: *mut FILE;
+
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    // the C headers redirect open()/fcntl() to open64()/fcntl64()
+    fn open64(path: *const c_char, oflag: c_int, ...) -> c_int;
+    fn fcntl64(fd: c_int, cmd: c_int, ...) -> c_int;
+    fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+    fn close(fd: c_int) -> c_int;
+    fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+    fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn pstrcpy(buf: *mut c_char, buf_size: c_int, s: *const c_char);
+}
+
+// TUNSETIFF = (((1U) << 30) | ('T' << 8) | 202 | (sizeof(int) << 16))
+const TUNSETIFF: c_ulong = 0x4004_54ca;
+
+const O_RDWR: c_int = 0o2;
+const F_SETFL: c_int = 4;
+const O_NONBLOCK: c_int = 0o4000;
+const IFF_TAP: c_short = 0x0002;
+const IFF_NO_PI: c_short = 0x1000;
+
+// static void tun_write_packet(EthernetDevice *net, const uint8_t *buf, int len)
+extern "C" fn tun_write_packet_impl(net: *mut EthernetDevice, buf: *const u8, len: c_int) {
+    unsafe {
+        let s = (*net).opaque as *mut TunState;
+        write((*s).fd, buf as *const c_void, len as usize);
+    }
+}
+
+fn fd_bit_index(fd: c_int) -> usize {
+    (fd / BITS_PER_MASK) as usize
+}
+
+fn fd_bit_mask(fd: c_int) -> c_long {
+    let shift = ((fd % BITS_PER_MASK) as u32) & (BITS_PER_MASK as u32 - 1);
+    (1u64 << shift) as c_long
+}
+
+// static void tun_select_fill(EthernetDevice *net, int *pfd_max,
+//                             fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                             int *pdelay)
+extern "C" fn tun_select_fill_impl(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut FdSet,
+    _wfds: *mut FdSet,
+    _efds: *mut FdSet,
+    _pdelay: *mut c_int,
+) {
+    unsafe {
+        let s = (*net).opaque as *mut TunState;
+        let net_fd = (*s).fd;
+
+        let can_write = match (*net).device_can_write_packet {
+            Some(f) => f(net),
+            None => 0,
+        };
+        (*s).select_filled = can_write;
+        if (*s).select_filled != 0 {
+            let idx = fd_bit_index(net_fd);
+            let bits = core::ptr::addr_of_mut!((*rfds).fds_bits) as *mut c_long;
+            *bits.add(idx) |= fd_bit_mask(net_fd);
+            *pfd_max = if *pfd_max > net_fd { *pfd_max } else { net_fd };
+        }
+    }
+}
+
+// static void tun_select_poll(EthernetDevice *net,
+//                             fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                             int select_ret)
+extern "C" fn tun_select_poll_impl(
+    net: *mut EthernetDevice,
+    rfds: *mut FdSet,
+    _wfds: *mut FdSet,
+    _efds: *mut FdSet,
+    select_ret: c_int,
+) {
+    unsafe {
+        let s = (*net).opaque as *mut TunState;
+        let net_fd = (*s).fd;
+        let mut buf = [0u8; 2048];
+
+        if select_ret <= 0 {
+            return;
+        }
+        if (*s).select_filled != 0 {
+            let idx = fd_bit_index(net_fd);
+            let bits = core::ptr::addr_of!((*rfds).fds_bits) as *const c_long;
+            if (*bits.add(idx) & fd_bit_mask(net_fd)) != 0 {
+                let ret = read(net_fd, buf.as_mut_ptr() as *mut c_void, buf.len());
+                if ret > 0 {
+                    if let Some(f) = (*net).device_write_packet {
+                        f(net, buf.as_mut_ptr(), ret as c_int);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn tun_open(ifname: *const c_char) -> *mut EthernetDevice {
+    unsafe {
+        // struct ifreq ifr; memset(&ifr, 0, sizeof(ifr));
+        let mut ifr: Ifreq = core::mem::zeroed();
+        let fd: c_int;
+        let ret: c_int;
+        let net: *mut EthernetDevice;
+        let s: *mut TunState;
+
+        fd = open64(b"/dev/net/tun\0".as_ptr() as *const c_char, O_RDWR);
+        if fd < 0 {
+            fprintf(
+                stderr,
+                b"Error: could not open /dev/net/tun\n\0".as_ptr() as *const c_char,
+            );
+            return core::ptr::null_mut();
+        }
+
+        // ifr.ifr_ifru.ifru_flags = IFF_TAP | IFF_NO_PI;
+        let flags = core::ptr::addr_of_mut!(ifr.ifr_ifru) as *mut c_short;
+        *flags = IFF_TAP | IFF_NO_PI;
+
+        // pstrcpy(ifr.ifr_ifrn.ifrn_name, sizeof(ifr.ifr_ifrn.ifrn_name), ifname);
+        let name = core::ptr::addr_of_mut!(ifr.ifr_ifrn) as *mut c_char;
+        pstrcpy(name, 16, ifname);
+
+        ret = ioctl(
+            fd,
+            TUNSETIFF,
+            core::ptr::addr_of_mut!(ifr) as *mut c_void,
+        );
+        if ret != 0 {
+            fprintf(
+                stderr,
+                b"Error: could not configure /dev/net/tun\n\0".as_ptr() as *const c_char,
+            );
+            close(fd);
+            return core::ptr::null_mut();
+        }
+        fcntl64(fd, F_SETFL, O_NONBLOCK);
+
+        net = mallocz(core::mem::size_of::<EthernetDevice>()) as *mut EthernetDevice;
+        (*net).mac_addr[0] = 0x02;
+        (*net).mac_addr[1] = 0x00;
+        (*net).mac_addr[2] = 0x00;
+        (*net).mac_addr[3] = 0x00;
+        (*net).mac_addr[4] = 0x00;
+        (*net).mac_addr[5] = 0x01;
+
+        s = mallocz(core::mem::size_of::<TunState>()) as *mut TunState;
+        (*s).fd = fd;
+        (*net).opaque = s as *mut c_void;
+        (*net).write_packet = Some(tun_write_packet_impl);
+        (*net).select_fill = Some(tun_select_fill_impl);
+        (*net).select_poll = Some(tun_select_poll_impl);
+        net
     }
 }
 }
@@ -1957,6 +3774,52 @@ pub unsafe extern "C" fn tun_open__part3569(fd: c_int) -> *mut EthernetDevice {
 }
 }
 
+// ── `slirp_write_packet` · temu.c:471-476 · chunk 3571 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void slirp_write_packet(EthernetDevice *net,
+//                                    const uint8_t *buf, int len)
+//     {
+//         Slirp *slirp_state = net->opaque;
+//         slirp_input(slirp_state, buf, len);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3571 {
+// Port of the static C function slirp_write_packet from temu.c.
+// Only the `opaque` field of EthernetDevice is read; the other pointer /
+// function-pointer members are mirrored with ABI-identical pointer types so
+// that the struct layout matches the C definition exactly.
+
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: *mut c_void,
+    pub opaque: *mut c_void,
+    pub select_fill: *mut c_void,
+    pub select_poll: *mut c_void,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: *mut c_void,
+    pub device_write_packet: *mut c_void,
+    pub device_set_carrier: *mut c_void,
+}
+
+extern "C" {
+    fn slirp_input(slirp: *mut c_void, pkt: *const u8, pkt_len: c_int);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_write_packet(
+    net: *mut EthernetDevice,
+    buf: *const u8,
+    len: c_int,
+) {
+    let slirp_state = (*net).opaque;
+    slirp_input(slirp_state, buf, len);
+}
+}
+
 // ── `Slirp *slirp_state = net->opaque; slirp_input(slirp_state, buf, len);` · temu.c:474-475 · chunk 3572 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2005,6 +3868,43 @@ pub unsafe extern "C" fn slirp_write_packet__part3572(
 }
 }
 
+// ── `slirp_can_output` · temu.c:478-482 · chunk 3573 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int slirp_can_output(void *opaque)
+//     {
+//         EthernetDevice *net = opaque;
+//         return net->device_can_write_packet(net);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3573 {
+// Rewrite of `int slirp_can_output(void *opaque)` from temu.c.
+
+use core::ffi::{c_int, c_void};
+
+/// Mirror of `struct EthernetDevice` (virtio.h) up to the field we use.
+/// The leading fields are kept in order so the offsets match.
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: *mut c_void,
+    pub opaque: *mut c_void,
+    pub select_fill: *mut c_void,
+    pub select_poll: *mut c_void,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(net: *mut EthernetDevice) -> c_int>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_can_output(opaque: *mut c_void) -> c_int {
+    let net = opaque as *mut EthernetDevice;
+    match (*net).device_can_write_packet {
+        Some(f) => f(net),
+        None => 0,
+    }
+}
+}
+
 // ── `EthernetDevice *net = opaque; return net->device_can_write_packet(net);` · temu.c:480-481 · chunk 3574 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2046,6 +3946,59 @@ pub unsafe extern "C" fn slirp_can_output__part3574(opaque: *mut c_void) -> c_in
     match (*net).device_can_write_packet {
         Some(f) => f(net),
         None => 0,
+    }
+}
+}
+
+// ── `slirp_output` · temu.c:484-488 · chunk 3575 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void slirp_output(void *opaque, const uint8_t *pkt, int pkt_len)
+//     {
+//         EthernetDevice *net = opaque;
+//         return net->device_write_packet(net, pkt, pkt_len);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3575 {
+// Port of slirp_output() from temu.c.
+use core::ffi::{c_int, c_long, c_void};
+
+// fd_set: struct { __fd_mask fds_bits[1024 / (8 * sizeof(__fd_mask))]; }
+// with __fd_mask = long.  Only ever used behind a pointer here, but mirrored for layout.
+#[repr(C)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            *mut EthernetDevice,
+            *mut c_int,
+            *mut FdSet,
+            *mut FdSet,
+            *mut FdSet,
+            *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(*mut EthernetDevice, *mut FdSet, *mut FdSet, *mut FdSet, c_int),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice) -> c_int>,
+    pub device_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub device_set_carrier: Option<unsafe extern "C" fn(*mut EthernetDevice, c_int)>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_output(opaque: *mut c_void, pkt: *const u8, pkt_len: c_int) {
+    let net = opaque as *mut EthernetDevice;
+    if let Some(f) = (*net).device_write_packet {
+        f(net, pkt, pkt_len);
     }
 }
 }
@@ -2123,6 +4076,57 @@ pub unsafe extern "C" fn slirp_output__part3576(
 type _CharAlias = c_char;
 }
 
+// ── `slirp_select_fill1` · temu.c:490-496 · chunk 3577 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void slirp_select_fill1(EthernetDevice *net, int *pfd_max,
+//                                    fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                                    int *pdelay)
+//     {
+//         Slirp *slirp_state = net->opaque;
+//         slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3577 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            buf: *const u8,
+            len: c_int,
+        ),
+    >,
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn slirp_select_fill(
+        slirp: *mut c_void,
+        pnfds: *mut c_int,
+        readfds: *mut c_void,
+        writefds: *mut c_void,
+        xfds: *mut c_void,
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_select_fill1(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut c_void,
+    wfds: *mut c_void,
+    efds: *mut c_void,
+    _pdelay: *mut c_int,
+) {
+    let slirp_state = (*net).opaque;
+    slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);
+}
+}
+
 // ── `Slirp *slirp_state = net->opaque; slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);` · temu.c:494-495 · chunk 3578 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2173,6 +4177,94 @@ pub extern "C" fn slirp_select_fill1__part3578(
         let slirp_state: *mut c_void = (*net).opaque;
         slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);
     }
+}
+}
+
+// ── `slirp_select_poll1` · temu.c:498-504 · chunk 3579 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void slirp_select_poll1(EthernetDevice *net,
+//                                    fd_set *rfds, fd_set *wfds, fd_set *efds,
+//                                    int select_ret)
+//     {
+//         Slirp *slirp_state = net->opaque;
+//         slirp_select_poll(slirp_state, rfds, wfds, efds, (select_ret <= 0));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3579 {
+use core::ffi::{c_int, c_long, c_void};
+
+// Opaque handle for the slirp state; only passed through to C.
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+// fd_set as defined by glibc on this target.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+// The fields of EthernetDevice, in order. Only `opaque` is actually read.
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            pfd_max: *mut c_int,
+            rfds: *mut FdSet,
+            wfds: *mut FdSet,
+            efds: *mut FdSet,
+            pdelay: *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(
+            net: *mut EthernetDevice,
+            rfds: *mut FdSet,
+            wfds: *mut FdSet,
+            efds: *mut FdSet,
+            select_ret: c_int,
+        ),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(net: *mut EthernetDevice) -> c_int>,
+    pub device_write_packet:
+        Option<unsafe extern "C" fn(net: *mut EthernetDevice, buf: *const u8, len: c_int)>,
+    pub device_set_carrier: Option<unsafe extern "C" fn(net: *mut EthernetDevice, carrier_state: c_int)>,
+}
+
+extern "C" {
+    fn slirp_select_poll(
+        slirp: *mut Slirp,
+        readfds: *mut FdSet,
+        writefds: *mut FdSet,
+        xfds: *mut FdSet,
+        select_error: c_int,
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_select_poll1(
+    net: *mut EthernetDevice,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    select_ret: c_int,
+) {
+    let slirp_state = (*net).opaque as *mut Slirp;
+    slirp_select_poll(
+        slirp_state,
+        rfds,
+        wfds,
+        efds,
+        if select_ret <= 0 { 1 } else { 0 },
+    );
 }
 }
 
@@ -2235,6 +4327,266 @@ pub unsafe extern "C" fn slirp_select_poll1__part3580(
         efds,
         if select_ret <= 0 { 1 } else { 0 },
     );
+}
+}
+
+// ── `slirp_open` · temu.c:506-539 · chunk 3581 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static EthernetDevice *slirp_open(void)
+//     {
+//         EthernetDevice *net;
+//         struct in_addr net_addr = { .s_addr = htonl(0x0a000200) };
+//         struct in_addr mask = { .s_addr = htonl(0xffffff00) };
+//         struct in_addr host = { .s_addr = htonl(0x0a000202) };
+//         struct in_addr dhcp = { .s_addr = htonl(0x0a00020f) };
+//         struct in_addr dns = { .s_addr = htonl(0x0a000203) };
+//         const char *bootfile = 
+//                               ((void *)0)
+//                                   ;
+//         const char *vhostname = 
+//                                ((void *)0)
+//                                    ;
+//         int restricted = 0;
+//     
+//         if (slirp_state) {
+//             fprintf(
+//                    stderr
+//                          , "Only a single slirp instance is allowed\n");
+//             return 
+//                   ((void *)0)
+//                       ;
+//         }
+//         net = mallocz(sizeof(*net));
+//     
+//         slirp_state = slirp_init(restricted, net_addr, mask, host, vhostname,
+//                                  "", bootfile, dhcp, dns, net);
+//     
+//         net->mac_addr[0] = 0x02;
+//         net->mac_addr[1] = 0x00;
+//         net->mac_addr[2] = 0x00;
+//         net->mac_addr[3] = 0x00;
+//         net->mac_addr[4] = 0x00;
+//         net->mac_addr[5] = 0x01;
+//         net->opaque = slirp_state;
+//         net->write_packet = slirp_write_packet;
+//         net->select_fill = slirp_select_fill1;
+//         net->select_poll = slirp_select_poll1;
+//     
+//         return net;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3581 {
+// Rust port of `static EthernetDevice *slirp_open(void)` from temu.c
+#![allow(non_camel_case_types, non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+// Opaque C types (only handled through pointers).
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+// fd_set: __fd_mask fds_bits[1024 / (8 * sizeof(__fd_mask))] with
+// __fd_mask = long int on this target. Only ever passed through.
+#[repr(C)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+type WritePacketFn = Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>;
+type SelectFillFn = Option<
+    unsafe extern "C" fn(
+        *mut EthernetDevice,
+        *mut c_int,
+        *mut FdSet,
+        *mut FdSet,
+        *mut FdSet,
+        *mut c_int,
+    ),
+>;
+type SelectPollFn = Option<
+    unsafe extern "C" fn(*mut EthernetDevice, *mut FdSet, *mut FdSet, *mut FdSet, c_int),
+>;
+type CanWritePacketFn = Option<unsafe extern "C" fn(*mut EthernetDevice) -> c_int>;
+type SetCarrierFn = Option<unsafe extern "C" fn(*mut EthernetDevice, c_int)>;
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: WritePacketFn,
+    pub opaque: *mut c_void,
+    pub select_fill: SelectFillFn,
+    pub select_poll: SelectPollFn,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: CanWritePacketFn,
+    pub device_write_packet: WritePacketFn,
+    pub device_set_carrier: SetCarrierFn,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+
+    fn htonl(hostlong: u32) -> u32;
+
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    static stderr: *mut FILE;
+
+    fn slirp_init(
+        restricted: c_int,
+        vnetwork: InAddr,
+        vnetmask: InAddr,
+        vhost: InAddr,
+        vhostname: *const c_char,
+        tftp_path: *const c_char,
+        bootfile: *const c_char,
+        vdhcp_start: InAddr,
+        vnameserver: InAddr,
+        opaque: *mut c_void,
+    ) -> *mut Slirp;
+
+    fn slirp_input(slirp: *mut Slirp, pkt: *const u8, pkt_len: c_int);
+
+    fn slirp_select_fill(
+        slirp: *mut Slirp,
+        pnfds: *mut c_int,
+        readfds: *mut FdSet,
+        writefds: *mut FdSet,
+        xfds: *mut FdSet,
+    );
+
+    fn slirp_select_poll(
+        slirp: *mut Slirp,
+        readfds: *mut FdSet,
+        writefds: *mut FdSet,
+        xfds: *mut FdSet,
+        select_error: c_int,
+    );
+}
+
+// The C file-scope `static Slirp *slirp_state;` has no linker symbol, so the
+// state is mirrored here. It starts out NULL just like the C static.
+static mut SLIRP_STATE: *mut Slirp = core::ptr::null_mut();
+
+#[inline]
+fn slirp_state_slot() -> *mut *mut Slirp {
+    unsafe { core::ptr::addr_of_mut!(SLIRP_STATE) }
+}
+
+#[inline]
+unsafe fn slirp_state_get() -> *mut Slirp {
+    core::ptr::read(slirp_state_slot())
+}
+
+#[inline]
+unsafe fn slirp_state_set(v: *mut Slirp) {
+    core::ptr::write(slirp_state_slot(), v)
+}
+
+// Ports of the static callbacks that slirp_open installs into the device.
+unsafe extern "C" fn slirp_write_packet(net: *mut EthernetDevice, buf: *const u8, len: c_int) {
+    let slirp_state: *mut Slirp = (*net).opaque as *mut Slirp;
+    slirp_input(slirp_state, buf, len);
+}
+
+unsafe extern "C" fn slirp_select_fill1(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    _pdelay: *mut c_int,
+) {
+    let slirp_state: *mut Slirp = (*net).opaque as *mut Slirp;
+    slirp_select_fill(slirp_state, pfd_max, rfds, wfds, efds);
+}
+
+unsafe extern "C" fn slirp_select_poll1(
+    net: *mut EthernetDevice,
+    rfds: *mut FdSet,
+    wfds: *mut FdSet,
+    efds: *mut FdSet,
+    select_ret: c_int,
+) {
+    let slirp_state: *mut Slirp = (*net).opaque as *mut Slirp;
+    slirp_select_poll(
+        slirp_state,
+        rfds,
+        wfds,
+        efds,
+        if select_ret <= 0 { 1 } else { 0 },
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn slirp_open() -> *mut EthernetDevice {
+    let net_addr = InAddr {
+        s_addr: htonl(0x0a00_0200u32),
+    }; // 10.0.2.0
+    let mask = InAddr {
+        s_addr: htonl(0xffff_ff00u32),
+    }; // 255.255.255.0
+    let host = InAddr {
+        s_addr: htonl(0x0a00_0202u32),
+    }; // 10.0.2.2
+    let dhcp = InAddr {
+        s_addr: htonl(0x0a00_020fu32),
+    }; // 10.0.2.15
+    let dns = InAddr {
+        s_addr: htonl(0x0a00_0203u32),
+    }; // 10.0.2.3
+    let bootfile: *const c_char = core::ptr::null();
+    let vhostname: *const c_char = core::ptr::null();
+    let restricted: c_int = 0;
+
+    if !slirp_state_get().is_null() {
+        fprintf(
+            core::ptr::read(core::ptr::addr_of!(stderr)),
+            b"Only a single slirp instance is allowed\n\0".as_ptr() as *const c_char,
+        );
+        return core::ptr::null_mut();
+    }
+
+    let net = mallocz(core::mem::size_of::<EthernetDevice>()) as *mut EthernetDevice;
+
+    let state = slirp_init(
+        restricted,
+        net_addr,
+        mask,
+        host,
+        vhostname,
+        b"\0".as_ptr() as *const c_char,
+        bootfile,
+        dhcp,
+        dns,
+        net as *mut c_void,
+    );
+    slirp_state_set(state);
+
+    (*net).mac_addr[0] = 0x02;
+    (*net).mac_addr[1] = 0x00;
+    (*net).mac_addr[2] = 0x00;
+    (*net).mac_addr[3] = 0x00;
+    (*net).mac_addr[4] = 0x00;
+    (*net).mac_addr[5] = 0x01;
+    (*net).opaque = state as *mut c_void;
+    (*net).write_packet = Some(slirp_write_packet);
+    (*net).select_fill = Some(slirp_select_fill1);
+    (*net).select_poll = Some(slirp_select_poll1);
+
+    net
 }
 }
 
@@ -2457,6 +4809,360 @@ pub extern "C" fn slirp_open__part3583(
 
         net
     }
+}
+}
+
+// ── `virt_machine_run` · temu.c:546-609 · chunk 3584 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     void virt_machine_run(VirtMachine *m)
+//     {
+//         fd_set rfds, wfds, efds;
+//         int fd_max, ret, delay;
+//         struct timeval tv;
+//     
+//         int stdin_fd;
+//     
+//     
+//         delay = virt_machine_get_sleep_duration(m, 10);
+//     
+//     
+//         
+//        do { unsigned int __i; fd_set *__arr = (
+//        &rfds
+//        ); for (__i = 0; __i < sizeof (fd_set) / sizeof (__fd_mask); ++__i) ((__arr)->fds_bits)[__i] = 0; } while (0)
+//                      ;
+//         
+//        do { unsigned int __i; fd_set *__arr = (
+//        &wfds
+//        ); for (__i = 0; __i < sizeof (fd_set) / sizeof (__fd_mask); ++__i) ((__arr)->fds_bits)[__i] = 0; } while (0)
+//                      ;
+//         
+//        do { unsigned int __i; fd_set *__arr = (
+//        &efds
+//        ); for (__i = 0; __i < sizeof (fd_set) / sizeof (__fd_mask); ++__i) ((__arr)->fds_bits)[__i] = 0; } while (0)
+//                      ;
+//         fd_max = -1;
+//     
+//         if (m->console_dev && virtio_console_can_write_data(m->console_dev)) {
+//             STDIODevice *s = m->console->opaque;
+//             stdin_fd = s->stdin_fd;
+//             
+//            ((void) (((
+//            &rfds
+//            )->fds_bits)[((
+//            stdin_fd
+//            ) / (8 * (int) sizeof (__fd_mask)))] |= ((__fd_mask) (1UL << ((
+//            stdin_fd
+//            ) % (8 * (int) sizeof (__fd_mask)))))))
+//                                   ;
+//             fd_max = stdin_fd;
+//     
+//             if (s->resize_pending) {
+//                 int width, height;
+//                 console_get_size(s, &width, &height);
+//                 virtio_console_resize_event(m->console_dev, width, height);
+//                 s->resize_pending = FALSE;
+//             }
+//         }
+//     
+//         if (m->net) {
+//             m->net->select_fill(m->net, &fd_max, &rfds, &wfds, &efds, &delay);
+//         }
+//     
+//         fs_net_set_fdset(&fd_max, &rfds, &wfds, &efds, &delay);
+//     
+//         tv.tv_sec = delay / 1000;
+//         tv.tv_usec = (delay % 1000) * 1000;
+//         ret = select(fd_max + 1, &rfds, &wfds, &efds, &tv);
+//         if (m->net) {
+//             m->net->select_poll(m->net, &rfds, &wfds, &efds, ret);
+//         }
+//         if (ret > 0) {
+//     
+//             if (m->console_dev && 
+//                                  ((((
+//                                  &rfds
+//                                  )->fds_bits)[((
+//                                  stdin_fd
+//                                  ) / (8 * (int) sizeof (__fd_mask)))] & ((__fd_mask) (1UL << ((
+//                                  stdin_fd
+//                                  ) % (8 * (int) sizeof (__fd_mask)))))) != 0)
+//                                                           ) {
+//                 uint8_t buf[128];
+//                 int ret, len;
+//                 len = virtio_console_get_write_len(m->console_dev);
+//                 len = min_int(len, sizeof(buf));
+//                 ret = m->console->read_data(m->console->opaque, buf, len);
+//                 if (ret > 0) {
+//                     virtio_console_write_data(m->console_dev, buf, ret);
+//                 }
+//             }
+//     
+//         }
+//     
+//     
+//         sdl_refresh(m);
+//     
+//     
+//         virt_machine_interp(m, 500000);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3584 {
+// Port of temu.c: void virt_machine_run(VirtMachine *m)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_ulong, c_void};
+
+type BOOL = c_int;
+
+// typedef long int __fd_mask;
+// __fd_mask fds_bits[1024 / (8 * (int) sizeof (__fd_mask))];
+#[repr(C)]
+pub struct FdSet {
+    pub fds_bits: [c_long; 16],
+}
+
+#[repr(C)]
+pub struct TimeVal {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct Winsize {
+    pub ws_row: u16,
+    pub ws_col: u16,
+    pub ws_xpixel: u16,
+    pub ws_ypixel: u16,
+}
+
+#[repr(C)]
+pub struct STDIODevice {
+    pub stdin_fd: c_int,
+    pub console_esc_state: c_int,
+    pub resize_pending: BOOL,
+}
+
+#[repr(C)]
+pub struct CharacterDevice {
+    pub opaque: *mut c_void,
+    pub write_data: Option<unsafe extern "C" fn(*mut c_void, *const u8, c_int)>,
+    pub read_data: Option<unsafe extern "C" fn(*mut c_void, *mut u8, c_int) -> c_int>,
+}
+
+#[repr(C)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            *mut EthernetDevice,
+            *mut c_int,
+            *mut FdSet,
+            *mut FdSet,
+            *mut FdSet,
+            *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(*mut EthernetDevice, *mut FdSet, *mut FdSet, *mut FdSet, c_int),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice) -> BOOL>,
+    pub device_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub device_set_carrier: Option<unsafe extern "C" fn(*mut EthernetDevice, BOOL)>,
+}
+
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const c_char,
+    pub virt_machine_set_defaults: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub virt_machine_init: Option<unsafe extern "C" fn(*const c_void) -> *mut VirtMachine>,
+    pub virt_machine_end: Option<unsafe extern "C" fn(*mut VirtMachine)>,
+    pub virt_machine_get_sleep_duration:
+        Option<unsafe extern "C" fn(*mut VirtMachine, c_int) -> c_int>,
+    pub virt_machine_interp: Option<unsafe extern "C" fn(*mut VirtMachine, c_int)>,
+    pub vm_mouse_is_absolute: Option<unsafe extern "C" fn(*mut VirtMachine) -> BOOL>,
+    pub vm_send_mouse_event:
+        Option<unsafe extern "C" fn(*mut VirtMachine, c_int, c_int, c_int, c_uint)>,
+    pub vm_send_key_event: Option<unsafe extern "C" fn(*mut VirtMachine, BOOL, u16)>,
+}
+
+#[repr(C)]
+pub struct VirtMachine {
+    pub vmc: *const VirtMachineClass,
+    pub net: *mut EthernetDevice,
+    pub console_dev: *mut c_void, // VIRTIODevice
+    pub console: *mut CharacterDevice,
+    pub fb_dev: *mut c_void, // FBDevice
+}
+
+extern "C" {
+    fn select(
+        nfds: c_int,
+        readfds: *mut FdSet,
+        writefds: *mut FdSet,
+        exceptfds: *mut FdSet,
+        timeout: *mut TimeVal,
+    ) -> c_int;
+    fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+
+    fn virtio_console_can_write_data(s: *mut c_void) -> BOOL;
+    fn virtio_console_get_write_len(s: *mut c_void) -> c_int;
+    fn virtio_console_write_data(s: *mut c_void, buf: *const u8, buf_len: c_int) -> c_int;
+    fn virtio_console_resize_event(s: *mut c_void, width: c_int, height: c_int);
+
+    fn sdl_refresh(m: *mut VirtMachine);
+}
+
+#[inline]
+fn fd_mask_nbits() -> c_int {
+    (8 * core::mem::size_of::<c_long>()) as c_int
+}
+
+// FD_SET(fd, set)
+unsafe fn fd_set(fd: c_int, set: *mut FdSet) {
+    let nbits = fd_mask_nbits();
+    let idx = (fd / nbits) as isize;
+    let bit = (fd % nbits) as u32;
+    let base = (*set).fds_bits.as_mut_ptr();
+    *base.offset(idx) |= (1u64 << bit) as c_long;
+}
+
+// FD_ISSET(fd, set) != 0
+unsafe fn fd_isset(fd: c_int, set: *const FdSet) -> bool {
+    let nbits = fd_mask_nbits();
+    let idx = (fd / nbits) as isize;
+    let bit = (fd % nbits) as u32;
+    let base = (*set).fds_bits.as_ptr();
+    (*base.offset(idx) & ((1u64 << bit) as c_long)) != 0
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+unsafe fn virt_machine_get_sleep_duration(s: *mut VirtMachine, delay: c_int) -> c_int {
+    match (*(*s).vmc).virt_machine_get_sleep_duration {
+        Some(f) => f(s, delay),
+        None => delay,
+    }
+}
+
+#[inline]
+unsafe fn virt_machine_interp(s: *mut VirtMachine, max_exec_cycle: c_int) {
+    if let Some(f) = (*(*s).vmc).virt_machine_interp {
+        f(s, max_exec_cycle);
+    }
+}
+
+// static void console_get_size(STDIODevice *s, int *pw, int *ph)
+unsafe fn console_get_size(s: *mut STDIODevice, pw: *mut c_int, ph: *mut c_int) {
+    let mut ws: Winsize = core::mem::zeroed();
+    let mut width: c_int = 80;
+    let mut height: c_int = 25;
+    if ioctl((*s).stdin_fd, 0x5413, &mut ws as *mut Winsize) == 0
+        && ws.ws_col >= 4
+        && ws.ws_row >= 4
+    {
+        width = ws.ws_col as c_int;
+        height = ws.ws_row as c_int;
+    }
+    *pw = width;
+    *ph = height;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_run(m: *mut VirtMachine) {
+    let mut rfds: FdSet = core::mem::zeroed();
+    let mut wfds: FdSet = core::mem::zeroed();
+    let mut efds: FdSet = core::mem::zeroed();
+    let mut stdin_fd: c_int = 0;
+
+    let mut delay: c_int = virt_machine_get_sleep_duration(m, 10);
+
+    // FD_ZERO(&rfds); FD_ZERO(&wfds); FD_ZERO(&efds);
+    {
+        let n = core::mem::size_of::<FdSet>() / core::mem::size_of::<c_long>();
+        let mut i = 0usize;
+        while i < n {
+            rfds.fds_bits[i] = 0;
+            wfds.fds_bits[i] = 0;
+            efds.fds_bits[i] = 0;
+            i += 1;
+        }
+    }
+    let mut fd_max: c_int = -1;
+
+    if !(*m).console_dev.is_null() && virtio_console_can_write_data((*m).console_dev) != 0 {
+        let console = (*m).console;
+        let s: *mut STDIODevice = (*console).opaque as *mut STDIODevice;
+        stdin_fd = (*s).stdin_fd;
+        fd_set(stdin_fd, &mut rfds);
+        fd_max = stdin_fd;
+
+        if (*s).resize_pending != 0 {
+            let mut width: c_int = 0;
+            let mut height: c_int = 0;
+            console_get_size(s, &mut width, &mut height);
+            virtio_console_resize_event((*m).console_dev, width, height);
+            (*s).resize_pending = 0;
+        }
+    }
+
+    if !(*m).net.is_null() {
+        let net = (*m).net;
+        if let Some(f) = (*net).select_fill {
+            f(net, &mut fd_max, &mut rfds, &mut wfds, &mut efds, &mut delay);
+        }
+    }
+
+    // CONFIG_FS_NET: fs_net_set_fdset(&fd_max, &rfds, &wfds, &efds, &delay).
+    // fs_net_set_fdset() returns immediately (leaving the arguments untouched)
+    // while the curl multi handle is not initialised, which is the state of
+    // this program, so nothing is added to the fd sets here.
+    // (The routine itself lives in fs_wget.c, which is not part of this link.)
+
+    let mut tv = TimeVal {
+        tv_sec: (delay / 1000) as c_long,
+        tv_usec: ((delay % 1000) * 1000) as c_long,
+    };
+    let ret: c_int = select(fd_max + 1, &mut rfds, &mut wfds, &mut efds, &mut tv);
+
+    if !(*m).net.is_null() {
+        let net = (*m).net;
+        if let Some(f) = (*net).select_poll {
+            f(net, &mut rfds, &mut wfds, &mut efds, ret);
+        }
+    }
+
+    if ret > 0 {
+        if !(*m).console_dev.is_null() && fd_isset(stdin_fd, &rfds) {
+            let mut buf = [0u8; 128];
+            let mut len: c_int = virtio_console_get_write_len((*m).console_dev);
+            len = min_int(len, 128 as c_int);
+            let console = (*m).console;
+            let r: c_int = match (*console).read_data {
+                Some(f) => f((*console).opaque, buf.as_mut_ptr(), len),
+                None => 0,
+            };
+            if r > 0 {
+                virtio_console_write_data((*m).console_dev, buf.as_ptr(), r);
+            }
+        }
+    }
+
+    sdl_refresh(m);
+
+    virt_machine_interp(m, 500000);
 }
 }
 
@@ -3242,6 +5948,38 @@ pub extern "C" fn help__part3598() {
 }
 }
 
+// ── `net_start_cb` · temu.c:644-647 · chunk 3600 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void net_start_cb(void *arg)
+//     {
+//         net_completed = TRUE;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3600 {
+use core::ffi::{c_int, c_void};
+
+// The C translation unit's file-scope `static BOOL net_completed;` is
+// internal, so this Rust unit provides its own copy of the flag, shared by
+// the ported net_start_cb and the C net_poll_cb through the exported helpers.
+static mut NET_COMPLETED: c_int = 0;
+
+#[no_mangle]
+pub static mut net_completed: c_int = 0;
+
+#[no_mangle]
+pub extern "C" fn net_start_cb(_arg: *mut c_void) {
+    unsafe {
+        net_completed = 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn net_get_completed() -> c_int {
+    unsafe { net_completed }
+}
+}
+
 // ── `net_completed = TRUE;` · temu.c:646-646 · chunk 3601 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3259,6 +5997,39 @@ pub extern "C" fn net_start_cb__part3601(net_completed: *mut c_int) {
             *net_completed = 1;
         }
     }
+}
+}
+
+// ── `net_poll_cb` · temu.c:649-652 · chunk 3602 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static BOOL net_poll_cb(void *arg)
+//     {
+//         return net_completed;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3602 {
+// Rust rewrite of temu.c's net_poll_cb:
+//
+//     static BOOL net_completed;
+//     static BOOL net_poll_cb(void *arg)
+//     {
+//         return net_completed;
+//     }
+//
+// `net_completed` is a file-static in the C translation unit and therefore has
+// no linker symbol, so its storage is ported here as a private Rust static
+// (BOOL is `int`, FALSE == 0, TRUE == 1).
+
+use core::ffi::{c_int, c_void};
+
+// Mirrors `static BOOL net_completed;` (zero-initialized == FALSE).
+static mut NET_COMPLETED: c_int = 0;
+
+#[no_mangle]
+pub extern "C" fn net_poll_cb(_arg: *mut c_void) -> c_int {
+    // Read the flag without forming a reference to the mutable static.
+    unsafe { core::ptr::read_volatile(core::ptr::addr_of!(NET_COMPLETED)) }
 }
 }
 
@@ -4137,6 +6908,488 @@ pub extern "C" fn main__part3613(p: *mut VirtMachineParams, build_preload_file: 
             (*entry).fs_dev = fs;
             i += 1;
         }
+    }
+}
+}
+
+// ── `for (i = 0; i < p->eth_count; i++)` · temu.c:796-816 · chunk 3614 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     for(i = 0; i < p->eth_count; i++) {
+//     
+//             if (!strcmp(p->tab_eth[i].driver, "user")) {
+//                 p->tab_eth[i].net = slirp_open();
+//                 if (!p->tab_eth[i].net)
+//                     exit(1);
+//             } else
+//     
+//     
+//             if (!strcmp(p->tab_eth[i].driver, "tap")) {
+//                 p->tab_eth[i].net = tun_open(p->tab_eth[i].ifname);
+//                 if (!p->tab_eth[i].net)
+//                     exit(1);
+//             } else
+//     
+//             {
+//                 fprintf(
+//                        stderr
+//                              , "Unsupported network driver '%s'\n",
+//                         p->tab_eth[i].driver);
+//                 exit(1);
+//             }
+//         }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3614 {
+// Port of the ethernet-device setup loop of main() (temu.c).
+// The helpers (slirp_open, tun_open, ...) are static in the C translation unit,
+// so their logic is re-implemented here as private fns; the remaining helpers
+// are real external symbols.
+
+use core::ffi::{c_char, c_int, c_short, c_ulong, c_ushort, c_void};
+
+const TUNSETIFF: c_ulong = 0x4004_54ca;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+// ---- C layout mirrors -------------------------------------------------------
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct IfMap {
+    mem_start: c_ulong,
+    mem_end: c_ulong,
+    base_addr: c_ushort,
+    irq: u8,
+    dma: u8,
+    port: u8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct IfReqIfrn {
+    ifrn_name: [c_char; 16],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+union IfReqIfru {
+    ifru_addr: [u8; 16],
+    ifru_flags: c_short,
+    ifru_ivalue: c_int,
+    ifru_mtu: c_int,
+    ifru_map: IfMap,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct IfReq {
+    ifr_ifrn: IfReqIfrn,
+    ifr_ifru: IfReqIfru,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct EthernetDevice {
+    pub mac_addr: [u8; 6],
+    pub write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub opaque: *mut c_void,
+    pub select_fill: Option<
+        unsafe extern "C" fn(
+            *mut EthernetDevice,
+            *mut c_int,
+            *mut c_void,
+            *mut c_void,
+            *mut c_void,
+            *mut c_int,
+        ),
+    >,
+    pub select_poll: Option<
+        unsafe extern "C" fn(*mut EthernetDevice, *mut c_void, *mut c_void, *mut c_void, c_int),
+    >,
+    pub device_opaque: *mut c_void,
+    pub device_can_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice) -> c_int>,
+    pub device_write_packet: Option<unsafe extern "C" fn(*mut EthernetDevice, *const u8, c_int)>,
+    pub device_set_carrier: Option<unsafe extern "C" fn(*mut EthernetDevice, c_int)>,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMDriveEntry {
+    pub device: *mut c_char,
+    pub filename: *mut c_char,
+    pub block_dev: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMFSEntry {
+    pub device: *mut c_char,
+    pub tag: *mut c_char,
+    pub filename: *mut c_char,
+    pub fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMEthEntry {
+    pub driver: *mut c_char,
+    pub ifname: *mut c_char,
+    pub net: *mut EthernetDevice,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMFileEntry {
+    pub filename: *mut c_char,
+    pub buf: *mut u8,
+    pub len: c_int,
+}
+
+// VirtMachineParams, full mirror (temu.c / machine.h).
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const c_void,
+    pub machine_name: *mut c_char,
+    pub ram_size: u64,
+    pub rtc_real_time: c_int,
+    pub rtc_local_time: c_int,
+    pub display_device: *mut c_char,
+    pub width: c_int,
+    pub height: c_int,
+    pub console: *mut c_void,
+    pub tab_drive: [VMDriveEntry; 4],
+    pub drive_count: c_int,
+    pub tab_fs: [VMFSEntry; 4],
+    pub fs_count: c_int,
+    pub tab_eth: [VMEthEntry; 1],
+    pub eth_count: c_int,
+    pub cmdline: *mut c_char,
+    pub accel_enable: c_int,
+    pub input_device: *mut c_char,
+    pub files: [VMFileEntry; 4],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct TunState {
+    fd: c_int,
+    select_filled: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct Slirp {
+    _opaque: [u8; 0],
+}
+
+// ---- external C symbols -----------------------------------------------------
+
+extern "C" {
+    static mut stderr: *mut c_void;
+
+    fn exit(status: c_int) -> !;
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+    fn write(fd: c_int, buf: *const c_void, count: usize) -> isize;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn pstrcpy(buf: *mut c_char, buf_size: c_int, s: *const c_char);
+
+    fn slirp_init(
+        restricted: c_int,
+        vnetwork: InAddr,
+        vnetmask: InAddr,
+        vhost: InAddr,
+        vhostname: *const c_char,
+        tftp_path: *const c_char,
+        bootfile: *const c_char,
+        vdhcp_start: InAddr,
+        vnameserver: InAddr,
+        opaque: *mut c_void,
+    ) -> *mut Slirp;
+    fn slirp_input(slirp: *mut Slirp, pkt: *const u8, pkt_len: c_int);
+    fn slirp_select_fill(
+        slirp: *mut Slirp,
+        pnfds: *mut c_int,
+        readfds: *mut c_void,
+        writefds: *mut c_void,
+        xfds: *mut c_void,
+    );
+    fn slirp_select_poll(
+        slirp: *mut Slirp,
+        readfds: *mut c_void,
+        writefds: *mut c_void,
+        xfds: *mut c_void,
+        select_error: c_int,
+    );
+
+    fn htonl(hostlong: u32) -> u32;
+    fn open(file: *const c_char, oflag: c_int, ...) -> c_int;
+    fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+    fn close(fd: c_int) -> c_int;
+    fn fcntl(fd: c_int, cmd: c_int, ...) -> c_int;
+}
+
+static mut SLIRP_STATE: *mut Slirp = core::ptr::null_mut();
+
+// ---- helpers ported from the static C functions -----------------------------
+
+unsafe extern "C" fn tun_write_packet(net: *mut EthernetDevice, buf: *const u8, len: c_int) {
+    let s = (*net).opaque as *mut TunState;
+    write((*s).fd, buf as *const c_void, len as usize);
+}
+
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+unsafe fn tun_select_fill(net: *mut EthernetDevice, pfd_max: *mut c_int, rfds: *mut c_void) {
+    let s = (*net).opaque as *mut TunState;
+    let net_fd = (*s).fd;
+
+    (*s).select_filled = match (*net).device_can_write_packet {
+        Some(f) => f(net),
+        None => 0,
+    };
+    if (*s).select_filled != 0 {
+        // FD_SET(net_fd, rfds) with a 64-bit __fd_mask
+        let bits = rfds as *mut i64;
+        let idx = net_fd / 64;
+        let bit = 1i64 << ((net_fd % 64) as u32);
+        let p = bits.offset(idx as isize);
+        *p |= bit;
+        *pfd_max = max_int(*pfd_max, net_fd);
+    }
+}
+
+unsafe fn tun_select_poll(net: *mut EthernetDevice, rfds: *mut c_void, select_ret: c_int) {
+    let s = (*net).opaque as *mut TunState;
+    let net_fd = (*s).fd;
+    let mut buf = [0u8; 2048];
+
+    if select_ret <= 0 {
+        return;
+    }
+    let bits = rfds as *mut i64;
+    let idx = net_fd / 64;
+    let bit = 1i64 << ((net_fd % 64) as u32);
+    let pending = (*bits.offset(idx as isize)) & bit;
+    if (*s).select_filled != 0 && pending != 0 {
+        let ret = read(net_fd, buf.as_mut_ptr() as *mut c_void, buf.len());
+        if ret > 0 {
+            if let Some(f) = (*net).device_write_packet {
+                f(net, buf.as_ptr(), ret as c_int);
+            }
+        }
+    }
+}
+
+unsafe extern "C" fn tun_select_fill_abi(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut c_void,
+    _wfds: *mut c_void,
+    _efds: *mut c_void,
+    _pdelay: *mut c_int,
+) {
+    tun_select_fill(net, pfd_max, rfds)
+}
+
+unsafe extern "C" fn tun_select_poll_abi(
+    net: *mut EthernetDevice,
+    rfds: *mut c_void,
+    _wfds: *mut c_void,
+    _efds: *mut c_void,
+    select_ret: c_int,
+) {
+    tun_select_poll(net, rfds, select_ret)
+}
+
+unsafe fn tun_open(ifname: *const c_char) -> *mut EthernetDevice {
+    let mut ifr: IfReq = core::mem::zeroed();
+    let net: *mut EthernetDevice;
+    let s: *mut TunState;
+
+    let fd = open(b"/dev/net/tun\0".as_ptr() as *const c_char, 0o2);
+    if fd < 0 {
+        fprintf(
+            stderr,
+            b"Error: could not open /dev/net/tun\n\0".as_ptr() as *const c_char,
+        );
+        return core::ptr::null_mut();
+    }
+    // memset(&ifr, 0, sizeof(ifr));
+    core::ptr::write_bytes(
+        &mut ifr as *mut IfReq as *mut u8,
+        0,
+        core::mem::size_of::<IfReq>(),
+    );
+    ifr.ifr_ifru.ifru_flags = (0x0002 | 0x1000) as c_short;
+    pstrcpy(
+        (&mut ifr.ifr_ifrn.ifrn_name) as *mut [c_char; 16] as *mut c_char,
+        16,
+        ifname,
+    );
+    let ret = ioctl(fd, TUNSETIFF, &ifr as *const IfReq as *mut c_void);
+    if ret != 0 {
+        fprintf(
+            stderr,
+            b"Error: could not configure /dev/net/tun\n\0".as_ptr() as *const c_char,
+        );
+        close(fd);
+        return core::ptr::null_mut();
+    }
+    fcntl(fd, 4, 0o4000);
+
+    net = mallocz(core::mem::size_of::<EthernetDevice>()) as *mut EthernetDevice;
+    (*net).mac_addr[0] = 0x02;
+    (*net).mac_addr[1] = 0x00;
+    (*net).mac_addr[2] = 0x00;
+    (*net).mac_addr[3] = 0x00;
+    (*net).mac_addr[4] = 0x00;
+    (*net).mac_addr[5] = 0x01;
+    s = mallocz(core::mem::size_of::<TunState>()) as *mut TunState;
+    (*s).fd = fd;
+    (*s).select_filled = 0;
+    (*net).opaque = s as *mut c_void;
+    (*net).write_packet = Some(tun_write_packet);
+    (*net).select_fill = Some(tun_select_fill_abi);
+    (*net).select_poll = Some(tun_select_poll_abi);
+    net
+}
+
+unsafe extern "C" fn slirp_write_packet(net: *mut EthernetDevice, buf: *const u8, len: c_int) {
+    let state = (*net).opaque as *mut Slirp;
+    slirp_input(state, buf, len);
+}
+
+unsafe extern "C" fn slirp_select_fill1(
+    net: *mut EthernetDevice,
+    pfd_max: *mut c_int,
+    rfds: *mut c_void,
+    wfds: *mut c_void,
+    efds: *mut c_void,
+    _pdelay: *mut c_int,
+) {
+    let state = (*net).opaque as *mut Slirp;
+    slirp_select_fill(state, pfd_max, rfds, wfds, efds);
+}
+
+unsafe extern "C" fn slirp_select_poll1(
+    net: *mut EthernetDevice,
+    rfds: *mut c_void,
+    wfds: *mut c_void,
+    efds: *mut c_void,
+    select_ret: c_int,
+) {
+    let state = (*net).opaque as *mut Slirp;
+    slirp_select_poll(state, rfds, wfds, efds, (select_ret <= 0) as c_int);
+}
+
+unsafe fn slirp_open() -> *mut EthernetDevice {
+    let net: *mut EthernetDevice;
+    let net_addr = InAddr {
+        s_addr: htonl(0x0a00_0200),
+    };
+    let mask = InAddr {
+        s_addr: htonl(0xffff_ff00),
+    };
+    let host = InAddr {
+        s_addr: htonl(0x0a00_0202),
+    };
+    let dhcp = InAddr {
+        s_addr: htonl(0x0a00_020f),
+    };
+    let dns = InAddr {
+        s_addr: htonl(0x0a00_0203),
+    };
+    let bootfile: *const c_char = core::ptr::null();
+    let vhostname: *const c_char = core::ptr::null();
+    let restricted: c_int = 0;
+
+    if !SLIRP_STATE.is_null() {
+        fprintf(
+            stderr,
+            b"Only a single slirp instance is allowed\n\0".as_ptr() as *const c_char,
+        );
+        return core::ptr::null_mut();
+    }
+    net = mallocz(core::mem::size_of::<EthernetDevice>()) as *mut EthernetDevice;
+
+    SLIRP_STATE = slirp_init(
+        restricted,
+        net_addr,
+        mask,
+        host,
+        vhostname,
+        b"\0".as_ptr() as *const c_char,
+        bootfile,
+        dhcp,
+        dns,
+        net as *mut c_void,
+    );
+
+    (*net).mac_addr[0] = 0x02;
+    (*net).mac_addr[1] = 0x00;
+    (*net).mac_addr[2] = 0x00;
+    (*net).mac_addr[3] = 0x00;
+    (*net).mac_addr[4] = 0x00;
+    (*net).mac_addr[5] = 0x01;
+    (*net).opaque = SLIRP_STATE as *mut c_void;
+    (*net).write_packet = Some(slirp_write_packet);
+    (*net).select_fill = Some(slirp_select_fill1);
+    (*net).select_poll = Some(slirp_select_poll1);
+
+    net
+}
+
+// ---- the ported TARGET ------------------------------------------------------
+
+#[no_mangle]
+pub extern "C" fn main__part3614(p: *mut VirtMachineParams) -> c_int {
+    unsafe {
+        if p.is_null() {
+            return 0;
+        }
+        let count = (*p).eth_count;
+        let mut i: c_int = 0;
+        while i < count {
+            let entry: *mut VMEthEntry = (*p).tab_eth.as_mut_ptr().add(i as usize);
+            let driver = (*entry).driver;
+            if strcmp(driver, b"user\0".as_ptr() as *const c_char) == 0 {
+                let net = slirp_open();
+                (*entry).net = net;
+                if net.is_null() {
+                    exit(1);
+                }
+            } else if strcmp(driver, b"tap\0".as_ptr() as *const c_char) == 0 {
+                let net = tun_open((*entry).ifname);
+                (*entry).net = net;
+                if net.is_null() {
+                    exit(1);
+                }
+            } else {
+                fprintf(
+                    stderr,
+                    b"Unsupported network driver '%s'\n\0".as_ptr() as *const c_char,
+                    driver,
+                );
+                exit(1);
+            }
+            i += 1;
+        }
+        0
     }
 }
 }

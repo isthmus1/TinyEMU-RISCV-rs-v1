@@ -1,5 +1,106 @@
 //! From `machine.c`.
 
+// ── `vm_get_int` · machine.c:56-70 · chunk 1358 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int vm_get_int(JSONValue obj, const char *name, int *pval)
+//     {
+//         JSONValue val;
+//         val = json_object_get(obj, name);
+//         if (json_is_undefined(val)) {
+//             vm_error("expecting '%s' property\n", name);
+//             return -1;
+//         }
+//         if (val.type != JSON_INT) {
+//             vm_error("%s: integer expected\n", name);
+//             return -1;
+//         }
+//         *pval = val.u.int32;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1358 {
+// Rust rewrite of int vm_get_int(JSONValue obj, const char *name, int *pval)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int};
+
+// Values of the C enum JSONTypeEnum (JSON_STR = 0, ...).
+const JSON_INT: c_int = 1;
+const JSON_UNDEFINED: c_int = 6;
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct JSONProperty {
+    pub name: JSONValue,
+    pub value: JSONValue,
+}
+
+#[repr(C)]
+pub struct JSONObject {
+    pub len: c_int,
+    pub size: c_int,
+    pub props: *mut JSONProperty,
+}
+
+#[repr(C)]
+pub struct JSONArray {
+    pub len: c_int,
+    pub size: c_int,
+    pub tab: *mut JSONValue,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union JSONValueU {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int, // BOOL is typedef int
+    pub obj: *mut JSONObject,
+    pub array: *mut JSONArray,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct JSONValue {
+    pub type_: c_int, // JSONTypeEnum
+    pub u: JSONValueU,
+}
+
+extern "C" {
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn vm_error(fmt: *const c_char, ...);
+}
+
+#[no_mangle]
+pub extern "C" fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int {
+    let val = unsafe { json_object_get(obj, name) };
+    // json_is_undefined(val)
+    if val.type_ == JSON_UNDEFINED {
+        unsafe {
+            vm_error(b"expecting '%s' property\n\0".as_ptr() as *const c_char, name);
+        }
+        return -1;
+    }
+    if val.type_ != JSON_INT {
+        unsafe {
+            vm_error(b"%s: integer expected\n\0".as_ptr() as *const c_char, name);
+        }
+        return -1;
+    }
+    let int32 = unsafe { val.u.int32 };
+    unsafe {
+        *pval = int32;
+    }
+    0
+}
+}
+
 // ── `JSONValue val; val = json_object_get(obj, name);` · machine.c:58-59 · chunk 1359 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -177,6 +278,110 @@ pub extern "C" fn vm_get_int__part1362(val: JSONValue, pval: *mut c_int) -> c_in
     unsafe {
         *pval = val.u.int32;
     }
+    0
+}
+}
+
+// ── `vm_get_int_opt` · machine.c:72-86 · chunk 1363 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int vm_get_int_opt(JSONValue obj, const char *name, int *pval, int def_val)
+//     {
+//         JSONValue val;
+//         val = json_object_get(obj, name);
+//         if (json_is_undefined(val)) {
+//             *pval = def_val;
+//             return 0;
+//         }
+//         if (val.type != JSON_INT) {
+//             vm_error("%s: integer expected\n", name);
+//             return -1;
+//         }
+//         *pval = val.u.int32;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1363 {
+// Rust rewrite of `vm_get_int_opt` from machine.c
+// int vm_get_int_opt(JSONValue obj, const char *name, int *pval, int def_val)
+
+use core::ffi::{c_char, c_int};
+
+const JSON_INT: c_int = 1;
+const JSON_UNDEFINED: c_int = 6;
+
+// Mirrors `typedef int BOOL;`
+type Bool = c_int;
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct JSONObject {
+    pub len: c_int,
+    pub size: c_int,
+    pub props: *mut JSONProperty,
+}
+
+#[repr(C)]
+pub struct JSONArray {
+    pub len: c_int,
+    pub size: c_int,
+    pub tab: *mut JSONValue,
+}
+
+#[repr(C)]
+pub union JSONValueUnion {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: Bool,
+    pub obj: *mut JSONObject,
+    pub array: *mut JSONArray,
+}
+
+#[repr(C)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueUnion,
+}
+
+#[repr(C)]
+pub struct JSONProperty {
+    pub name: JSONValue,
+    pub value: JSONValue,
+}
+
+extern "C" {
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn vm_error(fmt: *const c_char, ...);
+}
+
+// Equivalent of the static inline `json_is_undefined`.
+#[inline]
+fn json_is_undefined(val: &JSONValue) -> bool {
+    val.type_ == JSON_UNDEFINED
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vm_get_int_opt(
+    obj: JSONValue,
+    name: *const c_char,
+    pval: *mut c_int,
+    def_val: c_int,
+) -> c_int {
+    let val = json_object_get(obj, name);
+    if json_is_undefined(&val) {
+        *pval = def_val;
+        return 0;
+    }
+    if val.type_ != JSON_INT {
+        vm_error(b"%s: integer expected\n\0".as_ptr() as *const c_char, name);
+        return -1;
+    }
+    *pval = val.u.int32;
     0
 }
 }
@@ -402,6 +607,101 @@ pub extern "C" fn vm_get_int_opt__part1367(val: JSONValue, pval: *mut c_int) -> 
 }
 }
 
+// ── `vm_get_str2` · machine.c:88-108 · chunk 1368 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int vm_get_str2(JSONValue obj, const char *name, const char **pstr,
+//                           BOOL is_opt)
+//     {
+//         JSONValue val;
+//         val = json_object_get(obj, name);
+//         if (json_is_undefined(val)) {
+//             if (is_opt) {
+//                 *pstr = 
+//                        ((void *)0)
+//                            ;
+//                 return 0;
+//             } else {
+//                 vm_error("expecting '%s' property\n", name);
+//                 return -1;
+//             }
+//         }
+//         if (val.type != JSON_STR) {
+//             vm_error("%s: string expected\n", name);
+//             return -1;
+//         }
+//         *pstr = val.u.str->data;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1368 {
+// Rewrite of static int vm_get_str2(JSONValue obj, const char *name,
+//                                    const char **pstr, BOOL is_opt)
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int};
+
+// JSONTypeEnum values (C enum is int)
+const JSON_STR: c_int = 0;
+const JSON_UNDEFINED: c_int = 6;
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONValueU {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int,
+    pub obj: *mut core::ffi::c_void,
+    pub array: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueU,
+}
+
+extern "C" {
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn vm_error(fmt: *const c_char, ...);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vm_get_str2(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+    is_opt: c_int,
+) -> c_int {
+    let val: JSONValue = json_object_get(obj, name);
+    if val.type_ == JSON_UNDEFINED {
+        if is_opt != 0 {
+            *pstr = core::ptr::null();
+            return 0;
+        } else {
+            vm_error(
+                b"expecting '%s' property\n\0".as_ptr() as *const c_char,
+                name,
+            );
+            return -1;
+        }
+    }
+    if val.type_ != JSON_STR {
+        vm_error(b"%s: string expected\n\0".as_ptr() as *const c_char, name);
+        return -1;
+    }
+    *pstr = (*val.u.str_).data.as_ptr();
+    return 0;
+}
+}
+
 // ── `JSONValue val; val = json_object_get(obj, name);` · machine.c:91-92 · chunk 1369 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -605,6 +905,94 @@ pub unsafe extern "C" fn vm_get_str2__part1372(
 }
 }
 
+// ── `vm_get_str` · machine.c:110-113 · chunk 1373 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int vm_get_str(JSONValue obj, const char *name, const char **pstr)
+//     {
+//         return vm_get_str2(obj, name, pstr, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1373 {
+// Port of the static C helper vm_get_str (which forwards to vm_get_str2).
+use core::ffi::{c_char, c_int, c_void};
+
+type BOOL = c_int;
+const FALSE: BOOL = 0;
+
+type JSONTypeEnum = c_int;
+const JSON_STR: JSONTypeEnum = 0;
+const JSON_UNDEFINED: JSONTypeEnum = 6;
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union JSONValueU {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: BOOL,
+    pub obj: *mut c_void,
+    pub array: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct JSONValue {
+    pub type_: JSONTypeEnum,
+    pub u: JSONValueU,
+}
+
+extern "C" {
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn vm_error(fmt: *const c_char, ...);
+}
+
+unsafe fn vm_get_str2(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+    is_opt: BOOL,
+) -> c_int {
+    let val: JSONValue = json_object_get(obj, name);
+    if val.type_ == JSON_UNDEFINED {
+        if is_opt != 0 {
+            *pstr = core::ptr::null();
+            return 0;
+        } else {
+            vm_error(
+                b"expecting '%s' property\n\0".as_ptr() as *const c_char,
+                name,
+            );
+            return -1;
+        }
+    }
+    if val.type_ != JSON_STR {
+        vm_error(
+            b"%s: string expected\n\0".as_ptr() as *const c_char,
+            name,
+        );
+        return -1;
+    }
+    let s: *mut JSONString = val.u.str_;
+    *pstr = (*s).data.as_ptr();
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn vm_get_str(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+) -> c_int {
+    unsafe { vm_get_str2(obj, name, pstr, FALSE) }
+}
+}
+
 // ── `return vm_get_str2(obj, name, pstr, FALSE);` · machine.c:112-112 · chunk 1374 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -672,6 +1060,76 @@ pub unsafe extern "C" fn vm_get_str__part1374(
     // *pstr = val.u.str->data;
     let s = val.u.str_;
     *pstr = core::ptr::addr_of!((*s).data) as *const c_char;
+    0
+}
+}
+
+// ── `vm_get_str_opt` · machine.c:115-118 · chunk 1375 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int vm_get_str_opt(JSONValue obj, const char *name, const char **pstr)
+//     {
+//         return vm_get_str2(obj, name, pstr, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1375 {
+// Port of machine.c's static helper vm_get_str_opt.
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+pub union JSONValueU {
+    pub str: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int,
+    pub obj: *mut c_void,
+    pub array: *mut c_void,
+}
+
+#[repr(C)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueU,
+}
+
+const JSON_STR: c_int = 0;
+const JSON_UNDEFINED: c_int = 6;
+
+extern "C" {
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn vm_error(fmt: *const c_char, ...);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vm_get_str_opt(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+) -> c_int {
+    let val = json_object_get(obj, name);
+    if val.type_ == JSON_UNDEFINED {
+        // is_opt == TRUE
+        *pstr = core::ptr::null();
+        return 0;
+    }
+    if val.type_ != JSON_STR {
+        vm_error(
+            b"%s: string expected\n\0".as_ptr() as *const c_char,
+            name,
+        );
+        return -1;
+    }
+    let s = val.u.str;
+    if s.is_null() {
+        *pstr = core::ptr::null();
+    } else {
+        *pstr = core::ptr::addr_of!((*s).data) as *const c_char;
+    }
     0
 }
 }
@@ -746,6 +1204,36 @@ pub extern "C" fn vm_get_str_opt__part1376(
 }
 }
 
+// ── `strdup_null` · machine.c:120-126 · chunk 1377 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static char *strdup_null(const char *str)
+//     {
+//         if (!str)
+//             return 
+//                   ((void *)0)
+//                       ;
+//         else
+//             return strdup(str);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1377 {
+use core::ffi::c_char;
+
+extern "C" {
+    fn strdup(s: *const c_char) -> *mut c_char;
+}
+
+#[no_mangle]
+pub extern "C" fn strdup_null(s: *const c_char) -> *mut c_char {
+    if s.is_null() {
+        core::ptr::null_mut()
+    } else {
+        unsafe { strdup(s) }
+    }
+}
+}
+
 // ── `if (!str) … else` · machine.c:122-125 · chunk 1378 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -770,6 +1258,151 @@ pub extern "C" fn strdup_null__part1378(str: *const c_char) -> *mut c_char {
         core::ptr::null_mut()
     } else {
         unsafe { strdup(str) }
+    }
+}
+}
+
+// ── `cmdline_subst` · machine.c:129-172 · chunk 1379 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static char *cmdline_subst(const char *cmdline)
+//     {
+//         DynBuf dbuf;
+//         const char *p;
+//         char var_name[32], *q, buf[32];
+//     
+//         dbuf_init(&dbuf);
+//         p = cmdline;
+//         while (*p != '\0') {
+//             if (p[0] == '$' && p[1] == '{') {
+//                 p += 2;
+//                 q = var_name;
+//                 while (*p != '\0' && *p != '}') {
+//                     if ((q - var_name) < sizeof(var_name) - 1)
+//                         *q++ = *p;
+//                     p++;
+//                 }
+//                 *q = '\0';
+//                 if (*p == '}')
+//                     p++;
+//                 if (!strcmp(var_name, "TZ")) {
+//                     time_t ti;
+//                     struct tm tm;
+//                     int n, sg;
+//     
+//                     time(&ti);
+//                     localtime_r(&ti, &tm);
+//                     n = tm.tm_gmtoff / 60;
+//                     sg = '-';
+//                     if (n < 0) {
+//                         sg = '+';
+//                         n = -n;
+//                     }
+//                     snprintf(buf, sizeof(buf), "UTC%c%02d:%02d",
+//                              sg, n / 60, n % 60);
+//                     dbuf_putstr(&dbuf, buf);
+//                 }
+//             } else {
+//                 dbuf_putc(&dbuf, *p++);
+//             }
+//         }
+//         dbuf_putc(&dbuf, 0);
+//         return (char *)dbuf.buf;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1379 {
+use core::ffi::{c_char, c_int, c_long};
+
+#[repr(C)]
+struct DynBuf {
+    buf: *mut u8,
+    size: usize,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+struct Tm {
+    tm_sec: c_int,
+    tm_min: c_int,
+    tm_hour: c_int,
+    tm_mday: c_int,
+    tm_mon: c_int,
+    tm_year: c_int,
+    tm_wday: c_int,
+    tm_yday: c_int,
+    tm_isdst: c_int,
+    tm_gmtoff: c_long,
+    tm_zone: *const c_char,
+}
+
+extern "C" {
+    fn dbuf_init(s: *mut DynBuf);
+    fn dbuf_putc(s: *mut DynBuf, c: u8);
+    fn dbuf_putstr(s: *mut DynBuf, string: *const c_char);
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn time(t: *mut c_long) -> c_long;
+    fn localtime_r(t: *const c_long, tp: *mut Tm) -> *mut Tm;
+    fn snprintf(buf: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cmdline_subst(cmdline: *const c_char) -> *mut c_char {
+    unsafe {
+        let mut dbuf = DynBuf {
+            buf: core::ptr::null_mut(),
+            size: 0,
+            allocated_size: 0,
+        };
+
+        dbuf_init(&mut dbuf);
+
+        let mut p = cmdline;
+        while *p != 0 {
+            if *p == b'$' as c_char && *p.add(1) == b'{' as c_char {
+                p = p.add(2);
+                let mut var_name = [0 as c_char; 32];
+                let mut q: usize = 0;
+                while *p != 0 && *p != b'}' as c_char {
+                    if q < 32 - 1 {
+                        var_name[q] = *p;
+                        q += 1;
+                    }
+                    p = p.add(1);
+                }
+                var_name[q] = 0;
+                if *p == b'}' as c_char {
+                    p = p.add(1);
+                }
+                if strcmp(var_name.as_ptr(), b"TZ\0".as_ptr() as *const c_char) == 0 {
+                    let mut ti: c_long = 0;
+                    let mut tm: Tm = core::mem::zeroed();
+                    // get the offset to UTC
+                    time(&mut ti);
+                    localtime_r(&ti, &mut tm);
+                    let mut n: c_int = (tm.tm_gmtoff / 60) as c_int;
+                    let mut sg: c_char = b'-' as c_char;
+                    if n < 0 {
+                        sg = b'+' as c_char;
+                        n = n.wrapping_neg();
+                    }
+                    let mut buf = [0 as c_char; 32];
+                    snprintf(
+                        buf.as_mut_ptr(),
+                        32,
+                        b"UTC%c%02d:%02d\0".as_ptr() as *const c_char,
+                        sg as c_int,
+                        n / 60,
+                        n % 60,
+                    );
+                    dbuf_putstr(&mut dbuf, buf.as_ptr());
+                }
+            } else {
+                dbuf_putc(&mut dbuf, *p as u8);
+                p = p.add(1);
+            }
+        }
+        dbuf_putc(&mut dbuf, 0);
+        dbuf.buf as *mut c_char
     }
 }
 }
@@ -977,6 +1610,116 @@ pub extern "C" fn cmdline_subst__part1382(dbuf: *mut DynBuf) -> *mut c_char {
 const _UNUSED: Option<c_int> = None;
 }
 
+// ── `find_name` · machine.c:174-194 · chunk 1383 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static BOOL find_name(const char *name, const char *name_list)
+//     {
+//         size_t len;
+//         const char *p, *r;
+//     
+//         p = name_list;
+//         for(;;) {
+//             r = 
+//                _Generic (0 ? (
+//                p
+//                ) : (void *) 1, const void *: (const char *) (strchr (
+//                p
+//                , 
+//                ','
+//                )), default: strchr (
+//                p
+//                , 
+//                ','
+//                ))
+//                              ;
+//             if (!r) {
+//                 if (!strcmp(name, p))
+//                     return TRUE;
+//                 break;
+//             } else {
+//                 len = r - p;
+//                 if (len == strlen(name) && !memcmp(name, p, len))
+//                     return TRUE;
+//                 p = r + 1;
+//             }
+//         }
+//         return FALSE;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1383 {
+use core::ffi::{c_char, c_int};
+
+unsafe fn byte_at(p: *const c_char, i: usize) -> u8 {
+    *p.add(i) as u8
+}
+
+unsafe fn c_str_eq(a: *const c_char, b: *const c_char) -> bool {
+    let mut i: usize = 0;
+    loop {
+        let ca = byte_at(a, i);
+        let cb = byte_at(b, i);
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn c_str_len(s: *const c_char) -> usize {
+    let mut i: usize = 0;
+    while byte_at(s, i) != 0 {
+        i += 1;
+    }
+    i
+}
+
+unsafe fn mem_eq(a: *const c_char, b: *const c_char, n: usize) -> bool {
+    let mut i: usize = 0;
+    while i < n {
+        if byte_at(a, i) != byte_at(b, i) {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+
+#[no_mangle]
+pub extern "C" fn find_name(name: *const c_char, name_list: *const c_char) -> c_int {
+    unsafe {
+        let mut p: *const c_char = name_list;
+        loop {
+            // r = strchr(p, ',')
+            let mut r: *const c_char = core::ptr::null();
+            let mut q: *const c_char = p;
+            while *q != 0 {
+                if (*q as u8) == b',' {
+                    r = q;
+                    break;
+                }
+                q = q.add(1);
+            }
+            if r.is_null() {
+                if c_str_eq(name, p) {
+                    return 1;
+                }
+                return 0;
+            } else {
+                let len: usize = (r as usize).wrapping_sub(p as usize);
+                if len == c_str_len(name) && mem_eq(name, p, len) {
+                    return 1;
+                }
+                p = r.add(1);
+            }
+        }
+    }
+}
+}
+
 // ── `size_t len; const char *p, *r; p = name_list;` · machine.c:176-179 · chunk 1384 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1071,6 +1814,140 @@ use core::ffi::c_int;
 pub extern "C" fn find_name__part1386() -> c_int {
     // FALSE == 0 (BOOL is typedef int)
     0
+}
+}
+
+// ── `virt_machine_find_class` · machine.c:211-221 · chunk 1388 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static const VirtMachineClass *virt_machine_find_class(const char *machine_name)
+//     {
+//         const VirtMachineClass *vmc, **pvmc;
+//     
+//         for(pvmc = virt_machine_list; *pvmc != 
+//                                               ((void *)0)
+//                                                   ; pvmc++) {
+//             vmc = *pvmc;
+//             if (find_name(machine_name, vmc->machine_names))
+//                 return vmc;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1388 {
+// Port of machine.c: virt_machine_find_class (with its static helper find_name inlined).
+
+use core::ffi::{c_char, c_int};
+
+type BOOL = c_int;
+
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const c_char,
+    pub virt_machine_set_defaults: *const core::ffi::c_void,
+    pub virt_machine_init: *const core::ffi::c_void,
+    pub virt_machine_end: *const core::ffi::c_void,
+    pub virt_machine_get_sleep_duration: *const core::ffi::c_void,
+    pub virt_machine_interp: *const core::ffi::c_void,
+    pub vm_mouse_is_absolute: *const core::ffi::c_void,
+    pub vm_send_mouse_event: *const core::ffi::c_void,
+    pub vm_send_key_event: *const core::ffi::c_void,
+}
+
+extern "C" {
+    static riscv_machine_class: VirtMachineClass;
+    static pc_machine_class: VirtMachineClass;
+}
+
+// The entries of the file-static machine list depending on the build config,
+// as seen in the preprocessed translation unit: riscv first, then pc, then NULL.
+unsafe fn list_at(i: usize) -> *const VirtMachineClass {
+    match i {
+        0 => &riscv_machine_class as *const VirtMachineClass,
+        1 => &pc_machine_class as *const VirtMachineClass,
+        _ => core::ptr::null(),
+    }
+}
+
+// strcmp(a, b) == 0
+unsafe fn str_eq(a: *const c_char, b: *const c_char) -> bool {
+    let mut i: usize = 0;
+    loop {
+        let ca = *a.add(i);
+        let cb = *b.add(i);
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn c_strlen(s: *const c_char) -> usize {
+    let mut i: usize = 0;
+    while *s.add(i) != 0 {
+        i += 1;
+    }
+    i
+}
+
+// memcmp(a, b, len) == 0
+unsafe fn mem_eq(a: *const c_char, b: *const c_char, len: usize) -> bool {
+    let mut i: usize = 0;
+    while i < len {
+        if *a.add(i) != *b.add(i) {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
+
+// static BOOL find_name(const char *name, const char *name_list)
+unsafe fn find_name(name: *const c_char, name_list: *const c_char) -> BOOL {
+    let mut p = name_list;
+    loop {
+        // r = strchr(p, ',')
+        let mut r = p;
+        while *r != 0 && *r != b',' as c_char {
+            r = r.add(1);
+        }
+        if *r == 0 {
+            if str_eq(name, p) {
+                return 1; // TRUE
+            }
+            break;
+        } else {
+            let len = r.offset_from(p) as usize;
+            if len == c_strlen(name) && mem_eq(name, p, len) {
+                return 1; // TRUE
+            }
+            p = r.add(1);
+        }
+    }
+    0 // FALSE
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_find_class(
+    machine_name: *const c_char,
+) -> *const VirtMachineClass {
+    let mut i: usize = 0;
+    loop {
+        let vmc: *const VirtMachineClass = list_at(i);
+        if vmc.is_null() {
+            break;
+        }
+        if find_name(machine_name, (*vmc).machine_names) != 0 {
+            return vmc;
+        }
+        i += 1;
+    }
+    core::ptr::null()
 }
 }
 
@@ -1228,6 +2105,879 @@ pub struct VirtMachineClass {
 #[no_mangle]
 pub extern "C" fn virt_machine_find_class__part1390() -> *const VirtMachineClass {
     core::ptr::null()
+}
+}
+
+// ── `virt_machine_parse_config` · machine.c:223-404 · chunk 1391 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int virt_machine_parse_config(VirtMachineParams *p,
+//                                          char *config_file_str, int len)
+//     {
+//         int version, val;
+//         const char *tag_name, *str;
+//         char buf1[256];
+//         JSONValue cfg, obj, el;
+//     
+//         cfg = json_parse_value_len(config_file_str, len);
+//         if (json_is_error(cfg)) {
+//             vm_error("error: %s\n", json_get_error(cfg));
+//             json_free(cfg);
+//             return -1;
+//         }
+//     
+//         if (vm_get_int(cfg, "version", &version) < 0)
+//             goto tag_fail;
+//         if (version != 1) {
+//             if (version > 1) {
+//                 vm_error("The emulator is too old to run this VM: please upgrade\n");
+//                 return -1;
+//             } else {
+//                 vm_error("The VM configuration file is too old for this emulator version: please upgrade the VM configuration file\n");
+//                 return -1;
+//             }
+//         }
+//     
+//         if (vm_get_str(cfg, "machine", &str) < 0)
+//             goto tag_fail;
+//         p->machine_name = strdup(str);
+//         p->vmc = virt_machine_find_class(p->machine_name);
+//         if (!p->vmc) {
+//             vm_error("Unknown machine name: %s\n", p->machine_name);
+//             goto tag_fail;
+//         }
+//         p->vmc->virt_machine_set_defaults(p);
+//     
+//         tag_name = "memory_size";
+//         if (vm_get_int(cfg, tag_name, &val) < 0)
+//             goto tag_fail;
+//         p->ram_size = (uint64_t)val << 20;
+//     
+//         tag_name = "bios";
+//         if (vm_get_str_opt(cfg, tag_name, &str) < 0)
+//             goto tag_fail;
+//         if (str) {
+//             p->files[VM_FILE_BIOS].filename = strdup(str);
+//         }
+//     
+//         tag_name = "kernel";
+//         if (vm_get_str_opt(cfg, tag_name, &str) < 0)
+//             goto tag_fail;
+//         if (str) {
+//             p->files[VM_FILE_KERNEL].filename = strdup(str);
+//         }
+//     
+//         if (vm_get_str_opt(cfg, "cmdline", &str) < 0)
+//             goto tag_fail;
+//         if (str) {
+//             p->cmdline = cmdline_subst(str);
+//         }
+//     
+//         tag_name = "initrd";
+//         if (vm_get_str_opt(cfg, tag_name, &str) < 0)
+//             goto tag_fail;
+//         if (str) {
+//             p->files[VM_FILE_INITRD].filename = strdup(str);
+//         }
+//     
+//         for(;;) {
+//             snprintf(buf1, sizeof(buf1), "drive%d", p->drive_count);
+//             obj = json_object_get(cfg, buf1);
+//             if (json_is_undefined(obj))
+//                 break;
+//             if (p->drive_count >= 4) {
+//                 vm_error("Too many drives\n");
+//                 return -1;
+//             }
+//             if (vm_get_str(obj, "file", &str) < 0)
+//                 goto tag_fail;
+//             p->tab_drive[p->drive_count].filename = strdup(str);
+//             if (vm_get_str_opt(obj, "device", &str) < 0)
+//                 goto tag_fail;
+//             p->tab_drive[p->drive_count].device = strdup_null(str);
+//             p->drive_count++;
+//         }
+//     
+//         for(;;) {
+//             snprintf(buf1, sizeof(buf1), "fs%d", p->fs_count);
+//             obj = json_object_get(cfg, buf1);
+//             if (json_is_undefined(obj))
+//                 break;
+//             if (p->fs_count >= 4) {
+//                 vm_error("Too many filesystems\n");
+//                 return -1;
+//             }
+//             if (vm_get_str(obj, "file", &str) < 0)
+//                 goto tag_fail;
+//             p->tab_fs[p->fs_count].filename = strdup(str);
+//             if (vm_get_str_opt(obj, "tag", &str) < 0)
+//                 goto tag_fail;
+//             if (!str) {
+//                 if (p->fs_count == 0)
+//                     strcpy(buf1, "/dev/root");
+//                 else
+//                     snprintf(buf1, sizeof(buf1), "/dev/root%d", p->fs_count);
+//                 str = buf1;
+//             }
+//             p->tab_fs[p->fs_count].tag = strdup(str);
+//             p->fs_count++;
+//         }
+//     
+//         for(;;) {
+//             snprintf(buf1, sizeof(buf1), "eth%d", p->eth_count);
+//             obj = json_object_get(cfg, buf1);
+//             if (json_is_undefined(obj))
+//                 break;
+//             if (p->eth_count >= 1) {
+//                 vm_error("Too many ethernet interfaces\n");
+//                 return -1;
+//             }
+//             if (vm_get_str(obj, "driver", &str) < 0)
+//                 goto tag_fail;
+//             p->tab_eth[p->eth_count].driver = strdup(str);
+//             if (!strcmp(str, "tap")) {
+//                 if (vm_get_str(obj, "ifname", &str) < 0)
+//                     goto tag_fail;
+//                 p->tab_eth[p->eth_count].ifname = strdup(str);
+//             }
+//             p->eth_count++;
+//         }
+//     
+//         p->display_device = 
+//                            ((void *)0)
+//                                ;
+//         obj = json_object_get(cfg, "display0");
+//         if (!json_is_undefined(obj)) {
+//             if (vm_get_str(obj, "device", &str) < 0)
+//                 goto tag_fail;
+//             p->display_device = strdup(str);
+//             if (vm_get_int(obj, "width", &p->width) < 0)
+//                 goto tag_fail;
+//             if (vm_get_int(obj, "height", &p->height) < 0)
+//                 goto tag_fail;
+//             if (vm_get_str_opt(obj, "vga_bios", &str) < 0)
+//                 goto tag_fail;
+//             if (str) {
+//                 p->files[VM_FILE_VGA_BIOS].filename = strdup(str);
+//             }
+//         }
+//     
+//         if (vm_get_str_opt(cfg, "input_device", &str) < 0)
+//             goto tag_fail;
+//         p->input_device = strdup_null(str);
+//     
+//         if (vm_get_str_opt(cfg, "accel", &str) < 0)
+//             goto tag_fail;
+//         if (str) {
+//             if (!strcmp(str, "none")) {
+//                 p->accel_enable = FALSE;
+//             } else if (!strcmp(str, "auto")) {
+//                 p->accel_enable = TRUE;
+//             } else {
+//                 vm_error("unsupported 'accel' config: %s\n", str);
+//                 return -1;
+//             }
+//         }
+//     
+//         tag_name = "rtc_local_time";
+//         el = json_object_get(cfg, tag_name);
+//         if (!json_is_undefined(el)) {
+//             if (el.type != JSON_BOOL) {
+//                 vm_error("%s: boolean expected\n", tag_name);
+//                 goto tag_fail;
+//             }
+//             p->rtc_local_time = el.u.b;
+//         }
+//     
+//         json_free(cfg);
+//         return 0;
+//      tag_fail:
+//         json_free(cfg);
+//         return -1;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1391 {
+// Rust port of the static C function virt_machine_parse_config (machine.c).
+// The static helpers it uses (find_name, virt_machine_find_class, vm_get_str,
+// vm_get_str_opt, strdup_null, cmdline_subst) have no linker symbols, so their
+// logic is ported here as private Rust functions.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::ptr;
+
+// JSONTypeEnum values (json.h)
+const JSON_STR: c_int = 0;
+const JSON_INT: c_int = 1;
+const JSON_BOOL: c_int = 4;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+// VMFileTypeEnum values (machine.h)
+const VM_FILE_BIOS: usize = 0;
+const VM_FILE_VGA_BIOS: usize = 1;
+const VM_FILE_KERNEL: usize = 2;
+const VM_FILE_INITRD: usize = 3;
+const VM_FILE_COUNT: usize = 4;
+
+const MAX_DRIVE_DEVICE: c_int = 4;
+const MAX_ETH_DEVICE: c_int = 1;
+
+// typedef struct { int len; char data[0]; } JSONString;
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    pub data: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct JSONObject {
+    pub len: c_int,
+    pub size: c_int,
+    pub props: *mut JSONProperty,
+}
+
+#[repr(C)]
+pub struct JSONArray {
+    pub len: c_int,
+    pub size: c_int,
+    pub tab: *mut JSONValue,
+}
+
+#[repr(C)]
+pub struct JSONProperty {
+    pub name: JSONValue,
+    pub value: JSONValue,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONValueUnion {
+    pub str: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int, // BOOL
+    pub obj: *mut JSONObject,
+    pub array: *mut JSONArray,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueUnion,
+}
+
+// machine.h types touched here
+#[repr(C)]
+pub struct VMFileEntry {
+    pub filename: *mut c_char,
+    pub buf: *mut u8,
+    pub len: c_int,
+}
+
+#[repr(C)]
+pub struct VMDriveEntry {
+    pub device: *mut c_char,
+    pub filename: *mut c_char,
+    pub block_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMFSEntry {
+    pub device: *mut c_char,
+    pub tag: *mut c_char,
+    pub filename: *mut c_char,
+    pub fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMEthEntry {
+    pub driver: *mut c_char,
+    pub ifname: *mut c_char,
+    pub net: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const VirtMachineClass,
+    pub machine_name: *mut c_char,
+    pub ram_size: u64,
+    pub rtc_real_time: c_int,
+    pub rtc_local_time: c_int,
+    pub display_device: *mut c_char,
+    pub width: c_int,
+    pub height: c_int,
+    pub console: *mut c_void,
+    pub tab_drive: [VMDriveEntry; MAX_DRIVE_DEVICE as usize],
+    pub drive_count: c_int,
+    pub tab_fs: [VMFSEntry; MAX_DRIVE_DEVICE as usize],
+    pub fs_count: c_int,
+    pub tab_eth: [VMEthEntry; MAX_ETH_DEVICE as usize],
+    pub eth_count: c_int,
+    pub cmdline: *mut c_char,
+    pub accel_enable: c_int,
+    pub input_device: *mut c_char,
+    pub files: [VMFileEntry; VM_FILE_COUNT],
+}
+
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const c_char,
+    pub virt_machine_set_defaults: Option<unsafe extern "C" fn(p: *mut VirtMachineParams)>,
+    pub virt_machine_init:
+        Option<unsafe extern "C" fn(p: *const VirtMachineParams) -> *mut c_void>,
+    pub virt_machine_end: Option<unsafe extern "C" fn(s: *mut c_void)>,
+    pub virt_machine_get_sleep_duration:
+        Option<unsafe extern "C" fn(s: *mut c_void, delay: c_int) -> c_int>,
+    pub virt_machine_interp:
+        Option<unsafe extern "C" fn(s: *mut c_void, max_exec_cycle: c_int)>,
+    pub vm_mouse_is_absolute: Option<unsafe extern "C" fn(s: *mut c_void) -> c_int>,
+    pub vm_send_mouse_event:
+        Option<unsafe extern "C" fn(s1: *mut c_void, dx: c_int, dy: c_int, dz: c_int, buttons: u32)>,
+    pub vm_send_key_event:
+        Option<unsafe extern "C" fn(s1: *mut c_void, is_down: c_int, key_code: u16)>,
+}
+
+// DynBuf (cutils.h)
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+// struct tm (glibc layout, used by cmdline_subst for ${TZ})
+#[repr(C)]
+pub struct Tm {
+    pub tm_sec: c_int,
+    pub tm_min: c_int,
+    pub tm_hour: c_int,
+    pub tm_mday: c_int,
+    pub tm_mon: c_int,
+    pub tm_year: c_int,
+    pub tm_wday: c_int,
+    pub tm_yday: c_int,
+    pub tm_isdst: c_int,
+    pub tm_gmtoff: c_long,
+    pub tm_zone: *const c_char,
+}
+
+extern "C" {
+    // json.h
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_free(val: JSONValue);
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_get_error(val: JSONValue) -> *const c_char;
+
+    // machine.c / machine.h
+    fn vm_error(fmt: *const c_char, ...);
+    fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int;
+
+    // C library
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn strchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn strlen(s: *const c_char) -> usize;
+    fn memcmp(s1: *const c_void, s2: *const c_void, n: usize) -> c_int;
+    fn snprintf(s: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+    fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
+
+    // cutils.c
+    fn dbuf_init(s: *mut DynBuf);
+    fn dbuf_putc(s: *mut DynBuf, c: u8);
+    fn dbuf_putstr(s: *mut DynBuf, str_: *const c_char);
+
+    // time
+    fn time(t: *mut c_long) -> c_long;
+    fn localtime_r(t: *const c_long, tm: *mut Tm) -> *mut Tm;
+
+    // machine classes (defined in riscv_machine.c / x86_machine.c)
+    static riscv_machine_class: VirtMachineClass;
+    static pc_machine_class: VirtMachineClass;
+}
+
+// small literal helper: b"..." -> *const c_char
+macro_rules! cstr {
+    ($s:expr) => {
+        $s.as_ptr() as *const c_char
+    };
+}
+
+// static BOOL find_name(const char *name, const char *name_list)
+unsafe fn find_name(name: *const c_char, name_list: *const c_char) -> c_int {
+    let mut p = name_list;
+    loop {
+        let r = strchr(p, b',' as c_int);
+        if r.is_null() {
+            if strcmp(name, p) == 0 {
+                return 1; // TRUE
+            }
+            break;
+        } else {
+            let len = r as usize - p as usize;
+            if len == strlen(name) && memcmp(name as *const c_void, p as *const c_void, len) == 0 {
+                return 1; // TRUE
+            }
+            p = r.add(1);
+        }
+    }
+    0 // FALSE
+}
+
+// static const VirtMachineClass *virt_machine_list[] = {
+//     &riscv_machine_class, &pc_machine_class, NULL };
+unsafe fn virt_machine_find_class(machine_name: *const c_char) -> *const VirtMachineClass {
+    let list: [*const VirtMachineClass; 3] = [
+        &riscv_machine_class as *const VirtMachineClass,
+        &pc_machine_class as *const VirtMachineClass,
+        ptr::null(),
+    ];
+    let mut i: usize = 0;
+    while let Some(slot) = list.get(i) {
+        let vmc = *slot;
+        if vmc.is_null() {
+            break;
+        }
+        if find_name(machine_name, (*vmc).machine_names) != 0 {
+            return vmc;
+        }
+        i += 1;
+    }
+    ptr::null()
+}
+
+// static int vm_get_str2(JSONValue obj, const char *name, const char **pstr, BOOL is_opt)
+unsafe fn vm_get_str2(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+    is_opt: c_int,
+) -> c_int {
+    let val = json_object_get(obj, name);
+    if val.type_ == JSON_UNDEFINED {
+        if is_opt != 0 {
+            *pstr = ptr::null();
+            return 0;
+        } else {
+            vm_error(cstr!(b"expecting '%s' property\n\0"), name);
+            return -1;
+        }
+    }
+    if val.type_ != JSON_STR {
+        vm_error(cstr!(b"%s: string expected\n\0"), name);
+        return -1;
+    }
+    *pstr = (*val.u.str).data.as_ptr();
+    0
+}
+
+unsafe fn vm_get_str(obj: JSONValue, name: *const c_char, pstr: *mut *const c_char) -> c_int {
+    vm_get_str2(obj, name, pstr, 0)
+}
+
+unsafe fn vm_get_str_opt(obj: JSONValue, name: *const c_char, pstr: *mut *const c_char) -> c_int {
+    vm_get_str2(obj, name, pstr, 1)
+}
+
+// static char *strdup_null(const char *str)
+unsafe fn strdup_null(str_: *const c_char) -> *mut c_char {
+    if str_.is_null() {
+        ptr::null_mut()
+    } else {
+        strdup(str_)
+    }
+}
+
+// static char *cmdline_subst(const char *cmdline)
+unsafe fn cmdline_subst(cmdline: *const c_char) -> *mut c_char {
+    let mut dbuf = DynBuf {
+        buf: ptr::null_mut(),
+        size: 0,
+        allocated_size: 0,
+    };
+    let mut var_name = [0i8; 32];
+    let mut buf = [0i8; 32];
+    let var_name_size = core::mem::size_of::<[i8; 32]>();
+    let buf_size = core::mem::size_of::<[i8; 32]>();
+
+    dbuf_init(&mut dbuf);
+    let mut p = cmdline;
+    while *p != 0 {
+        if *p == b'$' as c_char && *p.add(1) == b'{' as c_char {
+            p = p.add(2);
+            let vn_base = var_name.as_mut_ptr();
+            let mut q = vn_base;
+            while *p != 0 && *p != b'}' as c_char {
+                if (q as usize - vn_base as usize) < var_name_size - 1 {
+                    *q = *p;
+                    q = q.add(1);
+                }
+                p = p.add(1);
+            }
+            *q = 0;
+            if *p == b'}' as c_char {
+                p = p.add(1);
+            }
+            if strcmp(vn_base, cstr!(b"TZ\0")) == 0 {
+                let mut ti: c_long = 0;
+                let mut tm = core::mem::zeroed::<Tm>();
+
+                time(&mut ti as *mut c_long);
+                localtime_r(&ti as *const c_long, &mut tm as *mut Tm);
+                let mut n: c_int = (tm.tm_gmtoff / 60) as c_int;
+                let mut sg: c_int = b'-' as c_int;
+                if n < 0 {
+                    sg = b'+' as c_int;
+                    n = -n;
+                }
+                snprintf(
+                    buf.as_mut_ptr(),
+                    buf_size,
+                    cstr!(b"UTC%c%02d:%02d\0"),
+                    sg,
+                    n / 60,
+                    n % 60,
+                );
+                dbuf_putstr(&mut dbuf, buf.as_ptr());
+            }
+        } else {
+            dbuf_putc(&mut dbuf, *p as u8);
+            p = p.add(1);
+        }
+    }
+    dbuf_putc(&mut dbuf, 0);
+    dbuf.buf as *mut c_char
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_parse_config(
+    p_arg: *mut VirtMachineParams,
+    config_file_str: *mut c_char,
+    len: c_int,
+) -> c_int {
+    let p: &mut VirtMachineParams = &mut *p_arg;
+    let mut version: c_int = 0;
+    let mut val: c_int = 0;
+    let mut str_: *const c_char;
+    let mut buf1 = [0i8; 256];
+    let buf1_size = core::mem::size_of::<[i8; 256]>();
+
+    let cfg = json_parse_value_len(config_file_str, len);
+    if cfg.type_ == JSON_EXCEPTION {
+        vm_error(cstr!(b"error: %s\n\0"), json_get_error(cfg));
+        json_free(cfg);
+        return -1;
+    }
+
+    // tag_fail is emulated with this flag; the original "goto tag_fail" jumps
+    // straight to the cleanup at the end of the function.
+    let mut fail = false;
+
+    // ---- version ----
+    if vm_get_int(cfg, cstr!(b"version\0"), &mut version as *mut c_int) < 0 {
+        fail = true;
+    }
+    if !fail && version != 1 {
+        if version > 1 {
+            vm_error(cstr!(
+                b"The emulator is too old to run this VM: please upgrade\n\0"
+            ));
+            return -1;
+        } else {
+            vm_error(cstr!(b"The VM configuration file is too old for this emulator version: please upgrade the VM configuration file\n\0"));
+            return -1;
+        }
+    }
+
+    // ---- machine ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str(cfg, cstr!(b"machine\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else {
+            p.machine_name = strdup(str_);
+            p.vmc = virt_machine_find_class(p.machine_name);
+            if p.vmc.is_null() {
+                vm_error(cstr!(b"Unknown machine name: %s\n\0"), p.machine_name);
+                fail = true;
+            } else if let Some(set_defaults) = (*p.vmc).virt_machine_set_defaults {
+                set_defaults(p as *mut VirtMachineParams);
+            }
+        }
+    }
+
+    // ---- memory_size ----
+    if !fail {
+        if vm_get_int(cfg, cstr!(b"memory_size\0"), &mut val as *mut c_int) < 0 {
+            fail = true;
+        } else {
+            p.ram_size = ((val as u32) as u64) << 20;
+        }
+    }
+
+    // ---- bios ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"bios\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else if !str_.is_null() {
+            p.files[VM_FILE_BIOS].filename = strdup(str_);
+        }
+    }
+
+    // ---- kernel ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"kernel\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else if !str_.is_null() {
+            p.files[VM_FILE_KERNEL].filename = strdup(str_);
+        }
+    }
+
+    // ---- cmdline ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"cmdline\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else if !str_.is_null() {
+            p.cmdline = cmdline_subst(str_);
+        }
+    }
+
+    // ---- initrd ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"initrd\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else if !str_.is_null() {
+            p.files[VM_FILE_INITRD].filename = strdup(str_);
+        }
+    }
+
+    // ---- drives ----
+    if !fail {
+        loop {
+            snprintf(
+                buf1.as_mut_ptr(),
+                buf1_size,
+                cstr!(b"drive%d\0"),
+                p.drive_count,
+            );
+            let obj = json_object_get(cfg, buf1.as_ptr());
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if p.drive_count >= MAX_DRIVE_DEVICE {
+                vm_error(cstr!(b"Too many drives\n\0"));
+                return -1;
+            }
+            str_ = ptr::null();
+            if vm_get_str(obj, cstr!(b"file\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+                break;
+            }
+            let idx = p.drive_count as usize;
+            match p.tab_drive.get_mut(idx) {
+                Some(entry) => entry.filename = strdup(str_),
+                None => {
+                    fail = true;
+                    break;
+                }
+            }
+            str_ = ptr::null();
+            if vm_get_str_opt(obj, cstr!(b"device\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+                break;
+            }
+            match p.tab_drive.get_mut(idx) {
+                Some(entry) => entry.device = strdup_null(str_),
+                None => {
+                    fail = true;
+                    break;
+                }
+            }
+            p.drive_count += 1;
+        }
+    }
+
+    // ---- filesystems ----
+    if !fail {
+        loop {
+            snprintf(buf1.as_mut_ptr(), buf1_size, cstr!(b"fs%d\0"), p.fs_count);
+            let obj = json_object_get(cfg, buf1.as_ptr());
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if p.fs_count >= MAX_DRIVE_DEVICE {
+                vm_error(cstr!(b"Too many filesystems\n\0"));
+                return -1;
+            }
+            str_ = ptr::null();
+            if vm_get_str(obj, cstr!(b"file\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+                break;
+            }
+            let idx = p.fs_count as usize;
+            match p.tab_fs.get_mut(idx) {
+                Some(entry) => entry.filename = strdup(str_),
+                None => {
+                    fail = true;
+                    break;
+                }
+            }
+            str_ = ptr::null();
+            if vm_get_str_opt(obj, cstr!(b"tag\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+                break;
+            }
+            if str_.is_null() {
+                if p.fs_count == 0 {
+                    strcpy(buf1.as_mut_ptr(), cstr!(b"/dev/root\0"));
+                } else {
+                    snprintf(
+                        buf1.as_mut_ptr(),
+                        buf1_size,
+                        cstr!(b"/dev/root%d\0"),
+                        p.fs_count,
+                    );
+                }
+                str_ = buf1.as_ptr();
+            }
+            match p.tab_fs.get_mut(idx) {
+                Some(entry) => entry.tag = strdup(str_),
+                None => {
+                    fail = true;
+                    break;
+                }
+            }
+            p.fs_count += 1;
+        }
+    }
+
+    // ---- ethernet ----
+    if !fail {
+        loop {
+            snprintf(buf1.as_mut_ptr(), buf1_size, cstr!(b"eth%d\0"), p.eth_count);
+            let obj = json_object_get(cfg, buf1.as_ptr());
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if p.eth_count >= MAX_ETH_DEVICE {
+                vm_error(cstr!(b"Too many ethernet interfaces\n\0"));
+                return -1;
+            }
+            str_ = ptr::null();
+            if vm_get_str(obj, cstr!(b"driver\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+                break;
+            }
+            let idx = p.eth_count as usize;
+            match p.tab_eth.get_mut(idx) {
+                Some(entry) => entry.driver = strdup(str_),
+                None => {
+                    fail = true;
+                    break;
+                }
+            }
+            if strcmp(str_, cstr!(b"tap\0")) == 0 {
+                str_ = ptr::null();
+                if vm_get_str(obj, cstr!(b"ifname\0"), &mut str_ as *mut *const c_char) < 0 {
+                    fail = true;
+                    break;
+                }
+                match p.tab_eth.get_mut(idx) {
+                    Some(entry) => entry.ifname = strdup(str_),
+                    None => {
+                        fail = true;
+                        break;
+                    }
+                }
+            }
+            p.eth_count += 1;
+        }
+    }
+
+    // ---- display ----
+    if !fail {
+        p.display_device = ptr::null_mut();
+        let obj = json_object_get(cfg, cstr!(b"display0\0"));
+        if obj.type_ != JSON_UNDEFINED {
+            str_ = ptr::null();
+            if vm_get_str(obj, cstr!(b"device\0"), &mut str_ as *mut *const c_char) < 0 {
+                fail = true;
+            } else {
+                p.display_device = strdup(str_);
+                if vm_get_int(obj, cstr!(b"width\0"), &mut p.width as *mut c_int) < 0 {
+                    fail = true;
+                } else if vm_get_int(obj, cstr!(b"height\0"), &mut p.height as *mut c_int) < 0 {
+                    fail = true;
+                } else {
+                    str_ = ptr::null();
+                    if vm_get_str_opt(
+                        obj,
+                        cstr!(b"vga_bios\0"),
+                        &mut str_ as *mut *const c_char,
+                    ) < 0
+                    {
+                        fail = true;
+                    } else if !str_.is_null() {
+                        p.files[VM_FILE_VGA_BIOS].filename = strdup(str_);
+                    }
+                }
+            }
+        }
+    }
+
+    // ---- input_device ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"input_device\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else {
+            p.input_device = strdup_null(str_);
+        }
+    }
+
+    // ---- accel ----
+    if !fail {
+        str_ = ptr::null();
+        if vm_get_str_opt(cfg, cstr!(b"accel\0"), &mut str_ as *mut *const c_char) < 0 {
+            fail = true;
+        } else if !str_.is_null() {
+            if strcmp(str_, cstr!(b"none\0")) == 0 {
+                p.accel_enable = 0; // FALSE
+            } else if strcmp(str_, cstr!(b"auto\0")) == 0 {
+                p.accel_enable = 1; // TRUE
+            } else {
+                vm_error(cstr!(b"unsupported 'accel' config: %s\n\0"), str_);
+                return -1;
+            }
+        }
+    }
+
+    // ---- rtc_local_time ----
+    if !fail {
+        let tag_name = cstr!(b"rtc_local_time\0");
+        let el = json_object_get(cfg, tag_name);
+        if el.type_ != JSON_UNDEFINED {
+            if el.type_ != JSON_BOOL {
+                vm_error(cstr!(b"%s: boolean expected\n\0"), tag_name);
+                fail = true;
+            } else {
+                p.rtc_local_time = el.u.b;
+            }
+        }
+    }
+
+    // tag_fail / success
+    json_free(cfg);
+    if fail {
+        return -1;
+    }
+    0
 }
 }
 
@@ -4057,6 +5807,108 @@ pub extern "C" fn virt_machine_parse_config__part1425() -> c_int {
 }
 }
 
+// ── `get_file_path` · machine.c:424-446 · chunk 1429 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     char *get_file_path(const char *base_filename, const char *filename)
+//     {
+//         int len, len1;
+//         char *fname, *p;
+//     
+//         if (!base_filename)
+//             goto done;
+//         if (
+//            _Generic (0 ? (
+//            filename
+//            ) : (void *) 1, const void *: (const char *) (strchr (
+//            filename
+//            , 
+//            ':'
+//            )), default: strchr (
+//            filename
+//            , 
+//            ':'
+//            ))
+//                                 )
+//             goto done;
+//         if (filename[0] == '/')
+//             goto done;
+//         p = 
+//            _Generic (0 ? (
+//            base_filename
+//            ) : (void *) 1, const void *: (const char *) (strrchr (
+//            base_filename
+//            , 
+//            '/'
+//            )), default: strrchr (
+//            base_filename
+//            , 
+//            '/'
+//            ))
+//                                       ;
+//         if (!p) {
+//         done:
+//             return strdup(filename);
+//         }
+//         len = p + 1 - base_filename;
+//         len1 = strlen(filename);
+//         fname = malloc(len + len1 + 1);
+//         memcpy(fname, base_filename, len);
+//         memcpy(fname + len, filename, len1 + 1);
+//         return fname;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1429 {
+// Rust rewrite of get_file_path from machine.c
+use core::ffi::{c_char, c_int, c_void};
+
+extern "C" {
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strrchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strlen(s: *const c_char) -> usize;
+    fn malloc(size: usize) -> *mut c_void;
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub extern "C" fn get_file_path(
+    base_filename: *const c_char,
+    filename: *const c_char,
+) -> *mut c_char {
+    unsafe {
+        if base_filename.is_null() {
+            return strdup(filename);
+        }
+        if !strchr(filename, ':' as c_int).is_null() {
+            // full URL
+            return strdup(filename);
+        }
+        if *filename == b'/' as c_char {
+            return strdup(filename);
+        }
+        let p: *mut c_char = strrchr(base_filename, '/' as c_int);
+        if p.is_null() {
+            return strdup(filename);
+        }
+        let len: c_int = (p as isize + 1 - base_filename as isize) as c_int;
+        let len1: c_int = strlen(filename) as c_int;
+        let fname = malloc((len + len1 + 1) as usize) as *mut c_char;
+        memcpy(
+            fname as *mut c_void,
+            base_filename as *const c_void,
+            len as usize,
+        );
+        memcpy(
+            fname.offset(len as isize) as *mut c_void,
+            filename as *const c_void,
+            (len1 + 1) as usize,
+        );
+        fname
+    }
+}
+}
+
 // ── `if (!base_filename)` · machine.c:429-430 · chunk 1430 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -4258,6 +6110,90 @@ pub extern "C" fn get_file_path__part1435(
 }
 }
 
+// ── `load_file` · machine.c:456-478 · chunk 1436 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int load_file(uint8_t **pbuf, const char *filename)
+//     {
+//         FILE *f;
+//         int size;
+//         uint8_t *buf;
+//     
+//         f = fopen(filename, "rb");
+//         if (!f) {
+//             perror(filename);
+//             exit(1);
+//         }
+//         fseek(f, 0, 
+//                    2
+//                            );
+//         size = ftell(f);
+//         fseek(f, 0, 
+//                    0
+//                            );
+//         buf = malloc(size);
+//         if (fread(buf, 1, size, f) != size) {
+//             fprintf(
+//                    stderr
+//                          , "%s: read error\n", filename);
+//             exit(1);
+//         }
+//         fclose(f);
+//         *pbuf = buf;
+//         return size;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1436 {
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+extern "C" {
+    fn fopen(filename: *const c_char, modes: *const c_char) -> *mut FILE;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn fseek(stream: *mut FILE, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut FILE) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut FILE) -> usize;
+    fn perror(s: *const c_char);
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    static stderr: *mut FILE;
+}
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+/* return -1 if error. */
+#[no_mangle]
+pub unsafe extern "C" fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    let f: *mut FILE = fopen(filename, b"rb\0".as_ptr() as *const c_char);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    // C assigns the long returned by ftell() to an int: same truncation here.
+    let size: c_int = ftell(f) as c_int;
+    fseek(f, 0, SEEK_SET);
+    let buf: *mut u8 = malloc(size as usize) as *mut u8;
+    if fread(buf as *mut c_void, 1, size as usize, f) != size as usize {
+        fprintf(
+            stderr,
+            b"%s: read error\n\0".as_ptr() as *const c_char,
+            filename,
+        );
+        exit(1);
+    }
+    fclose(f);
+    *pbuf = buf;
+    size
+}
+}
+
 // ── `FILE *f; int size; uint8_t *buf; f = fopen(filename, "rb");` · machine.c:458-462 · chunk 1437 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -4435,6 +6371,65 @@ pub extern "C" fn load_file__part1441(
 }
 }
 
+// ── `config_load_file_cb` · machine.c:482-492 · chunk 1442 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void config_load_file_cb(void *opaque, int err, void *data, size_t size)
+//     {
+//         VMConfigLoadState *s = opaque;
+//     
+//     
+//         if (err < 0) {
+//             vm_error("Error %d while loading file\n", -err);
+//             exit(1);
+//         }
+//         s->file_load_cb(s->file_load_opaque, data, size);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1442 {
+// Rust rewrite of config_load_file_cb (machine.c)
+use core::ffi::{c_char, c_int, c_void};
+
+// FSLoadFileCB: void (*)(void *opaque, uint8_t *buf, int buf_len)
+type FSLoadFileCB = Option<unsafe extern "C" fn(*mut c_void, *mut u8, c_int)>;
+type StartCB = Option<unsafe extern "C" fn(*mut c_void)>;
+
+// Mirror of the C VMConfigLoadState (same field order and types).
+#[repr(C)]
+struct VMConfigLoadState {
+    vm_params: *mut c_void,
+    start_cb: StartCB,
+    opaque: *mut c_void,
+    file_load_cb: FSLoadFileCB,
+    file_load_opaque: *mut c_void,
+    file_index: c_int,
+}
+
+extern "C" {
+    fn vm_error(fmt: *const c_char, ...);
+    fn exit(status: c_int) -> !;
+}
+
+static ERR_FMT: &[u8] = b"Error %d while loading file\n\0";
+
+#[no_mangle]
+pub unsafe extern "C" fn config_load_file_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    let s = opaque as *mut VMConfigLoadState;
+
+    if err < 0 {
+        vm_error(ERR_FMT.as_ptr() as *const c_char, err.wrapping_neg());
+        exit(1);
+    }
+
+    // s->file_load_cb(s->file_load_opaque, data, size);
+    // size is size_t in the call, converted to int in the callee's prototype.
+    let st = &mut *s;
+    if let Some(cb) = st.file_load_cb {
+        cb(st.file_load_opaque, data as *mut u8, size as c_int);
+    }
+}
+}
+
 // ── `if (err < 0)` · machine.c:487-490 · chunk 1443 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -4504,6 +6499,167 @@ pub unsafe extern "C" fn config_load_file_cb__part1444(
     let cb = (*s).file_load_cb;
     if let Some(f) = cb {
         f((*s).file_load_opaque, data as *mut u8, size as c_int);
+    }
+}
+}
+
+// ── `config_load_file` · machine.c:495-513 · chunk 1445 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void config_load_file(VMConfigLoadState *s, const char *filename,
+//                                  FSLoadFileCB *cb, void *opaque)
+//     {
+//     
+//     
+//         if (is_url(filename)) {
+//             s->file_load_cb = cb;
+//             s->file_load_opaque = opaque;
+//             fs_wget(filename, 
+//                              ((void *)0)
+//                                  , 
+//                                    ((void *)0)
+//                                        , s, config_load_file_cb, TRUE);
+//         } else
+//     
+//         {
+//             uint8_t *buf;
+//             int size;
+//             size = load_file(&buf, filename);
+//             cb(opaque, buf, size);
+//             free(buf);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1445 {
+// Rust port of `config_load_file` (machine.c) and the static helpers it uses
+// (`load_file` and `config_load_file_cb`), which have no linker symbol.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+// Opaque mirror of C `FILE`.
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+// WGetWriteCallback: void (*)(void *opaque, int err, void *data, size_t size)
+type WGetWriteCallback =
+    Option<unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize)>;
+
+// FSLoadFileCB: void (*)(void *opaque, uint8_t *buf, int buf_len)
+type FSLoadFileCB =
+    Option<unsafe extern "C" fn(opaque: *mut c_void, buf: *mut u8, buf_len: c_int)>;
+
+// Mirror of the C struct VMConfigLoadState (field order and types matter).
+#[repr(C)]
+pub struct VMConfigLoadState {
+    pub vm_params: *mut c_void,
+    pub start_cb: Option<unsafe extern "C" fn(opaque: *mut c_void)>,
+    pub opaque: *mut c_void,
+    pub file_load_cb: FSLoadFileCB,
+    pub file_load_opaque: *mut c_void,
+    pub file_index: c_int,
+}
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+const TRUE: c_int = 1;
+
+extern "C" {
+    fn is_url(path: *const c_char) -> c_int;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: WGetWriteCallback,
+        single_write: c_int,
+    ) -> *mut c_void;
+    fn vm_error(fmt: *const c_char, ...);
+    fn exit(status: c_int) -> !;
+    fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn fseek(stream: *mut FILE, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut FILE) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, n: usize, stream: *mut FILE) -> usize;
+    fn fprintf(stream: *mut FILE, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    static mut stderr: *mut FILE;
+}
+
+// Port of the static C function `load_file`: returns the file size.
+unsafe fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    let mode: *const c_char = b"rb\0".as_ptr() as *const c_char;
+
+    let f = fopen(filename, mode);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    let size: c_int = ftell(f) as c_int;
+    fseek(f, 0, SEEK_SET);
+    let buf = malloc(size as usize) as *mut u8;
+    if fread(buf as *mut c_void, 1, size as usize, f) != size as usize {
+        let fmt: *const c_char = b"%s: read error\n\0".as_ptr() as *const c_char;
+        fprintf(stderr, fmt, filename);
+        exit(1);
+    }
+    fclose(f);
+    *pbuf = buf;
+    size
+}
+
+// Port of the static C function `config_load_file_cb`.
+unsafe extern "C" fn config_load_file_cb(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let s = opaque as *mut VMConfigLoadState;
+
+    if err < 0 {
+        let fmt: *const c_char = b"Error %d while loading file\n\0".as_ptr() as *const c_char;
+        vm_error(fmt, err.wrapping_neg());
+        exit(1);
+    }
+    let cb = (*s).file_load_cb;
+    let cb_opaque = (*s).file_load_opaque;
+    if let Some(f) = cb {
+        f(cb_opaque, data as *mut u8, size as c_int);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn config_load_file(
+    s: *mut VMConfigLoadState,
+    filename: *const c_char,
+    cb: FSLoadFileCB,
+    opaque: *mut c_void,
+) {
+    if is_url(filename) != 0 {
+        (*s).file_load_cb = cb;
+        (*s).file_load_opaque = opaque;
+        fs_wget(
+            filename,
+            core::ptr::null(),
+            core::ptr::null(),
+            s as *mut c_void,
+            Some(config_load_file_cb),
+            TRUE,
+        );
+    } else {
+        let mut buf: *mut u8 = core::ptr::null_mut();
+        let size: c_int = load_file(&mut buf, filename);
+        if let Some(f) = cb {
+            f(opaque, buf, size);
+        }
+        free(buf as *mut c_void);
     }
 }
 }
@@ -4595,6 +6751,995 @@ pub unsafe extern "C" fn config_load_file__part1446(
 }
 }
 
+// ── `virt_machine_load_config_file` · machine.c:515-529 · chunk 1447 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     void virt_machine_load_config_file(VirtMachineParams *p,
+//                                        const char *filename,
+//                                        void (*start_cb)(void *opaque),
+//                                        void *opaque)
+//     {
+//         VMConfigLoadState *s;
+//     
+//         s = mallocz(sizeof(*s));
+//         s->vm_params = p;
+//         s->start_cb = start_cb;
+//         s->opaque = opaque;
+//         p->cfg_filename = strdup(filename);
+//     
+//         config_load_file(s, filename, config_file_loaded, s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1447 {
+// Rust port of virt_machine_load_config_file (machine.c lines 515-529).
+//
+// The TARGET calls the file-static helper config_load_file(), which in turn
+// calls the file-static config_file_loaded()/config_additional_file_load()/
+// config_additional_file_load_cb()/virt_machine_parse_config()/load_file()
+// chain.  None of those have a linker symbol, so their logic is ported here.
+// Everything else (mallocz, strdup, free, is_url, fs_wget, get_file_path,
+// vm_error, vm_get_int, json_*, dbuf_*, libc stdio) is called through extern.
+
+#![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
+#![allow(non_upper_case_globals)]
+#![allow(dead_code)]
+#![allow(unused_unsafe)]
+#![allow(unused_assignments)]
+#![allow(clippy::all)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+use core::mem::{size_of, zeroed};
+use core::ptr::{addr_of_mut, null, null_mut};
+use std::ffi::CString;
+
+// ---------------------------------------------------------------------------
+// constants
+// ---------------------------------------------------------------------------
+
+pub type BOOL = c_int;
+
+const VM_FILE_BIOS: usize = 0;
+const VM_FILE_VGA_BIOS: usize = 1;
+const VM_FILE_KERNEL: usize = 2;
+const VM_FILE_INITRD: usize = 3;
+const VM_FILE_COUNT: c_int = 4;
+
+const JSON_STR: c_int = 0;
+const JSON_BOOL: c_int = 4;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+const VM_CONFIG_VERSION: c_int = 1;
+const MAX_DRIVE_DEVICE: c_int = 4;
+const MAX_ETH_DEVICE: c_int = 1;
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+const TRUE_VAL: BOOL = 1;
+
+// ---------------------------------------------------------------------------
+// C type mirrors (exact field order)
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+pub struct VMFileEntry {
+    pub filename: *mut c_char,
+    pub buf: *mut u8,
+    pub len: c_int,
+}
+
+#[repr(C)]
+pub struct VMDriveEntry {
+    pub device: *mut c_char,
+    pub filename: *mut c_char,
+    pub block_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMFSEntry {
+    pub device: *mut c_char,
+    pub tag: *mut c_char,
+    pub filename: *mut c_char,
+    pub fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMEthEntry {
+    pub driver: *mut c_char,
+    pub ifname: *mut c_char,
+    pub net: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const c_char,
+    pub virt_machine_set_defaults: Option<unsafe extern "C" fn(*mut VirtMachineParams)>,
+    pub virt_machine_init: Option<unsafe extern "C" fn(*const VirtMachineParams) -> *mut c_void>,
+    pub virt_machine_end: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub virt_machine_get_sleep_duration: Option<unsafe extern "C" fn(*mut c_void, c_int) -> c_int>,
+    pub virt_machine_interp: Option<unsafe extern "C" fn(*mut c_void, c_int)>,
+    pub vm_mouse_is_absolute: Option<unsafe extern "C" fn(*mut c_void) -> BOOL>,
+    pub vm_send_mouse_event:
+        Option<unsafe extern "C" fn(*mut c_void, c_int, c_int, c_int, c_uint)>,
+    pub vm_send_key_event: Option<unsafe extern "C" fn(*mut c_void, BOOL, u16)>,
+}
+
+#[repr(C)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const VirtMachineClass,
+    pub machine_name: *mut c_char,
+    pub ram_size: u64,
+    pub rtc_real_time: BOOL,
+    pub rtc_local_time: BOOL,
+    pub display_device: *mut c_char,
+    pub width: c_int,
+    pub height: c_int,
+    pub console: *mut c_void,
+    pub tab_drive: [VMDriveEntry; 4],
+    pub drive_count: c_int,
+    pub tab_fs: [VMFSEntry; 4],
+    pub fs_count: c_int,
+    pub tab_eth: [VMEthEntry; 1],
+    pub eth_count: c_int,
+    pub cmdline: *mut c_char,
+    pub accel_enable: BOOL,
+    pub input_device: *mut c_char,
+    pub files: [VMFileEntry; 4],
+}
+
+type FSLoadFileCB = unsafe extern "C" fn(*mut c_void, *mut u8, c_int);
+type WGetWriteCallback = unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+#[repr(C)]
+struct VMConfigLoadState {
+    vm_params: *mut VirtMachineParams,
+    start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    opaque: *mut c_void,
+    file_load_cb: Option<FSLoadFileCB>,
+    file_load_opaque: *mut c_void,
+    file_index: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONString {
+    pub len: c_int,
+    // char data[0]; flexible array member
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONUnion {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int,
+    pub obj: *mut c_void,
+    pub array: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int, // JSONTypeEnum
+    pub u: JSONUnion,
+}
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct Tm {
+    pub tm_sec: c_int,
+    pub tm_min: c_int,
+    pub tm_hour: c_int,
+    pub tm_mday: c_int,
+    pub tm_mon: c_int,
+    pub tm_year: c_int,
+    pub tm_wday: c_int,
+    pub tm_yday: c_int,
+    pub tm_isdst: c_int,
+    pub tm_gmtoff: c_long,
+    pub tm_zone: *const c_char,
+}
+
+// ---------------------------------------------------------------------------
+// extern declarations
+// ---------------------------------------------------------------------------
+
+extern "C" {
+    // libc
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn exit(status: c_int) -> !;
+    fn fopen64(filename: *const c_char, modes: *const c_char) -> *mut c_void;
+    fn fclose(stream: *mut c_void) -> c_int;
+    fn fseek(stream: *mut c_void, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut c_void) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn perror(s: *const c_char);
+    fn time(t: *mut c_long) -> c_long;
+    fn localtime_r(t: *const c_long, tm: *mut Tm) -> *mut Tm;
+
+    // tinyemu
+    fn mallocz(size: usize) -> *mut c_void;
+    fn vm_error(fmt: *const c_char, ...);
+    fn is_url(path: *const c_char) -> BOOL;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: BOOL,
+    ) -> *mut c_void;
+    fn get_file_path(base_filename: *const c_char, filename: *const c_char) -> *mut c_char;
+
+    fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int;
+
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_free(val: JSONValue);
+    fn json_get_error(val: JSONValue) -> *const c_char;
+
+    fn dbuf_init(s: *mut DynBuf);
+    fn dbuf_putc(s: *mut DynBuf, c: u8);
+    fn dbuf_putstr(s: *mut DynBuf, str_: *const c_char);
+
+    static riscv_machine_class: VirtMachineClass;
+    static pc_machine_class: VirtMachineClass;
+}
+
+// ---------------------------------------------------------------------------
+// small C string helpers (no panics)
+// ---------------------------------------------------------------------------
+
+unsafe fn c_strlen(s: *const u8) -> usize {
+    unsafe {
+        let mut n = 0usize;
+        while *s.add(n) != 0 {
+            n += 1;
+        }
+        n
+    }
+}
+
+unsafe fn bytes_eq(a: *const u8, b: *const u8, len: usize) -> bool {
+    unsafe {
+        let mut i = 0usize;
+        while i < len {
+            if *a.add(i) != *b.add(i) {
+                return false;
+            }
+            i += 1;
+        }
+        true
+    }
+}
+
+unsafe fn cstr_eq_cstr(a: *const u8, b: *const u8) -> bool {
+    unsafe {
+        let mut i = 0usize;
+        loop {
+            let ca = *a.add(i);
+            let cb = *b.add(i);
+            if ca != cb {
+                return false;
+            }
+            if ca == 0 {
+                return true;
+            }
+            i += 1;
+        }
+    }
+}
+
+unsafe fn cstr_eq_lit(a: *const c_char, lit: &[u8]) -> bool {
+    unsafe {
+        if a.is_null() {
+            return false;
+        }
+        let p = a as *const u8;
+        let mut i = 0usize;
+        while i < lit.len() {
+            if *p.add(i) != lit[i] {
+                return false;
+            }
+            i += 1;
+        }
+        *p.add(lit.len()) == 0
+    }
+}
+
+// snprintf(buf, sizeof(buf), "<prefix>%d", n)
+fn build_indexed_name(prefix: &str, n: c_int) -> [u8; 256] {
+    let mut out = [0u8; 256];
+    let s = format!("{}{}", prefix, n);
+    let bytes = s.as_bytes();
+    let len = if bytes.len() > 255 { 255 } else { bytes.len() };
+    let mut i = 0usize;
+    while i < len {
+        out[i] = bytes[i];
+        i += 1;
+    }
+    out
+}
+
+fn build_dev_root(n: c_int) -> [u8; 256] {
+    let mut out = [0u8; 256];
+    let s = if n == 0 {
+        String::from("/dev/root")
+    } else {
+        format!("/dev/root{}", n)
+    };
+    let bytes = s.as_bytes();
+    let len = if bytes.len() > 255 { 255 } else { bytes.len() };
+    let mut i = 0usize;
+    while i < len {
+        out[i] = bytes[i];
+        i += 1;
+    }
+    out
+}
+
+unsafe fn json_string_data(val: JSONValue) -> *const c_char {
+    unsafe {
+        let s = val.u.str_;
+        (s as *const u8).add(size_of::<JSONString>()) as *const c_char
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ported static helpers of machine.c
+// ---------------------------------------------------------------------------
+
+unsafe fn vm_get_str2(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+    is_opt: BOOL,
+) -> c_int {
+    unsafe {
+        let val = json_object_get(obj, name);
+        if val.type_ == JSON_UNDEFINED {
+            if is_opt != 0 {
+                *pstr = null::<c_char>();
+                return 0;
+            } else {
+                vm_error(b"expecting '%s' property\n\0".as_ptr() as *const c_char, name);
+                return -1;
+            }
+        }
+        if val.type_ != JSON_STR {
+            vm_error(b"%s: string expected\n\0".as_ptr() as *const c_char, name);
+            return -1;
+        }
+        *pstr = json_string_data(val);
+        0
+    }
+}
+
+unsafe fn vm_get_str(obj: JSONValue, name: *const c_char, pstr: *mut *const c_char) -> c_int {
+    unsafe { vm_get_str2(obj, name, pstr, 0) }
+}
+
+unsafe fn vm_get_str_opt(obj: JSONValue, name: *const c_char, pstr: *mut *const c_char) -> c_int {
+    unsafe { vm_get_str2(obj, name, pstr, TRUE_VAL) }
+}
+
+unsafe fn strdup_null(s: *const c_char) -> *mut c_char {
+    unsafe {
+        if s.is_null() {
+            null_mut::<c_char>()
+        } else {
+            strdup(s)
+        }
+    }
+}
+
+unsafe fn find_name(name: *const c_char, name_list: *const c_char) -> BOOL {
+    unsafe {
+        let mut p = name_list as *const u8;
+        loop {
+            let mut q = p;
+            while *q != 0 && *q != b',' {
+                q = q.add(1);
+            }
+            if *q == 0 {
+                if cstr_eq_cstr(name as *const u8, p) {
+                    return 1;
+                }
+                return 0;
+            } else {
+                let len = q as usize - p as usize;
+                let namelen = c_strlen(name as *const u8);
+                if len == namelen && bytes_eq(name as *const u8, p, len) {
+                    return 1;
+                }
+                p = q.add(1);
+            }
+        }
+    }
+}
+
+unsafe fn virt_machine_find_class(machine_name: *const c_char) -> *const VirtMachineClass {
+    unsafe {
+        let list: [*const VirtMachineClass; 3] = [
+            &riscv_machine_class as *const VirtMachineClass,
+            &pc_machine_class as *const VirtMachineClass,
+            null::<VirtMachineClass>(),
+        ];
+        let mut i = 0usize;
+        while i < list.len() {
+            let vmc = *list.get_unchecked(i);
+            if !vmc.is_null() {
+                let names = (*vmc).machine_names;
+                if find_name(machine_name, names) != 0 {
+                    return vmc;
+                }
+            }
+            i += 1;
+        }
+        null::<VirtMachineClass>()
+    }
+}
+
+unsafe fn cmdline_subst(cmdline: *const c_char) -> *mut c_char {
+    unsafe {
+        let mut dbuf: DynBuf = zeroed();
+        dbuf_init(addr_of_mut!(dbuf));
+
+        let mut p = cmdline as *const u8;
+        while *p != 0 {
+            if *p == b'$' && *p.add(1) == b'{' {
+                p = p.add(2);
+                let mut var_name = [0u8; 32];
+                let mut q = 0usize;
+                while *p != 0 && *p != b'}' {
+                    if q < 31 {
+                        var_name[q] = *p;
+                        q += 1;
+                    }
+                    p = p.add(1);
+                }
+                var_name[q] = 0;
+                if *p == b'}' {
+                    p = p.add(1);
+                }
+                if cstr_eq_lit(var_name.as_ptr() as *const c_char, b"TZ") {
+                    let mut ti: c_long = 0;
+                    time(addr_of_mut!(ti));
+                    let mut tm: Tm = zeroed();
+                    localtime_r(addr_of_mut!(ti) as *const c_long, addr_of_mut!(tm));
+                    let mut n: c_int = (tm.tm_gmtoff / 60) as c_int;
+                    let mut sg: u8 = b'-';
+                    if n < 0 {
+                        sg = b'+';
+                        n = -n;
+                    }
+                    let s = format!("UTC{}{:02}:{:02}", sg as char, n / 60, n % 60);
+                    if let Ok(cs) = CString::new(s) {
+                        dbuf_putstr(addr_of_mut!(dbuf), cs.as_ptr());
+                    }
+                }
+            } else {
+                dbuf_putc(addr_of_mut!(dbuf), *p);
+                p = p.add(1);
+            }
+        }
+        dbuf_putc(addr_of_mut!(dbuf), 0);
+        dbuf.buf as *mut c_char
+    }
+}
+
+unsafe fn tag_fail(cfg: JSONValue) -> c_int {
+    unsafe {
+        json_free(cfg);
+    }
+    -1
+}
+
+unsafe fn virt_machine_parse_config(
+    p: *mut VirtMachineParams,
+    config_file_str: *mut c_char,
+    len: c_int,
+) -> c_int {
+    unsafe {
+        let mut version: c_int = 0;
+        let mut val: c_int = 0;
+        let mut strp: *const c_char = null::<c_char>();
+        let mut tag_name: *const c_char;
+
+        let cfg = json_parse_value_len(config_file_str, len);
+        if cfg.type_ == JSON_EXCEPTION {
+            vm_error(
+                b"error: %s\n\0".as_ptr() as *const c_char,
+                json_get_error(cfg),
+            );
+            json_free(cfg);
+            return -1;
+        }
+
+        if vm_get_int(
+            cfg,
+            b"version\0".as_ptr() as *const c_char,
+            addr_of_mut!(version),
+        ) < 0
+        {
+            return tag_fail(cfg);
+        }
+        if version != VM_CONFIG_VERSION {
+            if version > VM_CONFIG_VERSION {
+                vm_error(
+                    b"The emulator is too old to run this VM: please upgrade\n\0".as_ptr()
+                        as *const c_char,
+                );
+            } else {
+                vm_error(
+                    b"The VM configuration file is too old for this emulator version: please upgrade the VM configuration file\n\0"
+                        .as_ptr() as *const c_char,
+                );
+            }
+            return -1;
+        }
+
+        if vm_get_str(
+            cfg,
+            b"machine\0".as_ptr() as *const c_char,
+            addr_of_mut!(strp),
+        ) < 0
+        {
+            return tag_fail(cfg);
+        }
+        (*p).machine_name = strdup(strp);
+        (*p).vmc = virt_machine_find_class((*p).machine_name);
+        if (*p).vmc.is_null() {
+            vm_error(
+                b"Unknown machine name: %s\n\0".as_ptr() as *const c_char,
+                (*p).machine_name,
+            );
+            return tag_fail(cfg);
+        }
+        if let Some(vmc) = (*p).vmc.as_ref() {
+            if let Some(f) = vmc.virt_machine_set_defaults {
+                f(p);
+            }
+        }
+
+        tag_name = b"memory_size\0".as_ptr() as *const c_char;
+        if vm_get_int(cfg, tag_name, addr_of_mut!(val)) < 0 {
+            return tag_fail(cfg);
+        }
+        (*p).ram_size = (val as u64) << 20;
+
+        tag_name = b"bios\0".as_ptr() as *const c_char;
+        if vm_get_str_opt(cfg, tag_name, addr_of_mut!(strp)) < 0 {
+            return tag_fail(cfg);
+        }
+        if !strp.is_null() {
+            (*p).files[VM_FILE_BIOS].filename = strdup(strp);
+        }
+
+        tag_name = b"kernel\0".as_ptr() as *const c_char;
+        if vm_get_str_opt(cfg, tag_name, addr_of_mut!(strp)) < 0 {
+            return tag_fail(cfg);
+        }
+        if !strp.is_null() {
+            (*p).files[VM_FILE_KERNEL].filename = strdup(strp);
+        }
+
+        if vm_get_str_opt(
+            cfg,
+            b"cmdline\0".as_ptr() as *const c_char,
+            addr_of_mut!(strp),
+        ) < 0
+        {
+            return tag_fail(cfg);
+        }
+        if !strp.is_null() {
+            (*p).cmdline = cmdline_subst(strp);
+        }
+
+        tag_name = b"initrd\0".as_ptr() as *const c_char;
+        if vm_get_str_opt(cfg, tag_name, addr_of_mut!(strp)) < 0 {
+            return tag_fail(cfg);
+        }
+        if !strp.is_null() {
+            (*p).files[VM_FILE_INITRD].filename = strdup(strp);
+        }
+
+        // drives
+        loop {
+            let namebuf = build_indexed_name("drive", (*p).drive_count);
+            let obj = json_object_get(cfg, namebuf.as_ptr() as *const c_char);
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if (*p).drive_count >= MAX_DRIVE_DEVICE {
+                vm_error(b"Too many drives\n\0".as_ptr() as *const c_char);
+                return -1;
+            }
+            if vm_get_str(
+                obj,
+                b"file\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            let idx = (*p).drive_count as usize;
+            if let Some(e) = (*p).tab_drive.get_mut(idx) {
+                e.filename = strdup(strp);
+            }
+            if vm_get_str_opt(
+                obj,
+                b"device\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            if let Some(e) = (*p).tab_drive.get_mut(idx) {
+                e.device = strdup_null(strp);
+            }
+            (*p).drive_count += 1;
+        }
+
+        // filesystems
+        loop {
+            let namebuf = build_indexed_name("fs", (*p).fs_count);
+            let obj = json_object_get(cfg, namebuf.as_ptr() as *const c_char);
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if (*p).fs_count >= MAX_DRIVE_DEVICE {
+                vm_error(b"Too many filesystems\n\0".as_ptr() as *const c_char);
+                return -1;
+            }
+            if vm_get_str(
+                obj,
+                b"file\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            let idx = (*p).fs_count as usize;
+            if let Some(e) = (*p).tab_fs.get_mut(idx) {
+                e.filename = strdup(strp);
+            }
+            if vm_get_str_opt(
+                obj,
+                b"tag\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            let tagbuf: [u8; 256] = if strp.is_null() {
+                build_dev_root((*p).fs_count)
+            } else {
+                [0u8; 256]
+            };
+            let tagptr: *const c_char = if strp.is_null() {
+                tagbuf.as_ptr() as *const c_char
+            } else {
+                strp
+            };
+            if let Some(e) = (*p).tab_fs.get_mut(idx) {
+                e.tag = strdup(tagptr);
+            }
+            (*p).fs_count += 1;
+        }
+
+        // ethernet interfaces
+        loop {
+            let namebuf = build_indexed_name("eth", (*p).eth_count);
+            let obj = json_object_get(cfg, namebuf.as_ptr() as *const c_char);
+            if obj.type_ == JSON_UNDEFINED {
+                break;
+            }
+            if (*p).eth_count >= MAX_ETH_DEVICE {
+                vm_error(
+                    b"Too many ethernet interfaces\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+            if vm_get_str(
+                obj,
+                b"driver\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            let idx = (*p).eth_count as usize;
+            if let Some(e) = (*p).tab_eth.get_mut(idx) {
+                e.driver = strdup(strp);
+            }
+            if cstr_eq_lit(strp, b"tap") {
+                if vm_get_str(
+                    obj,
+                    b"ifname\0".as_ptr() as *const c_char,
+                    addr_of_mut!(strp),
+                ) < 0
+                {
+                    return tag_fail(cfg);
+                }
+                if let Some(e) = (*p).tab_eth.get_mut(idx) {
+                    e.ifname = strdup(strp);
+                }
+            }
+            (*p).eth_count += 1;
+        }
+
+        (*p).display_device = null_mut::<c_char>();
+        let obj = json_object_get(cfg, b"display0\0".as_ptr() as *const c_char);
+        if obj.type_ != JSON_UNDEFINED {
+            if vm_get_str(
+                obj,
+                b"device\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            (*p).display_device = strdup(strp);
+            if vm_get_int(
+                obj,
+                b"width\0".as_ptr() as *const c_char,
+                addr_of_mut!((*p).width),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            if vm_get_int(
+                obj,
+                b"height\0".as_ptr() as *const c_char,
+                addr_of_mut!((*p).height),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            if vm_get_str_opt(
+                obj,
+                b"vga_bios\0".as_ptr() as *const c_char,
+                addr_of_mut!(strp),
+            ) < 0
+            {
+                return tag_fail(cfg);
+            }
+            if !strp.is_null() {
+                (*p).files[VM_FILE_VGA_BIOS].filename = strdup(strp);
+            }
+        }
+
+        if vm_get_str_opt(
+            cfg,
+            b"input_device\0".as_ptr() as *const c_char,
+            addr_of_mut!(strp),
+        ) < 0
+        {
+            return tag_fail(cfg);
+        }
+        (*p).input_device = strdup_null(strp);
+
+        if vm_get_str_opt(
+            cfg,
+            b"accel\0".as_ptr() as *const c_char,
+            addr_of_mut!(strp),
+        ) < 0
+        {
+            return tag_fail(cfg);
+        }
+        if !strp.is_null() {
+            if cstr_eq_lit(strp, b"none") {
+                (*p).accel_enable = 0;
+            } else if cstr_eq_lit(strp, b"auto") {
+                (*p).accel_enable = 1;
+            } else {
+                vm_error(
+                    b"unsupported 'accel' config: %s\n\0".as_ptr() as *const c_char,
+                    strp,
+                );
+                return -1;
+            }
+        }
+
+        tag_name = b"rtc_local_time\0".as_ptr() as *const c_char;
+        let el = json_object_get(cfg, tag_name);
+        if el.type_ != JSON_UNDEFINED {
+            if el.type_ != JSON_BOOL {
+                vm_error(
+                    b"%s: boolean expected\n\0".as_ptr() as *const c_char,
+                    tag_name,
+                );
+                return tag_fail(cfg);
+            }
+            (*p).rtc_local_time = el.u.b;
+        }
+
+        json_free(cfg);
+        0
+    }
+}
+
+// return -1 if error.
+unsafe fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    unsafe {
+        let f = fopen64(filename, b"rb\0".as_ptr() as *const c_char);
+        if f.is_null() {
+            perror(filename);
+            exit(1);
+        }
+        fseek(f, 0, SEEK_END);
+        let size: c_int = ftell(f) as c_int;
+        fseek(f, 0, SEEK_SET);
+        let buf = malloc(size as usize) as *mut u8;
+        if fread(buf as *mut c_void, 1, size as usize, f) != size as usize {
+            vm_error(b"%s: read error\n\0".as_ptr() as *const c_char, filename);
+            exit(1);
+        }
+        fclose(f);
+        *pbuf = buf;
+        size
+    }
+}
+
+unsafe extern "C" fn config_load_file_cb(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    unsafe {
+        let s = opaque as *mut VMConfigLoadState;
+        if err < 0 {
+            vm_error(
+                b"Error %d while loading file\n\0".as_ptr() as *const c_char,
+                -err,
+            );
+            exit(1);
+        }
+        if let Some(f) = (*s).file_load_cb {
+            f((*s).file_load_opaque, data as *mut u8, size as c_int);
+        }
+    }
+}
+
+unsafe fn config_load_file(
+    s: *mut VMConfigLoadState,
+    filename: *const c_char,
+    cb: Option<FSLoadFileCB>,
+    opaque: *mut c_void,
+) {
+    unsafe {
+        if is_url(filename) != 0 {
+            (*s).file_load_cb = cb;
+            (*s).file_load_opaque = opaque;
+            fs_wget(
+                filename,
+                null::<c_char>(),
+                null::<c_char>(),
+                s as *mut c_void,
+                Some(config_load_file_cb),
+                TRUE_VAL,
+            );
+        } else {
+            let mut buf: *mut u8 = null_mut::<u8>();
+            let size = load_file(addr_of_mut!(buf), filename);
+            if let Some(f) = cb {
+                f(opaque, buf, size);
+            }
+            free(buf as *mut c_void);
+        }
+    }
+}
+
+unsafe extern "C" fn config_file_loaded(opaque: *mut c_void, buf: *mut u8, buf_len: c_int) {
+    unsafe {
+        let s = opaque as *mut VMConfigLoadState;
+        let p = (*s).vm_params;
+        if virt_machine_parse_config(p, buf as *mut c_char, buf_len) < 0 {
+            exit(1);
+        }
+        (*s).file_index = 0;
+        config_additional_file_load(s);
+    }
+}
+
+unsafe fn config_additional_file_load(s: *mut VMConfigLoadState) {
+    unsafe {
+        let p = (*s).vm_params;
+        loop {
+            let idx = (*s).file_index;
+            if idx >= VM_FILE_COUNT {
+                break;
+            }
+            let fname_ptr = match (*p).files.get(idx as usize) {
+                Some(e) => e.filename,
+                None => break,
+            };
+            if !fname_ptr.is_null() {
+                break;
+            }
+            (*s).file_index = idx + 1;
+        }
+        if (*s).file_index == VM_FILE_COUNT {
+            if let Some(cb) = (*s).start_cb {
+                cb((*s).opaque);
+            }
+            free(s as *mut c_void);
+        } else {
+            let idx = (*s).file_index as usize;
+            let file_name = match (*p).files.get(idx) {
+                Some(e) => e.filename,
+                None => return,
+            };
+            let fname = get_file_path((*p).cfg_filename, file_name);
+            config_load_file(
+                s,
+                fname,
+                Some(config_additional_file_load_cb),
+                s as *mut c_void,
+            );
+            free(fname as *mut c_void);
+        }
+    }
+}
+
+unsafe extern "C" fn config_additional_file_load_cb(
+    opaque: *mut c_void,
+    buf: *mut u8,
+    buf_len: c_int,
+) {
+    unsafe {
+        let s = opaque as *mut VMConfigLoadState;
+        let p = (*s).vm_params;
+        let idx = (*s).file_index as usize;
+        let new_buf = malloc(buf_len as usize) as *mut u8;
+        if buf_len > 0 && !new_buf.is_null() && !buf.is_null() {
+            core::ptr::copy_nonoverlapping(buf as *const u8, new_buf, buf_len as usize);
+        }
+        if let Some(e) = (*p).files.get_mut(idx) {
+            e.buf = new_buf;
+            e.len = buf_len;
+        }
+        (*s).file_index += 1;
+        config_additional_file_load(s);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TARGET
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_load_config_file(
+    p: *mut VirtMachineParams,
+    filename: *const c_char,
+    start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    opaque: *mut c_void,
+) {
+    unsafe {
+        let s = mallocz(size_of::<VMConfigLoadState>()) as *mut VMConfigLoadState;
+        (*s).vm_params = p;
+        (*s).start_cb = start_cb;
+        (*s).opaque = opaque;
+        (*p).cfg_filename = strdup(filename);
+
+        config_load_file(s, filename, Some(config_file_loaded), s as *mut c_void);
+    }
+}
+}
+
 // ── `VMConfigLoadState *s; s = mallocz(sizeof(*s)); s->vm_params = p; s->start_cb = start_cb; s->opa…` · machine.c:520-528 · chunk 1448 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -4648,6 +7793,810 @@ pub unsafe extern "C" fn virt_machine_load_config_file__part1448(
     // p->cfg_filename = strdup(filename);  (cfg_filename is VirtMachineParams' first field)
     *(p as *mut *mut c_char) = strdup(filename);
     s
+}
+}
+
+// ── `config_file_loaded` · machine.c:531-542 · chunk 1449 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void config_file_loaded(void *opaque, uint8_t *buf, int buf_len)
+//     {
+//         VMConfigLoadState *s = opaque;
+//         VirtMachineParams *p = s->vm_params;
+//     
+//         if (virt_machine_parse_config(p, (char *)buf, buf_len) < 0)
+//             exit(1);
+//     
+//     
+//         s->file_index = 0;
+//         config_additional_file_load(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1449 {
+// Rust port of machine.c: config_file_loaded() plus the static helpers it
+// reaches (virt_machine_parse_config, find_name, virt_machine_find_class,
+// vm_get_str*, strdup_null, cmdline_subst, config_additional_file_load,
+// config_load_file, load_file). All of those are static in C, so they have no
+// linker symbol and are re-implemented here as private Rust functions.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::ptr;
+
+/* ------------------------------------------------------------------ */
+/* constants                                                          */
+/* ------------------------------------------------------------------ */
+
+const VM_FILE_COUNT: c_int = 4;
+
+const JSON_STR: c_int = 0;
+const JSON_BOOL: c_int = 4;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+/* ------------------------------------------------------------------ */
+/* small helper for literal C strings                                 */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+fn cstr(s: &'static [u8]) -> *const c_char {
+    s.as_ptr() as *const c_char
+}
+
+/* ------------------------------------------------------------------ */
+/* mirrored C types                                                   */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+struct JSONString {
+    len: c_int,
+    data: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union JSONValueU {
+    str_: *mut JSONString,
+    int32: c_int,
+    b: c_int,
+    obj: *mut c_void,
+    array: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct JSONValue {
+    type_: c_int,
+    u: JSONValueU,
+}
+
+#[repr(C)]
+struct DynBuf {
+    buf: *mut u8,
+    size: usize,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+struct Tm {
+    tm_sec: c_int,
+    tm_min: c_int,
+    tm_hour: c_int,
+    tm_mday: c_int,
+    tm_mon: c_int,
+    tm_year: c_int,
+    tm_wday: c_int,
+    tm_yday: c_int,
+    tm_isdst: c_int,
+    tm_gmtoff: c_long,
+    tm_zone: *const c_char,
+}
+
+type time_t = c_long;
+
+#[repr(C)]
+struct VMFileEntry {
+    filename: *mut c_char,
+    buf: *mut u8,
+    len: c_int,
+}
+
+#[repr(C)]
+struct VMDriveEntry {
+    device: *mut c_char,
+    filename: *mut c_char,
+    block_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMFSEntry {
+    device: *mut c_char,
+    tag: *mut c_char,
+    filename: *mut c_char,
+    fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMEthEntry {
+    driver: *mut c_char,
+    ifname: *mut c_char,
+    net: *mut c_void,
+}
+
+#[repr(C)]
+struct VirtMachineClass {
+    machine_names: *const c_char,
+    virt_machine_set_defaults: Option<unsafe extern "C" fn(*mut VirtMachineParams)>,
+    virt_machine_init: Option<unsafe extern "C" fn(*const VirtMachineParams) -> *mut c_void>,
+    virt_machine_end: Option<unsafe extern "C" fn(*mut c_void)>,
+    virt_machine_get_sleep_duration: Option<unsafe extern "C" fn(*mut c_void, c_int) -> c_int>,
+    virt_machine_interp: Option<unsafe extern "C" fn(*mut c_void, c_int)>,
+    vm_mouse_is_absolute: Option<unsafe extern "C" fn(*mut c_void) -> c_int>,
+    vm_send_mouse_event:
+        Option<unsafe extern "C" fn(*mut c_void, c_int, c_int, c_int, c_int)>,
+    vm_send_key_event: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+}
+
+#[repr(C)]
+struct VirtMachineParams {
+    cfg_filename: *mut c_char,
+    vmc: *const VirtMachineClass,
+    machine_name: *mut c_char,
+    ram_size: u64,
+    rtc_real_time: c_int,
+    rtc_local_time: c_int,
+    display_device: *mut c_char,
+    width: c_int,
+    height: c_int,
+    console: *mut c_void,
+    tab_drive: [VMDriveEntry; 4],
+    drive_count: c_int,
+    tab_fs: [VMFSEntry; 4],
+    fs_count: c_int,
+    tab_eth: [VMEthEntry; 1],
+    eth_count: c_int,
+    cmdline: *mut c_char,
+    accel_enable: c_int,
+    input_device: *mut c_char,
+    files: [VMFileEntry; VM_FILE_COUNT as usize],
+}
+
+type FSLoadFileCB = unsafe extern "C" fn(*mut c_void, *mut u8, c_int);
+type WGetWriteCallback = unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+#[repr(C)]
+struct VMConfigLoadState {
+    vm_params: *mut VirtMachineParams,
+    start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    opaque: *mut c_void,
+    file_load_cb: Option<FSLoadFileCB>,
+    file_load_opaque: *mut c_void,
+    file_index: c_int,
+}
+
+/* ------------------------------------------------------------------ */
+/* extern declarations                                                */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    /* machine.c / cutils.c / json.c / fs_utils.c / fs_wget.c */
+    fn vm_error(fmt: *const c_char, ...);
+    fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int;
+
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_get_error(val: JSONValue) -> *const c_char;
+    fn json_free(val: JSONValue);
+
+    fn get_file_path(base_filename: *const c_char, filename: *const c_char) -> *mut c_char;
+    fn is_url(path: *const c_char) -> c_int;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn dbuf_init(s: *mut DynBuf);
+    fn dbuf_putc(s: *mut DynBuf, c: u8);
+    fn dbuf_putstr(s: *mut DynBuf, string: *const c_char);
+
+    static riscv_machine_class: VirtMachineClass;
+    static pc_machine_class: VirtMachineClass;
+
+    /* libc */
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn strlen(s: *const c_char) -> usize;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strcpy(d: *mut c_char, s: *const c_char) -> *mut c_char;
+    fn memcmp(a: *const c_void, b: *const c_void, n: usize) -> c_int;
+    fn memcpy(d: *mut c_void, s: *const c_void, n: usize) -> *mut c_void;
+    fn snprintf(buf: *mut c_char, size: usize, fmt: *const c_char, ...) -> c_int;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn exit(code: c_int) -> !;
+
+    fn time(t: *mut time_t) -> time_t;
+    fn localtime_r(t: *const time_t, tm: *mut Tm) -> *mut Tm;
+
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fclose(f: *mut c_void) -> c_int;
+    fn fseek(f: *mut c_void, off: c_long, whence: c_int) -> c_int;
+    fn ftell(f: *mut c_void) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, n: usize, f: *mut c_void) -> usize;
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    static mut stderr: *mut c_void;
+}
+
+/* ------------------------------------------------------------------ */
+/* json_is_error / json_is_undefined                                  */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+fn json_is_error(val: JSONValue) -> bool {
+    val.type_ == JSON_EXCEPTION
+}
+
+#[inline]
+fn json_is_undefined(val: JSONValue) -> bool {
+    val.type_ == JSON_UNDEFINED
+}
+
+/* ------------------------------------------------------------------ */
+/* vm_get_str2 / vm_get_str / vm_get_str_opt / strdup_null            */
+/* ------------------------------------------------------------------ */
+
+unsafe fn vm_get_str2(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+    is_opt: c_int,
+) -> c_int {
+    let val = json_object_get(obj, name);
+    if json_is_undefined(val) {
+        if is_opt != 0 {
+            *pstr = ptr::null();
+            0
+        } else {
+            vm_error(cstr(b"expecting '%s' property\n\0"), name);
+            -1
+        }
+    } else if val.type_ != JSON_STR {
+        vm_error(cstr(b"%s: string expected\n\0"), name);
+        -1
+    } else {
+        let s = val.u.str_;
+        *pstr = ptr::addr_of!((*s).data) as *const c_char;
+        0
+    }
+}
+
+unsafe fn vm_get_str(obj: JSONValue, name: *const c_char, pstr: *mut *const c_char) -> c_int {
+    vm_get_str2(obj, name, pstr, 0)
+}
+
+unsafe fn vm_get_str_opt(
+    obj: JSONValue,
+    name: *const c_char,
+    pstr: *mut *const c_char,
+) -> c_int {
+    vm_get_str2(obj, name, pstr, 1)
+}
+
+unsafe fn strdup_null(s: *const c_char) -> *mut c_char {
+    if s.is_null() {
+        ptr::null_mut()
+    } else {
+        strdup(s)
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* cmdline_subst (only ${TZ} is substituted)                          */
+/* ------------------------------------------------------------------ */
+
+unsafe fn cmdline_subst(cmdline: *const c_char) -> *mut c_char {
+    let mut dbuf: DynBuf = core::mem::zeroed();
+    let mut var_name = [0u8; 32];
+    let mut buf = [0u8; 32];
+
+    dbuf_init(ptr::addr_of_mut!(dbuf));
+    let mut p = cmdline;
+    while *p != 0 {
+        if *p == b'$' as c_char && *p.add(1) == b'{' as c_char {
+            p = p.add(2);
+            let mut q: usize = 0;
+            while *p != 0 && *p != b'}' as c_char {
+                if q < 32 - 1 {
+                    var_name[q] = *p as u8;
+                    q += 1;
+                }
+                p = p.add(1);
+            }
+            var_name[q] = 0;
+            if *p == b'}' as c_char {
+                p = p.add(1);
+            }
+            if strcmp(var_name.as_ptr() as *const c_char, cstr(b"TZ\0")) == 0 {
+                let mut ti: time_t = 0;
+                let mut tm: Tm = core::mem::zeroed();
+                time(ptr::addr_of_mut!(ti));
+                localtime_r(ptr::addr_of!(ti), ptr::addr_of_mut!(tm));
+                let mut n: c_int = (tm.tm_gmtoff / 60) as c_int;
+                let mut sg: c_int = b'-' as c_int;
+                if n < 0 {
+                    sg = b'+' as c_int;
+                    n = -n;
+                }
+                snprintf(
+                    buf.as_mut_ptr() as *mut c_char,
+                    buf.len(),
+                    cstr(b"UTC%c%02d:%02d\0"),
+                    sg,
+                    n / 60,
+                    n % 60,
+                );
+                dbuf_putstr(ptr::addr_of_mut!(dbuf), buf.as_ptr() as *const c_char);
+            }
+        } else {
+            dbuf_putc(ptr::addr_of_mut!(dbuf), *p as u8);
+            p = p.add(1);
+        }
+    }
+    dbuf_putc(ptr::addr_of_mut!(dbuf), 0);
+    dbuf.buf as *mut c_char
+}
+
+/* ------------------------------------------------------------------ */
+/* find_name / virt_machine_find_class                                */
+/* ------------------------------------------------------------------ */
+
+unsafe fn find_name(name: *const c_char, name_list: *const c_char) -> c_int {
+    let mut p = name_list;
+    loop {
+        let r = strchr(p, b',' as c_int);
+        if r.is_null() {
+            if strcmp(name, p) == 0 {
+                return 1;
+            }
+            break;
+        } else {
+            let len = r as usize - p as usize;
+            if len == strlen(name) && memcmp(name as *const c_void, p as *const c_void, len) == 0 {
+                return 1;
+            }
+            p = (r as *const c_char).add(1);
+        }
+    }
+    0
+}
+
+unsafe fn virt_machine_find_class(machine_name: *const c_char) -> *const VirtMachineClass {
+    let mut i: usize = 0;
+    loop {
+        let vmc: *const VirtMachineClass = match i {
+            0 => ptr::addr_of!(riscv_machine_class),
+            1 => ptr::addr_of!(pc_machine_class),
+            _ => break,
+        };
+        if find_name(machine_name, (*vmc).machine_names) != 0 {
+            return vmc;
+        }
+        i += 1;
+    }
+    ptr::null()
+}
+
+/* ------------------------------------------------------------------ */
+/* virt_machine_parse_config                                          */
+/* ------------------------------------------------------------------ */
+
+enum ParseRes {
+    Ok,
+    TagFail, /* goto tag_fail: json_free() then return -1 */
+    Fail,    /* return -1 without freeing (as in the C original) */
+}
+
+#[inline]
+unsafe fn file_at(p: *mut VirtMachineParams, i: c_int) -> *mut VMFileEntry {
+    (*p).files.as_mut_ptr().add(i as usize)
+}
+
+unsafe fn parse_config_inner(cfg: JSONValue, p: *mut VirtMachineParams) -> ParseRes {
+    let mut str_: *const c_char;
+    let mut val: c_int = 0;
+    let mut buf1 = [0u8; 256];
+
+    str_ = ptr::null();
+    if vm_get_str(cfg, cstr(b"machine\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    (*p).machine_name = strdup(str_);
+    (*p).vmc = virt_machine_find_class((*p).machine_name);
+    if (*p).vmc.is_null() {
+        vm_error(
+            cstr(b"Unknown machine name: %s\n\0"),
+            (*p).machine_name,
+        );
+        return ParseRes::TagFail;
+    }
+    if let Some(f) = (*(*p).vmc).virt_machine_set_defaults {
+        f(p);
+    }
+
+    /* memory_size */
+    if vm_get_int(cfg, cstr(b"memory_size\0"), ptr::addr_of_mut!(val)) < 0 {
+        return ParseRes::TagFail;
+    }
+    (*p).ram_size = (val as u64) << 20;
+
+    /* bios */
+    if vm_get_str_opt(cfg, cstr(b"bios\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    if !str_.is_null() {
+        (*file_at(p, 0)).filename = strdup(str_);
+    }
+
+    /* kernel */
+    if vm_get_str_opt(cfg, cstr(b"kernel\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    if !str_.is_null() {
+        (*file_at(p, 2)).filename = strdup(str_);
+    }
+
+    /* cmdline */
+    if vm_get_str_opt(cfg, cstr(b"cmdline\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    if !str_.is_null() {
+        (*p).cmdline = cmdline_subst(str_);
+    }
+
+    /* initrd */
+    if vm_get_str_opt(cfg, cstr(b"initrd\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    if !str_.is_null() {
+        (*file_at(p, 3)).filename = strdup(str_);
+    }
+
+    /* drives */
+    loop {
+        snprintf(
+            buf1.as_mut_ptr() as *mut c_char,
+            buf1.len(),
+            cstr(b"drive%d\0"),
+            (*p).drive_count,
+        );
+        let obj = json_object_get(cfg, buf1.as_ptr() as *const c_char);
+        if json_is_undefined(obj) {
+            break;
+        }
+        if (*p).drive_count >= 4 {
+            vm_error(cstr(b"Too many drives\n\0"));
+            return ParseRes::Fail;
+        }
+        if vm_get_str(obj, cstr(b"file\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        let idx = (*p).drive_count as usize;
+        (*(*p).tab_drive.as_mut_ptr().add(idx)).filename = strdup(str_);
+        if vm_get_str_opt(obj, cstr(b"device\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        (*(*p).tab_drive.as_mut_ptr().add(idx)).device = strdup_null(str_);
+        (*p).drive_count += 1;
+    }
+
+    /* filesystems */
+    loop {
+        snprintf(
+            buf1.as_mut_ptr() as *mut c_char,
+            buf1.len(),
+            cstr(b"fs%d\0"),
+            (*p).fs_count,
+        );
+        let obj = json_object_get(cfg, buf1.as_ptr() as *const c_char);
+        if json_is_undefined(obj) {
+            break;
+        }
+        if (*p).fs_count >= 4 {
+            vm_error(cstr(b"Too many filesystems\n\0"));
+            return ParseRes::Fail;
+        }
+        if vm_get_str(obj, cstr(b"file\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        let idx = (*p).fs_count as usize;
+        (*(*p).tab_fs.as_mut_ptr().add(idx)).filename = strdup(str_);
+        if vm_get_str_opt(obj, cstr(b"tag\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        if str_.is_null() {
+            if (*p).fs_count == 0 {
+                strcpy(buf1.as_mut_ptr() as *mut c_char, cstr(b"/dev/root\0"));
+            } else {
+                snprintf(
+                    buf1.as_mut_ptr() as *mut c_char,
+                    buf1.len(),
+                    cstr(b"/dev/root%d\0"),
+                    (*p).fs_count,
+                );
+            }
+            str_ = buf1.as_ptr() as *const c_char;
+        }
+        (*(*p).tab_fs.as_mut_ptr().add(idx)).tag = strdup(str_);
+        (*p).fs_count += 1;
+    }
+
+    /* ethernet interfaces */
+    loop {
+        snprintf(
+            buf1.as_mut_ptr() as *mut c_char,
+            buf1.len(),
+            cstr(b"eth%d\0"),
+            (*p).eth_count,
+        );
+        let obj = json_object_get(cfg, buf1.as_ptr() as *const c_char);
+        if json_is_undefined(obj) {
+            break;
+        }
+        if (*p).eth_count >= 1 {
+            vm_error(cstr(b"Too many ethernet interfaces\n\0"));
+            return ParseRes::Fail;
+        }
+        if vm_get_str(obj, cstr(b"driver\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        let idx = (*p).eth_count as usize;
+        (*(*p).tab_eth.as_mut_ptr().add(idx)).driver = strdup(str_);
+        if strcmp(str_, cstr(b"tap\0")) == 0 {
+            if vm_get_str(obj, cstr(b"ifname\0"), ptr::addr_of_mut!(str_)) < 0 {
+                return ParseRes::TagFail;
+            }
+            (*(*p).tab_eth.as_mut_ptr().add(idx)).ifname = strdup(str_);
+        }
+        (*p).eth_count += 1;
+    }
+
+    /* display */
+    (*p).display_device = ptr::null_mut();
+    let obj = json_object_get(cfg, cstr(b"display0\0"));
+    if !json_is_undefined(obj) {
+        if vm_get_str(obj, cstr(b"device\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        (*p).display_device = strdup(str_);
+        if vm_get_int(obj, cstr(b"width\0"), ptr::addr_of_mut!((*p).width)) < 0 {
+            return ParseRes::TagFail;
+        }
+        if vm_get_int(obj, cstr(b"height\0"), ptr::addr_of_mut!((*p).height)) < 0 {
+            return ParseRes::TagFail;
+        }
+        if vm_get_str_opt(obj, cstr(b"vga_bios\0"), ptr::addr_of_mut!(str_)) < 0 {
+            return ParseRes::TagFail;
+        }
+        if !str_.is_null() {
+            (*file_at(p, 1)).filename = strdup(str_);
+        }
+    }
+
+    /* input_device */
+    if vm_get_str_opt(cfg, cstr(b"input_device\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    (*p).input_device = strdup_null(str_);
+
+    /* accel */
+    if vm_get_str_opt(cfg, cstr(b"accel\0"), ptr::addr_of_mut!(str_)) < 0 {
+        return ParseRes::TagFail;
+    }
+    if !str_.is_null() {
+        if strcmp(str_, cstr(b"none\0")) == 0 {
+            (*p).accel_enable = 0;
+        } else if strcmp(str_, cstr(b"auto\0")) == 0 {
+            (*p).accel_enable = 1;
+        } else {
+            vm_error(cstr(b"unsupported 'accel' config: %s\n\0"), str_);
+            return ParseRes::Fail;
+        }
+    }
+
+    /* rtc_local_time */
+    let tag_name = cstr(b"rtc_local_time\0");
+    let el = json_object_get(cfg, tag_name);
+    if !json_is_undefined(el) {
+        if el.type_ != JSON_BOOL {
+            vm_error(cstr(b"%s: boolean expected\n\0"), tag_name);
+            return ParseRes::TagFail;
+        }
+        (*p).rtc_local_time = el.u.b;
+    }
+
+    ParseRes::Ok
+}
+
+unsafe fn virt_machine_parse_config(
+    p: *mut VirtMachineParams,
+    config_file_str: *mut c_char,
+    len: c_int,
+) -> c_int {
+    let cfg = json_parse_value_len(config_file_str, len);
+    if json_is_error(cfg) {
+        vm_error(cstr(b"error: %s\n\0"), json_get_error(cfg));
+        json_free(cfg);
+        return -1;
+    }
+
+    let mut version: c_int = 0;
+    if vm_get_int(cfg, cstr(b"version\0"), ptr::addr_of_mut!(version)) < 0 {
+        json_free(cfg);
+        return -1;
+    }
+    if version != 1 {
+        if version > 1 {
+            vm_error(cstr(
+                b"The emulator is too old to run this VM: please upgrade\n\0",
+            ));
+        } else {
+            vm_error(cstr(b"The VM configuration file is too old for this emulator version: please upgrade the VM configuration file\n\0"));
+        }
+        return -1;
+    }
+
+    match parse_config_inner(cfg, p) {
+        ParseRes::Ok => {
+            json_free(cfg);
+            0
+        }
+        ParseRes::TagFail => {
+            json_free(cfg);
+            -1
+        }
+        ParseRes::Fail => -1,
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* load_file                                                          */
+/* ------------------------------------------------------------------ */
+
+unsafe fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    let f = fopen(filename, cstr(b"rb\0"));
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, 2 /* SEEK_END */);
+    let size: c_int = ftell(f) as c_int;
+    fseek(f, 0, 0 /* SEEK_SET */);
+    let buf = malloc(size as usize) as *mut u8;
+    if fread(buf as *mut c_void, 1, size as usize, f) != size as usize {
+        let err_out = stderr;
+        fprintf(err_out, cstr(b"%s: read error\n\0"), filename);
+        exit(1);
+    }
+    fclose(f);
+    *pbuf = buf;
+    size
+}
+
+/* ------------------------------------------------------------------ */
+/* config_load_file / callbacks                                        */
+/* ------------------------------------------------------------------ */
+
+unsafe extern "C" fn config_load_file_cb(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let s = opaque as *mut VMConfigLoadState;
+
+    if err < 0 {
+        vm_error(cstr(b"Error %d while loading file\n\0"), -err);
+        exit(1);
+    }
+    if let Some(f) = (*s).file_load_cb {
+        f((*s).file_load_opaque, data as *mut u8, size as c_int);
+    }
+}
+
+unsafe fn config_load_file(
+    s: *mut VMConfigLoadState,
+    filename: *const c_char,
+    cb: Option<FSLoadFileCB>,
+    opaque: *mut c_void,
+) {
+    if is_url(filename) != 0 {
+        (*s).file_load_cb = cb;
+        (*s).file_load_opaque = opaque;
+        fs_wget(
+            filename,
+            ptr::null(),
+            ptr::null(),
+            s as *mut c_void,
+            Some(config_load_file_cb),
+            1,
+        );
+    } else {
+        let mut buf: *mut u8 = ptr::null_mut();
+        let size = load_file(ptr::addr_of_mut!(buf), filename);
+        if let Some(f) = cb {
+            f(opaque, buf, size);
+        }
+        free(buf as *mut c_void);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* config_additional_file_load (+ callback)                           */
+/* ------------------------------------------------------------------ */
+
+unsafe extern "C" fn config_additional_file_load_cb(
+    opaque: *mut c_void,
+    buf: *mut u8,
+    buf_len: c_int,
+) {
+    let s = opaque as *mut VMConfigLoadState;
+    let p = (*s).vm_params;
+
+    let e = file_at(p, (*s).file_index);
+    (*e).buf = malloc(buf_len as usize) as *mut u8;
+    memcpy((*e).buf as *mut c_void, buf as *const c_void, buf_len as usize);
+    (*e).len = buf_len;
+
+    (*s).file_index += 1;
+    config_additional_file_load(s);
+}
+
+unsafe fn config_additional_file_load(s: *mut VMConfigLoadState) {
+    let p = (*s).vm_params;
+    while (*s).file_index < VM_FILE_COUNT && (*(file_at(p, (*s).file_index))).filename.is_null() {
+        (*s).file_index += 1;
+    }
+    if (*s).file_index == VM_FILE_COUNT {
+        if let Some(cb) = (*s).start_cb {
+            cb((*s).opaque);
+        }
+        free(s as *mut c_void);
+    } else {
+        let fname = get_file_path(
+            (*p).cfg_filename,
+            (*(file_at(p, (*s).file_index))).filename,
+        );
+        config_load_file(
+            s,
+            fname,
+            Some(config_additional_file_load_cb),
+            s as *mut c_void,
+        );
+        free(fname as *mut c_void);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* the TARGET                                                         */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn config_file_loaded(opaque: *mut c_void, buf: *mut u8, buf_len: c_int) {
+    let s = opaque as *mut VMConfigLoadState;
+    let p = (*s).vm_params;
+
+    if virt_machine_parse_config(p, buf as *mut c_char, buf_len) < 0 {
+        exit(1);
+    }
+
+    (*s).file_index = 0;
+    config_additional_file_load(s);
 }
 }
 
@@ -5535,6 +9484,256 @@ pub unsafe extern "C" fn config_file_loaded__part1451(s: *mut VMConfigLoadState)
 }
 }
 
+// ── `config_additional_file_load` · machine.c:544-564 · chunk 1452 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void config_additional_file_load(VMConfigLoadState *s)
+//     {
+//         VirtMachineParams *p = s->vm_params;
+//         while (s->file_index < VM_FILE_COUNT &&
+//                p->files[s->file_index].filename == 
+//                                                   ((void *)0)
+//                                                       ) {
+//             s->file_index++;
+//         }
+//         if (s->file_index == VM_FILE_COUNT) {
+//             if (s->start_cb)
+//                 s->start_cb(s->opaque);
+//             free(s);
+//         } else {
+//             char *fname;
+//     
+//             fname = get_file_path(p->cfg_filename,
+//                                   p->files[s->file_index].filename);
+//             config_load_file(s, fname,
+//                              config_additional_file_load_cb, s);
+//             free(fname);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1452 {
+// Port of machine.c: config_additional_file_load()
+// All helper routines it reaches (config_load_file, config_load_file_cb,
+// load_file, config_additional_file_load_cb) are `static` in C, so their
+// logic is reproduced here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::ptr::{null, null_mut};
+
+const VM_FILE_COUNT: c_int = 4;
+const TRUE: c_int = 1;
+
+#[repr(C)]
+struct VmFileEntry {
+    filename: *mut c_char,
+    buf: *mut u8,
+    len: c_int,
+}
+
+#[repr(C)]
+struct VmDriveEntry {
+    device: *mut c_char,
+    filename: *mut c_char,
+    block_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VmFsEntry {
+    device: *mut c_char,
+    tag: *mut c_char,
+    filename: *mut c_char,
+    fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VmEthEntry {
+    driver: *mut c_char,
+    ifname: *mut c_char,
+    net: *mut c_void,
+}
+
+#[repr(C)]
+struct VirtMachineParams {
+    cfg_filename: *mut c_char,
+    vmc: *const c_void,
+    machine_name: *mut c_char,
+    ram_size: u64,
+    rtc_real_time: c_int,
+    rtc_local_time: c_int,
+    display_device: *mut c_char,
+    width: c_int,
+    height: c_int,
+    console: *mut c_void,
+    tab_drive: [VmDriveEntry; 4],
+    drive_count: c_int,
+    tab_fs: [VmFsEntry; 4],
+    fs_count: c_int,
+    tab_eth: [VmEthEntry; 1],
+    eth_count: c_int,
+    cmdline: *mut c_char,
+    accel_enable: c_int,
+    input_device: *mut c_char,
+    files: [VmFileEntry; VM_FILE_COUNT as usize],
+}
+
+type FileLoadCb = unsafe extern "C" fn(*mut c_void, *mut u8, c_int);
+type StartCb = unsafe extern "C" fn(*mut c_void);
+type WGetWriteCallback = unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+#[repr(C)]
+struct VmConfigLoadState {
+    vm_params: *mut VirtMachineParams,
+    start_cb: Option<StartCb>,
+    opaque: *mut c_void,
+    file_load_cb: Option<FileLoadCb>,
+    file_load_opaque: *mut c_void,
+    file_index: c_int,
+}
+
+extern "C" {
+    fn get_file_path(base_filename: *const c_char, filename: *const c_char) -> *mut c_char;
+    fn is_url(path: *const c_char) -> c_int;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+    fn vm_error(fmt: *const c_char, ...);
+    fn perror(s: *const c_char);
+    #[link_name = "fopen64"]
+    fn fopen(filename: *const c_char, modes: *const c_char) -> *mut c_void;
+    fn fclose(stream: *mut c_void) -> c_int;
+    fn fseek(stream: *mut c_void, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut c_void) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    static mut stderr: *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn exit(status: c_int) -> !;
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+// static int load_file(uint8_t **pbuf, const char *filename)
+unsafe fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    let f = fopen(filename, b"rb\0".as_ptr() as *const c_char);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, 2 /* SEEK_END */);
+    let size_long = ftell(f);
+    let size = size_long as c_int;
+    fseek(f, 0, 0 /* SEEK_SET */);
+    let buf = malloc(size as usize);
+    if fread(buf, 1, size as usize, f) != size as usize {
+        fprintf(
+            stderr,
+            b"%s: read error\n\0".as_ptr() as *const c_char,
+            filename,
+        );
+        exit(1);
+    }
+    fclose(f);
+    *pbuf = buf as *mut u8;
+    size
+}
+
+// static void config_load_file_cb(void *opaque, int err, void *data, size_t size)
+unsafe extern "C" fn config_load_file_cb(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let s = opaque as *mut VmConfigLoadState;
+
+    if err < 0 {
+        vm_error(
+            b"Error %d while loading file\n\0".as_ptr() as *const c_char,
+            -err,
+        );
+        exit(1);
+    }
+    if let Some(cb) = (*s).file_load_cb {
+        cb((*s).file_load_opaque, data as *mut u8, size as c_int);
+    }
+}
+
+// static void config_load_file(VMConfigLoadState *s, const char *filename,
+//                              FSLoadFileCB *cb, void *opaque)
+unsafe fn config_load_file(
+    s: *mut VmConfigLoadState,
+    filename: *const c_char,
+    cb: FileLoadCb,
+    opaque: *mut c_void,
+) {
+    if is_url(filename) != 0 {
+        (*s).file_load_cb = Some(cb);
+        (*s).file_load_opaque = opaque;
+        fs_wget(
+            filename,
+            null(),
+            null(),
+            s as *mut c_void,
+            Some(config_load_file_cb),
+            TRUE,
+        );
+    } else {
+        let mut buf: *mut u8 = null_mut();
+        let size = load_file(&mut buf, filename);
+        cb(opaque, buf, size);
+        free(buf as *mut c_void);
+    }
+}
+
+// static void config_additional_file_load_cb(void *opaque,
+//                                            uint8_t *buf, int buf_len)
+unsafe extern "C" fn config_additional_file_load_cb(
+    opaque: *mut c_void,
+    buf: *mut u8,
+    buf_len: c_int,
+) {
+    let s = opaque as *mut VmConfigLoadState;
+    let p = (*s).vm_params;
+
+    let entry = (*p).files.as_mut_ptr().add((*s).file_index as usize);
+    (*entry).buf = malloc(buf_len as usize) as *mut u8;
+    memcpy((*entry).buf as *mut c_void, buf as *const c_void, buf_len as usize);
+    (*entry).len = buf_len;
+
+    // load the next files
+    (*s).file_index += 1;
+    config_additional_file_load(s);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn config_additional_file_load(s: *mut VmConfigLoadState) {
+    let p = (*s).vm_params;
+    while (*s).file_index < VM_FILE_COUNT
+        && (*(*p).files.as_mut_ptr().add((*s).file_index as usize))
+            .filename
+            .is_null()
+    {
+        (*s).file_index += 1;
+    }
+    if (*s).file_index == VM_FILE_COUNT {
+        if let Some(cb) = (*s).start_cb {
+            cb((*s).opaque);
+        }
+        free(s as *mut c_void);
+    } else {
+        let entry = (*p).files.as_mut_ptr().add((*s).file_index as usize);
+        let fname = get_file_path((*p).cfg_filename, (*entry).filename);
+        config_load_file(s, fname, config_additional_file_load_cb, s as *mut c_void);
+        free(fname as *mut c_void);
+    }
+}
+}
+
 // ── `while (s->file_index < VM_FILE_COUNT && p->files[s->file_index].filename == ((void *)0)` · machine.c:547-550 · chunk 1453 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -5799,6 +9998,281 @@ pub unsafe extern "C" fn config_additional_file_load__part1454(
 }
 }
 
+// ── `config_additional_file_load_cb` · machine.c:566-579 · chunk 1455 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void config_additional_file_load_cb(void *opaque,
+//                                                uint8_t *buf, int buf_len)
+//     {
+//         VMConfigLoadState *s = opaque;
+//         VirtMachineParams *p = s->vm_params;
+//     
+//         p->files[s->file_index].buf = malloc(buf_len);
+//         memcpy(p->files[s->file_index].buf, buf, buf_len);
+//         p->files[s->file_index].len = buf_len;
+//     
+//     
+//         s->file_index++;
+//         config_additional_file_load(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1455 {
+// Rust rewrite of machine.c: config_additional_file_load_cb()
+//
+// The C static helpers it depends on (config_additional_file_load,
+// config_load_file, config_load_file_cb, load_file) have no linker symbols,
+// so their logic is ported here as private Rust fns.
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+const VM_FILE_COUNT: c_int = 4;
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+const TRUE: c_int = 1;
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct XHRState {
+    _private: [u8; 0],
+}
+
+// typedef void FSLoadFileCB(void *opaque, uint8_t *buf, int buf_len);
+type FSLoadFileCB = unsafe extern "C" fn(opaque: *mut c_void, buf: *mut u8, buf_len: c_int);
+
+// typedef void WGetWriteCallback(void *opaque, int err, void *data, size_t size);
+type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+
+#[repr(C)]
+pub struct VMFileEntry {
+    pub filename: *mut c_char,
+    pub buf: *mut u8,
+    pub len: c_int,
+}
+
+#[repr(C)]
+pub struct VMDriveEntry {
+    pub device: *mut c_char,
+    pub filename: *mut c_char,
+    pub block_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMFSEntry {
+    pub device: *mut c_char,
+    pub tag: *mut c_char,
+    pub filename: *mut c_char,
+    pub fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VMEthEntry {
+    pub driver: *mut c_char,
+    pub ifname: *mut c_char,
+    pub net: *mut c_void,
+}
+
+// Mirror of VirtMachineParams (machine.h). Pointer-only fields of opaque
+// device/class types are represented as raw void pointers (same layout).
+#[repr(C)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const c_void,
+    pub machine_name: *mut c_char,
+    pub ram_size: u64,
+    pub rtc_real_time: c_int,
+    pub rtc_local_time: c_int,
+    pub display_device: *mut c_char,
+    pub width: c_int,
+    pub height: c_int,
+    pub console: *mut c_void,
+    pub tab_drive: [VMDriveEntry; 4],
+    pub drive_count: c_int,
+    pub tab_fs: [VMFSEntry; 4],
+    pub fs_count: c_int,
+    pub tab_eth: [VMEthEntry; 1],
+    pub eth_count: c_int,
+    pub cmdline: *mut c_char,
+    pub accel_enable: c_int,
+    pub input_device: *mut c_char,
+    pub files: [VMFileEntry; 4],
+}
+
+#[repr(C)]
+pub struct VMConfigLoadState {
+    pub vm_params: *mut VirtMachineParams,
+    pub start_cb: Option<unsafe extern "C" fn(opaque: *mut c_void)>,
+    pub opaque: *mut c_void,
+    pub file_load_cb: Option<FSLoadFileCB>,
+    pub file_load_opaque: *mut c_void,
+    pub file_index: c_int,
+}
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+
+    fn get_file_path(base_filename: *const c_char, filename: *const c_char) -> *mut c_char;
+
+    fn is_url(path: *const c_char) -> c_int;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut XHRState;
+
+    fn vm_error(fmt: *const c_char, ...);
+    fn exit(status: c_int) -> !;
+    fn perror(s: *const c_char);
+
+    fn fopen(filename: *const c_char, modes: *const c_char) -> *mut FILE;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn fseek(stream: *mut FILE, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut FILE) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, n: usize, stream: *mut FILE) -> usize;
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+
+    static mut stderr: *mut FILE;
+}
+
+// static int load_file(uint8_t **pbuf, const char *filename)
+unsafe fn load_file(pbuf: *mut *mut u8, filename: *const c_char) -> c_int {
+    let f = fopen(filename, b"rb\0".as_ptr() as *const c_char);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    let size: c_int = ftell(f) as c_int;
+    fseek(f, 0, SEEK_SET);
+    let buf = malloc(size as usize) as *mut u8;
+    if fread(buf as *mut c_void, 1, size as usize, f) != size as usize {
+        fprintf(
+            stderr,
+            b"%s: read error\n\0".as_ptr() as *const c_char,
+            filename,
+        );
+        exit(1);
+    }
+    fclose(f);
+    *pbuf = buf;
+    size
+}
+
+// static void config_load_file_cb(void *opaque, int err, void *data, size_t size)
+unsafe extern "C" fn config_load_file_cb(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let s = opaque as *mut VMConfigLoadState;
+
+    if err < 0 {
+        vm_error(
+            b"Error %d while loading file\n\0".as_ptr() as *const c_char,
+            -err,
+        );
+        exit(1);
+    }
+    let cb = (*s).file_load_cb;
+    if let Some(f) = cb {
+        f((*s).file_load_opaque, data as *mut u8, size as c_int);
+    }
+}
+
+// static void config_load_file(VMConfigLoadState *s, const char *filename,
+//                              FSLoadFileCB *cb, void *opaque)
+unsafe fn config_load_file(
+    s: *mut VMConfigLoadState,
+    filename: *const c_char,
+    cb: Option<FSLoadFileCB>,
+    opaque: *mut c_void,
+) {
+    if is_url(filename) != 0 {
+        (*s).file_load_cb = cb;
+        (*s).file_load_opaque = opaque;
+        fs_wget(
+            filename,
+            core::ptr::null(),
+            core::ptr::null(),
+            s as *mut c_void,
+            Some(config_load_file_cb),
+            TRUE,
+        );
+    } else {
+        let mut buf: *mut u8 = core::ptr::null_mut();
+        let size = load_file(&mut buf, filename);
+        if let Some(f) = cb {
+            f(opaque, buf, size);
+        }
+        free(buf as *mut c_void);
+    }
+}
+
+// static void config_additional_file_load(VMConfigLoadState *s)
+unsafe fn config_additional_file_load(s: *mut VMConfigLoadState) {
+    let p = (*s).vm_params;
+
+    while (*s).file_index < VM_FILE_COUNT
+        && (*(*p).files.as_mut_ptr().add((*s).file_index as usize))
+            .filename
+            .is_null()
+    {
+        (*s).file_index += 1;
+    }
+    if (*s).file_index == VM_FILE_COUNT {
+        let start_cb = (*s).start_cb;
+        if let Some(f) = start_cb {
+            f((*s).opaque);
+        }
+        free(s as *mut c_void);
+    } else {
+        let fname = get_file_path(
+            (*p).cfg_filename,
+            (*(*p).files.as_mut_ptr().add((*s).file_index as usize)).filename,
+        );
+        config_load_file(
+            s,
+            fname,
+            Some(config_additional_file_load_cb),
+            s as *mut c_void,
+        );
+        free(fname as *mut c_void);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn config_additional_file_load_cb(
+    opaque: *mut c_void,
+    buf: *mut u8,
+    buf_len: c_int,
+) {
+    let s = opaque as *mut VMConfigLoadState;
+    let p = (*s).vm_params;
+    let file_index = (*s).file_index;
+    let entry = (*p).files.as_mut_ptr().add(file_index as usize);
+
+    let new_buf = malloc(buf_len as usize);
+    (*entry).buf = new_buf as *mut u8;
+    memcpy(new_buf, buf as *const c_void, buf_len as usize);
+    (*entry).len = buf_len;
+
+    (*s).file_index = file_index + 1;
+    config_additional_file_load(s);
+}
+}
+
 // ── `VMConfigLoadState *s = opaque; VirtMachineParams *p = s->vm_params; p->files[s->file_index].buf…` · machine.c:569-578 · chunk 1456 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -6045,6 +10519,123 @@ pub unsafe extern "C" fn config_additional_file_load_cb__part1456(
 }
 }
 
+// ── `vm_add_cmdline` · machine.c:581-597 · chunk 1457 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void vm_add_cmdline(VirtMachineParams *p, const char *cmdline)
+//     {
+//         char *new_cmdline, *old_cmdline;
+//         if (cmdline[0] == '!') {
+//             new_cmdline = strdup(cmdline + 1);
+//         } else {
+//             old_cmdline = p->cmdline;
+//             if (!old_cmdline)
+//                 old_cmdline = "";
+//             new_cmdline = malloc(strlen(old_cmdline) + 1 + strlen(cmdline) + 1);
+//             strcpy(new_cmdline, old_cmdline);
+//             strcat(new_cmdline, " ");
+//             strcat(new_cmdline, cmdline);
+//         }
+//         free(p->cmdline);
+//         p->cmdline = new_cmdline;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1457 {
+// Rust rewrite of vm_add_cmdline (machine.c) for the C program.
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMFileEntry {
+    pub filename: *mut c_char,
+    pub buf: *mut u8,
+    pub len: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMDriveEntry {
+    pub device: *mut c_char,
+    pub filename: *mut c_char,
+    pub block_dev: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMFSEntry {
+    pub device: *mut c_char,
+    pub tag: *mut c_char,
+    pub filename: *mut c_char,
+    pub fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct VMEthEntry {
+    pub driver: *mut c_char,
+    pub ifname: *mut c_char,
+    pub net: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const c_void, /* const VirtMachineClass * */
+    pub machine_name: *mut c_char,
+    pub ram_size: u64,
+    pub rtc_real_time: c_int,  /* BOOL */
+    pub rtc_local_time: c_int, /* BOOL */
+    pub display_device: *mut c_char,
+    pub width: c_int,
+    pub height: c_int,
+    pub console: *mut c_void, /* CharacterDevice * */
+    pub tab_drive: [VMDriveEntry; 4],
+    pub drive_count: c_int,
+    pub tab_fs: [VMFSEntry; 4],
+    pub fs_count: c_int,
+    pub tab_eth: [VMEthEntry; 1],
+    pub eth_count: c_int,
+    pub cmdline: *mut c_char,
+    pub accel_enable: c_int, /* BOOL */
+    pub input_device: *mut c_char,
+    pub files: [VMFileEntry; 4], /* VM_FILE_COUNT == 4 */
+}
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn strlen(s: *const c_char) -> usize;
+    fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
+    fn strcat(dst: *mut c_char, src: *const c_char) -> *mut c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+}
+
+static EMPTY: [c_char; 1] = [0];
+static SPACE: [c_char; 2] = [b' ' as c_char, 0];
+
+#[no_mangle]
+pub unsafe extern "C" fn vm_add_cmdline(p: *mut VirtMachineParams, cmdline: *const c_char) {
+    let new_cmdline: *mut c_char;
+    if *cmdline == b'!' as c_char {
+        new_cmdline = strdup(cmdline.add(1));
+    } else {
+        let mut old_cmdline: *mut c_char = (*p).cmdline;
+        if old_cmdline.is_null() {
+            old_cmdline = EMPTY.as_ptr() as *mut c_char;
+        }
+        let size: usize = strlen(old_cmdline) + 1 + strlen(cmdline) + 1;
+        new_cmdline = malloc(size) as *mut c_char;
+        strcpy(new_cmdline, old_cmdline);
+        strcat(new_cmdline, SPACE.as_ptr());
+        strcat(new_cmdline, cmdline);
+    }
+    free((*p).cmdline as *mut c_void);
+    (*p).cmdline = new_cmdline;
+}
+}
+
 // ── `if (cmdline[0] == '!') … else` · machine.c:584-594 · chunk 1458 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -6140,6 +10731,144 @@ pub extern "C" fn vm_add_cmdline__part1459(slot: *mut *mut c_char, new_cmdline: 
     unsafe {
         free(*slot as *mut c_void);
         *slot = new_cmdline;
+    }
+}
+}
+
+// ── `virt_machine_free_config` · machine.c:599-624 · chunk 1460 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void virt_machine_free_config(VirtMachineParams *p)
+//     {
+//         int i;
+//     
+//         free(p->machine_name);
+//         free(p->cmdline);
+//         for(i = 0; i < VM_FILE_COUNT; i++) {
+//             free(p->files[i].filename);
+//             free(p->files[i].buf);
+//         }
+//         for(i = 0; i < p->drive_count; i++) {
+//             free(p->tab_drive[i].filename);
+//             free(p->tab_drive[i].device);
+//         }
+//         for(i = 0; i < p->fs_count; i++) {
+//             free(p->tab_fs[i].filename);
+//             free(p->tab_fs[i].tag);
+//         }
+//         for(i = 0; i < p->eth_count; i++) {
+//             free(p->tab_eth[i].driver);
+//             free(p->tab_eth[i].ifname);
+//         }
+//         free(p->input_device);
+//         free(p->display_device);
+//         free(p->cfg_filename);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1460 {
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+struct VMFileEntry {
+    filename: *mut c_char,
+    buf: *mut u8,
+    len: c_int,
+}
+
+#[repr(C)]
+struct VMDriveEntry {
+    device: *mut c_char,
+    filename: *mut c_char,
+    block_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMFSEntry {
+    device: *mut c_char,
+    tag: *mut c_char,
+    filename: *mut c_char,
+    fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMEthEntry {
+    driver: *mut c_char,
+    ifname: *mut c_char,
+    net: *mut c_void,
+}
+
+const VM_FILE_COUNT: usize = 4;
+
+#[repr(C)]
+struct VirtMachineParams {
+    cfg_filename: *mut c_char,
+    vmc: *const c_void,
+    machine_name: *mut c_char,
+    ram_size: u64,
+    rtc_real_time: c_int,
+    rtc_local_time: c_int,
+    display_device: *mut c_char,
+    width: c_int,
+    height: c_int,
+    console: *mut c_void,
+    tab_drive: [VMDriveEntry; 4],
+    drive_count: c_int,
+    tab_fs: [VMFSEntry; 4],
+    fs_count: c_int,
+    tab_eth: [VMEthEntry; 1],
+    eth_count: c_int,
+    cmdline: *mut c_char,
+    accel_enable: c_int,
+    input_device: *mut c_char,
+    files: [VMFileEntry; VM_FILE_COUNT],
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+#[no_mangle]
+pub extern "C" fn virt_machine_free_config(p: *mut VirtMachineParams) {
+    unsafe {
+        if p.is_null() {
+            return;
+        }
+        let p = &mut *p;
+
+        free(p.machine_name as *mut c_void);
+        free(p.cmdline as *mut c_void);
+
+        let mut i: c_int = 0;
+        while i < VM_FILE_COUNT as c_int {
+            free(p.files[i as usize].filename as *mut c_void);
+            free(p.files[i as usize].buf as *mut c_void);
+            i += 1;
+        }
+
+        i = 0;
+        while i < p.drive_count {
+            free(p.tab_drive[i as usize].filename as *mut c_void);
+            free(p.tab_drive[i as usize].device as *mut c_void);
+            i += 1;
+        }
+
+        i = 0;
+        while i < p.fs_count {
+            free(p.tab_fs[i as usize].filename as *mut c_void);
+            free(p.tab_fs[i as usize].tag as *mut c_void);
+            i += 1;
+        }
+
+        i = 0;
+        while i < p.eth_count {
+            free(p.tab_eth[i as usize].driver as *mut c_void);
+            free(p.tab_eth[i as usize].ifname as *mut c_void);
+            i += 1;
+        }
+
+        free(p.input_device as *mut c_void);
+        free(p.display_device as *mut c_void);
+        free(p.cfg_filename as *mut c_void);
     }
 }
 }
@@ -6424,6 +11153,58 @@ pub extern "C" fn virt_machine_free_config__part1466(p: *mut VirtMachineParams) 
 }
 }
 
+// ── `virt_machine_init` · machine.c:626-630 · chunk 1467 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     VirtMachine *virt_machine_init(const VirtMachineParams *p)
+//     {
+//         const VirtMachineClass *vmc = p->vmc;
+//         return vmc->virt_machine_init(p);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1467 {
+// Rewrite of virt_machine_init from machine.c
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int};
+
+// Opaque to Rust; never dereferenced here (only a pointer is passed through).
+#[repr(C)]
+pub struct VirtMachine {
+    _opaque: [u8; 0],
+}
+
+// Mirror of the leading part of struct VirtMachineClass (machine.h).
+// Only the fields up to and including virt_machine_init are needed, and their
+// offsets are preserved exactly.
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const c_char,
+    pub virt_machine_set_defaults: Option<unsafe extern "C" fn(p: *mut VirtMachineParams)>,
+    pub virt_machine_init:
+        Option<unsafe extern "C" fn(p: *const VirtMachineParams) -> *mut VirtMachine>,
+    // remaining members (virt_machine_end, ...) are not accessed
+}
+
+// Mirror of the leading part of VirtMachineParams (machine.h): only
+// cfg_filename and vmc are needed, in that order, to read p->vmc correctly.
+#[repr(C)]
+pub struct VirtMachineParams {
+    pub cfg_filename: *mut c_char,
+    pub vmc: *const VirtMachineClass,
+    // remaining members are not accessed
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_init(p: *const VirtMachineParams) -> *mut VirtMachine {
+    let vmc: *const VirtMachineClass = (*p).vmc;
+    match (*vmc).virt_machine_init {
+        Some(f) => f(p),
+        None => core::ptr::null_mut(),
+    }
+}
+}
+
 // ── `const VirtMachineClass *vmc = p->vmc; return vmc->virt_machine_init(p);` · machine.c:628-629 · chunk 1468 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -6462,6 +11243,99 @@ pub unsafe extern "C" fn virt_machine_init__part1468(
         Some(f) => f(p),
         None => core::ptr::null_mut(),
     }
+}
+}
+
+// ── `virt_machine_set_defaults` · machine.c:632-635 · chunk 1469 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void virt_machine_set_defaults(VirtMachineParams *p)
+//     {
+//         memset(p, 0, sizeof(*p));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1469 {
+// Port of: void virt_machine_set_defaults(VirtMachineParams *p)
+// Original C body: memset(p, 0, sizeof(*p));
+
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// POINTER_SIZE_ASSUMPTION: all pointer fields keep the C layout below.
+
+#[repr(C)]
+struct VMFileEntry {
+    filename: *mut c_char,
+    buf: *mut u8,
+    len: c_int,
+}
+
+#[repr(C)]
+struct VMDriveEntry {
+    device: *mut c_char,
+    filename: *mut c_char,
+    block_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMFSEntry {
+    device: *mut c_char,
+    tag: *mut c_char,
+    filename: *mut c_char,
+    fs_dev: *mut c_void,
+}
+
+#[repr(C)]
+struct VMEthEntry {
+    driver: *mut c_char,
+    ifname: *mut c_char,
+    net: *mut c_void,
+}
+
+// Opaque handles used only behind pointers.
+#[repr(C)]
+struct VirtMachineClass {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+struct CharacterDevice {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+struct VirtMachineParams {
+    cfg_filename: *mut c_char,
+    vmc: *const VirtMachineClass,
+    machine_name: *mut c_char,
+    ram_size: u64,
+    rtc_real_time: c_int,
+    rtc_local_time: c_int,
+    display_device: *mut c_char,
+    width: c_int,
+    height: c_int,
+    console: *mut CharacterDevice,
+    tab_drive: [VMDriveEntry; 4],
+    drive_count: c_int,
+    tab_fs: [VMFSEntry; 4],
+    fs_count: c_int,
+    tab_eth: [VMEthEntry; 1],
+    eth_count: c_int,
+    cmdline: *mut c_char,
+    accel_enable: c_int,
+    input_device: *mut c_char,
+    files: [VMFileEntry; 4],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_set_defaults(p: *mut VirtMachineParams) {
+    // memset(p, 0, sizeof(*p)) with p == NULL being undefined behaviour in C too.
+    if p.is_null() {
+        return;
+    }
+    core::ptr::write_bytes(p, 0u8, 1);
 }
 }
 
@@ -6537,6 +11411,48 @@ pub unsafe extern "C" fn virt_machine_set_defaults__part1470(p: *mut VirtMachine
         0u8,
         core::mem::size_of::<VirtMachineParams>(),
     );
+}
+}
+
+// ── `virt_machine_end` · machine.c:637-640 · chunk 1471 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void virt_machine_end(VirtMachine *s)
+//     {
+//         s->vmc->virt_machine_end(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1471 {
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct VirtMachine {
+    pub vmc: *const VirtMachineClass,
+    pub net: *mut c_void,
+    pub console_dev: *mut c_void,
+    pub console: *mut c_void,
+    pub fb_dev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct VirtMachineClass {
+    pub machine_names: *const core::ffi::c_char,
+    pub virt_machine_set_defaults: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub virt_machine_init: Option<unsafe extern "C" fn(*const c_void) -> *mut VirtMachine>,
+    pub virt_machine_end: Option<unsafe extern "C" fn(*mut VirtMachine)>,
+    pub virt_machine_get_sleep_duration: Option<unsafe extern "C" fn(*mut VirtMachine, core::ffi::c_int) -> core::ffi::c_int>,
+    pub virt_machine_interp: Option<unsafe extern "C" fn(*mut VirtMachine, core::ffi::c_int)>,
+    pub vm_mouse_is_absolute: Option<unsafe extern "C" fn(*mut VirtMachine) -> core::ffi::c_int>,
+    pub vm_send_mouse_event: Option<unsafe extern "C" fn(*mut VirtMachine, core::ffi::c_int, core::ffi::c_int, core::ffi::c_int, core::ffi::c_uint)>,
+    pub vm_send_key_event: Option<unsafe extern "C" fn(*mut VirtMachine, core::ffi::c_int, u16)>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn virt_machine_end(s: *mut VirtMachine) {
+    let vmc = (*s).vmc;
+    if let Some(f) = (*vmc).virt_machine_end {
+        f(s);
+    }
 }
 }
 

@@ -3186,471 +3186,75 @@ static uint32_t virtio_pci_read(void *opaque, uint32_t offset, int size_log2);
 static void virtio_pci_write(void *opaque, uint32_t offset,
                              uint32_t val, int size_log2);
 
-static void virtio_reset(VIRTIODevice *s)
-{
-    void virtio_reset__part3699(VIRTIODevice *s);
+static void virtio_reset(VIRTIODevice *s);
 
-    int i;
+static uint8_t *virtio_pci_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
 
-    virtio_reset__part3699(s);
-
-    void virtio_reset__part3700(QueueState *qs);
-    virtio_reset__part3700(&s->queue[0]);
-
-}
-
-static uint8_t *virtio_pci_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw)
-{
-    uint8_t *virtio_pci_get_ram_ptr__part3702(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
-    return virtio_pci_get_ram_ptr__part3702(s, paddr, is_rw);
-}
-
-static uint8_t *virtio_mmio_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw)
-{
-        uint8_t *virtio_mmio_get_ram_ptr__part3704(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
-    return virtio_mmio_get_ram_ptr__part3704(s, paddr, is_rw);
-
-}
+static uint8_t *virtio_mmio_get_ram_ptr(VIRTIODevice *s, virtio_phys_addr_t paddr, BOOL is_rw);
 
 static void virtio_add_pci_capability(VIRTIODevice *s, int cfg_type,
                                       int bar, uint32_t offset, uint32_t len,
-                                      uint32_t mult)
-{
-    uint8_t cap[20];
-    int cap_len;
-        int virtio_add_pci_capability__part3706(int cfg_type);
-    cap_len = virtio_add_pci_capability__part3706(cfg_type);
-
-    void virtio_add_pci_capability__part3707(uint8_t *cap, int cap_len, int cfg_type, int bar, uint32_t offset, uint32_t len);
-    virtio_add_pci_capability__part3707(cap, cap_len, cfg_type, bar, offset, len);
-
-    void virtio_add_pci_capability__part3708(int cfg_type, uint8_t *cap, uint32_t mult);
-    virtio_add_pci_capability__part3708(cfg_type, cap, mult);
-
-        void virtio_add_pci_capability__part3709(VIRTIODevice *s, const uint8_t *cap, int cap_len);
-    virtio_add_pci_capability__part3709(s, cap, cap_len);
-
-}
+                                      uint32_t mult);
 
 static void virtio_pci_bar_set(void *opaque, int bar_num,
-                               uint32_t addr, BOOL enabled)
-{
-    void virtio_pci_bar_set__part3711(void *opaque, int bar_num, uint32_t addr, int enabled);
-    virtio_pci_bar_set__part3711(opaque, bar_num, addr, enabled);
-
-}
+                               uint32_t addr, BOOL enabled);
 
 static void virtio_init(VIRTIODevice *s, VIRTIOBusDef *bus,
                         uint32_t device_id, int config_space_size,
-                        VIRTIODeviceRecvFunc *device_recv)
-{
-    void virtio_init__part3713(void *s, size_t size);
-virtio_init__part3713(s, sizeof(*s));
+                        VIRTIODeviceRecvFunc *device_recv);
 
-
-    if (bus->pci_bus) {
-        uint16_t pci_device_id, class_id;
-        char name[32];
-        int bar_num;
-
-        switch(device_id) {
-        case 1:
-            pci_device_id = 0x1000;
-            class_id = 0x0200;
-            break;
-        case 2:
-            pci_device_id = 0x1001;
-            class_id = 0x0100;
-            break;
-        case 3:
-            pci_device_id = 0x1003;
-            class_id = 0x0780;
-            break;
-        case 9:
-            pci_device_id = 0x1040 + device_id;
-            class_id = 0x2;
-            break;
-        case 18:
-            pci_device_id = 0x1040 + device_id;
-            class_id = 0x0980;
-            break;
-        default:
-            abort();
-        }
-        snprintf(name, sizeof(name), "virtio_%04x", pci_device_id);
-        s->pci_dev = pci_register_device(bus->pci_bus, name, -1,
-                                         0x1af4, pci_device_id, 0x00,
-                                         class_id);
-        pci_device_set_config16(s->pci_dev, 0x2c, 0x1af4);
-        pci_device_set_config16(s->pci_dev, 0x2e, device_id);
-        pci_device_set_config8(s->pci_dev, 0x3d, 1);
-
-        bar_num = 4;
-        virtio_add_pci_capability(s, 1, bar_num,
-                              0x0000, 0x1000, 0);
-        virtio_add_pci_capability(s, 3, bar_num,
-                              0x1000, 0x1000, 0);
-        virtio_add_pci_capability(s, 4, bar_num,
-                              0x2000, 0x1000, 0);
-        virtio_add_pci_capability(s, 2, bar_num,
-                              0x3000, 0x1000, 0);
-
-        s->get_ram_ptr = virtio_pci_get_ram_ptr;
-        s->irq = pci_device_get_irq(s->pci_dev, 0);
-        s->mem_map = pci_device_get_mem_map(s->pci_dev);
-        s->mem_range = cpu_register_device(s->mem_map, 0, 0x4000, s,
-                                           virtio_pci_read, virtio_pci_write,
-                                           (1 << 0) | (1 << 1) | (1 << 2) | (1 << 4));
-        pci_register_bar(s->pci_dev, bar_num, 0x4000, 0x00,
-                         s, virtio_pci_bar_set);
-    } else {
-
-        s->mem_map = bus->mem_map;
-        s->irq = bus->irq;
-        s->mem_range = cpu_register_device(s->mem_map, bus->addr, 4096,
-                                           s, virtio_mmio_read, virtio_mmio_write,
-                                           (1 << 0) | (1 << 1) | (1 << 2));
-        s->get_ram_ptr = virtio_mmio_get_ram_ptr;
-    }
-
-        void virtio_init__part3715(VIRTIODevice *s, uint32_t device_id, int config_space_size, VIRTIODeviceRecvFunc *device_recv);
-    virtio_init__part3715(s, device_id, config_space_size, device_recv);
-
-}
-
-static uint16_t virtio_read16(VIRTIODevice *s, virtio_phys_addr_t addr)
-{
-    uint8_t *ptr;
-    extern int virtio_read16__part3717(uint64_t addr);
-    if (virtio_read16__part3717(addr))
-        return 0;
-
-        uint8_t *virtio_read16__part3718(VIRTIODevice *s, virtio_phys_addr_t addr);
-    ptr = virtio_read16__part3718(s, addr);
-        int virtio_read16__part3719(const uint8_t *ptr);
-    if (virtio_read16__part3719(ptr))
-        return 0;
-
-        {
-        uint16_t virtio_read16__part3720(const uint8_t *ptr);
-        return virtio_read16__part3720(ptr);
-    }
-
-}
+static uint16_t virtio_read16(VIRTIODevice *s, virtio_phys_addr_t addr);
 
 static void virtio_write16(VIRTIODevice *s, virtio_phys_addr_t addr,
-                           uint16_t val)
-{
-    uint8_t *ptr;
-    extern int virtio_write16__part3722(uint64_t addr);
-    if (virtio_write16__part3722(addr))
-        return;
-        uint8_t *virtio_write16__part3723(VIRTIODevice *s, virtio_phys_addr_t addr);
-    ptr = virtio_write16__part3723(s, addr);
-
-        int virtio_write16__part3724(uint8_t *ptr);
-    if (virtio_write16__part3724(ptr))
-        return;
-    void virtio_write16__part3725(uint8_t *ptr, uint16_t val);
-virtio_write16__part3725(ptr, val);
-
-}
+                           uint16_t val);
 
 static void virtio_write32(VIRTIODevice *s, virtio_phys_addr_t addr,
-                           uint32_t val)
-{
-    uint8_t *ptr;
-        {
-        int virtio_write32__part3727(uint64_t addr);
-        if (virtio_write32__part3727(addr))
-            return;
-    }
-
-    uint8_t *virtio_write32__part3728(VIRTIODevice *s, virtio_phys_addr_t addr);
-    ptr = virtio_write32__part3728(s, addr);
-    {
-    int virtio_write32__part3729(uint8_t *ptr);
-    if (virtio_write32__part3729(ptr))
-        return;
-}
-
-    void virtio_write32__part3730(uint8_t *ptr, uint32_t val);
-    virtio_write32__part3730(ptr, val);
-
-}
+                           uint32_t val);
 
 static int virtio_memcpy_from_ram(VIRTIODevice *s, uint8_t *buf,
-                                  virtio_phys_addr_t addr, int count)
-{
-    uint8_t *ptr;
-    int l;
-
-        {
-        extern int virtio_memcpy_from_ram__part3732(VIRTIODevice *s, uint8_t *buf,
-                                                   virtio_phys_addr_t addr, int count);
-        int part_ret;
-        (void)l;
-        (void)ptr;
-        part_ret = virtio_memcpy_from_ram__part3732(s, buf, addr, count);
-        if (part_ret < 0)
-            return -1;
-    }
-
-    int virtio_memcpy_from_ram__part3733(void);
-return virtio_memcpy_from_ram__part3733();
-
-}
+                                  virtio_phys_addr_t addr, int count);
 
 static int virtio_memcpy_to_ram(VIRTIODevice *s, virtio_phys_addr_t addr,
-                                const uint8_t *buf, int count)
-{
-    uint8_t *ptr;
-    int l;
-
-        {
-        int virtio_memcpy_to_ram__part3735(VIRTIODevice *s, virtio_phys_addr_t addr,
-                                           const uint8_t *buf, int count);
-        if (virtio_memcpy_to_ram__part3735(s, addr, buf, count) < 0)
-            return -1;
-    }
-    int virtio_memcpy_to_ram__part3736(void);
-    return virtio_memcpy_to_ram__part3736();
-
-}
+                                const uint8_t *buf, int count);
 
 static int get_desc(VIRTIODevice *s, VIRTIODesc *desc,
-                    int queue_idx, int desc_idx)
-{
-    int get_desc__part3738(VIRTIODevice *s, VIRTIODesc *desc, int queue_idx, int desc_idx);
-    return get_desc__part3738(s, desc, queue_idx, desc_idx);
-}
+                    int queue_idx, int desc_idx);
 
 static int memcpy_to_from_queue(VIRTIODevice *s, uint8_t *buf,
                                 int queue_idx, int desc_idx,
-                                int offset, int count, BOOL to_queue)
-{
-    VIRTIODesc desc;
-    int l, f_write_flag;
-
-    int memcpy_to_from_queue__part3740(int count);
-
-    if (memcpy_to_from_queue__part3740(count))
-        return 0;
-
-
-        {
-        int memcpy_to_from_queue__part3741(VIRTIODevice *s, VIRTIODesc *desc, int queue_idx, int desc_idx);
-        (void)memcpy_to_from_queue__part3741(s, &desc, queue_idx, desc_idx);
-    }
-
-
-        {
-        int memcpy_to_from_queue__part3742(VIRTIODevice *s, int queue_idx,
-                                           int *desc_idx, VIRTIODesc *desc,
-                                           BOOL to_queue, int *f_write_flag);
-        int part_ret = memcpy_to_from_queue__part3742(s, queue_idx, &desc_idx,
-                                                      &desc, to_queue,
-                                                      &f_write_flag);
-        if (part_ret != 0)
-            return part_ret;
-    }
-
-
-        /* part3743: descriptor advance loop ported to Rust */
-    {
-        extern int memcpy_to_from_queue__part3743(VIRTIODevice *, VIRTIODesc *, int *, int *, int, int);
-        int part3743_rc = memcpy_to_from_queue__part3743(s, &desc, &offset, &desc_idx, queue_idx, f_write_flag);
-        if (part3743_rc != 0)
-            return -1;
-    }
-
-
-    for(;;) {
-        l = min_int(count, desc.len - offset);
-        if (to_queue)
-            virtio_memcpy_to_ram(s, desc.addr + offset, buf, l);
-        else
-            virtio_memcpy_from_ram(s, buf, desc.addr + offset, l);
-        count -= l;
-        if (count == 0)
-            break;
-        offset += l;
-        buf += l;
-        if (offset == desc.len) {
-            if (!(desc.flags & 1))
-                return -1;
-            desc_idx = desc.next;
-            get_desc(s, &desc, queue_idx, desc_idx);
-            if ((desc.flags & 2) != f_write_flag)
-                return -1;
-            offset = 0;
-        }
-    }
-        {
-        int memcpy_to_from_queue__part3745(void);
-        return memcpy_to_from_queue__part3745();
-    }
-}
+                                int offset, int count, BOOL to_queue);
 
 static int memcpy_from_queue(VIRTIODevice *s, void *buf,
                              int queue_idx, int desc_idx,
-                             int offset, int count)
-{
-        {
-        int memcpy_from_queue__part3747(VIRTIODevice *s, void *buf,
-                                        int queue_idx, int desc_idx,
-                                        int offset, int count);
-        return memcpy_from_queue__part3747(s, buf, queue_idx, desc_idx, offset,
-                                           count);
-    }
-
-}
+                             int offset, int count);
 
 static int memcpy_to_queue(VIRTIODevice *s,
                            int queue_idx, int desc_idx,
-                           int offset, const void *buf, int count)
-{
-        int memcpy_to_queue__part3749(VIRTIODevice *s, int queue_idx, int desc_idx, int offset, const void *buf, int count);
-    return memcpy_to_queue__part3749(s, queue_idx, desc_idx, offset, buf, count);
-
-}
+                           int offset, const void *buf, int count);
 
 
 static void virtio_consume_desc(VIRTIODevice *s,
-                                int queue_idx, int desc_idx, int desc_len)
-{
-        void virtio_consume_desc__part3751(VIRTIODevice *s, int queue_idx, int desc_idx, int desc_len);
-    virtio_consume_desc__part3751(s, queue_idx, desc_idx, desc_len);
-
-}
+                                int queue_idx, int desc_idx, int desc_len);
 
 static int get_desc_rw_size(VIRTIODevice *s,
                              int *pread_size, int *pwrite_size,
-                             int queue_idx, int desc_idx)
-{
-    void get_desc_rw_size__part3753(VIRTIODevice *s, int queue_idx, int desc_idx,
-                                VIRTIODesc *pdesc, int *pread_size, int *pwrite_size);
-    VIRTIODesc desc;
-    int read_size, write_size;
-
-    get_desc_rw_size__part3753(s, queue_idx, desc_idx, &desc, &read_size, &write_size);
+                             int queue_idx, int desc_idx);
 
 
-    int get_desc_rw_size__part3754(VIRTIODevice *s, VIRTIODesc *desc,
-                               int *pread_size, int queue_idx, int *pdesc_idx);
-    if (get_desc_rw_size__part3754(s, &desc, &read_size, queue_idx, &desc_idx))
-        goto done;
-
-        {
-        extern int get_desc_rw_size__part3755(VIRTIODevice *s, VIRTIODesc *desc,
-                                              int *write_size, int *desc_idx,
-                                              int queue_idx);
-        int part3755_ret;
-
-        part3755_ret = get_desc_rw_size__part3755(s, &desc, &write_size,
-                                                 &desc_idx, queue_idx);
-        if (part3755_ret)
-            return part3755_ret;
-    }
-
-
-  done:
-    void get_desc_rw_size__part3756(int *pread_size, int read_size);
-    get_desc_rw_size__part3756(pread_size, read_size);
-
-        {
-        int get_desc_rw_size__part3757(int *pwrite_size, int write_size);
-        return get_desc_rw_size__part3757(pwrite_size, write_size);
-    }
-
-}
-
-
-static void queue_notify(VIRTIODevice *s, int queue_idx)
-{
-    QueueState *qs = &s->queue[queue_idx];
-    uint16_t avail_idx;
-    int desc_idx, read_size, write_size;
-
-    int queue_notify__part3759(QueueState *qs);
-
-    if (queue_notify__part3759(qs))
-        return;
-
-        uint16_t queue_notify__part3760(VIRTIODevice *s, virtio_phys_addr_t addr);
-    avail_idx = queue_notify__part3760(s, qs->avail_addr + 2);
-    void queue_notify__part3761(VIRTIODevice *s, int queue_idx, uint16_t avail_idx);
-    queue_notify__part3761(s, queue_idx, avail_idx);
-}
+static void queue_notify(VIRTIODevice *s, int queue_idx);
 
 static uint32_t virtio_config_read(VIRTIODevice *s, uint32_t offset,
-                                   int size_log2)
-{
-    uint32_t val;
-        uint32_t virtio_config_read__part3763(const uint8_t *config_space,
-                                          uint32_t config_space_size,
-                                          uint32_t offset, int size_log2);
-    val = virtio_config_read__part3763(s->config_space, s->config_space_size,
-                                       offset, size_log2);
-
-        {
-        uint32_t virtio_config_read__part3764(uint32_t val);
-        return virtio_config_read__part3764(val);
-    }
-
-}
+                                   int size_log2);
 
 static void virtio_config_write(VIRTIODevice *s, uint32_t offset,
-                                uint32_t val, int size_log2)
-{
-        void virtio_config_write__part3766(uint8_t *config_space,
-                                       uint32_t config_space_size,
-                                       void (*config_write)(VIRTIODevice *s),
-                                       VIRTIODevice *s,
-                                       uint32_t offset, uint32_t val,
-                                       int size_log2);
-    virtio_config_write__part3766(s->config_space, s->config_space_size,
-                                  s->config_write, s, offset, val, size_log2);
+                                uint32_t val, int size_log2);
 
-}
-
-static uint32_t virtio_mmio_read(void *opaque, uint32_t offset, int size_log2)
-{
-    VIRTIODevice *s = opaque;
-    uint32_t val;
-
-    uint32_t virtio_mmio_read__part3768(void *opaque, uint32_t offset, int size_log2);
-    if (offset >= 0x100) {
-        return virtio_mmio_read__part3768(opaque, offset, size_log2);
-    }
+static uint32_t virtio_mmio_read(void *opaque, uint32_t offset, int size_log2);
 
 
-        uint32_t virtio_mmio_read__part3769(VIRTIODevice *s, uint32_t offset, int size_log2);
-    val = virtio_mmio_read__part3769(s, offset, size_log2);
+static void set_low32(virtio_phys_addr_t *paddr, uint32_t val);
 
-
-
-
-
-
-
-        uint32_t virtio_mmio_read__part3770(uint32_t val);
-    return virtio_mmio_read__part3770(val);
-
-}
-
-
-static void set_low32(virtio_phys_addr_t *paddr, uint32_t val)
-{
-        extern void set_low32__part3772(virtio_phys_addr_t *paddr, uint32_t val);
-    set_low32__part3772(paddr, val);
-}
-
-static void set_high32(virtio_phys_addr_t *paddr, uint32_t val)
-{
-        void set_high32__part3774(uint64_t *paddr, uint32_t val);
-    set_high32__part3774(paddr, val);
-}
+static void set_high32(virtio_phys_addr_t *paddr, uint32_t val);
 
 
 
@@ -3659,130 +3263,16 @@ static void set_high32(virtio_phys_addr_t *paddr, uint32_t val)
 
 
 static void virtio_mmio_write(void *opaque, uint32_t offset,
-                              uint32_t val, int size_log2)
-{
-    VIRTIODevice *s = opaque;
-    int virtio_mmio_write__part3776(VIRTIODevice *s, uint32_t offset,
-                               uint32_t val, int size_log2);
-    if (virtio_mmio_write__part3776(s, offset, val, size_log2))
-        return;
+                              uint32_t val, int size_log2);
 
-
-        void virtio_mmio_write__part3777(void *opaque, uint32_t offset, uint32_t val, int size_log2);
-    virtio_mmio_write__part3777(opaque, offset, val, size_log2);
-}
-
-static uint32_t virtio_pci_read(void *opaque, uint32_t offset1, int size_log2)
-{
-    uint32_t virtio_pci_read__part3779(void *opaque, uint32_t offset1, uint32_t *val_out);
-    VIRTIODevice *s = opaque;
-    uint32_t offset;
-    uint32_t val;
-    offset = virtio_pci_read__part3779(opaque, offset1, &val);
-
-    {
-    uint32_t virtio_pci_read__part3780(void *opaque, uint32_t offset1, int size_log2);
-    val = virtio_pci_read__part3780(opaque, offset1, size_log2);
-}
-
-
-
-
-
-
-
-    uint32_t virtio_pci_read__part3781(uint32_t val);
-    return virtio_pci_read__part3781(val);
-}
+static uint32_t virtio_pci_read(void *opaque, uint32_t offset1, int size_log2);
 
 static void virtio_pci_write(void *opaque, uint32_t offset1,
-                             uint32_t val, int size_log2)
-{
-        VIRTIODevice *s = opaque;
-    uint32_t offset;
-    uint32_t virtio_pci_write__part3783(uint32_t offset1);
+                             uint32_t val, int size_log2);
 
-    offset = virtio_pci_write__part3783(offset1);
+void virtio_set_debug(VIRTIODevice *s, int debug);
 
-    switch(offset1 >> 12) {
-    case 0x0000 >> 12:
-        if (size_log2 == 2) {
-            switch(offset) {
-            case 0x000:
-                s->device_features_sel = val;
-                break;
-            case 0x020:
-                set_low32(&s->queue[s->queue_sel].desc_addr, val);
-                break;
-            case 0x028:
-                set_low32(&s->queue[s->queue_sel].avail_addr, val);
-                break;
-            case 0x030:
-                set_low32(&s->queue[s->queue_sel].used_addr, val);
-                break;
-
-            case 0x024:
-                set_high32(&s->queue[s->queue_sel].desc_addr, val);
-                break;
-            case 0x02c:
-                set_high32(&s->queue[s->queue_sel].avail_addr, val);
-                break;
-            case 0x034:
-                set_high32(&s->queue[s->queue_sel].used_addr, val);
-                break;
-
-            }
-        } else if (size_log2 == 1) {
-            switch(offset) {
-            case 0x016:
-                if (val < 8)
-                    s->queue_sel = val;
-                break;
-            case 0x018:
-                if ((val & (val - 1)) == 0 && val > 0) {
-                    s->queue[s->queue_sel].num = val;
-                }
-                break;
-            case 0x01c:
-                s->queue[s->queue_sel].ready = val & 1;
-                break;
-            }
-        } else if (size_log2 == 0) {
-            switch(offset) {
-            case 0x014:
-                s->status = val;
-                if (val == 0) {
-
-                    set_irq(s->irq, 0);
-                    virtio_reset(s);
-                }
-                break;
-            }
-        }
-        break;
-    case 0x2000 >> 12:
-        virtio_config_write(s, offset, val, size_log2);
-        break;
-    case 0x3000 >> 12:
-        if (val < 8)
-            queue_notify(s, val);
-        break;
-    }
-}
-
-void virtio_set_debug(VIRTIODevice *s, int debug)
-{
-    void virtio_set_debug__part3786(VIRTIODevice *s, int debug);
-virtio_set_debug__part3786(s, debug);
-
-}
-
-static void virtio_config_change_notify(VIRTIODevice *s)
-{
-
-    void virtio_config_change_notify__part3788(VIRTIODevice *s);
-    virtio_config_change_notify__part3788(s);
-}
+static void virtio_config_change_notify(VIRTIODevice *s);
 
 
 
@@ -3808,136 +3298,16 @@ typedef struct {
     uint32_t ioprio;
     uint64_t sector_num;
 } BlockRequestHeader;
-static void virtio_block_req_end(VIRTIODevice *s, int ret)
-{
-    VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s;
-    int write_size;
-    int queue_idx = s1->req.queue_idx;
-    int desc_idx = s1->req.desc_idx;
-    uint8_t *buf, buf1[1];
+static void virtio_block_req_end(VIRTIODevice *s, int ret);
 
-    switch(s1->req.type) {
-    case 0:
-        write_size = s1->req.write_size;
-        buf = s1->req.buf;
-        if (ret < 0) {
-            buf[write_size - 1] = 1;
-        } else {
-            buf[write_size - 1] = 0;
-        }
-        memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, write_size);
-        free(buf);
-        virtio_consume_desc(s, queue_idx, desc_idx, write_size);
-        break;
-    case 1:
-        if (ret < 0)
-            buf1[0] = 1;
-        else
-            buf1[0] = 0;
-        memcpy_to_queue(s, queue_idx, desc_idx, 0, buf1, sizeof(buf1));
-        virtio_consume_desc(s, queue_idx, desc_idx, 1);
-        break;
-    default:
-        abort();
-    }
-}
-
-static void virtio_block_req_cb(void *opaque, int ret)
-{
-        void virtio_block_req_cb__part3798(void *opaque, int ret);
-
-    virtio_block_req_cb__part3798(opaque, ret);
-
-}
+static void virtio_block_req_cb(void *opaque, int ret);
 
 
 static int virtio_block_recv_request(VIRTIODevice *s, int queue_idx,
                                      int desc_idx, int read_size,
-                                     int write_size)
-{
-    VIRTIOBlockDevice *s1 = (VIRTIOBlockDevice *)s;
-    BlockDevice *bs = s1->bs;
-    BlockRequestHeader h;
-    uint8_t *buf;
-    int len, ret;
+                                     int write_size);
 
-    extern int virtio_block_recv_request__part3800(VIRTIOBlockDevice *s1);
-    if (virtio_block_recv_request__part3800(s1))
-        return -1;
-
-
-        {
-        int virtio_block_recv_request__part3801(void *s, void *h, int queue_idx, int desc_idx);
-        if (virtio_block_recv_request__part3801(s, &h, queue_idx, desc_idx))
-            return 0;
-    }
-
-    {
-        void virtio_block_recv_request__part3802(BlockRequest *req,
-                                                 const BlockRequestHeader *h,
-                                                 int queue_idx, int desc_idx);
-        virtio_block_recv_request__part3802(&s1->req, &h, queue_idx, desc_idx);
-    }
-    switch(h.type) {
-    case 0:
-        s1->req.buf = malloc(write_size);
-        s1->req.write_size = write_size;
-        ret = bs->read_async(bs, h.sector_num, s1->req.buf,
-                             (write_size - 1) / 512,
-                             virtio_block_req_cb, s);
-        if (ret > 0) {
-
-            s1->req_in_progress = TRUE;
-        } else {
-            virtio_block_req_end(s, ret);
-        }
-        break;
-    case 1:
-        
-       ((void) sizeof (__assert_single_arg (
-       write_size >= 1
-       )), __extension__ ({ if (
-       write_size >= 1
-       ) ; else __assert_fail (
-       "write_size >= 1"
-       , "virtio.c", 1097, __extension__ __PRETTY_FUNCTION__); }))
-                              ;
-        len = read_size - sizeof(h);
-        buf = malloc(len);
-        memcpy_from_queue(s, buf, queue_idx, desc_idx, sizeof(h), len);
-        ret = bs->write_async(bs, h.sector_num, buf, len / 512,
-                              virtio_block_req_cb, s);
-        free(buf);
-        if (ret > 0) {
-
-            s1->req_in_progress = TRUE;
-        } else {
-            virtio_block_req_end(s, ret);
-        }
-        break;
-    default:
-        break;
-    }
-    int virtio_block_recv_request__part3804(void);
-    return virtio_block_recv_request__part3804();
-}
-
-VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs)
-{
-    VIRTIOBlockDevice *s;
-    uint64_t nb_sectors;
-
-    s = mallocz(sizeof(*s));
-    virtio_init(&s->common, bus,
-                2, 8, virtio_block_recv_request);
-    s->bs = bs;
-
-    nb_sectors = bs->get_sector_count(bs);
-    put_le32(s->common.config_space, nb_sectors);
-    put_le32(s->common.config_space + 4, nb_sectors >> 32);
-
-    return (VIRTIODevice *)s;
-}
+VIRTIODevice *virtio_block_init(VIRTIOBusDef *bus, BlockDevice *bs);
 
 
 
@@ -3960,110 +3330,15 @@ typedef struct {
 
 static int virtio_net_recv_request(VIRTIODevice *s, int queue_idx,
                                    int desc_idx, int read_size,
-                                   int write_size)
-{
-    VIRTIONetDevice *s1 = (VIRTIONetDevice *)s;
-    EthernetDevice *es = s1->es;
-    VIRTIONetHeader h;
-    uint8_t *buf;
-    int len;
+                                   int write_size);
 
-        if (queue_idx == 1) {
-        extern int virtio_net_recv_request__part3812(VIRTIODevice *s, int queue_idx,
-                                                     int desc_idx, int read_size,
-                                                     int write_size);
-        if (virtio_net_recv_request__part3812(s, queue_idx, desc_idx,
-                                              read_size, write_size))
-            return 0;
-    }
+static BOOL virtio_net_can_write_packet(EthernetDevice *es);
 
-        int virtio_net_recv_request__part3813(void);
-    return virtio_net_recv_request__part3813();
+static void virtio_net_write_packet(EthernetDevice *es, const uint8_t *buf, int buf_len);
 
-}
+static void virtio_net_set_carrier(EthernetDevice *es, BOOL carrier_state);
 
-static BOOL virtio_net_can_write_packet(EthernetDevice *es)
-{
-    VIRTIODevice *s = es->device_opaque;
-    QueueState *qs = &s->queue[0];
-    uint16_t avail_idx;
-
-        int virtio_net_can_write_packet__part3815(const QueueState *qs);
-    if (!virtio_net_can_write_packet__part3815(qs))
-        return FALSE;
-
-    BOOL virtio_net_can_write_packet__part3816(VIRTIODevice *s, QueueState *qs);
-    return virtio_net_can_write_packet__part3816(s, qs);
-
-}
-
-static void virtio_net_write_packet(EthernetDevice *es, const uint8_t *buf, int buf_len)
-{
-    VIRTIODevice *s = es->device_opaque;
-    VIRTIONetDevice *s1 = (VIRTIONetDevice *)s;
-    int queue_idx = 0;
-    QueueState *qs = &s->queue[queue_idx];
-    int desc_idx;
-    VIRTIONetHeader h;
-    int len, read_size, write_size;
-    uint16_t avail_idx;
-
-    int virtio_net_write_packet__part3818(const QueueState *qs);
-    if (virtio_net_write_packet__part3818(qs))
-        return;
-    uint16_t virtio_net_write_packet__part3819(VIRTIODevice *s, virtio_phys_addr_t addr);
-avail_idx = virtio_net_write_packet__part3819(s, qs->avail_addr + 2);
-    int virtio_net_write_packet__part3820(const QueueState *qs, uint16_t avail_idx);
-    if (virtio_net_write_packet__part3820(qs, avail_idx))
-        return;
-
-    uint16_t virtio_net_write_packet__part3821(VIRTIODevice *s, QueueState *qs);
-desc_idx = virtio_net_write_packet__part3821(s, qs);
-        int virtio_net_write_packet__part3822(VIRTIODevice *s, int *pread_size, int *pwrite_size, int queue_idx, int desc_idx);
-    if (virtio_net_write_packet__part3822(s, &read_size, &write_size, queue_idx, desc_idx))
-        return;
-    int virtio_net_write_packet__part3823(int header_size, int buf_len);
-    len = virtio_net_write_packet__part3823(s1->header_size, buf_len);
-
-    int virtio_net_write_packet__part3824(int len, int write_size);
-    if (virtio_net_write_packet__part3824(len, write_size))
-        return;
-
-    memset(&h, 0, s1->header_size);
-    memcpy_to_queue(s, queue_idx, desc_idx, 0, &h, s1->header_size);
-    memcpy_to_queue(s, queue_idx, desc_idx, s1->header_size, buf, buf_len);
-    virtio_consume_desc(s, queue_idx, desc_idx, len);
-    qs->last_avail_idx++;
-}
-
-static void virtio_net_set_carrier(EthernetDevice *es, BOOL carrier_state)
-{
-}
-
-VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es)
-{
-    VIRTIONetDevice *s;
-
-    s = mallocz(sizeof(*s));
-    virtio_init(&s->common, bus,
-                1, 6 + 2, virtio_net_recv_request);
-
-    s->common.device_features = (1 << 5) ;
-    s->common.queue[0].manual_recv = TRUE;
-    s->es = es;
-    memcpy(s->common.config_space, es->mac_addr, 6);
-
-    s->common.config_space[6] = 0;
-    s->common.config_space[7] = 0;
-
-    s->header_size = sizeof(VIRTIONetHeader);
-
-    es->device_opaque = s;
-    es->device_can_write_packet = virtio_net_can_write_packet;
-    es->device_write_packet = virtio_net_write_packet;
-    es->device_set_carrier = virtio_net_set_carrier;
-    return (VIRTIODevice *)s;
-}
+VIRTIODevice *virtio_net_init(VIRTIOBusDef *bus, EthernetDevice *es);
 
 
 
@@ -4075,112 +3350,18 @@ typedef struct VIRTIOConsoleDevice {
 
 static int virtio_console_recv_request(VIRTIODevice *s, int queue_idx,
                                        int desc_idx, int read_size,
-                                       int write_size)
-{
-    VIRTIOConsoleDevice *s1 = (VIRTIOConsoleDevice *)s;
-    CharacterDevice *cs = s1->cs;
-    uint8_t *buf;
+                                       int write_size);
 
-    void virtio_console_recv_request__part3832(VIRTIODevice *s, CharacterDevice *cs,
-                                           int queue_idx, int desc_idx,
-                                           int read_size);
-    virtio_console_recv_request__part3832(s, cs, queue_idx, desc_idx, read_size);
+BOOL virtio_console_can_write_data(VIRTIODevice *s);
 
-    int virtio_console_recv_request__part3833(void);
-    return virtio_console_recv_request__part3833();
-}
+int virtio_console_get_write_len(VIRTIODevice *s);
 
-BOOL virtio_console_can_write_data(VIRTIODevice *s)
-{
-    QueueState *qs = &s->queue[0];
-    uint16_t avail_idx;
-
-    {
-    int virtio_console_can_write_data__part3835(const QueueState *qs);
-    if (virtio_console_can_write_data__part3835(qs))
-        return FALSE;
-}
-    BOOL virtio_console_can_write_data__part3836(VIRTIODevice *s, QueueState *qs);
-    return virtio_console_can_write_data__part3836(s, qs);
-
-}
-
-int virtio_console_get_write_len(VIRTIODevice *s)
-{
-    int queue_idx = 0;
-    QueueState *qs = &s->queue[queue_idx];
-    int desc_idx;
-    int read_size, write_size;
-    uint16_t avail_idx;
-
-    extern int virtio_console_get_write_len__part3838(uint32_t ready);
-    if (virtio_console_get_write_len__part3838(qs->ready))
-        return 0;
-
-        uint16_t virtio_console_get_write_len__part3839(VIRTIODevice *s, QueueState *qs);
-    avail_idx = virtio_console_get_write_len__part3839(s, qs);
-    int virtio_console_get_write_len__part3840(const QueueState *qs, uint16_t avail_idx);
-    if (virtio_console_get_write_len__part3840(qs, avail_idx))
-        return 0;
-
-    uint16_t virtio_console_get_write_len__part3841(VIRTIODevice *s, QueueState *qs);
-    desc_idx = virtio_console_get_write_len__part3841(s, qs);
-
-        int virtio_console_get_write_len__part3842(VIRTIODevice *s, int *pread_size, int *pwrite_size, int queue_idx, int desc_idx);
-    if (virtio_console_get_write_len__part3842(s, &read_size, &write_size, queue_idx, desc_idx))
-        return 0;
-        int virtio_console_get_write_len__part3843(int write_size);
-    return virtio_console_get_write_len__part3843(write_size);
-
-}
-
-int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len)
-{
-    int queue_idx = 0;
-    QueueState *qs = &s->queue[queue_idx];
-    int desc_idx;
-    uint16_t avail_idx;
-
-    int virtio_console_write_data__part3845(const QueueState *qs);
-    if (virtio_console_write_data__part3845(qs))
-        return 0;
-
-    uint16_t virtio_console_write_data__part3846(VIRTIODevice *s, QueueState *qs);
-    avail_idx = virtio_console_write_data__part3846(s, qs);
-    int virtio_console_write_data__part3847(uint16_t last_avail_idx, uint16_t avail_idx);
-    if (virtio_console_write_data__part3847(qs->last_avail_idx, avail_idx))
-        return 0;
-
-    desc_idx = virtio_read16(s, qs->avail_addr + 4 +
-                             (qs->last_avail_idx & (qs->num - 1)) * 2);
-    memcpy_to_queue(s, queue_idx, desc_idx, 0, buf, buf_len);
-    virtio_consume_desc(s, queue_idx, desc_idx, buf_len);
-    qs->last_avail_idx++;
-    return buf_len;
-}
+int virtio_console_write_data(VIRTIODevice *s, const uint8_t *buf, int buf_len);
 
 
-void virtio_console_resize_event(VIRTIODevice *s, int width, int height)
-{
+void virtio_console_resize_event(VIRTIODevice *s, int width, int height);
 
-    void virtio_console_resize_event__part3850(VIRTIODevice *s, int width, int height);
-    virtio_console_resize_event__part3850(s, width, height);
-
-}
-
-VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs)
-{
-    VIRTIOConsoleDevice *s;
-
-    s = mallocz(sizeof(*s));
-    virtio_init(&s->common, bus,
-                3, 4, virtio_console_recv_request);
-    s->common.device_features = (1 << 0);
-    s->common.queue[0].manual_recv = TRUE;
-
-    s->cs = cs;
-    return (VIRTIODevice *)s;
-}
+VIRTIODevice *virtio_console_init(VIRTIOBusDef *bus, CharacterDevice *cs);
 
 
 
@@ -4206,145 +3387,25 @@ static const uint16_t buttons_list[] = {
 
 static int virtio_input_recv_request(VIRTIODevice *s, int queue_idx,
                                       int desc_idx, int read_size,
-                                      int write_size)
-{
-    void virtio_input_recv_request__part3858(VIRTIODevice *s, int queue_idx, int desc_idx);
-    virtio_input_recv_request__part3858(s, queue_idx, desc_idx);
-
-        int virtio_input_recv_request__part3859(void);
-    return virtio_input_recv_request__part3859();
-
-}
+                                      int write_size);
 
 
 static int virtio_input_queue_event(VIRTIODevice *s,
                                     uint16_t type, uint16_t code,
-                                    uint32_t value)
-{
-    int queue_idx = 0;
-    QueueState *qs = &s->queue[queue_idx];
-    int desc_idx, buf_len;
-    uint16_t avail_idx;
-    uint8_t buf[8];
-
-    extern int virtio_input_queue_event__part3861(const uint32_t *ready);
-    if (virtio_input_queue_event__part3861(&qs->ready))
-        return -1;
-
-
-        void virtio_input_queue_event__part3862(VIRTIODevice *s, QueueState *qs,
-                                            uint16_t type, uint16_t code,
-                                            uint32_t value, uint8_t *buf,
-                                            int *buf_len, uint16_t *avail_idx);
-    virtio_input_queue_event__part3862(s, qs, type, code, value, buf,
-                                       &buf_len, &avail_idx);
-
-    int virtio_input_queue_event__part3863(uint16_t last_avail_idx, uint16_t avail_idx);
-    if (virtio_input_queue_event__part3863(qs->last_avail_idx, avail_idx))
-        return -1;
-
-        int virtio_input_queue_event__part3864(VIRTIODevice *s, int queue_idx,
-                                           const uint8_t *buf, int buf_len);
-    return virtio_input_queue_event__part3864(s, queue_idx, buf, buf_len);
-
-}
+                                    uint32_t value);
 
 int virtio_input_send_key_event(VIRTIODevice *s, BOOL is_down,
-                                uint16_t key_code)
-{
-    VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
-    int ret;
-
-    int virtio_input_send_key_event__part3866(int type);
-    if (virtio_input_send_key_event__part3866(s1->type))
-        return -1;
-
-    ret = virtio_input_queue_event(s, 0x01, key_code, is_down);
-    int virtio_input_send_key_event__part3868(int ret);
-    if (virtio_input_send_key_event__part3868(ret))
-        return ret;
-
-    int virtio_input_send_key_event__part3869(VIRTIODevice *s);
-    return virtio_input_send_key_event__part3869(s);
-}
+                                uint16_t key_code);
 
 
 int virtio_input_send_mouse_event(VIRTIODevice *s, int dx, int dy, int dz,
-                                  unsigned int buttons)
-{
-    VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
-    int ret, i, b, last_b;
+                                  unsigned int buttons);
 
-    {
-    int virtio_input_send_mouse_event__part3871(int input_type);
-    if (virtio_input_send_mouse_event__part3871((int)s1->type) != 0)
-        return -1;
-}
+static void set_bit(uint8_t *tab, int k);
 
-    {
-        int virtio_input_send_mouse_event__part3872(VIRTIODevice *s, int dx, int dy);
-        ret = virtio_input_send_mouse_event__part3872(s, dx, dy);
-        if (ret != 0)
-            return ret;
-    }
+static void virtio_input_config_write(VIRTIODevice *s);
 
-    {
-    int virtio_input_send_mouse_event__part3873(VIRTIODevice *s, int dz);
-    ret = virtio_input_send_mouse_event__part3873(s, dz);
-    if (ret != 0)
-        return ret;
-}
-
-
-    if (buttons != s1->buttons_state) {
-        for(i = 0; i < (sizeof(buttons_list) / sizeof(buttons_list[0])); i++) {
-            b = (buttons >> i) & 1;
-            last_b = (s1->buttons_state >> i) & 1;
-            if (b != last_b) {
-                ret = virtio_input_queue_event(s, 0x01,
-                                               buttons_list[i], b);
-                if (ret != 0)
-                    return ret;
-            }
-        }
-        s1->buttons_state = buttons;
-    }
-
-    return virtio_input_queue_event(s, 0x00, 0, 0);
-}
-
-static void set_bit(uint8_t *tab, int k)
-{
-    void set_bit__part3877(uint8_t *tab, int k);
-    set_bit__part3877(tab, k);
-
-}
-
-static void virtio_input_config_write(VIRTIODevice *s)
-{
-    VIRTIOInputDevice *s1 = (VIRTIOInputDevice *)s;
-    uint8_t *config = s->config_space;
-    int i;
-
-
-        void virtio_input_config_write__part3879(uint8_t *config, int s1_type);
-    virtio_input_config_write__part3879(config, (int)s1->type);
-
-}
-
-VIRTIODevice *virtio_input_init(VIRTIOBusDef *bus, VirtioInputTypeEnum type)
-{
-    VIRTIOInputDevice *s;
-
-    s = mallocz(sizeof(*s));
-    virtio_init(&s->common, bus,
-                18, 256, virtio_input_recv_request);
-    s->common.queue[0].manual_recv = TRUE;
-    s->common.device_features = 0;
-    s->common.config_write = virtio_input_config_write;
-    s->type = type;
-    return (VIRTIODevice *)s;
-}
+VIRTIODevice *virtio_input_init(VIRTIOBusDef *bus, VirtioInputTypeEnum type);
 
 
 
@@ -4363,61 +3424,13 @@ typedef struct VIRTIO9PDevice {
     BOOL req_in_progress;
 } VIRTIO9PDevice;
 
-static FIDDesc *fid_find1(VIRTIO9PDevice *s, uint32_t fid)
-{
-    struct list_head *el;
-    FIDDesc *f;
+static FIDDesc *fid_find1(VIRTIO9PDevice *s, uint32_t fid);
 
-        FIDDesc *fid_find1__part3887(struct list_head *head, struct list_head **el_out, uint32_t fid);
-    f = fid_find1__part3887(&s->fid_list, &el, fid);
-    if (f)
-        return f;
+static FSFile *fid_find(VIRTIO9PDevice *s, uint32_t fid);
 
-        {
-        FIDDesc *(*fid_find1__part3888)(void);
-        return fid_find1__part3888();
-    }
-}
+static void fid_delete(VIRTIO9PDevice *s, uint32_t fid);
 
-static FSFile *fid_find(VIRTIO9PDevice *s, uint32_t fid)
-{
-    FIDDesc *f;
-    FIDDesc *fid_find__part3890(VIRTIO9PDevice *s, uint32_t fid);
-
-    f = fid_find__part3890(s, fid);
-    int fid_find__part3891(const void *f);
-    if (fid_find__part3891(f))
-        return ((void *)0);
-
-    void *fid_find__part3892(FIDDesc *f);
-return fid_find__part3892(f);
-
-}
-
-static void fid_delete(VIRTIO9PDevice *s, uint32_t fid)
-{
-    FIDDesc *f;
-
-    FIDDesc *fid_delete__part3894(VIRTIO9PDevice *s, uint32_t fid);
-    f = fid_delete__part3894(s, fid);
-    void fid_delete__part3895(VIRTIO9PDevice *s, FIDDesc *f);
-    fid_delete__part3895(s, f);
-}
-
-static void fid_set(VIRTIO9PDevice *s, uint32_t fid, FSFile *fd)
-{
-    FIDDesc *fid_set__part3897(VIRTIO9PDevice *s, uint32_t fid);
-
-    FIDDesc *f;
-
-    f = fid_set__part3897(s, fid);
-
-    FIDDesc *fid_set__part3898(FSDevice *fs, struct list_head *fid_list,
-                           uint32_t fid, FSFile *fd, FIDDesc *f);
-
-    f = fid_set__part3898(s->fs, &s->fid_list, fid, fd, f);
-
-}
+static void fid_set(VIRTIO9PDevice *s, uint32_t fid, FSFile *fd);
 static int marshall(VIRTIO9PDevice *s,
                     uint8_t *buf1, int max_len, const char *fmt, ...)
 {
@@ -4764,30 +3777,10 @@ static int unmarshall(VIRTIO9PDevice *s, int queue_idx,
 
 static void virtio_9p_send_reply(VIRTIO9PDevice *s, int queue_idx,
                                  int desc_idx, uint8_t id, uint16_t tag,
-                                 uint8_t *buf, int buf_len)
-{
-    uint8_t *buf1;
-    int len;
-    len = buf_len + 7;
-    buf1 = malloc(len);
-    put_le32(buf1, len);
-    buf1[4] = id + 1;
-    put_le16(buf1 + 5, tag);
-    memcpy(buf1 + 7, buf, buf_len);
-    memcpy_to_queue((VIRTIODevice *)s, queue_idx, desc_idx, 0, buf1, len);
-    virtio_consume_desc((VIRTIODevice *)s, queue_idx, desc_idx, len);
-    free(buf1);
-}
+                                 uint8_t *buf, int buf_len);
 
 static void virtio_9p_send_error(VIRTIO9PDevice *s, int queue_idx,
-                                 int desc_idx, uint16_t tag, uint32_t error)
-{
-    uint8_t buf[4];
-    int buf_len;
-
-    buf_len = marshall(s, buf, sizeof(buf), "w", -error);
-    virtio_9p_send_reply(s, queue_idx, desc_idx, 6, tag, buf, buf_len);
-}
+                                 int desc_idx, uint16_t tag, uint32_t error);
 
 typedef struct {
     VIRTIO9PDevice *dev;
@@ -4797,665 +3790,14 @@ typedef struct {
 } P9OpenInfo;
 
 static void virtio_9p_open_reply(FSDevice *fs, FSQID *qid, int err,
-                                 P9OpenInfo *oi)
-{
-    VIRTIO9PDevice *s = oi->dev;
-    uint8_t buf[32];
-    int buf_len;
-
-    if (err < 0) {
-        virtio_9p_send_error(s, oi->queue_idx, oi->desc_idx, oi->tag, err);
-    } else {
-        buf_len = marshall(s, buf, sizeof(buf),
-                           "Qw", qid, s->msize - 24);
-        virtio_9p_send_reply(s, oi->queue_idx, oi->desc_idx, 12, oi->tag,
-                             buf, buf_len);
-    }
-    void virtio_9p_open_reply__part3909(void *oi);
-    virtio_9p_open_reply__part3909(oi);
-
-}
+                                 P9OpenInfo *oi);
 
 static void virtio_9p_open_cb(FSDevice *fs, FSQID *qid, int err,
-                              void *opaque)
-{
-    P9OpenInfo *oi = opaque;
-    VIRTIO9PDevice *s = oi->dev;
-    int queue_idx = oi->queue_idx;
-
-    virtio_9p_open_reply(fs, qid, err, oi);
-
-    s->req_in_progress = FALSE;
-
-
-    queue_notify((VIRTIODevice *)s, queue_idx);
-}
+                              void *opaque);
 
 static int virtio_9p_recv_request(VIRTIODevice *s1, int queue_idx,
                                    int desc_idx, int read_size,
-                                   int write_size)
-{
-    VIRTIO9PDevice *s = (VIRTIO9PDevice *)s1;
-    int offset, header_len;
-    uint8_t id;
-    uint16_t tag;
-    uint8_t buf[1024];
-    int buf_len, err;
-    FSDevice *fs = s->fs;
-
-    int virtio_9p_recv_request__part3913(int queue_idx);
-    if (virtio_9p_recv_request__part3913(queue_idx))
-        return 0;
-
-
-        int virtio_9p_recv_request__part3914(int req_in_progress);
-    if (virtio_9p_recv_request__part3914(s->req_in_progress))
-        return -1;
-
-    void virtio_9p_recv_request__part3915(int *offset, int *header_len);
-    virtio_9p_recv_request__part3915(&offset, &header_len);
-
-    if (memcpy_from_queue(s1, buf, queue_idx, desc_idx, offset, header_len)) {
-        tag = 0;
-        goto protocol_error;
-    }
-
-    void virtio_9p_recv_request__part3917(const uint8_t *buf, int header_len, uint8_t *id, uint16_t *tag, int *offset);
-    virtio_9p_recv_request__part3917(buf, header_len, &id, &tag, &offset);
-
-    switch(id) {
-    case 8:
-        {
-            FSStatFS st;
-
-            fs->fs_statfs(fs, &st);
-            buf_len = marshall(s, buf, sizeof(buf),
-                               "wwddddddw",
-                               0,
-                               st.f_bsize,
-                               st.f_blocks,
-                               st.f_bfree,
-                               st.f_bavail,
-                               st.f_files,
-                               st.f_ffree,
-                               0,
-                               256
-                               );
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 12:
-        {
-            uint32_t fid, flags;
-            FSFile *f;
-            FSQID qid;
-            P9OpenInfo *oi;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "ww", &fid, &flags))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            oi = malloc(sizeof(*oi));
-            oi->dev = s;
-            oi->queue_idx = queue_idx;
-            oi->desc_idx = desc_idx;
-            oi->tag = tag;
-            err = fs->fs_open(fs, &qid, f, flags, virtio_9p_open_cb, oi);
-            if (err <= 0) {
-                virtio_9p_open_reply(fs, &qid, err, oi);
-            } else {
-                s->req_in_progress = TRUE;
-            }
-        }
-        break;
-    case 14:
-        {
-            uint32_t fid, flags, mode, gid;
-            char *name;
-            FSFile *f;
-            FSQID qid;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wswww", &fid, &name, &flags, &mode, &gid))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f) {
-                err = -71;
-            } else {
-                err = fs->fs_create(fs, &qid, f, name, flags, mode, gid);
-            }
-            free(name);
-            if (err)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf),
-                               "Qw", &qid, s->msize - 24);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 16:
-        {
-            uint32_t fid, gid;
-            char *name, *symgt;
-            FSFile *f;
-            FSQID qid;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wssw", &fid, &name, &symgt, &gid))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f) {
-                err = -71;
-            } else {
-                err = fs->fs_symlink(fs, &qid, f, name, symgt, gid);
-            }
-            free(name);
-            free(symgt);
-            if (err)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf),
-                               "Q", &qid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 18:
-        {
-            uint32_t fid, mode, major, minor, gid;
-            char *name;
-            FSFile *f;
-            FSQID qid;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wswwww", &fid, &name, &mode, &major, &minor, &gid))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f) {
-                err = -71;
-            } else {
-                err = fs->fs_mknod(fs, &qid, f, name, mode, major, minor, gid);
-            }
-            free(name);
-            if (err)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf),
-                               "Q", &qid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 22:
-        {
-            uint32_t fid;
-            char buf1[1024];
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "w", &fid))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f) {
-                err = -71;
-            } else {
-                err = fs->fs_readlink(fs, buf1, sizeof(buf1), f);
-            }
-            if (err)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf), "s", buf1);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 24:
-        {
-            uint32_t fid;
-            uint64_t mask;
-            FSFile *f;
-            FSStat st;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wd", &fid, &mask))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            err = fs->fs_stat(fs, f, &st);
-            if (err)
-                goto error;
-
-            buf_len = marshall(s, buf, sizeof(buf),
-                               "dQwwwddddddddddddddd",
-                               mask, &st.qid,
-                               st.st_mode, st.st_uid, st.st_gid,
-                               st.st_nlink, st.st_rdev, st.st_size,
-                               st.st_blksize, st.st_blocks,
-                               st.st_atime_sec, (uint64_t)st.st_atime_nsec,
-                               st.st_mtime_sec, (uint64_t)st.st_mtime_nsec,
-                               st.st_ctime_sec, (uint64_t)st.st_ctime_nsec,
-                               (uint64_t)0, (uint64_t)0,
-                               (uint64_t)0, (uint64_t)0);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 26:
-        {
-            uint32_t fid, mask, mode, uid, gid;
-            uint64_t size, atime_sec, atime_nsec, mtime_sec, mtime_nsec;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wwwwwddddd", &fid, &mask, &mode, &uid, &gid,
-                           &size, &atime_sec, &atime_nsec,
-                           &mtime_sec, &mtime_nsec))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            err = fs->fs_setattr(fs, f, mask, mode, uid, gid, size, atime_sec,
-                                 atime_nsec, mtime_sec, mtime_nsec);
-            if (err)
-                goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 30:
-        {
-
-            err = -524;
-            goto error;
-        }
-        break;
-    case 40:
-        {
-            uint32_t fid, count;
-            uint64_t offs;
-            uint8_t *buf;
-            int n;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wdw", &fid, &offs, &count))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            buf = malloc(count + 4);
-            n = fs->fs_readdir(fs, f, offs, buf + 4, count);
-            if (n < 0) {
-                err = n;
-                goto error;
-            }
-            put_le32(buf, n);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, n + 4);
-            free(buf);
-        }
-        break;
-    case 50:
-        {
-            uint32_t fid;
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "w", &fid))
-                goto protocol_error;
-
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 52:
-        {
-            uint32_t fid;
-            FSFile *f;
-            FSLock lock;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wbwddws", &fid, &lock.type, &lock.flags,
-                           &lock.start, &lock.length,
-                           &lock.proc_id, &lock.client_id))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                err = -71;
-            else
-                err = fs->fs_lock(fs, f, &lock);
-            free(lock.client_id);
-            if (err < 0)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf), "b", err);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 54:
-        {
-            uint32_t fid;
-            FSFile *f;
-            FSLock lock;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wbddws", &fid, &lock.type,
-                           &lock.start, &lock.length,
-                           &lock.proc_id, &lock.client_id))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                err = -71;
-            else
-                err = fs->fs_getlock(fs, f, &lock);
-            if (err < 0) {
-                free(lock.client_id);
-                goto error;
-            }
-            buf_len = marshall(s, buf, sizeof(buf), "bddws",
-                               &lock.type,
-                               &lock.start, &lock.length,
-                               &lock.proc_id, &lock.client_id);
-            free(lock.client_id);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 70:
-        {
-            uint32_t dfid, fid;
-            char *name;
-            FSFile *f, *df;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wws", &dfid, &fid, &name))
-                goto protocol_error;
-            df = fid_find(s, dfid);
-            f = fid_find(s, fid);
-            if (!df || !f) {
-                err = -71;
-            } else {
-                err = fs->fs_link(fs, df, f, name);
-            }
-            free(name);
-            if (err)
-                goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 72:
-        {
-            uint32_t fid, mode, gid;
-            char *name;
-            FSFile *f;
-            FSQID qid;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wsww", &fid, &name, &mode, &gid))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            err = fs->fs_mkdir(fs, &qid, f, name, mode, gid);
-            if (err != 0)
-                goto error;
-            buf_len = marshall(s, buf, sizeof(buf), "Q", &qid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 74:
-        {
-            uint32_t fid, new_fid;
-            char *name, *new_name;
-            FSFile *f, *new_f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wsws", &fid, &name, &new_fid, &new_name))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            new_f = fid_find(s, new_fid);
-            if (!f || !new_f) {
-                err = -71;
-            } else {
-                err = fs->fs_renameat(fs, f, name, new_f, new_name);
-            }
-            free(name);
-            free(new_name);
-            if (err != 0)
-                goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 76:
-        {
-            uint32_t fid, flags;
-            char *name;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wsw", &fid, &name, &flags))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f) {
-                err = -71;
-            } else {
-                err = fs->fs_unlinkat(fs, f, name);
-            }
-            free(name);
-            if (err != 0)
-                goto error;
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 100:
-        {
-            uint32_t msize;
-            char *version;
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "ws", &msize, &version))
-                goto protocol_error;
-            s->msize = msize;
-
-            free(version);
-            buf_len = marshall(s, buf, sizeof(buf), "ws", s->msize, "9P2000.L");
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 104:
-        {
-            uint32_t fid, afid, uid;
-            char *uname, *aname;
-            FSQID qid;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wwssw", &fid, &afid, &uname, &aname, &uid))
-                goto protocol_error;
-            err = fs->fs_attach(fs, &f, &qid, uid, uname, aname);
-            if (err != 0)
-                goto error;
-            fid_set(s, fid, f);
-            free(uname);
-            free(aname);
-            buf_len = marshall(s, buf, sizeof(buf), "Q", &qid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 108:
-        {
-            uint16_t oldtag;
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "h", &oldtag))
-                goto protocol_error;
-
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    case 110:
-        {
-            uint32_t fid, newfid;
-            uint16_t nwname;
-            FSQID *qids;
-            char **names;
-            FSFile *f;
-            int i;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wwh", &fid, &newfid, &nwname))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            names = mallocz(sizeof(names[0]) * nwname);
-            qids = malloc(sizeof(qids[0]) * nwname);
-            for(i = 0; i < nwname; i++) {
-                if (unmarshall(s, queue_idx, desc_idx, &offset,
-                               "s", &names[i])) {
-                    err = -71;
-                    goto walk_done;
-                }
-            }
-            err = fs->fs_walk(fs, &f, qids, f, nwname, names);
-        walk_done:
-            for(i = 0; i < nwname; i++) {
-                free(names[i]);
-            }
-            free(names);
-            if (err < 0) {
-                free(qids);
-                goto error;
-            }
-            buf_len = marshall(s, buf, sizeof(buf), "h", err);
-            for(i = 0; i < err; i++) {
-                buf_len += marshall(s, buf + buf_len, sizeof(buf) - buf_len,
-                                    "Q", &qids[i]);
-            }
-            free(qids);
-            fid_set(s, newfid, f);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 116:
-        {
-            uint32_t fid, count;
-            uint64_t offs;
-            uint8_t *buf;
-            int n;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wdw", &fid, &offs, &count))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            buf = malloc(count + 4);
-            n = fs->fs_read(fs, f, offs, buf + 4, count);
-            if (n < 0) {
-                err = n;
-                free(buf);
-                goto error;
-            }
-            put_le32(buf, n);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, n + 4);
-            free(buf);
-        }
-        break;
-    case 118:
-        {
-            uint32_t fid, count;
-            uint64_t offs;
-            uint8_t *buf1;
-            int n;
-            FSFile *f;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "wdw", &fid, &offs, &count))
-                goto protocol_error;
-            f = fid_find(s, fid);
-            if (!f)
-                goto fid_not_found;
-            buf1 = malloc(count);
-            if (memcpy_from_queue(s1, buf1, queue_idx, desc_idx, offset,
-                                  count)) {
-                free(buf1);
-                goto protocol_error;
-            }
-            n = fs->fs_write(fs, f, offs, buf1, count);
-            free(buf1);
-            if (n < 0) {
-                err = n;
-                goto error;
-            }
-            buf_len = marshall(s, buf, sizeof(buf), "w", n);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, buf, buf_len);
-        }
-        break;
-    case 120:
-        {
-            uint32_t fid;
-
-            if (unmarshall(s, queue_idx, desc_idx, &offset,
-                           "w", &fid))
-                goto protocol_error;
-            fid_delete(s, fid);
-            virtio_9p_send_reply(s, queue_idx, desc_idx, id, tag, 
-                                                                 ((void *)0)
-                                                                     , 0);
-        }
-        break;
-    default:
-        printf("9p: unsupported operation id=%d\n", id);
-        goto protocol_error;
-    }
-        {
-        int virtio_9p_recv_request__part3919(void);
-        return virtio_9p_recv_request__part3919();
-    }
-
- error:
-    virtio_9p_send_error(s, queue_idx, desc_idx, tag, err);
-    int virtio_9p_recv_request__part3921(void);
-    return virtio_9p_recv_request__part3921();
-  protocol_error:
- fid_not_found:
-    {
-        void virtio_9p_recv_request__part3922(int *err);
-        virtio_9p_recv_request__part3922(&err);
-    }
-    goto error;
-
-        {
-        int virtio_9p_recv_request__part3923(void);
-        if (virtio_9p_recv_request__part3923())
-            goto error;
-    }
-
-}
+                                   int write_size);
 
 VIRTIODevice *virtio_9p_init(VIRTIOBusDef *bus, FSDevice *fs,
-                             const char *mount_tag)
-
-{
-    VIRTIO9PDevice *s;
-    int len;
-    uint8_t *cfg;
-
-    len = strlen(mount_tag);
-    s = mallocz(sizeof(*s));
-    virtio_init(&s->common, bus,
-                9, 2 + len, virtio_9p_recv_request);
-    s->common.device_features = 1 << 0;
-
-
-    cfg = s->common.config_space;
-    cfg[0] = len;
-    cfg[1] = len >> 8;
-    memcpy(cfg + 2, mount_tag, len);
-
-    s->fs = fs;
-    s->msize = 8192;
-    init_list_head(&s->fid_list);
-
-    return (VIRTIODevice *)s;
-}
+                             const char *mount_tag);

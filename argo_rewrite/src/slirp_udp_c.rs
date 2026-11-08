@@ -28,6 +28,617 @@ pub extern "C" fn udp_init__part2869(udb: *mut Socket, udp_last_so: *mut *mut So
 }
 }
 
+// ── `udp_input` · slirp/udp.c:56-226 · chunk 2870 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     udp_input(register struct mbuf *m, int iphlen)
+//     {
+//      Slirp *slirp = m->slirp;
+//      register struct ip *ip;
+//      register struct udphdr *uh;
+//      int len;
+//      struct ip save_ip;
+//      struct socket *so;
+//     
+//      ;
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      if(iphlen > sizeof(struct ip)) {
+//       ip_stripoptions(m, (struct mbuf *)0);
+//       iphlen = sizeof(struct ip);
+//      }
+//     
+//     
+//     
+//     
+//      ip = ((struct ip *)(m)->m_hdr.mh_data);
+//      uh = (struct udphdr *)((caddr_t)ip + iphlen);
+//     
+//     
+//     
+//     
+//     
+//      len = ntohs((uint16_t)uh->uh_ulen);
+//     
+//      if (ip->ip_len != len) {
+//       if (len > ip->ip_len) {
+//        goto bad;
+//       }
+//       m_adj(m, len - ip->ip_len);
+//       ip->ip_len = len;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      save_ip = *ip;
+//      save_ip.ip_len+= iphlen;
+//     
+//     
+//     
+//     
+//      if (uh->uh_sum) {
+//           memset(&((struct ipovly *)ip)->ih_mbuf, 0, sizeof(struct mbuf_ptr));
+//        ((struct ipovly *)ip)->ih_x1 = 0;
+//        ((struct ipovly *)ip)->ih_len = uh->uh_ulen;
+//        if(cksum(m, len + sizeof(struct ip))) {
+//          goto bad;
+//        }
+//      }
+//     
+//     
+//     
+//     
+//             if (ntohs(uh->uh_dport) == 67) {
+//                 bootp_input(m);
+//                 goto bad;
+//             }
+//     
+//             if (slirp->restricted) {
+//                 goto bad;
+//             }
+//      so = slirp->udp_last_so;
+//      if (so->so_lport != uh->uh_sport ||
+//          so->so_laddr.s_addr != ip->ip_src.s_addr) {
+//       struct socket *tmp;
+//     
+//       for (tmp = slirp->udb.so_next; tmp != &slirp->udb;
+//            tmp = tmp->so_next) {
+//        if (tmp->so_lport == uh->uh_sport &&
+//            tmp->so_laddr.s_addr == ip->ip_src.s_addr) {
+//         so = tmp;
+//         break;
+//        }
+//       }
+//       if (tmp == &slirp->udb) {
+//         so = 
+//             ((void *)0)
+//                 ;
+//       } else {
+//         slirp->udp_last_so = so;
+//       }
+//      }
+//     
+//      if (so == 
+//               ((void *)0)
+//                   ) {
+//     
+//     
+//     
+//     
+//        so = socreate(slirp);
+//        if (!so) {
+//            goto bad;
+//        }
+//        if(udp_attach(so) == -1) {
+//         
+//                               ;
+//          sofree(so);
+//          goto bad;
+//        }
+//     
+//     
+//     
+//     
+//        so->so_laddr = ip->ip_src;
+//        so->so_lport = uh->uh_sport;
+//     
+//        if ((so->so_iptos = udp_tos(so)) == 0)
+//          so->so_iptos = ip->ip_tos;
+//     
+//     
+//     
+//     
+//     
+//      }
+//     
+//             so->so_faddr = ip->ip_dst;
+//             so->so_fport = uh->uh_dport;
+//     
+//      iphlen += sizeof(struct udphdr);
+//      m->m_hdr.mh_len -= iphlen;
+//      m->m_hdr.mh_data += iphlen;
+//     
+//     
+//     
+//     
+//      if(sosendto(so,m) == -1) {
+//        m->m_hdr.mh_len += iphlen;
+//        m->m_hdr.mh_data -= iphlen;
+//        *ip=save_ip;
+//        ;
+//        icmp_error(m, 3,0, 0,strerror(
+//                                                               (*__errno_location ())
+//                                                                    ));
+//      }
+//     
+//      m_free(so->so_m);
+//     
+//     
+//      m->m_hdr.mh_len += iphlen;
+//      m->m_hdr.mh_data -= iphlen;
+//      *ip=save_ip;
+//      so->so_m=m;
+//     
+//      return;
+//     bad:
+//      m_free(m);
+//      return;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2870 {
+// Rust rewrite of slirp's udp_input().
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{
+    addr_of_mut, copy_nonoverlapping, null_mut, read_unaligned, write_bytes, write_unaligned,
+};
+
+const BOOTP_SERVER: u16 = 67;
+const ICMP_UNREACH: u8 = 3;
+const ICMP_UNREACH_NET: u8 = 0;
+
+// byte offsets inside the (packed) IP header
+const IP_TOS: usize = 1;
+const IP_LEN: usize = 2;
+const IP_SUM: usize = 10;
+const IP_SRC: usize = 12;
+const IP_DST: usize = 16;
+
+// ---------------------------------------------------------------- C types --
+
+#[repr(C)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct ip { u_int ip_hl:4, ip_v:4; ... } __attribute__((packed));
+#[repr(C, packed)]
+pub struct ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: in_addr,
+    pub ip_dst: in_addr,
+}
+
+#[repr(C, packed)]
+pub struct mbuf_ptr {
+    pub mptr: *mut mbuf,
+}
+
+// struct ipovly is laid out exactly like struct ip
+#[repr(C, packed)]
+pub struct ipovly {
+    pub ih_mbuf: mbuf_ptr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+#[repr(C)]
+pub struct udphdr {
+    pub uh_sport: u16,
+    pub uh_dport: u16,
+    pub uh_ulen: i16,
+    pub uh_sum: u16,
+}
+
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[repr(C)]
+pub struct sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C, packed)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: in_addr,
+    pub ipq_dst: in_addr,
+}
+
+#[repr(C)]
+pub struct BOOTPClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct ex_list {
+    pub ex_pty: c_int,
+    pub ex_addr: in_addr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ex_list,
+}
+
+#[repr(C)]
+pub struct tftp_session {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: in_addr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: in_addr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: timeval,
+    pub exec_list: *mut ex_list,
+    pub m_freelist: mbuf,
+    pub m_usedlist: mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: mbuf,
+    pub if_batchq: mbuf,
+    pub next_m: *mut mbuf,
+    pub ipq: ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BOOTPClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: socket,
+    pub tcp_last_so: *mut socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: socket,
+    pub udp_last_so: *mut socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [tftp_session; 3],
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct tos_t {
+    pub lport: u16,
+    pub fport: u16,
+    pub tos: u8,
+    pub emu: u8,
+}
+
+// ------------------------------------------------------------- C functions --
+
+extern "C" {
+    fn ip_stripoptions(m: *mut mbuf, m0: *mut mbuf);
+    fn m_adj(m: *mut mbuf, len: c_int);
+    fn m_free(m: *mut mbuf);
+    fn cksum(m: *mut mbuf, len: c_int) -> c_int;
+    fn bootp_input(m: *mut mbuf);
+    fn socreate(slirp: *mut Slirp) -> *mut socket;
+    fn udp_attach(so: *mut socket) -> c_int;
+    fn sofree(so: *mut socket);
+    fn sosendto(so: *mut socket, m: *mut mbuf) -> c_int;
+    fn icmp_error(msrc: *mut mbuf, type_: u8, code: u8, minsize: c_int, message: *const c_char);
+    fn __errno_location() -> *mut c_int;
+    fn strerror(errnum: c_int) -> *mut c_char;
+}
+
+// ---------------------------------------------------------------- helpers ---
+
+#[inline]
+fn ntohs(v: u16) -> u16 {
+    u16::from_be(v)
+}
+
+#[inline]
+unsafe fn ip_u16(p: *const ip, off: usize) -> u16 {
+    read_unaligned((p as *const u8).add(off) as *const u16)
+}
+
+#[inline]
+unsafe fn ip_set_u16(p: *mut ip, off: usize, v: u16) {
+    write_unaligned((p as *mut u8).add(off) as *mut u16, v)
+}
+
+#[inline]
+unsafe fn ip_in_addr(p: *const ip, off: usize) -> in_addr {
+    read_unaligned((p as *const u8).add(off) as *const in_addr)
+}
+
+#[inline]
+unsafe fn uh_u16(p: *const udphdr, off: usize) -> u16 {
+    read_unaligned((p as *const u8).add(off) as *const u16)
+}
+
+static UDPTOS: [tos_t; 2] = [
+    tos_t {
+        lport: 0,
+        fport: 53,
+        tos: 0x10,
+        emu: 0,
+    },
+    tos_t {
+        lport: 0,
+        fport: 0,
+        tos: 0,
+        emu: 0,
+    },
+];
+
+// static uint8_t udp_tos(struct socket *so)
+unsafe fn udp_tos(so: *mut socket) -> u8 {
+    let mut i: usize = 0;
+    loop {
+        let t = match UDPTOS.get(i) {
+            Some(t) => t,
+            None => break,
+        };
+        if t.tos == 0 {
+            break;
+        }
+        if (t.fport != 0 && ntohs((*so).so_fport) == t.fport)
+            || (t.lport != 0 && ntohs((*so).so_lport) == t.lport)
+        {
+            (*so).so_emu = t.emu;
+            return t.tos;
+        }
+        i += 1;
+    }
+    0
+}
+
+// ------------------------------------------------------------------ target --
+
+#[no_mangle]
+pub unsafe extern "C" fn udp_input(m: *mut mbuf, mut iphlen: c_int) {
+    let slirp: *mut Slirp = (*m).slirp;
+
+    // Strip IP options, if any.
+    if iphlen > size_of::<ip>() as c_int {
+        ip_stripoptions(m, null_mut());
+        iphlen = size_of::<ip>() as c_int;
+    }
+
+    // Get IP and UDP header together in first mbuf.
+    let ip: *mut ip = (*m).m_hdr.mh_data as *mut ip;
+    let uh: *mut udphdr = (ip as *mut u8).add(iphlen as usize) as *mut udphdr;
+
+    let uh_sport = uh_u16(uh, 0);
+    let uh_dport = uh_u16(uh, 2);
+    let uh_ulen = uh_u16(uh, 4);
+    let uh_sum = uh_u16(uh, 6);
+
+    // Make mbuf data length reflect UDP length.
+    let len: c_int = ntohs(uh_ulen) as c_int;
+
+    let cur_ip_len = ip_u16(ip, IP_LEN) as c_int;
+    if cur_ip_len != len {
+        if len > cur_ip_len {
+            // bad:
+            m_free(m);
+            return;
+        }
+        m_adj(m, len - cur_ip_len);
+        ip_set_u16(ip, IP_LEN, len as u16);
+    }
+
+    // Save a copy of the IP header in case we want to restore it.
+    let mut save_ip = [0u8; size_of::<ip>()];
+    copy_nonoverlapping(ip as *const u8, save_ip.as_mut_ptr(), size_of::<ip>());
+    {
+        let l = read_unaligned(save_ip.as_ptr().add(IP_LEN) as *const u16);
+        let nl = (l as c_int).wrapping_add(iphlen) as u16;
+        write_unaligned(save_ip.as_mut_ptr().add(IP_LEN) as *mut u16, nl);
+    }
+
+    // Checksum extended UDP header and data.
+    if uh_sum != 0 {
+        write_bytes(ip as *mut u8, 0, size_of::<mbuf_ptr>()); // ih_mbuf
+        *((ip as *mut u8).add(size_of::<mbuf_ptr>())) = 0; // ih_x1
+        ip_set_u16(ip, IP_SUM, uh_ulen); // ih_len = uh->uh_ulen
+        if cksum(m, len + size_of::<ip>() as c_int) != 0 {
+            // bad:
+            m_free(m);
+            return;
+        }
+    }
+
+    // handle DHCP/BOOTP
+    if ntohs(uh_dport) == BOOTP_SERVER {
+        bootp_input(m);
+        // bad:
+        m_free(m);
+        return;
+    }
+
+    if (*slirp).restricted != 0 {
+        // bad:
+        m_free(m);
+        return;
+    }
+
+    let ip_src = ip_in_addr(ip, IP_SRC);
+
+    // Locate pcb for datagram.
+    let mut so: *mut socket = (*slirp).udp_last_so;
+    if (*so).so_lport != uh_sport || (*so).so_laddr.s_addr != ip_src.s_addr {
+        let udb_addr: *mut socket = addr_of_mut!((*slirp).udb);
+        let mut tmp: *mut socket = (*slirp).udb.so_next;
+
+        while tmp != udb_addr {
+            if (*tmp).so_lport == uh_sport && (*tmp).so_laddr.s_addr == ip_src.s_addr {
+                so = tmp;
+                break;
+            }
+            tmp = (*tmp).so_next;
+        }
+        if tmp == udb_addr {
+            so = null_mut();
+        } else {
+            (*slirp).udp_last_so = so;
+        }
+    }
+
+    if so.is_null() {
+        // If there's no socket for this packet, create one.
+        so = socreate(slirp);
+        if so.is_null() {
+            // bad:
+            m_free(m);
+            return;
+        }
+        if udp_attach(so) == -1 {
+            sofree(so);
+            // bad:
+            m_free(m);
+            return;
+        }
+
+        // Setup fields
+        (*so).so_laddr = ip_src;
+        (*so).so_lport = uh_sport;
+
+        let tos = udp_tos(so);
+        (*so).so_iptos = tos;
+        if tos == 0 {
+            (*so).so_iptos = *((ip as *const u8).add(IP_TOS));
+        }
+    }
+
+    (*so).so_faddr = ip_in_addr(ip, IP_DST);
+    (*so).so_fport = uh_dport;
+
+    iphlen += size_of::<udphdr>() as c_int;
+    (*m).m_hdr.mh_len -= iphlen;
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(iphlen as isize);
+
+    // Now we sendto() the packet.
+    if sosendto(so, m) == -1 {
+        (*m).m_hdr.mh_len += iphlen;
+        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(-(iphlen as isize));
+        // *ip = save_ip
+        copy_nonoverlapping(save_ip.as_ptr(), ip as *mut u8, size_of::<ip>());
+        let err = *__errno_location();
+        icmp_error(m, ICMP_UNREACH, ICMP_UNREACH_NET, 0, strerror(err));
+    }
+
+    m_free((*so).so_m); // used for ICMP if error on sorecvfrom
+
+    // restore the orig mbuf packet
+    (*m).m_hdr.mh_len += iphlen;
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(-(iphlen as isize));
+    copy_nonoverlapping(save_ip.as_ptr(), ip as *mut u8, size_of::<ip>());
+    (*so).so_m = m; // ICMP backup
+}
+}
+
 // ── `Slirp *slirp = m->slirp; register struct ip *ip; register struct udphdr *uh; int len; struct ip…` · slirp/udp.c:59-68 · chunk 2871 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1377,6 +1988,260 @@ pub mod chunk2886 {
 pub extern "C" fn udp_input__part2886() {}
 }
 
+// ── `udp_output2` · slirp/udp.c:228-277 · chunk 2887 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int udp_output2(struct socket *so, struct mbuf *m,
+//                     struct sockaddr_in *saddr, struct sockaddr_in *daddr,
+//                     int iptos)
+//     {
+//      register struct udpiphdr *ui;
+//      int error = 0;
+//     
+//      ;
+//      ;
+//      ;
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//      m->m_hdr.mh_data -= sizeof(struct udpiphdr);
+//      m->m_hdr.mh_len += sizeof(struct udpiphdr);
+//     
+//     
+//     
+//     
+//     
+//      ui = ((struct udpiphdr *)(m)->m_hdr.mh_data);
+//         memset(&ui->ui_i.ih_mbuf, 0 , sizeof(struct mbuf_ptr));
+//      ui->ui_i.ih_x1 = 0;
+//      ui->ui_i.ih_pr = 
+//                 IPPROTO_UDP
+//                            ;
+//      ui->ui_i.ih_len = htons(m->m_hdr.mh_len - sizeof(struct ip));
+//     
+//             ui->ui_i.ih_src = saddr->sin_addr;
+//      ui->ui_i.ih_dst = daddr->sin_addr;
+//      ui->ui_u.uh_sport = saddr->sin_port;
+//      ui->ui_u.uh_dport = daddr->sin_port;
+//      ui->ui_u.uh_ulen = ui->ui_i.ih_len;
+//     
+//     
+//     
+//     
+//      ui->ui_u.uh_sum = 0;
+//      if ((ui->ui_u.uh_sum = cksum(m, m->m_hdr.mh_len)) == 0)
+//       ui->ui_u.uh_sum = 0xffff;
+//      ((struct ip *)ui)->ip_len = m->m_hdr.mh_len;
+//     
+//      ((struct ip *)ui)->ip_ttl = 64;
+//      ((struct ip *)ui)->ip_tos = iptos;
+//     
+//      error = ip_output(so, m);
+//     
+//      return (error);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2887 {
+// Rust port of slirp's udp_output2().
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int};
+
+// ---------------------------------------------------------------------------
+// C types this function can see (exact layout mirrors)
+// ---------------------------------------------------------------------------
+
+// typedef struct Slirp Slirp; opaque here.
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+// struct socket; opaque here (only pointer passing / forwarding).
+#[repr(C)]
+pub struct Socket {
+    _private: [u8; 0],
+}
+
+// struct in_addr { in_addr_t s_addr; } with typedef uint32_t in_addr_t;
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+// struct sockaddr_in
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct SockaddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: in_addr,
+    pub sin_zero: [u8; 8],
+}
+
+// struct mbuf_ptr { struct mbuf *mptr; } __attribute__((packed));
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct mbuf_ptr {
+    pub mptr: *mut Mbuf,
+}
+
+// struct ipovly { ... } __attribute__((packed));
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipovly {
+    pub ih_mbuf: mbuf_ptr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+// struct udphdr { uint16_t uh_sport; uint16_t uh_dport; int16_t uh_ulen; uint16_t uh_sum; };
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct udphdr {
+    pub uh_sport: u16,
+    pub uh_dport: u16,
+    pub uh_ulen: i16,
+    pub uh_sum: u16,
+}
+
+// struct udpiphdr { struct ipovly ui_i; struct udphdr ui_u; };
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct udpiphdr {
+    pub ui_i: ipovly,
+    pub ui_u: udphdr,
+}
+
+// struct m_hdr { ... };
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char, // caddr_t
+    pub mh_len: c_int,
+}
+
+// union M_dat { char m_dat_[1]; char *m_ext_; };
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+// struct mbuf { struct m_hdr m_hdr; Slirp *slirp; union M_dat M_dat; };
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: M_dat,
+}
+
+// ---------------------------------------------------------------------------
+// Layout constants derived from the mirrors above
+// ---------------------------------------------------------------------------
+
+const PTR: usize = core::mem::size_of::<mbuf_ptr>();
+const OFF_X1: usize = PTR; // ipovly.ih_x1  (also struct ip's ip_ttl overlay)
+const OFF_PR: usize = PTR + 1; // ipovly.ih_pr  (also ip_p)
+const OFF_LEN: usize = PTR + 2; // ipovly.ih_len (also ip_sum)
+const OFF_SRC: usize = PTR + 4;
+const OFF_DST: usize = PTR + 8;
+const OFF_SPORT: usize = PTR + 12;
+const OFF_DPORT: usize = PTR + 14;
+const OFF_ULEN: usize = PTR + 16;
+const OFF_SUM: usize = PTR + 18;
+
+// struct ip overlay offsets
+const OFF_IP_TOS: usize = 1;
+const OFF_IP_LEN: usize = 2;
+
+const SIZEOF_IP: c_int = 20; // sizeof(struct ip), packed
+const IPPROTO_UDP: u8 = 17;
+const IPDEFTTL: u8 = 64;
+
+#[inline]
+unsafe fn store<T>(base: *mut u8, off: usize, val: T) {
+    core::ptr::write_unaligned(base.add(off) as *mut T, val);
+}
+
+extern "C" {
+    fn cksum(m: *mut Mbuf, len: c_int) -> c_int;
+    fn ip_output(so: *mut Socket, m: *mut Mbuf) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn udp_output2(
+    so: *mut Socket,
+    m: *mut Mbuf,
+    saddr: *mut SockaddrIn,
+    daddr: *mut SockaddrIn,
+    iptos: c_int,
+) -> c_int {
+    let mut error: c_int = 0;
+
+    // Adjust for header
+    // m->m_hdr.mh_data -= sizeof(struct udpiphdr);
+    let hdr_size = core::mem::size_of::<udpiphdr>();
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(-(hdr_size as isize));
+    // m->m_hdr.mh_len += sizeof(struct udpiphdr);
+    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(hdr_size as c_int);
+
+    // ui = mtod(m, struct udpiphdr *)
+    let ui: *mut u8 = (*m).m_hdr.mh_data as *mut u8;
+
+    // memset(&ui->ui_i.ih_mbuf, 0, sizeof(struct mbuf_ptr));
+    core::ptr::write_bytes(ui, 0, core::mem::size_of::<mbuf_ptr>());
+    store(ui, OFF_X1, 0u8);
+    store(ui, OFF_PR, IPPROTO_UDP);
+    // ui->ui_i.ih_len = htons(m->m_hdr.mh_len - sizeof(struct ip));
+    let ih_len: u16 = (*m)
+        .m_hdr
+        .mh_len
+        .wrapping_sub(SIZEOF_IP)
+        .to_be() as u16;
+    store(ui, OFF_LEN, ih_len);
+
+    store(ui, OFF_SRC, (*saddr).sin_addr);
+    store(ui, OFF_DST, (*daddr).sin_addr);
+    store(ui, OFF_SPORT, (*saddr).sin_port);
+    store(ui, OFF_DPORT, (*daddr).sin_port);
+    store(ui, OFF_ULEN, ih_len as i16);
+
+    // Stuff checksum and output datagram.
+    store(ui, OFF_SUM, 0u16);
+    let sum: u16 = cksum(m, (*m).m_hdr.mh_len) as u16;
+    store(ui, OFF_SUM, sum);
+    if sum == 0 {
+        store(ui, OFF_SUM, 0xffffu16);
+    }
+
+    // ((struct ip *)ui)->ip_len = m->m_hdr.mh_len;
+    store(ui, OFF_IP_LEN, (*m).m_hdr.mh_len as u16);
+    // ((struct ip *)ui)->ip_ttl = IPDEFTTL;
+    store(ui, OFF_X1, IPDEFTTL);
+    // ((struct ip *)ui)->ip_tos = iptos;
+    store(ui, OFF_IP_TOS, iptos as u8);
+
+    error = ip_output(so, m);
+
+    error
+}
+}
+
 // ── `register struct udpiphdr *ui; int error = 0; ; ; ; ; ; m->m_hdr.mh_data -= sizeof(struct udpiph…` · slirp/udp.c:232-266 · chunk 2888 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1743,6 +2608,165 @@ pub extern "C" fn udp_output2__part2890(
 }
 }
 
+// ── `udp_output` · slirp/udp.c:279-302 · chunk 2891 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int udp_output(struct socket *so, struct mbuf *m,
+//                    struct sockaddr_in *addr)
+//     
+//     {
+//         Slirp *slirp = so->slirp;
+//         struct sockaddr_in saddr, daddr;
+//     
+//         saddr = *addr;
+//         if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
+//             slirp->vnetwork_addr.s_addr) {
+//             uint32_t inv_mask = ~slirp->vnetwork_mask.s_addr;
+//     
+//             if ((so->so_faddr.s_addr & inv_mask) == inv_mask) {
+//                 saddr.sin_addr = slirp->vhost_addr;
+//             } else if (addr->sin_addr.s_addr == loopback_addr.s_addr ||
+//                        so->so_faddr.s_addr != slirp->vhost_addr.s_addr) {
+//                 saddr.sin_addr = so->so_faddr;
+//             }
+//         }
+//         daddr.sin_addr = so->so_laddr;
+//         daddr.sin_port = so->so_lport;
+//     
+//         return udp_output2(so, m, &saddr, &daddr, so->so_iptos);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2891 {
+// Rust rewrite of slirp's udp_output().
+
+use core::ffi::{c_int, c_uchar, c_uint, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+#[allow(non_snake_case)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+#[allow(non_snake_case)]
+pub struct SockAddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: InAddr,
+    pub sin_zero: [c_uchar; 8],
+}
+
+#[repr(C)]
+#[allow(non_snake_case)]
+pub struct SBuf {
+    pub sb_cc: c_uint,
+    pub sb_hiwat: c_uint,
+    pub sb_mbcnt: c_uint,
+    pub sb_mbmax: c_uint,
+    pub sb_lowat: c_int,
+    pub sb_flags: c_int,
+    pub sb_want: c_int,
+    pub sb_wait: *mut c_void,
+    pub sb_ctl: *mut c_void,
+    pub sb_data: *mut c_void,
+}
+
+#[repr(C)]
+#[allow(non_snake_case)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: c_uchar,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: SBuf,
+    pub so_snd: SBuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+#[allow(non_snake_case)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [u8; 33],
+}
+
+extern "C" {
+    fn udp_output2(
+        so: *mut Socket,
+        m: *mut c_void,
+        saddr: *mut SockAddrIn,
+        daddr: *mut SockAddrIn,
+        iptos: c_int,
+    ) -> c_int;
+    #[allow(non_upper_case_globals)]
+    static loopback_addr: InAddr;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn udp_output(
+    so: *mut Socket,
+    m: *mut c_void,
+    addr: *mut SockAddrIn,
+) -> c_int {
+    let slirp: *mut Slirp = (*so).slirp;
+
+    let mut saddr: SockAddrIn = core::ptr::read(addr);
+    let mut daddr: SockAddrIn = SockAddrIn {
+        sin_family: 0,
+        sin_port: 0,
+        sin_addr: InAddr { s_addr: 0 },
+        sin_zero: [0; 8],
+    };
+
+    if ((*so).so_faddr.s_addr & (*slirp).vnetwork_mask.s_addr)
+        == (*slirp).vnetwork_addr.s_addr
+    {
+        let inv_mask: u32 = !(*slirp).vnetwork_mask.s_addr;
+
+        if ((*so).so_faddr.s_addr & inv_mask) == inv_mask {
+            saddr.sin_addr = (*slirp).vhost_addr;
+        } else if (*addr).sin_addr.s_addr == loopback_addr.s_addr
+            || (*so).so_faddr.s_addr != (*slirp).vhost_addr.s_addr
+        {
+            saddr.sin_addr = (*so).so_faddr;
+        }
+    }
+    daddr.sin_addr = (*so).so_laddr;
+    daddr.sin_port = (*so).so_lport;
+
+    udp_output2(
+        so,
+        m,
+        &mut saddr as *mut SockAddrIn,
+        &mut daddr as *mut SockAddrIn,
+        (*so).so_iptos as c_int,
+    )
+}
+}
+
 // ── `Slirp *slirp = so->slirp; struct sockaddr_in saddr, daddr; saddr = *addr;` · slirp/udp.c:283-286 · chunk 2892 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1974,6 +2998,198 @@ pub extern "C" fn udp_output__part2894(
 }
 }
 
+// ── `udp_attach` · slirp/udp.c:304-312 · chunk 2895 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int
+//     udp_attach(struct socket *so)
+//     {
+//       if((so->s = os_socket(
+//                            2
+//                                   ,
+//                                    SOCK_DGRAM
+//                                              ,0)) != -1) {
+//         so->so_expire = curtime + 240000;
+//         slirp_insque(so, &so->slirp->udb);
+//       }
+//       return(so->s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2895 {
+// Port of slirp udp_attach(): int udp_attach(struct socket *so)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+
+const AF_INET: c_int = 2;
+const SOCK_DGRAM: c_int = 2;
+const SO_EXPIRE: c_uint = 240000;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TimeVal {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut MBuf,
+    pub mh_prev: *mut MBuf,
+    pub mh_nextpkt: *mut MBuf,
+    pub mh_prevpkt: *mut MBuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct MBuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MDat,
+}
+
+#[repr(C)]
+pub struct QLink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+pub struct IpQ {
+    pub frag_link: QLink,
+    pub ip_link: QLink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct SBuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut MBuf,
+    pub so_ti: *mut c_void, // struct tcpiphdr *
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void, // struct tcpcb *
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: SBuf,
+    pub so_snd: SBuf,
+    pub extra: *mut c_void,
+}
+
+// Only the leading part of `struct Slirp` (through `udb`) is mirrored: the
+// code below never needs anything past `udb`, and the offsets of every earlier
+// field match the C layout exactly.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: TimeVal,
+    pub exec_list: *mut ExList,
+    pub m_freelist: MBuf,
+    pub m_usedlist: MBuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: MBuf,
+    pub if_batchq: MBuf,
+    pub next_m: *mut MBuf,
+    pub ipq: IpQ,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: Socket,
+}
+
+extern "C" {
+    fn os_socket(domain: c_int, type_: c_int, protocol: c_int) -> c_int;
+    fn slirp_insque(a: *mut c_void, b: *mut c_void);
+    static mut curtime: c_uint;
+}
+
+#[no_mangle]
+pub extern "C" fn udp_attach(so: *mut Socket) -> c_int {
+    unsafe {
+        let s = os_socket(AF_INET, SOCK_DGRAM, 0);
+        (*so).s = s;
+        if s != -1 {
+            (*so).so_expire = curtime.wrapping_add(SO_EXPIRE);
+            let slirp = (*so).slirp;
+            slirp_insque(
+                so as *mut c_void,
+                core::ptr::addr_of_mut!((*slirp).udb) as *mut c_void,
+            );
+        }
+        (*so).s
+    }
+}
+}
+
 // ── `if (so->s = os_socket( 2 , SOCK_DGRAM ,0)) != -1)` · slirp/udp.c:307-310 · chunk 2896 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2066,6 +3282,53 @@ pub extern "C" fn udp_attach__part2897(so: *mut SocketPrefix) -> c_int {
 }
 }
 
+// ── `udp_detach` · slirp/udp.c:314-319 · chunk 2898 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     udp_detach(struct socket *so)
+//     {
+//      close(so->s);
+//      sofree(so);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2898 {
+// Rewrite of slirp/udp.c: udp_detach
+//
+// void udp_detach(struct socket *so)
+// {
+//     close(so->s);   /* closesocket(s) => close(s) */
+//     sofree(so);
+// }
+
+use core::ffi::c_int;
+
+// Prefix of `struct socket` up to the `s` field; the layout of the
+// accessed member is preserved exactly.
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+}
+
+extern "C" {
+    fn close(fd: c_int) -> c_int;
+    fn sofree(so: *mut Socket);
+}
+
+#[no_mangle]
+pub extern "C" fn udp_detach(so: *mut Socket) {
+    unsafe {
+        if so.is_null() {
+            return;
+        }
+        let _ = close((*so).s);
+        sofree(so);
+    }
+}
+}
+
 // ── `close(so->s); sofree(so);` · slirp/udp.c:317-318 · chunk 2899 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2132,6 +3395,102 @@ pub extern "C" fn udp_detach__part2899(so: *mut Socket) {
         close((*so).s);
         sofree(so);
     }
+}
+}
+
+// ── `udp_tos` · slirp/udp.c:326-341 · chunk 2901 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint8_t
+//     udp_tos(struct socket *so)
+//     {
+//      int i = 0;
+//     
+//      while(udptos[i].tos) {
+//       if ((udptos[i].fport && ntohs(so->so_fport) == udptos[i].fport) ||
+//           (udptos[i].lport && ntohs(so->so_lport) == udptos[i].lport)) {
+//            so->so_emu = udptos[i].emu;
+//        return udptos[i].tos;
+//       }
+//       i++;
+//      }
+//     
+//      return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2901 {
+// Rewrite of slirp/udp.c:udp_tos
+
+use core::ffi::{c_int, c_uint};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct SocketPrefix {
+    pub so_next: *mut SocketPrefix,
+    pub so_prev: *mut SocketPrefix,
+    pub s: c_int,
+    pub slirp: *mut core::ffi::c_void,
+    pub so_m: *mut core::ffi::c_void,
+    pub so_ti: *mut core::ffi::c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct TosT {
+    lport: u16,
+    fport: u16,
+    tos: u8,
+    emu: u8,
+}
+
+static UDPTOS: [TosT; 2] = [
+    TosT {
+        lport: 0,
+        fport: 53,
+        tos: 0x10,
+        emu: 0,
+    },
+    TosT {
+        lport: 0,
+        fport: 0,
+        tos: 0,
+        emu: 0,
+    },
+];
+
+extern "C" {
+    fn ntohs(netshort: u16) -> u16;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn udp_tos(so: *mut SocketPrefix) -> u8 {
+    let mut i: c_uint = 0;
+    loop {
+        let e = UDPTOS[i as usize];
+        if e.tos == 0 {
+            break;
+        }
+        let sp = &mut *so;
+        let fport_match = e.fport != 0 && ntohs(sp.so_fport) == e.fport;
+        let lport_match = e.lport != 0 && ntohs(sp.so_lport) == e.lport;
+        if fport_match || lport_match {
+            sp.so_emu = e.emu;
+            return e.tos;
+        }
+        i += 1;
+    }
+    0
 }
 }
 
@@ -2247,6 +3606,350 @@ pub mod chunk2903 {
 #[no_mangle]
 pub extern "C" fn udp_tos__part2903() -> u8 {
     0
+}
+}
+
+// ── `udp_listen` · slirp/udp.c:343-386 · chunk 2904 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     struct socket *
+//     udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
+//                u_int lport, int flags)
+//     {
+//      struct sockaddr_in addr;
+//      struct socket *so;
+//      socklen_t addrlen = sizeof(struct sockaddr_in), opt = 1;
+//     
+//      so = socreate(slirp);
+//      if (!so) {
+//          return 
+//                ((void *)0)
+//                    ;
+//      }
+//      so->s = os_socket(
+//                       2
+//                              ,
+//                               SOCK_DGRAM
+//                                         ,0);
+//      so->so_expire = curtime + 240000;
+//      slirp_insque(so, &slirp->udb);
+//     
+//      addr.sin_family = 
+//                       2
+//                              ;
+//      addr.sin_addr.s_addr = haddr;
+//      addr.sin_port = hport;
+//     
+//      if (bind(so->s,(struct sockaddr *)&addr, addrlen) < 0) {
+//       udp_detach(so);
+//       return 
+//             ((void *)0)
+//                 ;
+//      }
+//      setsockopt(so->s,
+//                      1
+//                                ,
+//                                 2
+//                                             ,(char *)&opt,sizeof(int));
+//     
+//      getsockname(so->s,(struct sockaddr *)&addr,&addrlen);
+//      so->so_fport = addr.sin_port;
+//      if (addr.sin_addr.s_addr == 0 ||
+//          addr.sin_addr.s_addr == loopback_addr.s_addr) {
+//         so->so_faddr = slirp->vhost_addr;
+//      } else {
+//         so->so_faddr = addr.sin_addr;
+//      }
+//      so->so_lport = lport;
+//      so->so_laddr.s_addr = laddr;
+//      if (flags != 0x200)
+//         so->so_expire = 0;
+//     
+//      so->so_state &= 0xf000;
+//      so->so_state |= 0x004 | flags;
+//     
+//      return so;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2904 {
+// Rust port of slirp/udp.c: udp_listen()
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_ushort};
+
+pub type u_int = c_uint;
+pub type u_char = core::ffi::c_uchar;
+pub type in_addr_t = u32;
+pub type in_port_t = u16;
+pub type sa_family_t = c_ushort;
+pub type socklen_t = c_uint;
+pub type tcp_seq = u32;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: in_addr_t,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct timeval {
+    pub tv_sec: core::ffi::c_long,
+    pub tv_usec: core::ffi::c_long,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct sockaddr {
+    pub sa_family: sa_family_t,
+    pub sa_data: [c_char; 14],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct sockaddr_in {
+    pub sin_family: sa_family_t,
+    pub sin_port: in_port_t,
+    pub sin_addr: in_addr,
+    pub sin_zero: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct qlink {
+    pub next: *mut core::ffi::c_void,
+    pub prev: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct mbuf_ptr {
+    pub mptr: *mut core::ffi::c_void,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipovly {
+    pub ih_mbuf: mbuf_ptr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: in_addr,
+    pub ipq_dst: in_addr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct BOOTPClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct tftp_session {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: in_addr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct mbuf {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+    pub slirp: *mut Slirp,
+    pub m_dat: [u8; 8],
+}
+
+#[repr(C)]
+pub struct sbuf {
+    pub sb_cc: u_int,
+    pub sb_datalen: u_int,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut core::ffi::c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u_char,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut core::ffi::c_void,
+    pub so_expire: u_int,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+pub struct ex_list {
+    pub ex_pty: c_int,
+    pub ex_addr: in_addr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ex_list,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: in_addr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: timeval,
+    pub exec_list: *mut ex_list,
+    pub m_freelist: mbuf,
+    pub m_usedlist: mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: mbuf,
+    pub if_batchq: mbuf,
+    pub next_m: *mut mbuf,
+    pub ipq: ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BOOTPClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: socket,
+    pub tcp_last_so: *mut socket,
+    pub tcp_iss: tcp_seq,
+    pub tcp_now: u32,
+    pub udb: socket,
+    pub udp_last_so: *mut socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [tftp_session; 3],
+    pub opaque: *mut core::ffi::c_void,
+}
+
+extern "C" {
+    static mut curtime: u_int;
+    static mut loopback_addr: in_addr;
+
+    fn socreate(slirp: *mut Slirp) -> *mut socket;
+    fn udp_detach(so: *mut socket);
+    fn os_socket(domain: c_int, type_: c_int, protocol: c_int) -> c_int;
+    fn slirp_insque(next: *mut core::ffi::c_void, prev: *mut core::ffi::c_void);
+    fn bind(fd: c_int, addr: *const sockaddr, len: socklen_t) -> c_int;
+    fn setsockopt(
+        fd: c_int,
+        level: c_int,
+        optname: c_int,
+        optval: *const core::ffi::c_void,
+        optlen: socklen_t,
+    ) -> c_int;
+    fn getsockname(fd: c_int, addr: *mut sockaddr, len: *mut socklen_t) -> c_int;
+}
+
+const AF_INET: c_int = 2;
+const SOCK_DGRAM: c_int = 2;
+const SOL_SOCKET: c_int = 1;
+const SO_REUSEADDR: c_int = 2;
+const SO_EXPIRE: u_int = 240000;
+const SS_FACCEPTONCE: c_int = 0x200;
+const SS_PERSISTENT_MASK: c_int = 0xf000;
+const SS_ISFCONNECTED: c_int = 0x004;
+
+#[no_mangle]
+pub unsafe extern "C" fn udp_listen(
+    slirp: *mut Slirp,
+    haddr: u32,
+    hport: u_int,
+    laddr: u32,
+    lport: u_int,
+    flags: c_int,
+) -> *mut socket {
+    let mut addr: sockaddr_in = core::mem::zeroed();
+    let mut addrlen: socklen_t = core::mem::size_of::<sockaddr_in>() as socklen_t;
+    let mut opt: socklen_t = 1;
+
+    let so = socreate(slirp);
+    if so.is_null() {
+        return core::ptr::null_mut();
+    }
+    (*so).s = os_socket(AF_INET, SOCK_DGRAM, 0);
+    (*so).so_expire = curtime.wrapping_add(SO_EXPIRE);
+    slirp_insque(
+        so as *mut core::ffi::c_void,
+        &mut (*slirp).udb as *mut socket as *mut core::ffi::c_void,
+    );
+
+    addr.sin_family = AF_INET as sa_family_t;
+    addr.sin_addr.s_addr = haddr;
+    addr.sin_port = hport as u16;
+
+    if bind((*so).s, &addr as *const sockaddr_in as *const sockaddr, addrlen) < 0 {
+        udp_detach(so);
+        return core::ptr::null_mut();
+    }
+    setsockopt(
+        (*so).s,
+        SOL_SOCKET,
+        SO_REUSEADDR,
+        &opt as *const socklen_t as *const core::ffi::c_void,
+        core::mem::size_of::<c_int>() as socklen_t,
+    );
+
+    getsockname(
+        (*so).s,
+        &mut addr as *mut sockaddr_in as *mut sockaddr,
+        &mut addrlen,
+    );
+    (*so).so_fport = addr.sin_port;
+    if addr.sin_addr.s_addr == 0 || addr.sin_addr.s_addr == loopback_addr.s_addr {
+        (*so).so_faddr = (*slirp).vhost_addr;
+    } else {
+        (*so).so_faddr = addr.sin_addr;
+    }
+    (*so).so_lport = lport as u16;
+    (*so).so_laddr.s_addr = laddr;
+    if flags != SS_FACCEPTONCE {
+        (*so).so_expire = 0;
+    }
+
+    (*so).so_state &= SS_PERSISTENT_MASK;
+    (*so).so_state |= SS_ISFCONNECTED | flags;
+
+    so
 }
 }
 

@@ -1,5 +1,43 @@
 //! From `cutils.c`.
 
+// ── `mallocz` · cutils.c:35-43 · chunk 413 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void *mallocz(size_t size)
+//     {
+//         void *ptr;
+//         ptr = malloc(size);
+//         if (!ptr)
+//             return 
+//                   ((void *)0)
+//                       ;
+//         memset(ptr, 0, size);
+//         return ptr;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk413 {
+// Rust rewrite of cutils.c's mallocz:
+//   void *mallocz(size_t size)
+use core::ffi::{c_int, c_void};
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn memset(dest: *mut c_void, c: c_int, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub extern "C" fn mallocz(size: usize) -> *mut c_void {
+    unsafe {
+        let ptr = malloc(size);
+        if ptr.is_null() {
+            return core::ptr::null_mut();
+        }
+        memset(ptr, 0, size);
+        ptr
+    }
+}
+}
+
 // ── `void *ptr; ptr = malloc(size);` · cutils.c:37-38 · chunk 414 · nvidia/nemotron-3.5-lightning · 5 attempt(s) · Unvalidated
 //
 // Original C:
@@ -53,6 +91,52 @@ pub extern "C" fn mallocz__part416(ptr: *mut c_void, size: c_ulong) -> *mut c_vo
         memset(ptr, 0, size);
         ptr
     }
+}
+}
+
+// ── `pstrcpy` · cutils.c:45-60 · chunk 417 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void pstrcpy(char *buf, int buf_size, const char *str)
+//     {
+//         int c;
+//         char *q = buf;
+//     
+//         if (buf_size <= 0)
+//             return;
+//     
+//         for(;;) {
+//             c = *str++;
+//             if (c == 0 || q >= buf + buf_size - 1)
+//                 break;
+//             *q++ = c;
+//         }
+//         *q = '\0';
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk417 {
+use core::ffi::{c_char, c_int};
+
+#[no_mangle]
+pub unsafe extern "C" fn pstrcpy(buf: *mut c_char, buf_size: c_int, str_: *const c_char) {
+    if buf_size <= 0 {
+        return;
+    }
+
+    let mut q: *mut c_char = buf;
+    let last: *mut c_char = buf.wrapping_add(buf_size as usize - 1);
+    let mut s: *const c_char = str_;
+
+    loop {
+        let c: c_char = *s;
+        s = s.wrapping_add(1);
+        if c == 0 || q >= last {
+            break;
+        }
+        *q = c;
+        q = q.wrapping_add(1);
+    }
+    *q = 0;
 }
 }
 
@@ -142,6 +226,46 @@ pub extern "C" fn pstrcpy__part420(q: *mut c_char) {
 }
 }
 
+// ── `pstrcat` · cutils.c:62-69 · chunk 421 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     char *pstrcat(char *buf, int buf_size, const char *s)
+//     {
+//         int len;
+//         len = strlen(buf);
+//         if (len < buf_size)
+//             pstrcpy(buf + len, buf_size - len, s);
+//         return buf;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk421 {
+// Port of cutils.c pstrcat: append s to the NUL-terminated string in buf,
+// truncating so the result fits in buf_size bytes.
+
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn strlen(s: *const c_char) -> usize;
+    fn pstrcpy(buf: *mut c_char, buf_size: c_int, str_: *const c_char);
+}
+
+#[no_mangle]
+pub extern "C" fn pstrcat(buf: *mut c_char, buf_size: c_int, s: *const c_char) -> *mut c_char {
+    unsafe {
+        // C: int len = strlen(buf);  (implicit size_t -> int conversion)
+        let len: c_int = strlen(buf) as c_int;
+        if len < buf_size {
+            pstrcpy(
+                buf.wrapping_offset(len as isize),
+                buf_size.wrapping_sub(len),
+                s,
+            );
+        }
+    }
+    buf
+}
+}
+
 // ── `int len; len = strlen(buf);` · cutils.c:64-65 · chunk 422 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -201,6 +325,52 @@ use std::ffi::c_char;
 #[no_mangle]
 pub extern "C" fn pstrcat__part424(buf: *mut c_char) -> *mut c_char {
     buf
+}
+}
+
+// ── `strstart` · cutils.c:71-85 · chunk 425 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int strstart(const char *str, const char *val, const char **ptr)
+//     {
+//         const char *p, *q;
+//         p = str;
+//         q = val;
+//         while (*q != '\0') {
+//             if (*p != *q)
+//                 return 0;
+//             p++;
+//             q++;
+//         }
+//         if (ptr)
+//             *ptr = p;
+//         return 1;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk425 {
+use core::ffi::{c_char, c_int};
+
+#[no_mangle]
+pub unsafe extern "C" fn strstart(
+    str: *const c_char,
+    val: *const c_char,
+    ptr: *mut *const c_char,
+) -> c_int {
+    let mut p: *const c_char = str;
+    let mut q: *const c_char = val;
+
+    while *q != 0 {
+        if *p != *q {
+            return 0;
+        }
+        p = p.add(1);
+        q = q.add(1);
+    }
+
+    if !ptr.is_null() {
+        *ptr = p;
+    }
+    1
 }
 }
 
@@ -300,6 +470,43 @@ pub extern "C" fn strstart__part429() -> c_int {
 }
 }
 
+// ── `dbuf_init` · cutils.c:87-90 · chunk 430 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void dbuf_init(DynBuf *s)
+//     {
+//         memset(s, 0, sizeof(*s));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk430 {
+// Rewrite of dbuf_init(DynBuf *s) from cutils.c:
+//     memset(s, 0, sizeof(*s));
+// Zero the whole DynBuf structure.
+
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+#[no_mangle]
+pub extern "C" fn dbuf_init(s: *mut DynBuf) {
+    if s.is_null() {
+        return;
+    }
+    unsafe {
+        core::ptr::write_bytes(
+            s as *mut c_void as *mut u8,
+            0u8,
+            core::mem::size_of::<DynBuf>(),
+        );
+    }
+}
+}
+
 // ── `memset(s, 0, sizeof(*s));` · cutils.c:89-89 · chunk 431 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -314,6 +521,72 @@ extern "C" {
 pub extern "C" fn dbuf_init__part431(s: *mut std::ffi::c_void, n: usize) {
     unsafe {
         memset(s, 0, n);
+    }
+}
+}
+
+// ── `dbuf_write` · cutils.c:92-104 · chunk 432 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void dbuf_write(DynBuf *s, size_t offset, const uint8_t *data, size_t len)
+//     {
+//         size_t end, new_size;
+//         new_size = end = offset + len;
+//         if (new_size > s->allocated_size) {
+//             new_size = max_int(new_size, s->allocated_size * 3 / 2);
+//             s->buf = realloc(s->buf, new_size);
+//             s->allocated_size = new_size;
+//         }
+//         memcpy(s->buf + offset, data, len);
+//         if (end > s->size)
+//             s->size = end;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk432 {
+// Rust rewrite of dbuf_write from cutils.c
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void;
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+// static inline in the C source: ported logic (int max_int(int a, int b))
+#[inline]
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dbuf_write(s: *mut DynBuf, offset: usize, data: *const u8, len: usize) {
+    let end: usize = offset.wrapping_add(len);
+    let mut new_size: usize = end;
+    if new_size > (*s).allocated_size {
+        // C calls max_int(size_t, size_t) with int parameters: values are
+        // truncated to int, compared, and converted back to size_t.
+        let grown: usize = (*s).allocated_size.wrapping_mul(3) / 2;
+        new_size = max_int(new_size as c_int, grown as c_int) as usize;
+        (*s).buf = realloc((*s).buf as *mut c_void, new_size) as *mut u8;
+        (*s).allocated_size = new_size;
+    }
+    memcpy(
+        (*s).buf.add(offset) as *mut c_void,
+        data as *const c_void,
+        len,
+    );
+    if end > (*s).size {
+        (*s).size = end;
     }
 }
 }
@@ -412,6 +685,39 @@ pub extern "C" fn dbuf_write__part436(end: core::ffi::c_ulong, s_size: *mut core
 }
 }
 
+// ── `dbuf_putc` · cutils.c:106-109 · chunk 437 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void dbuf_putc(DynBuf *s, uint8_t c)
+//     {
+//         dbuf_write(s, s->size, &c, 1);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk437 {
+// Port of cutils.c dbuf_putc
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn dbuf_write(s: *mut DynBuf, offset: usize, data: *const u8, len: usize);
+}
+
+#[no_mangle]
+pub extern "C" fn dbuf_putc(s: *mut DynBuf, c: u8) {
+    unsafe {
+        let size = (*s).size;
+        dbuf_write(s, size, &c as *const u8, 1);
+    }
+    let _ = core::mem::size_of::<c_void>();
+}
+}
+
 // ── `dbuf_write(s, s->size, &c, 1);` · cutils.c:108-108 · chunk 438 · nvidia/nemotron-3.5-lightning · 4 attempt(s) · Unvalidated
 //
 // Original C:
@@ -459,6 +765,40 @@ pub extern "C" fn dbuf_putc__part438(s: *mut DynBuf, offset: usize, data: *const
 }
 }
 
+// ── `dbuf_putstr` · cutils.c:111-114 · chunk 439 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void dbuf_putstr(DynBuf *s, const char *str)
+//     {
+//         dbuf_write(s, s->size, (const uint8_t *)str, strlen(str));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk439 {
+// Rewrite of dbuf_putstr from cutils.c
+use core::ffi::{c_char};
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn dbuf_write(s: *mut DynBuf, offset: usize, data: *const u8, len: usize);
+    fn strlen(str: *const c_char) -> usize;
+}
+
+#[no_mangle]
+pub extern "C" fn dbuf_putstr(s: *mut DynBuf, str: *const c_char) {
+    unsafe {
+        let len = strlen(str);
+        let offset = (*s).size;
+        dbuf_write(s, offset, str as *const u8, len);
+    }
+}
+}
+
 // ── `dbuf_write(s, s->size, (const uint8_t *)str, strlen(str));` · cutils.c:113-113 · chunk 440 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -486,6 +826,39 @@ pub extern "C" fn dbuf_putstr__part440(s: *mut DynBuf, str: *const c_char) {
         let s_size = (*s).size;
         dbuf_write(s, s_size, str as *const u8, len);
     }
+}
+}
+
+// ── `dbuf_free` · cutils.c:116-120 · chunk 441 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void dbuf_free(DynBuf *s)
+//     {
+//         free(s->buf);
+//         memset(s, 0, sizeof(*s));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk441 {
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct DynBuf {
+    pub buf: *mut u8,
+    pub size: usize,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dbuf_free(s: *mut DynBuf) {
+    if s.is_null() {
+        return;
+    }
+    free((*s).buf as *mut c_void);
+    core::ptr::write_bytes(s as *mut u8, 0, core::mem::size_of::<DynBuf>());
 }
 }
 

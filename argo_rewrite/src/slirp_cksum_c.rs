@@ -1,5 +1,251 @@
 //! From `slirp/cksum.c`.
 
+// ── `cksum` · slirp/cksum.c:48-139 · chunk 2267 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int cksum(struct mbuf *m, int len)
+//     {
+//      register uint16_t *w;
+//      register int sum = 0;
+//      register int mlen = 0;
+//      int byte_swapped = 0;
+//     
+//      union {
+//       uint8_t c[2];
+//       uint16_t s;
+//      } s_util;
+//      union {
+//       uint16_t s[2];
+//       uint32_t l;
+//      } l_util;
+//     
+//      if (m->m_hdr.mh_len == 0)
+//         goto cont;
+//      w = ((uint16_t *)(m)->m_hdr.mh_data);
+//     
+//      mlen = m->m_hdr.mh_len;
+//     
+//      if (len < mlen)
+//         mlen = len;
+//     
+//     
+//     
+//     
+//     
+//     
+//      if ((1 & (long) w) && (mlen > 0)) {
+//       {l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)(sum > 65535 ? sum -= 65535 : sum);};
+//       sum <<= 8;
+//       s_util.c[0] = *(uint8_t *)w;
+//       w = (uint16_t *)((int8_t *)w + 1);
+//       mlen--;
+//       byte_swapped = 1;
+//      }
+//     
+//     
+//     
+//     
+//      while ((mlen -= 32) >= 0) {
+//       sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+//       sum += w[4]; sum += w[5]; sum += w[6]; sum += w[7];
+//       sum += w[8]; sum += w[9]; sum += w[10]; sum += w[11];
+//       sum += w[12]; sum += w[13]; sum += w[14]; sum += w[15];
+//       w += 16;
+//      }
+//      mlen += 32;
+//      while ((mlen -= 8) >= 0) {
+//       sum += w[0]; sum += w[1]; sum += w[2]; sum += w[3];
+//       w += 4;
+//      }
+//      mlen += 8;
+//      if (mlen == 0 && byte_swapped == 0)
+//         goto cont;
+//      {l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)(sum > 65535 ? sum -= 65535 : sum);};
+//      while ((mlen -= 2) >= 0) {
+//       sum += *w++;
+//      }
+//     
+//      if (byte_swapped) {
+//       {l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)(sum > 65535 ? sum -= 65535 : sum);};
+//       sum <<= 8;
+//       if (mlen == -1) {
+//        s_util.c[1] = *(uint8_t *)w;
+//        sum += s_util.s;
+//        mlen = 0;
+//       } else
+//     
+//          mlen = -1;
+//      } else if (mlen == -1)
+//         s_util.c[0] = *(uint8_t *)w;
+//     
+//     cont:
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (mlen == -1) {
+//     
+//     
+//     
+//       s_util.c[1] = 0;
+//       sum += s_util.s;
+//      }
+//      {l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; (void)(sum > 65535 ? sum -= 65535 : sum);};
+//      return (~sum & 0xffff);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2267 {
+// Port of slirp/cksum.c cksum() to Rust.
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct MBufHdr {
+    pub mh_next: *mut c_void,
+    pub mh_prev: *mut c_void,
+    pub mh_nextpkt: *mut c_void,
+    pub mh_prevpkt: *mut c_void,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut c_void,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub struct MBuf {
+    pub m_hdr: MBufHdr,
+}
+
+#[inline]
+fn rd16(w: *mut u16, i: usize) -> u16 {
+    unsafe { (w.add(i) as *const u16).read_unaligned() }
+}
+
+#[inline]
+fn rdu16(w: *mut u16) -> u16 {
+    unsafe { (w as *const u16).read_unaligned() }
+}
+
+#[inline]
+fn rd8(w: *mut u16) -> u8 {
+    unsafe { *(w as *const u8) }
+}
+
+#[inline]
+fn reduce(sum: &mut c_int) {
+    // REDUCE: l_util.l = sum; sum = l_util.s[0] + l_util.s[1]; ADDCARRY(sum);
+    let l: u32 = *sum as u32;
+    let mut s: c_int = (l & 0xffff) as c_int + ((l >> 16) & 0xffff) as c_int;
+    if s > 65535 {
+        s -= 65535;
+    }
+    *sum = s;
+}
+
+#[no_mangle]
+pub extern "C" fn cksum(m: *mut MBuf, len: c_int) -> c_int {
+    let mut w: *mut u16 = core::ptr::null_mut();
+    let mut sum: c_int = 0;
+    let mut mlen: c_int = 0;
+    let mut byte_swapped: c_int = 0;
+    let mut s_util_c: [u8; 2] = [0, 0];
+
+    let m_len = unsafe { (*m).m_hdr.mh_len };
+    if m_len != 0 {
+        w = unsafe { (*m).m_hdr.mh_data as *mut u16 };
+        mlen = m_len;
+        if len < mlen {
+            mlen = len;
+        }
+
+        // Force to even boundary.
+        if (1 & (w as isize)) != 0 && mlen > 0 {
+            reduce(&mut sum);
+            sum <<= 8;
+            s_util_c[0] = rd8(w);
+            w = ((w as *mut u8).wrapping_add(1)) as *mut u16;
+            mlen -= 1;
+            byte_swapped = 1;
+        }
+
+        // Unrolled loop.
+        loop {
+            mlen -= 32;
+            if mlen < 0 {
+                break;
+            }
+            sum = sum.wrapping_add(rd16(w, 0) as c_int);
+            sum = sum.wrapping_add(rd16(w, 1) as c_int);
+            sum = sum.wrapping_add(rd16(w, 2) as c_int);
+            sum = sum.wrapping_add(rd16(w, 3) as c_int);
+            sum = sum.wrapping_add(rd16(w, 4) as c_int);
+            sum = sum.wrapping_add(rd16(w, 5) as c_int);
+            sum = sum.wrapping_add(rd16(w, 6) as c_int);
+            sum = sum.wrapping_add(rd16(w, 7) as c_int);
+            sum = sum.wrapping_add(rd16(w, 8) as c_int);
+            sum = sum.wrapping_add(rd16(w, 9) as c_int);
+            sum = sum.wrapping_add(rd16(w, 10) as c_int);
+            sum = sum.wrapping_add(rd16(w, 11) as c_int);
+            sum = sum.wrapping_add(rd16(w, 12) as c_int);
+            sum = sum.wrapping_add(rd16(w, 13) as c_int);
+            sum = sum.wrapping_add(rd16(w, 14) as c_int);
+            sum = sum.wrapping_add(rd16(w, 15) as c_int);
+            w = w.wrapping_add(16);
+        }
+        mlen += 32;
+        loop {
+            mlen -= 8;
+            if mlen < 0 {
+                break;
+            }
+            sum = sum.wrapping_add(rd16(w, 0) as c_int);
+            sum = sum.wrapping_add(rd16(w, 1) as c_int);
+            sum = sum.wrapping_add(rd16(w, 2) as c_int);
+            sum = sum.wrapping_add(rd16(w, 3) as c_int);
+            w = w.wrapping_add(4);
+        }
+        mlen += 8;
+
+        if !(mlen == 0 && byte_swapped == 0) {
+            reduce(&mut sum);
+            loop {
+                mlen -= 2;
+                if mlen < 0 {
+                    break;
+                }
+                sum = sum.wrapping_add(rdu16(w) as c_int);
+                w = w.wrapping_add(1);
+            }
+
+            if byte_swapped != 0 {
+                reduce(&mut sum);
+                sum <<= 8;
+                if mlen == -1 {
+                    s_util_c[1] = rd8(w);
+                    sum = sum.wrapping_add(u16::from_le_bytes(s_util_c) as c_int);
+                    mlen = 0;
+                } else {
+                    mlen = -1;
+                }
+            } else if mlen == -1 {
+                s_util_c[0] = rd8(w);
+            }
+        }
+    }
+
+    // cont:
+    if mlen == -1 {
+        // The last mbuf has odd # of bytes; append the byte per host endianness.
+        s_util_c[1] = 0;
+        sum = sum.wrapping_add(u16::from_le_bytes(s_util_c) as c_int);
+    }
+    reduce(&mut sum);
+    (!sum & 0xffff) as c_int
+}
+}
+
 // ── `if (m->m_hdr.mh_len == 0)` · slirp/cksum.c:64-65 · chunk 2268 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:

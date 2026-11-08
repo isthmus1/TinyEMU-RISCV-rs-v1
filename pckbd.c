@@ -3389,137 +3389,35 @@ struct KBDState {
     IRQSignal *irq_mouse;
 };
 
-static void qemu_system_reset_request(void)
-{
-    void qemu_system_reset_request__part1580(void);
-    qemu_system_reset_request__part1580();
+static void qemu_system_reset_request(void);
 
-}
+static void ioport_set_a20(int val);
 
-static void ioport_set_a20(int val)
-{
-}
-
-static int ioport_get_a20(void)
-{
-    int ioport_get_a20__part1583(void);
-    return ioport_get_a20__part1583();
-
-}
+static int ioport_get_a20(void);
 
 
 
 
-static void kbd_update_irq(KBDState *s)
-{
-    void kbd_update_irq__part1585(KBDState *s, int *irq_kbd_level, int *irq_mouse_level);
-int irq_kbd_level, irq_mouse_level;
-kbd_update_irq__part1585(s, &irq_kbd_level, &irq_mouse_level);
+static void kbd_update_irq(KBDState *s);
 
-    void kbd_update_irq__part1586(KBDState *s, int *irq_kbd_level, int *irq_mouse_level);
-    kbd_update_irq__part1586(s, &irq_kbd_level, &irq_mouse_level);
+static void kbd_update_kbd_irq(void *opaque, int level);
 
-    void kbd_update_irq__part1587(KBDState *s, int irq_kbd_level, int irq_mouse_level);
-    kbd_update_irq__part1587(s, irq_kbd_level, irq_mouse_level);
-}
+static void kbd_update_aux_irq(void *opaque, int level);
 
-static void kbd_update_kbd_irq(void *opaque, int level)
-{
-    KBDState *s = (KBDState *)opaque;
+static uint32_t kbd_read_status(void *opaque, uint32_t addr, int size_log2);
 
-    void kbd_update_kbd_irq__part1589(KBDState *s, int level);
-    kbd_update_kbd_irq__part1589(s, level);
-
-    void kbd_update_kbd_irq__part1590(KBDState *s);
-kbd_update_kbd_irq__part1590(s);
-}
-
-static void kbd_update_aux_irq(void *opaque, int level)
-{
-    KBDState *s = (KBDState *)opaque;
-
-    void kbd_update_aux_irq__part1592(KBDState *s, int level);
-    kbd_update_aux_irq__part1592(s, level);
-
-    void kbd_update_aux_irq__part1593(KBDState *s);
-    kbd_update_aux_irq__part1593(s);
-
-}
-
-static uint32_t kbd_read_status(void *opaque, uint32_t addr, int size_log2)
-{
-    uint32_t kbd_read_status__part1595(void *opaque);
-return kbd_read_status__part1595(opaque);
-
-}
-
-static void kbd_queue(KBDState *s, int b, int aux)
-{
-    void kbd_queue__part1597(void *s, int b, int aux);
-    kbd_queue__part1597(s, b, aux);
-
-}
+static void kbd_queue(KBDState *s, int b, int aux);
 
 static void kbd_write_command(void *opaque, uint32_t addr, uint32_t val,
-                              int size_log2)
-{
-    KBDState *s = opaque;
+                              int size_log2);
 
+static uint32_t kbd_read_data(void *opaque, uint32_t addr, int size_log2);
 
+static void kbd_write_data(void *opaque, uint32_t addr, uint32_t val, int size_log2);
 
-
-        uint32_t kbd_write_command__part1599(KBDState *s, uint32_t val);
-    val = kbd_write_command__part1599(s, val);
-}
-
-static uint32_t kbd_read_data(void *opaque, uint32_t addr, int size_log2)
-{
-    KBDState *s = opaque;
-    uint32_t val;
-    void kbd_read_data__part1601(KBDState *s, uint32_t *val);
-    kbd_read_data__part1601(s, &val);
-
-
-
-
-        {
-        uint32_t kbd_read_data__part1602(uint32_t val);
-        return kbd_read_data__part1602(val);
-    }
-
-}
-
-static void kbd_write_data(void *opaque, uint32_t addr, uint32_t val, int size_log2)
-{
-    KBDState *s = opaque;
-
-
-
-
-
-    void kbd_write_data__part1604(KBDState *s, uint32_t val);
-    kbd_write_data__part1604(s, val);
-
-    void kbd_write_data__part1605(KBDState *s);
-    kbd_write_data__part1605(s);
-}
-
-static void kbd_reset(void *opaque)
-{
-    void kbd_reset__part1607(void *opaque);
-    kbd_reset__part1607(opaque);
-
-}
+static void kbd_reset(void *opaque);
 
 KBDState *i8042_init(PS2KbdState **pkbd,
                      PS2MouseState **pmouse,
                      PhysMemoryMap *port_map,
-                     IRQSignal *kbd_irq, IRQSignal *mouse_irq, uint32_t io_base)
-{
-    KBDState *i8042_init__part1609(PS2KbdState **pkbd, PS2MouseState **pmouse,
-                               PhysMemoryMap *port_map,
-                               IRQSignal *kbd_irq, IRQSignal *mouse_irq,
-                               uint32_t io_base);
-    return i8042_init__part1609(pkbd, pmouse, port_map, kbd_irq, mouse_irq, io_base);
-
-}
+                     IRQSignal *kbd_irq, IRQSignal *mouse_irq, uint32_t io_base);

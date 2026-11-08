@@ -2831,52 +2831,11 @@ FSFile *fs_walk_path1(FSDevice *fs, FSFile *f, const char *path,
                       char **pname);
 FSFile *fs_walk_path(FSDevice *fs, FSFile *f, const char *path);
 
-FSFile *fs_dup(FSDevice *fs, FSFile *f)
-{
-    FSFile *fs_dup__part474(FSDevice *fs, FSFile *f);
-fs_dup__part474(fs, f);
-return f;
-}
+FSFile *fs_dup(FSDevice *fs, FSFile *f);
 
 FSFile *fs_walk_path1(FSDevice *fs, FSFile *f, const char *path,
-                      char **pname)
-{
-    const char *p;
-    char *name;
-    FSFile *f1;
-    FSQID qid;
-    int len, ret;
-    BOOL is_last, is_first;
+                      char **pname);
 
-    extern const char *fs_walk_path1__part476(const char *path);
-path = fs_walk_path1__part476(path);
+FSFile *fs_walk_path(FSDevice *fs, FSFile *f, const char *path);
 
-    void fs_walk_path1__part477(int *is_first_ptr);
-fs_walk_path1__part477(&is_first);
-        {
-        FSFile *fs_walk_path1__part478(FSDevice *fs, FSFile *f, const char *path,
-                                       char **pname, FSQID *qid, int is_first);
-        (void)p;
-        (void)name;
-        (void)f1;
-        (void)len;
-        (void)ret;
-        (void)is_last;
-        return fs_walk_path1__part478(fs, f, path, pname, &qid, is_first);
-    }
-
-    FSFile *fs_walk_path1__part479(FSDevice *fs, FSFile *f, const char *path, char **pname);
-return fs_walk_path1__part479(fs, f, path, pname);
-}
-
-FSFile *fs_walk_path(FSDevice *fs, FSFile *f, const char *path)
-{
-    extern FSFile *fs_walk_path__part481(FSDevice *fs, FSFile *f, const char *path);
-return fs_walk_path__part481(fs, f, path);
-}
-
-void fs_end(FSDevice *fs)
-{
-    void fs_end__part483(FSDevice *fs);
-fs_end__part483(fs);
-}
+void fs_end(FSDevice *fs);

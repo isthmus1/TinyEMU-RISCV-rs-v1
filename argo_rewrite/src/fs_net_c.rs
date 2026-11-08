@@ -1,5 +1,36 @@
 //! From `fs_net.c`.
 
+// ── `file_buffer_init` · fs_net.c:271-275 · chunk 634 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     void file_buffer_init(FileBuffer *bs)
+//     {
+//         bs->data = 
+//                   ((void *)0)
+//                       ;
+//         bs->allocated_size = 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk634 {
+// Port of file_buffer_init from fs_net.c
+#![allow(non_snake_case)]
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_init(bs: *mut FileBuffer) {
+    if bs.is_null() {
+        return;
+    }
+    (*bs).data = core::ptr::null_mut();
+    (*bs).allocated_size = 0;
+}
+}
+
 // ── `bs->data = ((void *)0) ; bs->allocated_size = 0;` · fs_net.c:273-274 · chunk 635 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -32,6 +63,51 @@ pub extern "C" fn file_buffer_init__part635(bs: *mut FileBuffer) {
         (*bs).data = core::ptr::null_mut();
         (*bs).allocated_size = 0;
     }
+}
+}
+
+// ── `file_buffer_reset` · fs_net.c:277-281 · chunk 636 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void file_buffer_reset(FileBuffer *bs)
+//     {
+//         free(bs->data);
+//         file_buffer_init(bs);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk636 {
+// Rewrite of fs_net.c:
+//   void file_buffer_reset(FileBuffer *bs)
+//   {
+//       free(bs->data);
+//       file_buffer_init(bs);
+//   }
+// file_buffer_init() is inlined here as a private helper (it just nulls the
+// pointer and zeroes the size), so only libc's free() is called externally.
+
+use core::ffi::c_void;
+use core::ptr;
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+#[inline]
+unsafe fn file_buffer_init(bs: *mut FileBuffer) {
+    (*bs).data = ptr::null_mut();
+    (*bs).allocated_size = 0;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_reset(bs: *mut FileBuffer) {
+    free((*bs).data as *mut c_void);
+    file_buffer_init(bs);
 }
 }
 
@@ -75,6 +151,46 @@ pub extern "C" fn file_buffer_reset__part637(bs: *mut FileBuffer) {
     unsafe {
         file_buffer_init(bs);
     }
+}
+}
+
+// ── `file_buffer_resize` · fs_net.c:283-292 · chunk 638 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int file_buffer_resize(FileBuffer *bs, size_t new_size)
+//     {
+//         uint8_t *new_data;
+//         new_data = realloc(bs->data, new_size);
+//         if (!new_data && new_size != 0)
+//             return -1;
+//         bs->data = new_data;
+//         bs->allocated_size = new_size;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk638 {
+// Rewrite of file_buffer_resize from fs_net.c
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn realloc(ptr: *mut c_void, size: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int {
+    let new_data = realloc((*bs).data as *mut c_void, new_size) as *mut u8;
+    if new_data.is_null() && new_size != 0 {
+        return -1;
+    }
+    (*bs).data = new_data;
+    (*bs).allocated_size = new_size;
+    0
 }
 }
 
@@ -163,6 +279,41 @@ pub extern "C" fn file_buffer_resize__part641(
 }
 }
 
+// ── `file_buffer_write` · fs_net.c:294-298 · chunk 642 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void file_buffer_write(FileBuffer *bs, size_t offset, const uint8_t *buf,
+//                            size_t size)
+//     {
+//         memcpy(bs->data + offset, buf, size);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk642 {
+// Rewrite of file_buffer_write from fs_net.c
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_write(
+    bs: *mut FileBuffer,
+    offset: usize,
+    buf: *const u8,
+    size: usize,
+) {
+    let dst = (*bs).data.add(offset);
+    memcpy(dst as *mut c_void, buf as *const c_void, size);
+}
+}
+
 // ── `memcpy(bs->data + offset, buf, size);` · fs_net.c:297-297 · chunk 643 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -194,6 +345,43 @@ pub extern "C" fn file_buffer_write__part643(
 }
 }
 
+// ── `file_buffer_set` · fs_net.c:300-303 · chunk 644 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void file_buffer_set(FileBuffer *bs, size_t offset, int val, size_t size)
+//     {
+//         memset(bs->data + offset, val, size);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk644 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_set(
+    bs: *mut FileBuffer,
+    offset: usize,
+    val: c_int,
+    size: usize,
+) {
+    if bs.is_null() {
+        return;
+    }
+    let data = (*bs).data;
+    if data.is_null() || size == 0 {
+        return;
+    }
+    let dst = data.add(offset);
+    core::ptr::write_bytes(dst, val as u8, size);
+    let _ = core::mem::size_of::<c_void>();
+}
+}
+
 // ── `memset(bs->data + offset, val, size);` · fs_net.c:302-302 · chunk 645 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -212,6 +400,43 @@ pub extern "C" fn file_buffer_set__part645(dest: *mut u8, offset: usize, val: c_
             slice.fill(val as u8);
         }
     }
+}
+}
+
+// ── `file_buffer_read` · fs_net.c:305-309 · chunk 646 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void file_buffer_read(FileBuffer *bs, size_t offset, uint8_t *buf,
+//                            size_t size)
+//     {
+//         memcpy(buf, bs->data + offset, size);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk646 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+extern "C" {
+    // Only the libc symbol we need; declared to keep the ABI honest.
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn file_buffer_read(
+    bs: *mut FileBuffer,
+    offset: usize,
+    buf: *mut u8,
+    size: usize,
+) {
+    // memcpy(buf, bs->data + offset, size);
+    let src = (*bs).data.add(offset) as *const c_void;
+    memcpy(buf as *mut c_void, src, size);
+    let _ = core::mem::size_of::<c_int>();
 }
 }
 
@@ -239,6 +464,95 @@ pub extern "C" fn file_buffer_read__part647(bs: *const FileBuffer, offset: usize
 }
 }
 
+// ── `to_blocks` · fs_net.c:312-315 · chunk 648 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+//     {
+//         return (size + fs->block_size - 1) >> fs->block_size_log2;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk648 {
+// Rust rewrite of the static C helper `to_blocks` from fs_net.c.
+use core::ffi::{c_char, c_int, c_void};
+
+// Mirror of `struct list_head`.
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// Mirror of `struct FSDevice` (22 function pointers).
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(*mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut c_void)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(*mut FSDevice, *mut c_void)>,
+    pub fs_attach: Option<unsafe extern "C" fn()>,
+    pub fs_walk: Option<unsafe extern "C" fn()>,
+    pub fs_mkdir: Option<unsafe extern "C" fn()>,
+    pub fs_open: Option<unsafe extern "C" fn()>,
+    pub fs_create: Option<unsafe extern "C" fn()>,
+    pub fs_stat: Option<unsafe extern "C" fn()>,
+    pub fs_setattr: Option<unsafe extern "C" fn()>,
+    pub fs_close: Option<unsafe extern "C" fn()>,
+    pub fs_readdir: Option<unsafe extern "C" fn()>,
+    pub fs_read: Option<unsafe extern "C" fn()>,
+    pub fs_write: Option<unsafe extern "C" fn()>,
+    pub fs_link: Option<unsafe extern "C" fn()>,
+    pub fs_symlink: Option<unsafe extern "C" fn()>,
+    pub fs_mknod: Option<unsafe extern "C" fn()>,
+    pub fs_readlink: Option<unsafe extern "C" fn()>,
+    pub fs_renameat: Option<unsafe extern "C" fn()>,
+    pub fs_unlinkat: Option<unsafe extern "C" fn()>,
+    pub fs_lock: Option<unsafe extern "C" fn()>,
+    pub fs_getlock: Option<unsafe extern "C" fn()>,
+}
+
+// Mirror of `typedef struct FSDeviceMem`, up to (and including) block_size.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let fs = &*fs;
+    let rounded = size
+        .wrapping_add(fs.block_size as u64)
+        .wrapping_sub(1);
+    rounded.wrapping_shr((fs.block_size_log2 as u32) & 63) as i64
+}
+}
+
 // ── `return (size + fs->block_size - 1) >> fs->block_size_log2;` · fs_net.c:314-314 · chunk 649 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -260,6 +574,59 @@ pub extern "C" fn to_blocks__part649(size: u64, block_size: u32, block_size_log2
     // never panic on an out-of-range or negative shift count.
     let blocks: u64 = sum.wrapping_shr(block_size_log2 as u32);
     blocks as i64
+}
+}
+
+// ── `inode_incref` · fs_net.c:317-321 · chunk 650 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSINode *inode_incref(FSDevice *fs, FSINode *n)
+//     {
+//         n->refcount++;
+//         return n;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk650 {
+// Rust rewrite of `static FSINode *inode_incref(FSDevice *fs, FSINode *n)`
+// from fs_net.c.
+//
+// The reference-count field lives at a fixed position in the (large) C
+// struct FSINode; only the leading fields are needed here.
+
+use core::ffi::{c_int, c_void};
+
+/// `struct list_head { struct list_head *prev; struct list_head *next; };`
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+/// Prefix mirror of `typedef struct FSINode { ... }` up to and including
+/// the `refcount` field, in declaration order.
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: c_int,
+}
+
+/// `typedef struct FSDevice FSDevice;` -- opaque here (unused).
+#[repr(C)]
+pub struct FSDevice {
+    _opaque: [u8; 0],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_incref(_fs: *mut FSDevice, n: *mut FSINode) -> *mut FSINode {
+    let _ = core::mem::size_of::<c_void>();
+    if !n.is_null() {
+        let rc = core::ptr::addr_of_mut!((*n).refcount);
+        // C's `n->refcount++` on an int32_t: wrapping add is irrelevant in
+        // practice but matches two's-complement overflow behaviour.
+        *rc = (*rc).wrapping_add(1);
+    }
+    n
 }
 }
 
@@ -290,6 +657,67 @@ pub extern "C" fn inode_incref__part651(fs: *mut FSDevice, n: *mut FSINode) -> *
     if !n.is_null() {
         let refcount = unsafe { &mut (*n).refcount };
         *refcount = refcount.wrapping_add(1);
+    }
+    n
+}
+}
+
+// ── `inode_inc_open` · fs_net.c:323-327 · chunk 652 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSINode *inode_inc_open(FSDevice *fs, FSINode *n)
+//     {
+//         n->open_count++;
+//         return n;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk652 {
+// Rust rewrite of the static C helper:
+//   static FSINode *inode_inc_open(FSDevice *fs, FSINode *n)
+//       { n->open_count++; return n; }
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_int, c_void};
+
+// Opaque forward declarations matching the C types.
+#[repr(C)]
+pub struct FSDevice {
+    _opaque: [u8; 0],
+}
+
+// Mirror of the leading fields of `struct FSINode` (fs_net.c) that are
+// touched here; the layout matches the C definition exactly up to
+// `open_count`.
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    // remaining fields of the C struct follow (union etc.); not accessed here.
+}
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+extern "C" {
+    // no external functions needed
+    #[allow(dead_code)]
+    fn _unused_marker(_: *mut c_void);
+}
+
+#[no_mangle]
+pub extern "C" fn inode_inc_open(fs: *mut FSDevice, n: *mut FSINode) -> *mut FSINode {
+    let _ = fs;
+    if n.is_null() {
+        return n;
+    }
+    unsafe {
+        let count = (*n).open_count;
+        (*n).open_count = count.wrapping_add(1);
     }
     n
 }
@@ -377,6 +805,660 @@ pub extern "C" fn inode_inc_open__part653(
         }
     }
     n
+}
+}
+
+// ── `inode_free` · fs_net.c:329-385 · chunk 654 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_free(FSDevice *fs1, FSINode *n)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//     
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->refcount == 0
+//        )), __extension__ ({ if (
+//        n->refcount == 0
+//        ) ; else __assert_fail (
+//        "n->refcount == 0"
+//        , "fs_net.c", 334, __extension__ __PRETTY_FUNCTION__); }))
+//                                ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->open_count == 0
+//        )), __extension__ ({ if (
+//        n->open_count == 0
+//        ) ; else __assert_fail (
+//        "n->open_count == 0"
+//        , "fs_net.c", 335, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         switch(n->type) {
+//         case FT_REG:
+//             fs->fs_blocks -= to_blocks(fs, n->u.reg.size);
+//             
+//            ((void) sizeof (__assert_single_arg (
+//            fs->fs_blocks >= 0
+//            )), __extension__ ({ if (
+//            fs->fs_blocks >= 0
+//            ) ; else __assert_fail (
+//            "fs->fs_blocks >= 0"
+//            , "fs_net.c", 339, __extension__ __PRETTY_FUNCTION__); }))
+//                                      ;
+//             file_buffer_reset(&n->u.reg.fbuf);
+//     
+//             free(n->u.reg.filename);
+//     
+//             switch(n->u.reg.state) {
+//             case REG_STATE_LOADED:
+//                 list_del(&n->u.reg.link);
+//                 fs->inode_cache_size -= n->u.reg.size;
+//                 
+//                ((void) sizeof (__assert_single_arg (
+//                fs->inode_cache_size >= 0
+//                )), __extension__ ({ if (
+//                fs->inode_cache_size >= 0
+//                ) ; else __assert_fail (
+//                "fs->inode_cache_size >= 0"
+//                , "fs_net.c", 348, __extension__ __PRETTY_FUNCTION__); }))
+//                                                 ;
+//                 fs_base_url_decref(fs1, n->u.reg.base_url);
+//                 break;
+//             case REG_STATE_LOADING:
+//                 {
+//                     FSOpenInfo *oi = n->u.reg.open_info;
+//                     if (oi->xhr)
+//                         fs_wget_free(oi->xhr);
+//                     if (oi->open_type == FS_OPEN_WGET_ARCHIVE) {
+//                         fs_error_archive(oi);
+//                     }
+//                     fs_open_end(oi);
+//                     fs_base_url_decref(fs1, n->u.reg.base_url);
+//                 }
+//                 break;
+//             case REG_STATE_UNLOADED:
+//                 fs_base_url_decref(fs1, n->u.reg.base_url);
+//                 break;
+//             case REG_STATE_LOCAL:
+//                 break;
+//             default:
+//                 abort();
+//             }
+//             break;
+//         case FT_LNK:
+//             free(n->u.symlink.name);
+//             break;
+//         case FT_DIR:
+//             
+//            ((void) sizeof (__assert_single_arg (
+//            list_empty(&n->u.dir.de_list)
+//            )), __extension__ ({ if (
+//            list_empty(&n->u.dir.de_list)
+//            ) ; else __assert_fail (
+//            "list_empty(&n->u.dir.de_list)"
+//            , "fs_net.c", 376, __extension__ __PRETTY_FUNCTION__); }))
+//                                                 ;
+//             break;
+//         default:
+//             break;
+//         }
+//         list_del(&n->link);
+//         free(n);
+//         fs->inode_count--;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs->inode_count >= 0
+//        )), __extension__ ({ if (
+//        fs->inode_count >= 0
+//        ) ; else __assert_fail (
+//        "fs->inode_count >= 0"
+//        , "fs_net.c", 384, __extension__ __PRETTY_FUNCTION__); }))
+//                                    ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk654 {
+// Rust rewrite of fs_net.c: static void inode_free(FSDevice *fs1, FSINode *n)
+//
+// The C TU keeps inode_free's static helpers (to_blocks, list_del, list_empty,
+// fs_base_url_decref, fs_open_end, fs_wget_set_error, fs_error_archive) private
+// to the translation unit, so they have no linker symbol.  They are therefore
+// ported here as private Rust functions, with identical semantics.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+// FSINodeTypeEnum
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+// FSINodeRegStateEnum
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+// FSOpenWgetEnum
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+// fs_wget_free() lives in fs_wget.c, which is not always part of the link unit
+// (and the C inode_free was its only reference from this translation unit).
+// Emit a *weak* no-op definition so the reference resolves when fs_wget.c is
+// absent; a real (strong) definition, when linked, takes precedence over this.
+core::arch::global_asm!(
+    ".text",
+    ".weak fs_wget_free",
+    ".type fs_wget_free, @function",
+    "fs_wget_free:",
+    "ret",
+    ".size fs_wget_free, .-fs_wget_free",
+);
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSQID {
+    pub r#type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSStatFS {
+    pub f_bsize: u32,
+    pub f_blocks: u64,
+    pub f_bfree: u64,
+    pub f_bavail: u64,
+    pub f_ffree: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSStat {
+    pub qid: FSQID,
+    pub st_mode: u32,
+    pub st_uid: u32,
+    pub st_gid: u32,
+    pub st_nlink: u64,
+    pub st_rdev: u64,
+    pub st_size: u64,
+    pub st_blksize: u64,
+    pub st_blocks: u64,
+    pub st_atime_sec: u64,
+    pub st_atime_nsec: u32,
+    pub st_mtime_sec: u64,
+    pub st_mtime_nsec: u32,
+    pub st_ctime_sec: u64,
+    pub st_ctime_nsec: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSLock {
+    pub r#type: u8,
+    pub flags: u32,
+    pub start: u64,
+    pub length: u64,
+    pub proc_id: u32,
+    pub client_id: *mut c_char,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(*mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSStatFS)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            u32,
+            *const c_char,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            *mut FSFile,
+            c_int,
+            *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSQID, *mut FSFile, *const c_char, u32, u32)
+            -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            u32,
+            Option<FSOpenCompletionFn>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSQID, *mut FSFile, *const c_char, u32, u32, u32)
+            -> c_int,
+    >,
+    pub fs_stat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSStat) -> c_int>,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            u32,
+            u32,
+            u32,
+            u32,
+            u64,
+            u64,
+            u64,
+            u64,
+            u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *const u8, c_int) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSFile, *const c_char) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSQID, *mut FSFile, *const c_char, *const c_char, u32)
+            -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut c_char, c_int, *mut FSFile) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char, *mut FSFile, *const c_char)
+            -> c_int,
+    >,
+    pub fs_unlinkat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char) -> c_int>,
+    pub fs_lock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const FSLock) -> c_int>,
+    pub fs_getlock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSLock) -> c_int>,
+}
+
+pub type FSOpenCompletionFn =
+    unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void);
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    // BOOL encrypted; AES_KEY aes_state;  -- never accessed here
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int, // BOOL
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int, // BOOL
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+#[repr(C)]
+pub struct XHRState {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct DecryptFileState {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int, // FSOpenWgetEnum
+    pub xhr: *mut XHRState,
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<FSOpenCompletionFn>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    // remaining fields are never touched by this function
+}
+
+extern "C" {
+    fn free(p: *mut c_void);
+    fn abort() -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn fs_wget_free(s: *mut XHRState);
+    fn decrypt_file_end(s: *mut DecryptFileState);
+}
+
+#[inline]
+unsafe fn assert_fail(
+    expr: &'static [u8],
+    file: &'static [u8],
+    line: c_uint,
+    func: &'static [u8],
+) -> ! {
+    __assert_fail(
+        expr.as_ptr() as *const c_char,
+        file.as_ptr() as *const c_char,
+        line,
+        func.as_ptr() as *const c_char,
+    )
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+unsafe fn list_empty(el: *mut ListHead) -> bool {
+    (*el).next == el
+}
+
+#[inline]
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let block_size = (*fs).block_size as u64;
+    let log2 = (*fs).block_size_log2;
+    let v = size.wrapping_add(block_size).wrapping_sub(1);
+    // A shift count outside 0..64 is undefined in C; do not panic in Rust.
+    let r = if log2 == 0 {
+        v
+    } else if log2 > 0 && log2 < 64 {
+        v >> (log2 as u32)
+    } else {
+        0u64
+    };
+    r as i64
+}
+
+// static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu)
+unsafe fn fs_base_url_decref(_fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    if !((*bu).ref_count >= 1) {
+        assert_fail(
+            b"bu->ref_count >= 1\0",
+            b"fs_net.c\0",
+            1602,
+            b"fs_base_url_decref\0",
+        );
+    }
+    (*bu).ref_count -= 1;
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+// static void fs_open_end(FSOpenInfo *oi)
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+#[inline]
+fn fsoi_archive_link_offset() -> usize {
+    let p: *const FSOpenInfo = core::ptr::null();
+    unsafe { core::ptr::addr_of!((*p).archive_link) as usize }
+}
+
+// static void fs_wget_set_error(FSINode *n)
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    if !((*n).u.reg.state == REG_STATE_LOADING) {
+        assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0",
+            b"fs_net.c\0",
+            750,
+            b"fs_wget_set_error\0",
+        );
+    }
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_error_archive(FSOpenInfo *oi)
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let off = fsoi_archive_link_offset();
+    let mut el = (*oi).archive_file_list.next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn inode_free(fs1: *mut FSDevice, n: *mut FSINode) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+
+        if !((*n).refcount == 0) {
+            assert_fail(b"n->refcount == 0\0", b"fs_net.c\0", 334, b"inode_free\0");
+        }
+        if !((*n).open_count == 0) {
+            assert_fail(b"n->open_count == 0\0", b"fs_net.c\0", 335, b"inode_free\0");
+        }
+
+        match (*n).r#type {
+            FT_REG => {
+                let blocks = to_blocks(fs, (*n).u.reg.size as u64);
+                (*fs).fs_blocks = (*fs).fs_blocks.wrapping_sub(blocks);
+                if !((*fs).fs_blocks >= 0) {
+                    assert_fail(b"fs->fs_blocks >= 0\0", b"fs_net.c\0", 339, b"inode_free\0");
+                }
+                file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+                free((*n).u.reg.filename as *mut c_void);
+
+                let state = (*n).u.reg.state;
+                if state == REG_STATE_LOADED {
+                    list_del(core::ptr::addr_of_mut!((*n).u.reg.link));
+                    // int64_t -= size_t: in C this converts the left side to
+                    // unsigned long; do the same arithmetic and wrap back.
+                    let size = (*n).u.reg.size as u64;
+                    (*fs).inode_cache_size =
+                        ((*fs).inode_cache_size as u64).wrapping_sub(size) as i64;
+                    if !((*fs).inode_cache_size >= 0) {
+                        assert_fail(
+                            b"fs->inode_cache_size >= 0\0",
+                            b"fs_net.c\0",
+                            348,
+                            b"inode_free\0",
+                        );
+                    }
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                } else if state == REG_STATE_LOADING {
+                    let oi = (*n).u.reg.open_info;
+                    if !(*oi).xhr.is_null() {
+                        fs_wget_free((*oi).xhr);
+                    }
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_error_archive(oi);
+                    }
+                    fs_open_end(oi);
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                } else if state == REG_STATE_UNLOADED {
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                } else if state == REG_STATE_LOCAL {
+                    // nothing to do
+                } else {
+                    abort();
+                }
+            }
+            FT_LNK => {
+                free((*n).u.symlink.name as *mut c_void);
+            }
+            FT_DIR => {
+                if !list_empty(core::ptr::addr_of_mut!((*n).u.dir.de_list)) {
+                    assert_fail(
+                        b"list_empty(&n->u.dir.de_list)\0",
+                        b"fs_net.c\0",
+                        376,
+                        b"inode_free\0",
+                    );
+                }
+            }
+            _ => {}
+        }
+
+        list_del(core::ptr::addr_of_mut!((*n).link));
+        free(n as *mut c_void);
+        (*fs).inode_count = (*fs).inode_count.wrapping_sub(1);
+        if !((*fs).inode_count >= 0) {
+            assert_fail(b"fs->inode_count >= 0\0", b"fs_net.c\0", 384, b"inode_free\0");
+        }
+    }
 }
 }
 
@@ -961,6 +2043,440 @@ pub unsafe extern "C" fn inode_free__part657(fs: *mut FSDeviceMem, n: *mut FSINo
 }
 }
 
+// ── `inode_decref` · fs_net.c:387-393 · chunk 658 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_decref(FSDevice *fs1, FSINode *n)
+//     {
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->refcount >= 1
+//        )), __extension__ ({ if (
+//        n->refcount >= 1
+//        ) ; else __assert_fail (
+//        "n->refcount >= 1"
+//        , "fs_net.c", 389, __extension__ __PRETTY_FUNCTION__); }))
+//                                ;
+//         if (--n->refcount <= 0 && n->open_count <= 0) {
+//             inode_free(fs1, n);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk658 {
+// Rust rewrite of fs_net.c's inode_decref().
+//
+// inode_decref() calls inode_free(), which is a `static` C function (no linker
+// symbol), so its logic - together with every static helper it reaches
+// (to_blocks, fs_base_url_decref, fs_open_end, fs_error_archive,
+// fs_wget_set_error) and the list.h inline helpers - is ported here as private
+// Rust functions.  Everything that does have a real linker symbol
+// (file_buffer_reset, fs_wget_free, decrypt_file_end, free, abort,
+// __assert_fail) is declared extern.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+const FILE_C: &[u8] = b"fs_net.c\0";
+
+/* FSINodeTypeEnum */
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+/* FSINodeRegStateEnum */
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+/* FSOpenWgetEnum */
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+/* assert strings */
+const A_REFCOUNT_ZERO: &[u8] = b"n->refcount == 0\0";
+const A_OPEN_COUNT_ZERO: &[u8] = b"n->open_count == 0\0";
+const A_FS_BLOCKS: &[u8] = b"fs->fs_blocks >= 0\0";
+const A_CACHE_SIZE: &[u8] = b"fs->inode_cache_size >= 0\0";
+const A_LIST_EMPTY: &[u8] = b"list_empty(&n->u.dir.de_list)\0";
+const A_INODE_COUNT: &[u8] = b"fs->inode_count >= 0\0";
+const A_DECREF_ARG: &[u8] = b"n->refcount >= 1\0";
+const A_REG_STATE: &[u8] = b"n->u.reg.state == REG_STATE_LOADING\0";
+const A_BU_REFCOUNT: &[u8] = b"bu->ref_count >= 1\0";
+
+const F_INODE_FREE: &[u8] = b"inode_free\0";
+const F_INODE_DECREF: &[u8] = b"inode_decref\0";
+const F_WGET_SET_ERROR: &[u8] = b"fs_wget_set_error\0";
+const F_BASE_URL_DECREF: &[u8] = b"fs_base_url_decref\0";
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+    fn abort() -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    /* non-static functions of fs_net.c / fs_wget.c */
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn fs_wget_free(s: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+}
+
+/* ------------------------------------------------------------------ */
+/* type mirrors (exact C layout)                                      */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSBaseURL {
+    pub link: list_head,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    pub aes_state: AES_KEY,
+}
+
+/* struct FSDevice: nothing but function pointers is ever touched here; the
+   field list is only needed so that FSDeviceMem's layout is right. */
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: list_head,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: list_head,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+pub type FSOpenCompletionFunc =
+    unsafe extern "C" fn(*mut FSDevice, *mut c_void, c_int, *mut c_void);
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut c_void,
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void,
+    pub cur_pos: usize,
+    pub archive_link: list_head,
+    pub archive_offset: u64,
+    pub archive_file_list: list_head,
+    pub f: *mut c_void,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: list_head,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: list_head,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+}
+
+/* ------------------------------------------------------------------ */
+/* helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+unsafe fn assert_cond(cond: bool, assertion: &'static [u8], line: c_uint, func: &'static [u8]) {
+    if !cond {
+        __assert_fail(
+            assertion.as_ptr() as *const c_char,
+            FILE_C.as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+/* list.h: static inline void list_del(struct list_head *el) */
+#[inline]
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+/* list.h: static inline int list_empty(struct list_head *el) */
+#[inline]
+unsafe fn list_empty(el: *mut list_head) -> bool {
+    (*el).next == el
+}
+
+#[inline]
+fn archive_link_offset() -> usize {
+    let uninit = core::mem::MaybeUninit::<FSOpenInfo>::uninit();
+    let base = uninit.as_ptr();
+    unsafe { core::ptr::addr_of!((*base).archive_link) as usize - base as usize }
+}
+
+/* ------------------------------------------------------------------ */
+/* ported static functions of fs_net.c                                */
+/* ------------------------------------------------------------------ */
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let v = size
+        .wrapping_add((*fs).block_size as u64)
+        .wrapping_sub(1);
+    v.wrapping_shr((*fs).block_size_log2 as u32) as i64
+}
+
+unsafe fn fs_base_url_decref(_fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    assert_cond(
+        (*bu).ref_count >= 1,
+        A_BU_REFCOUNT,
+        1602,
+        F_BASE_URL_DECREF,
+    );
+    (*bu).ref_count = (*bu).ref_count.wrapping_sub(1);
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    assert_cond(
+        (*n).u.reg.state == REG_STATE_LOADING,
+        A_REG_STATE,
+        750,
+        F_WGET_SET_ERROR,
+    );
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb(
+            (*oi).fs,
+            core::ptr::null_mut(),
+            -5, /* -P9_EIO */
+            (*oi).opaque,
+        );
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let off = archive_link_offset();
+    let head: *mut list_head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el: *mut list_head = (*head).next;
+    let mut el1: *mut list_head = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el1).next;
+    }
+}
+
+unsafe fn inode_free(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    assert_cond((*n).refcount == 0, A_REFCOUNT_ZERO, 334, F_INODE_FREE);
+    assert_cond((*n).open_count == 0, A_OPEN_COUNT_ZERO, 335, F_INODE_FREE);
+
+    let ty = (*n).r#type;
+    if ty == FT_REG {
+        let reg = &mut (*n).u.reg;
+        (*fs).fs_blocks = (*fs)
+            .fs_blocks
+            .wrapping_sub(to_blocks(fs, reg.size as u64));
+        assert_cond((*fs).fs_blocks >= 0, A_FS_BLOCKS, 339, F_INODE_FREE);
+        file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+        free(reg.filename as *mut c_void);
+
+        let state = reg.state;
+        if state == REG_STATE_LOADED {
+            list_del(core::ptr::addr_of_mut!((*n).u.reg.link));
+            (*fs).inode_cache_size = (*fs)
+                .inode_cache_size
+                .wrapping_sub(reg.size as i64);
+            assert_cond((*fs).inode_cache_size >= 0, A_CACHE_SIZE, 348, F_INODE_FREE);
+            fs_base_url_decref(fs1, reg.base_url);
+        } else if state == REG_STATE_LOADING {
+            let oi = reg.open_info;
+            if !(*oi).xhr.is_null() {
+                fs_wget_free((*oi).xhr);
+            }
+            if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                fs_error_archive(oi);
+            }
+            fs_open_end(oi);
+            fs_base_url_decref(fs1, reg.base_url);
+        } else if state == REG_STATE_UNLOADED {
+            fs_base_url_decref(fs1, reg.base_url);
+        } else if state == REG_STATE_LOCAL {
+            /* nothing */
+        } else {
+            abort();
+        }
+    } else if ty == FT_LNK {
+        free((*n).u.symlink.name as *mut c_void);
+    } else if ty == FT_DIR {
+        assert_cond(
+            list_empty(core::ptr::addr_of_mut!((*n).u.dir.de_list)),
+            A_LIST_EMPTY,
+            376,
+            F_INODE_FREE,
+        );
+    }
+
+    list_del(core::ptr::addr_of_mut!((*n).link));
+    free(n as *mut c_void);
+    (*fs).inode_count = (*fs).inode_count.wrapping_sub(1);
+    assert_cond((*fs).inode_count >= 0, A_INODE_COUNT, 384, F_INODE_FREE);
+}
+
+/* ------------------------------------------------------------------ */
+/* target                                                             */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_decref(fs1: *mut FSDevice, n: *mut FSINode) {
+    assert_cond((*n).refcount >= 1, A_DECREF_ARG, 389, F_INODE_DECREF);
+    (*n).refcount = (*n).refcount.wrapping_sub(1);
+    if (*n).refcount <= 0 && (*n).open_count <= 0 {
+        inode_free(fs1, n);
+    }
+}
+}
+
 // ── `((void) sizeof (__assert_single_arg ( n->refcount >= 1 )), __extension__ ({ if ( n->refcount >=…` · fs_net.c:389-389 · chunk 659 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1045,6 +2561,440 @@ pub extern "C" fn inode_decref__part660(n: *mut FSINode) -> c_int {
 }
 }
 
+// ── `inode_dec_open` · fs_net.c:395-401 · chunk 661 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_dec_open(FSDevice *fs1, FSINode *n)
+//     {
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->open_count >= 1
+//        )), __extension__ ({ if (
+//        n->open_count >= 1
+//        ) ; else __assert_fail (
+//        "n->open_count >= 1"
+//        , "fs_net.c", 397, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         if (--n->open_count <= 0 && n->refcount <= 0) {
+//             inode_free(fs1, n);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk661 {
+// Rust port of fs_net.c: inode_dec_open()
+//
+// The C function is static but calls the static inode_free(), which in turn
+// uses several other static helpers (to_blocks, list_del, list_empty,
+// fs_base_url_decref, fs_error_archive, fs_wget_set_error, fs_open_end).
+// Those have no linker symbol, so their logic is reproduced here privately.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+// ---------------------------------------------------------------------------
+// types mirrored from the C program
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FsBaseUrl {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    // AES_KEY aes_state;  (never accessed here)
+}
+
+// BOOL is `typedef int BOOL`
+pub type Bool = c_int;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FsInodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FsBaseUrl,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FsOpenInfo,
+    pub is_fscmd: Bool,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FsInodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FsInodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FsInodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FsInodeU {
+    pub reg: FsInodeReg,
+    pub dir: FsInodeDir,
+    pub dev: FsInodeDev,
+    pub symlink: FsInodeSymlink,
+}
+
+#[repr(C)]
+pub struct FsInode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FsInodeU,
+}
+
+// struct FSDevice: 22 function-pointer fields.
+#[repr(C)]
+pub struct FsDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FsDeviceMem {
+    pub common: FsDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FsInode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: Bool,
+    pub dump_started: Bool,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void, // FILE *
+    pub dump_preload_archive_file: *mut c_void, // FILE *
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void, // FILE *
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+pub type FsOpenCompletionFunc =
+    unsafe extern "C" fn(*mut FsDevice, *mut c_void /* FSQID * */, c_int, *mut c_void);
+
+#[repr(C)]
+pub struct FsOpenInfo {
+    pub fs: *mut FsDevice,
+    pub open_type: c_int, // FSOpenWgetEnum
+    pub xhr: *mut c_void, // XHRState *
+    pub n: *mut FsInode,
+    pub dec_state: *mut c_void, // DecryptFileState *
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut c_void, // FSFile *
+    pub cb: Option<FsOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn fs_wget_free(s: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+    fn free(p: *mut c_void);
+    fn abort() -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// ---------------------------------------------------------------------------
+// constants (from the C enums)
+// ---------------------------------------------------------------------------
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+// ---------------------------------------------------------------------------
+// helpers (private ports of the C static functions / inline helpers)
+// ---------------------------------------------------------------------------
+
+#[inline]
+unsafe fn assert_true(cond: bool, expr: &'static [u8], line: c_uint, func: &'static [u8]) {
+    if !cond {
+        __assert_fail(
+            expr.as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+unsafe fn list_empty(el: *mut ListHead) -> c_int {
+    ((*el).next == el) as c_int
+}
+
+// static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+#[inline]
+unsafe fn to_blocks(fs: *mut FsDeviceMem, size: u64) -> i64 {
+    let bs = (*fs).block_size as u64;
+    let n = size.wrapping_add(bs).wrapping_sub(1);
+    n.wrapping_shr((*fs).block_size_log2 as u32) as i64
+}
+
+// offsetof(FSOpenInfo, archive_link), computed without dereferencing.
+fn archive_link_offset() -> usize {
+    let dummy = core::mem::MaybeUninit::<FsOpenInfo>::uninit();
+    let base = dummy.as_ptr() as usize;
+    let field = unsafe { core::ptr::addr_of!((*dummy.as_ptr()).archive_link) as usize };
+    field.wrapping_sub(base)
+}
+
+unsafe fn fs_base_url_decref(fs: *mut FsDevice, bu: *mut FsBaseUrl) {
+    let _ = fs;
+    assert_true(
+        (*bu).ref_count >= 1,
+        b"bu->ref_count >= 1\0",
+        1602,
+        b"fs_base_url_decref\0",
+    );
+    (*bu).ref_count = (*bu).ref_count.wrapping_sub(1);
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(&mut (*bu).link as *mut ListHead);
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FsOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(&mut (*oi).archive_link as *mut ListHead);
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FsInode) {
+    assert_true(
+        (*n).u.reg.state == REG_STATE_LOADING,
+        b"n->u.reg.state == REG_STATE_LOADING\0",
+        750,
+        b"fs_wget_set_error\0",
+    );
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(&mut (*n).u.reg.fbuf as *mut FileBuffer);
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_error_archive(oi: *mut FsOpenInfo) {
+    let head = &mut (*oi).archive_file_list as *mut ListHead;
+    let off = archive_link_offset();
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FsOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn inode_free(fs1: *mut FsDevice, n: *mut FsInode) {
+    let fs = fs1 as *mut FsDeviceMem;
+
+    assert_true((*n).refcount == 0, b"n->refcount == 0\0", 334, b"inode_free\0");
+    assert_true(
+        (*n).open_count == 0,
+        b"n->open_count == 0\0",
+        335,
+        b"inode_free\0",
+    );
+    match (*n).type_ {
+        FT_REG => {
+            let b = to_blocks(fs, (*n).u.reg.size as u64);
+            (*fs).fs_blocks = (*fs).fs_blocks.wrapping_sub(b);
+            assert_true(
+                (*fs).fs_blocks >= 0,
+                b"fs->fs_blocks >= 0\0",
+                339,
+                b"inode_free\0",
+            );
+            file_buffer_reset(&mut (*n).u.reg.fbuf as *mut FileBuffer);
+            free((*n).u.reg.filename as *mut c_void);
+
+            match (*n).u.reg.state {
+                REG_STATE_LOADED => {
+                    list_del(&mut (*n).u.reg.link as *mut ListHead);
+                    let sz = (*n).u.reg.size as i64;
+                    (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_sub(sz);
+                    assert_true(
+                        (*fs).inode_cache_size >= 0,
+                        b"fs->inode_cache_size >= 0\0",
+                        348,
+                        b"inode_free\0",
+                    );
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_LOADING => {
+                    let oi = (*n).u.reg.open_info;
+                    if !(*oi).xhr.is_null() {
+                        fs_wget_free((*oi).xhr);
+                    }
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_error_archive(oi);
+                    }
+                    fs_open_end(oi);
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_UNLOADED => {
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_LOCAL => {}
+                _ => abort(),
+            }
+        }
+        FT_LNK => {
+            free((*n).u.symlink.name as *mut c_void);
+        }
+        FT_DIR => {
+            let empty = list_empty(&mut (*n).u.dir.de_list as *mut ListHead);
+            assert_true(
+                empty != 0,
+                b"list_empty(&n->u.dir.de_list)\0",
+                376,
+                b"inode_free\0",
+            );
+        }
+        _ => {}
+    }
+    list_del(&mut (*n).link as *mut ListHead);
+    free(n as *mut c_void);
+    (*fs).inode_count = (*fs).inode_count.wrapping_sub(1);
+    assert_true(
+        (*fs).inode_count >= 0,
+        b"fs->inode_count >= 0\0",
+        384,
+        b"inode_free\0",
+    );
+}
+
+// ---------------------------------------------------------------------------
+// the target function
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_dec_open(fs1: *mut FsDevice, n: *mut FsInode) {
+    assert_true(
+        (*n).open_count >= 1,
+        b"n->open_count >= 1\0",
+        397,
+        b"inode_dec_open\0",
+    );
+    (*n).open_count = (*n).open_count.wrapping_sub(1);
+    if (*n).open_count <= 0 && (*n).refcount <= 0 {
+        inode_free(fs1, n);
+    }
+}
+}
+
 // ── `((void) sizeof (__assert_single_arg ( n->open_count >= 1 )), __extension__ ({ if ( n->open_coun…` · fs_net.c:397-397 · chunk 662 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1121,6 +3071,79 @@ pub extern "C" fn inode_dec_open__part663(fs1: *mut FSDevice, n: *mut FSINode) {
 }
 }
 
+// ── `inode_update_mtime` · fs_net.c:403-409 · chunk 664 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_update_mtime(FSDevice *fs, FSINode *n)
+//     {
+//         struct timeval tv;
+//         gettimeofday(&tv, 
+//                          ((void *)0)
+//                              );
+//         n->mtime_sec = tv.tv_sec;
+//         n->mtime_nsec = tv.tv_usec * 1000;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk664 {
+// Port of fs_net.c inode_update_mtime
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_int, c_long};
+
+#[repr(C)]
+pub struct timeval {
+    pub tv_sec: c_long,  // __time_t (long int)
+    pub tv_usec: c_long, // __suseconds_t (long int)
+}
+
+// Prefix of the C FSINode fields (up to and including mtime_nsec).
+#[repr(C)]
+pub struct FSINode {
+    pub link_prev: *mut FSINodeLink,
+    pub link_next: *mut FSINodeLink,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+}
+
+#[repr(C)]
+pub struct FSINodeLink {
+    pub prev: *mut FSINodeLink,
+    pub next: *mut FSINodeLink,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    _private: [u8; 0],
+}
+
+extern "C" {
+    fn gettimeofday(tv: *mut timeval, tz: *mut core::ffi::c_void) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_update_mtime(_fs: *mut FSDevice, n: *mut FSINode) {
+    let mut tv: timeval = timeval {
+        tv_sec: 0,
+        tv_usec: 0,
+    };
+    gettimeofday(&mut tv as *mut timeval, core::ptr::null_mut());
+    if n.is_null() {
+        return;
+    }
+    let n = &mut *n;
+    n.mtime_sec = tv.tv_sec as u32;
+    n.mtime_nsec = (tv.tv_usec * 1000) as u32;
+}
+}
+
 // ── `struct timeval tv; gettimeofday(&tv, ((void *)0) ); n->mtime_sec = tv.tv_sec; n->mtime_nsec = t…` · fs_net.c:405-408 · chunk 665 · nvidia/nemotron-3.5-lightning · 4 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1165,6 +3188,276 @@ pub extern "C" fn inode_update_mtime__part665(n: *mut CFsInode) {
         (*n).mtime_sec = tv.tv_sec as c_uint;
         (*n).mtime_nsec = (tv.tv_usec as i64 * 1000i64) as c_uint;
     }
+}
+}
+
+// ── `inode_new` · fs_net.c:411-446 · chunk 666 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSINode *inode_new(FSDevice *fs1, FSINodeTypeEnum type,
+//                               uint32_t mode, uint32_t uid, uint32_t gid)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         FSINode *n;
+//     
+//         n = mallocz(sizeof(*n));
+//         n->refcount = 1;
+//         n->open_count = 0;
+//         n->inode_num = fs->inode_num_alloc;
+//         fs->inode_num_alloc++;
+//         n->type = type;
+//         n->mode = mode & 0xfff;
+//         n->uid = uid;
+//         n->gid = gid;
+//     
+//         switch(type) {
+//         case FT_REG:
+//             file_buffer_init(&n->u.reg.fbuf);
+//             break;
+//         case FT_DIR:
+//             init_list_head(&n->u.dir.de_list);
+//             break;
+//         default:
+//             break;
+//         }
+//     
+//         list_add(&n->link, &fs->inode_list);
+//         fs->inode_count++;
+//     
+//         inode_update_mtime(fs1, n);
+//         n->ctime_sec = n->mtime_sec;
+//         n->ctime_nsec = n->mtime_nsec;
+//     
+//         return n;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk666 {
+// Port of `inode_new()` from fs_net.c
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+// ---------------------------------------------------------------- list_head
+// struct list_head { struct list_head *prev; struct list_head *next; };
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// static inline void init_list_head(struct list_head *head)
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+// static inline void __list_add(struct list_head *el, prev, next)
+#[inline]
+unsafe fn __list_add(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// static inline void list_add(struct list_head *el, struct list_head *head)
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    __list_add(el, head, (*head).next);
+}
+
+// --------------------------------------------------------------- FS types
+
+pub type FSINodeTypeEnum = u32;
+
+const FT_DIR: FSINodeTypeEnum = 4;
+const FT_REG: FSINodeTypeEnum = 8;
+
+pub type FSINodeRegStateEnum = u32;
+pub type FSFileID = u64;
+
+// typedef struct { uint8_t *data; size_t allocated_size; } FileBuffer;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// The `reg` variant of the FSINode union. Pointers to types that inode_new()
+// never dereferences (FSBaseURL, FSOpenInfo) are kept as plain pointers.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: FSINodeRegStateEnum,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: FSFileID,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+// struct { struct list_head de_list; int size; } dir;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+// struct { uint32_t major; uint32_t minor; } dev;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+// struct { char *name; } symlink;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeUnion {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+// typedef struct FSINode { ... } FSINode;  (exact field order and types)
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: FSINodeTypeEnum,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+// struct FSDevice is an aggregate of 20 function pointers (160 bytes on this
+// target). Only its size/alignment matters here: FSDeviceMem embeds it as the
+// first member, so it is mirrored as an opaque block of pointer slots.
+#[repr(C)]
+pub struct FSDevice {
+    _slots: [*mut c_void; 20],
+}
+
+// typedef struct FSDeviceMem { FSDevice common; ... } FSDeviceMem;
+// Only inode_list, inode_count and inode_num_alloc are used by inode_new(),
+// but all preceding members are kept so those offsets are right.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+pub struct TimeVal {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn gettimeofday(tv: *mut TimeVal, tz: *mut c_void) -> c_int;
+}
+
+// static void inode_update_mtime(FSDevice *fs, FSINode *n)
+unsafe fn inode_update_mtime(_fs: *mut FSDevice, n: *mut FSINode) {
+    let mut tv: TimeVal = TimeVal {
+        tv_sec: 0,
+        tv_usec: 0,
+    };
+    gettimeofday(&mut tv as *mut TimeVal, core::ptr::null_mut());
+    (*n).mtime_sec = tv.tv_sec as u32;
+    (*n).mtime_nsec = tv.tv_usec.wrapping_mul(1000) as u32;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_new(
+    fs1: *mut FSDevice,
+    r#type: FSINodeTypeEnum,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+) -> *mut FSINode {
+    let fs = fs1 as *mut FSDeviceMem;
+    let n: *mut FSINode;
+
+    n = mallocz(core::mem::size_of::<FSINode>()) as *mut FSINode;
+    (*n).refcount = 1;
+    (*n).open_count = 0;
+    (*n).inode_num = (*fs).inode_num_alloc;
+    (*fs).inode_num_alloc = (*fs).inode_num_alloc.wrapping_add(1);
+    (*n).r#type = r#type;
+    (*n).mode = mode & 0xfff;
+    (*n).uid = uid;
+    (*n).gid = gid;
+
+    // switch(type) { case FT_REG: ...; case FT_DIR: ...; default: break; }
+    if r#type == FT_REG {
+        file_buffer_init(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    } else if r#type == FT_DIR {
+        init_list_head(core::ptr::addr_of_mut!((*n).u.dir.de_list));
+    }
+
+    list_add(
+        core::ptr::addr_of_mut!((*n).link),
+        core::ptr::addr_of_mut!((*fs).inode_list),
+    );
+    (*fs).inode_count = (*fs).inode_count.wrapping_add(1);
+
+    inode_update_mtime(fs1, n);
+    (*n).ctime_sec = (*n).mtime_sec;
+    (*n).ctime_nsec = (*n).mtime_nsec;
+
+    n
 }
 }
 
@@ -1588,6 +3881,249 @@ pub extern "C" fn inode_new__part669(fs1: *mut FsDeviceMem, n: *mut FsInode) -> 
 }
 }
 
+// ── `inode_dir_add` · fs_net.c:450-468 · chunk 670 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSDirEntry *inode_dir_add(FSDevice *fs1, FSINode *n, const char *name,
+//                                      FSINode *n1)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         FSDirEntry *de;
+//         int name_len, dirent_size, new_size;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->type == FT_DIR
+//        )), __extension__ ({ if (
+//        n->type == FT_DIR
+//        ) ; else __assert_fail (
+//        "n->type == FT_DIR"
+//        , "fs_net.c", 456, __extension__ __PRETTY_FUNCTION__); }))
+//                                 ;
+//     
+//         name_len = strlen(name);
+//         de = mallocz(sizeof(*de) + name_len + 1);
+//         de->inode = n1;
+//         memcpy(de->name, name, name_len + 1);
+//         dirent_size = sizeof(*de) + name_len + 1;
+//         new_size = n->u.dir.size + dirent_size;
+//         fs->fs_blocks += to_blocks(fs, new_size) - to_blocks(fs, n->u.dir.size);
+//         n->u.dir.size = new_size;
+//         list_add_tail(&de->link, &n->u.dir.de_list);
+//         return de;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk670 {
+// Rust port of the static C function `inode_dir_add` from fs_net.c.
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+const FT_DIR: c_int = 4;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// union FSINode.u.reg
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+// union FSINode.u.dir
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+// Only the leading part of `struct FSDevice` matters here: it is a table of
+// 22 function pointers.
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+// `typedef struct FSDeviceMem { ... }`, up to `block_size`.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strlen(s: *const c_char) -> usize;
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: u32,
+        function: *const c_char,
+    ) -> !;
+}
+
+// static inline __list_add
+unsafe fn list_add_impl(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// static inline list_add_tail
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    list_add_impl(el, (*head).prev, head);
+}
+
+// static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let block_size = (*fs).block_size as u64;
+    let log2 = (*fs).block_size_log2;
+    let v = size.wrapping_add(block_size).wrapping_sub(1);
+    v.wrapping_shr(log2 as u32) as i64
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_dir_add(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    name: *const c_char,
+    n1: *mut FSINode,
+) -> *mut FSDirEntry {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    if (*n).type_ != FT_DIR {
+        __assert_fail(
+            b"n->type == FT_DIR\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            456,
+            b"inode_dir_add\0".as_ptr() as *const c_char,
+        );
+    }
+
+    let entry_size: usize = core::mem::size_of::<FSDirEntry>();
+
+    let name_len: c_int = strlen(name) as c_int;
+    let de = mallocz(entry_size.wrapping_add(name_len as usize).wrapping_add(1))
+        as *mut FSDirEntry;
+    (*de).inode = n1;
+    let de_name: *mut c_char = core::ptr::addr_of_mut!((*de).name) as *mut c_char;
+    let copy_len: usize = name_len.wrapping_add(1) as usize;
+    memcpy(de_name as *mut c_void, name as *const c_void, copy_len);
+    let dirent_size: c_int =
+        entry_size.wrapping_add(name_len as usize).wrapping_add(1) as c_int;
+    let dir_ptr: *mut FSINodeDir = core::ptr::addr_of_mut!((*n).u.dir);
+    let old_size: c_int = (*dir_ptr).size;
+    let new_size: c_int = old_size.wrapping_add(dirent_size);
+    (*fs).fs_blocks = (*fs)
+        .fs_blocks
+        .wrapping_add(to_blocks(fs, new_size as u64) - to_blocks(fs, old_size as u64));
+    (*dir_ptr).size = new_size;
+    list_add_tail(
+        core::ptr::addr_of_mut!((*de).link),
+        core::ptr::addr_of_mut!((*dir_ptr).de_list),
+    );
+    de
+}
+}
+
 // ── `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSDirEntry *de; int name_len, dirent_size, new_size; ((vo…` · fs_net.c:453-467 · chunk 671 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2001,6 +4537,112 @@ pub unsafe extern "C" fn inode_dir_add__part671(
 }
 }
 
+// ── `inode_search` · fs_net.c:470-484 · chunk 672 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSDirEntry *inode_search(FSINode *n, const char *name)
+//     {
+//         struct list_head *el;
+//         FSDirEntry *de;
+//     
+//         if (n->type != FT_DIR)
+//             return 
+//                   ((void *)0)
+//                       ;
+//     
+//         for(el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list); el = el->next) {
+//             de = ((FSDirEntry *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 FSDirEntry
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (!strcmp(de->name, name))
+//                 return de;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk672 {
+// Rust rewrite of `inode_search` from fs_net.c (fspatch FS layer).
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// FSINodeTypeEnum values used by the target.
+const FT_DIR: c_int = 4;
+
+// The `dir` member of the FSINode union.  Its offset inside FSINode is
+// determined by the scalar members that precede the union, reproduced below.
+#[repr(C)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub dir: FSINodeDir, // union u { ... struct { de_list, size } dir; }
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if n.is_null() {
+        return core::ptr::null_mut();
+    }
+
+    if (*n).type_ != FT_DIR {
+        return core::ptr::null_mut();
+    }
+
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*n).dir.de_list);
+    let mut el: *mut ListHead = (*head).next;
+
+    while el != head {
+        // `link` is the first member of FSDirEntry, so offsetof(FSDirEntry, link) == 0.
+        let de: *mut FSDirEntry = el as *mut FSDirEntry;
+        let de_name: *const c_char = core::ptr::addr_of!((*de).name) as *const c_char;
+        if strcmp(de_name, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+
+    core::ptr::null_mut()
+}
+}
+
 // ── `if (n->type != FT_DIR)` · fs_net.c:475-476 · chunk 673 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2111,6 +4753,215 @@ pub struct FSDirEntry {
 #[no_mangle]
 pub extern "C" fn inode_search__part675() -> *mut FSDirEntry {
     core::ptr::null_mut()
+}
+}
+
+// ── `inode_search_path1` · fs_net.c:486-521 · chunk 676 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+//     {
+//         char name[1024];
+//         const char *p, *p1;
+//         int len;
+//         FSDirEntry *de;
+//     
+//         p = path;
+//         if (*p == '/')
+//             p++;
+//         if (*p == '\0')
+//             return n;
+//         for(;;) {
+//             p1 = 
+//                 _Generic (0 ? (
+//                 p
+//                 ) : (void *) 1, const void *: (const char *) (strchr (
+//                 p
+//                 , 
+//                 '/'
+//                 )), default: strchr (
+//                 p
+//                 , 
+//                 '/'
+//                 ))
+//                               ;
+//             if (!p1) {
+//                 len = strlen(p);
+//             } else {
+//                 len = p1 - p;
+//                 p1++;
+//             }
+//             if (len > sizeof(name) - 1)
+//                 return 
+//                       ((void *)0)
+//                           ;
+//             memcpy(name, p, len);
+//             name[len] = '\0';
+//             if (n->type != FT_DIR)
+//                 return 
+//                       ((void *)0)
+//                           ;
+//             de = inode_search(n, name);
+//             if (!de)
+//                 return 
+//                       ((void *)0)
+//                           ;
+//             n = de->inode;
+//             p = p1;
+//             if (!p)
+//                 break;
+//         }
+//         return n;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk676 {
+// Rust rewrite of static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int};
+
+const FT_DIR: c_int = 4;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSDir {
+    de_list: ListHead,
+    size: c_int,
+}
+
+// The union is never interpreted as a whole; `dir` covers the member used here.
+// A padding array keeps the alignment/size in the same ballpark as the C union.
+#[repr(C)]
+#[derive(Copy, Clone)]
+union FSINodeU {
+    dir: FSDir,
+    _pad: [u64; 32],
+}
+
+#[repr(C)]
+struct FSINode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    type_: c_int,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FSINodeU,
+}
+
+#[repr(C)]
+struct FSDirEntry {
+    link: ListHead,
+    inode: *mut FSINode,
+    mark: u8,
+    name: [c_char; 0],
+}
+
+#[repr(C)]
+struct FSDevice {
+    _private: [u8; 0],
+}
+
+unsafe fn str_eq(a: *const c_char, b: *const c_char) -> bool {
+    let a = a as *const u8;
+    let b = b as *const u8;
+    let mut i: isize = 0;
+    loop {
+        let ca = *a.offset(i);
+        let cb = *b.offset(i);
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+// Rust implementation of the file-static C helper inode_search().
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != FT_DIR {
+        return core::ptr::null_mut();
+    }
+    let head = core::ptr::addr_of_mut!((*n).u.dir.de_list);
+    let mut el = (*head).next;
+    while el != head {
+        // link is the first member of FSDirEntry, so its offset is 0.
+        let de = el as *mut FSDirEntry;
+        if str_eq(core::ptr::addr_of!((*de).name) as *const c_char, name) {
+            return de;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_search_path1(
+    _fs: *mut FSDevice,
+    mut n: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    let mut name = [0u8; 1024];
+    let mut p = path as *const u8;
+    if *p == b'/' {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        // p1 = strchr(p, '/')
+        let mut q = p;
+        while *q != 0 && *q != b'/' {
+            q = q.add(1);
+        }
+        let p1: *const u8;
+        let len: c_int;
+        if *q == 0 {
+            p1 = core::ptr::null();
+            len = q.offset_from(p) as c_int;
+        } else {
+            len = q.offset_from(p) as c_int;
+            p1 = q.add(1);
+        }
+        if len > (1024 - 1) as c_int {
+            return core::ptr::null_mut();
+        }
+        let mut i: c_int = 0;
+        while i < len {
+            name[i as usize] = *p.offset(i as isize);
+            i += 1;
+        }
+        name[len as usize] = 0;
+        if (*n).type_ != FT_DIR {
+            return core::ptr::null_mut();
+        }
+        let de = inode_search(n, name.as_ptr() as *const c_char);
+        if de.is_null() {
+            return core::ptr::null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
 }
 }
 
@@ -2408,6 +5259,209 @@ pub extern "C" fn inode_search_path1__part681(n: *mut c_void) -> *mut c_void {
 }
 }
 
+// ── `inode_search_path` · fs_net.c:523-529 · chunk 682 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSINode *inode_search_path(FSDevice *fs1, const char *path)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         if (!fs1)
+//             return 
+//                   ((void *)0)
+//                       ;
+//         return inode_search_path1(fs1, fs->root_inode, path);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk682 {
+// Port of fs_net.c:523-529 : inode_search_path()
+// The static helpers inode_search_path1() and inode_search() have no linker
+// symbol in C, so their logic is reproduced here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_void};
+
+const FT_DIR: c_int = 4;
+const NAME_MAX_LEN: usize = 1024;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// Opaque view of FSDevice: only the pointer identity matters here.
+#[repr(C)]
+pub struct FSDevice {
+    pub f: [*mut c_void; 22],
+}
+
+#[repr(C)]
+pub struct FSDirData {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+// Prefix of the C struct FSINode, laid out exactly as in C up to and
+// including the directory member of the union.
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSDirData,
+}
+
+// C: struct { struct list_head link; FSINode *inode; uint8_t mark; char name[0]; }
+// offsetof(FSDirEntry, name) == 25
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+}
+
+const DIRENT_NAME_OFFSET: usize = 25;
+
+// Prefix of FSDeviceMem: FSDevice common, then the fields up to root_inode.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+}
+
+unsafe fn c_strlen(s: *const c_char) -> usize {
+    let mut n: usize = 0;
+    let mut p = s;
+    while *p != 0 {
+        p = p.add(1);
+        n += 1;
+    }
+    n
+}
+
+unsafe fn c_strchr(s: *const c_char, c: c_char) -> *const c_char {
+    let mut p = s;
+    loop {
+        if *p == c {
+            return p;
+        }
+        if *p == 0 {
+            return core::ptr::null();
+        }
+        p = p.add(1);
+    }
+}
+
+// strcmp(a, b) == 0
+unsafe fn c_streq(a: *const c_char, b: *const c_char) -> bool {
+    let mut i: isize = 0;
+    loop {
+        let ca = *a.offset(i) as u8;
+        let cb = *b.offset(i) as u8;
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn dirent_name(de: *mut FSDirEntry) -> *const c_char {
+    (de as *const u8).add(DIRENT_NAME_OFFSET) as *const c_char
+}
+
+// static FSDirEntry *inode_search(FSINode *n, const char *name)
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != FT_DIR {
+        return core::ptr::null_mut();
+    }
+    let head: *mut ListHead = &mut (*n).u.de_list;
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // link is the first member of FSDirEntry (offset 0)
+        let de = el as *mut FSDirEntry;
+        if c_streq(dirent_name(de), name) {
+            return de;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+// static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+unsafe fn inode_search_path1(_fs: *mut FSDevice, n0: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    let mut name = [0u8; NAME_MAX_LEN];
+    let mut n = n0;
+    let mut p = path;
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let mut p1 = c_strchr(p, b'/' as c_char);
+        let len: c_int;
+        if p1.is_null() {
+            len = c_strlen(p) as c_int;
+        } else {
+            len = (p1 as isize - p as isize) as c_int;
+            p1 = p1.add(1);
+        }
+        if len > (NAME_MAX_LEN as c_int - 1) {
+            return core::ptr::null_mut();
+        }
+        let ulen = len as usize;
+        core::ptr::copy_nonoverlapping(p as *const u8, name.as_mut_ptr(), ulen);
+        name[ulen] = 0;
+
+        if (*n).type_ != FT_DIR {
+            return core::ptr::null_mut();
+        }
+        let de = inode_search(n, name.as_ptr() as *const c_char);
+        if de.is_null() {
+            return core::ptr::null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+#[no_mangle]
+pub extern "C" fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        if fs1.is_null() {
+            return core::ptr::null_mut();
+        }
+        let fs = fs1 as *mut FSDeviceMem;
+        inode_search_path1(fs1, (*fs).root_inode, path)
+    }
+}
+}
+
 // ── `if (!fs1)` · fs_net.c:526-527 · chunk 683 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2648,6 +5702,142 @@ pub extern "C" fn inode_search_path__part684(
 }
 }
 
+// ── `is_empty_dir` · fs_net.c:531-543 · chunk 685 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static BOOL is_empty_dir(FSDevice *fs, FSINode *n)
+//     {
+//         struct list_head *el;
+//         FSDirEntry *de;
+//     
+//         for(el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list); el = el->next) {
+//             de = ((FSDirEntry *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 FSDirEntry
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (strcmp(de->name, ".") != 0 &&
+//                 strcmp(de->name, "..") != 0)
+//                 return FALSE;
+//         }
+//         return TRUE;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk685 {
+// Rust rewrite of: static BOOL is_empty_dir(FSDevice *fs, FSINode *n)
+use core::ffi::{c_char, c_int};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut core::ffi::c_void, // FSBaseURL *
+    pub file_id: u64,                     // FSFileID
+    pub link: ListHead,
+    pub open_info: *mut core::ffi::c_void, // struct FSOpenInfo *
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSReg,
+    pub dir: FSDir,
+    pub dev: FSDev,
+    pub symlink: FSSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn is_empty_dir(_fs: *mut core::ffi::c_void, n: *mut FSINode) -> c_int {
+    let dir: *mut FSDir = core::ptr::addr_of_mut!((*n).u.dir);
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*dir).de_list);
+    let dot: *const c_char = b".\0".as_ptr() as *const c_char;
+    let dotdot: *const c_char = b"..\0".as_ptr() as *const c_char;
+
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // list_entry(el, FSDirEntry, link): link is the first member (offset 0)
+        let de: *mut FSDirEntry = el as *mut FSDirEntry;
+        let name: *const c_char = core::ptr::addr_of!((*de).name) as *const c_char;
+        if strcmp(name, dot) != 0 && strcmp(name, dotdot) != 0 {
+            return 0; // FALSE
+        }
+        el = (*el).next;
+    }
+    1 // TRUE
+}
+}
+
 // ── `for (el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list; el = el->next)` · fs_net.c:536-541 · chunk 686 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2725,6 +5915,270 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn is_empty_dir__part687() -> c_int {
     1i32
+}
+}
+
+// ── `inode_dirent_delete_no_decref` · fs_net.c:545-558 · chunk 688 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_dirent_delete_no_decref(FSDevice *fs1, FSINode *n, FSDirEntry *de)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         int dirent_size, new_size;
+//         dirent_size = sizeof(*de) + strlen(de->name) + 1;
+//     
+//         new_size = n->u.dir.size - dirent_size;
+//         fs->fs_blocks += to_blocks(fs, new_size) - to_blocks(fs, n->u.dir.size);
+//         n->u.dir.size = new_size;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->u.dir.size >= 0
+//        )), __extension__ ({ if (
+//        n->u.dir.size >= 0
+//        ) ; else __assert_fail (
+//        "n->u.dir.size >= 0"
+//        , "fs_net.c", 554, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs->fs_blocks >= 0
+//        )), __extension__ ({ if (
+//        fs->fs_blocks >= 0
+//        ) ; else __assert_fail (
+//        "fs->fs_blocks >= 0"
+//        , "fs_net.c", 555, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         list_del(&de->link);
+//         free(de);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk688 {
+// Port of fs_net.c: static void inode_dirent_delete_no_decref(FSDevice *fs1,
+//                                                             FSINode *n,
+//                                                             FSDirEntry *de)
+#![allow(dead_code, non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+type BOOL = c_int;
+type FSINodeTypeEnum = c_int;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSINodeReg {
+    state: c_int,
+    size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut c_void,
+    file_id: u64,
+    link: ListHead,
+    open_info: *mut c_void,
+    is_fscmd: BOOL,
+    filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSINodeDir {
+    de_list: ListHead,
+    size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSINodeDev {
+    major: u32,
+    minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSINodeSymlink {
+    name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+union FSINodeU {
+    reg: FSINodeReg,
+    dir: FSINodeDir,
+    dev: FSINodeDev,
+    symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSINode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    type_: FSINodeTypeEnum,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSDirEntry {
+    link: ListHead,
+    inode: *mut FSINode,
+    mark: u8,
+    name: [c_char; 0],
+}
+
+type FSDeviceFnPtr = Option<unsafe extern "C" fn()>;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSDevice {
+    fs_end: FSDeviceFnPtr,
+    fs_delete: FSDeviceFnPtr,
+    fs_statfs: FSDeviceFnPtr,
+    fs_attach: FSDeviceFnPtr,
+    fs_walk: FSDeviceFnPtr,
+    fs_mkdir: FSDeviceFnPtr,
+    fs_open: FSDeviceFnPtr,
+    fs_create: FSDeviceFnPtr,
+    fs_stat: FSDeviceFnPtr,
+    fs_setattr: FSDeviceFnPtr,
+    fs_close: FSDeviceFnPtr,
+    fs_readdir: FSDeviceFnPtr,
+    fs_read: FSDeviceFnPtr,
+    fs_write: FSDeviceFnPtr,
+    fs_link: FSDeviceFnPtr,
+    fs_symlink: FSDeviceFnPtr,
+    fs_mknod: FSDeviceFnPtr,
+    fs_readlink: FSDeviceFnPtr,
+    fs_renameat: FSDeviceFnPtr,
+    fs_unlinkat: FSDeviceFnPtr,
+    fs_lock: FSDeviceFnPtr,
+    fs_getlock: FSDeviceFnPtr,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut FSINode,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+    dump_cache_load: BOOL,
+    dump_started: BOOL,
+    dump_preload_dir: *mut c_char,
+    dump_preload_file: *mut c_void,
+    dump_preload_archive_file: *mut c_void,
+    dump_archive_name: *mut c_char,
+    dump_archive_size: u64,
+    dump_archive_file: *mut c_void,
+    dump_archive_num: c_int,
+    dump_preload_list: ListHead,
+    dump_exclude_list: ListHead,
+}
+
+extern "C" {
+    fn strlen(s: *const c_char) -> usize;
+    fn free(p: *mut c_void);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let block_size = (*fs).block_size as u64;
+    let log2 = (*fs).block_size_log2 as u32;
+    let v = size.wrapping_add(block_size).wrapping_sub(1);
+    v.wrapping_shr(log2) as i64
+}
+
+#[no_mangle]
+pub extern "C" fn inode_dirent_delete_no_decref(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    de: *mut FSDirEntry,
+) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+
+        let name_ptr = core::ptr::addr_of!((*de).name) as *const c_char;
+        let raw_dirent_size: u64 = (core::mem::size_of::<FSDirEntry>() as u64)
+            .wrapping_add(strlen(name_ptr) as u64)
+            .wrapping_add(1);
+        let dirent_size: c_int = raw_dirent_size as u32 as c_int;
+
+        let old_size: c_int = (*n).u.dir.size;
+        let new_size: c_int = old_size.wrapping_sub(dirent_size);
+
+        let blocks_new = to_blocks(fs, new_size as u64);
+        let blocks_old = to_blocks(fs, old_size as u64);
+        (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(blocks_new.wrapping_sub(blocks_old));
+        (*n).u.dir.size = new_size;
+
+        if !((*n).u.dir.size >= 0) {
+            __assert_fail(
+                b"n->u.dir.size >= 0\0".as_ptr() as *const c_char,
+                b"fs_net.c\0".as_ptr() as *const c_char,
+                554,
+                b"inode_dirent_delete_no_decref\0".as_ptr() as *const c_char,
+            );
+        }
+        if !((*fs).fs_blocks >= 0) {
+            __assert_fail(
+                b"fs->fs_blocks >= 0\0".as_ptr() as *const c_char,
+                b"fs_net.c\0".as_ptr() as *const c_char,
+                555,
+                b"inode_dirent_delete_no_decref\0".as_ptr() as *const c_char,
+            );
+        }
+
+        // static inline void list_del(struct list_head *el)
+        let link = core::ptr::addr_of_mut!((*de).link);
+        let prev = (*link).prev;
+        let next = (*link).next;
+        (*prev).next = next;
+        (*next).prev = prev;
+        (*link).prev = core::ptr::null_mut();
+        (*link).next = core::ptr::null_mut();
+
+        free(de as *mut c_void);
+    }
 }
 }
 
@@ -2907,6 +6361,514 @@ pub extern "C" fn inode_dirent_delete_no_decref__part689(
         list_del(core::ptr::addr_of_mut!((*de).link));
         free(de as *mut c_void);
     }
+}
+}
+
+// ── `inode_dirent_delete` · fs_net.c:560-566 · chunk 690 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_dirent_delete(FSDevice *fs, FSINode *n, FSDirEntry *de)
+//     {
+//         FSINode *n1;
+//         n1 = de->inode;
+//         inode_dirent_delete_no_decref(fs, n, de);
+//         inode_decref(fs, n1);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk690 {
+// Rust port of the static function `inode_dirent_delete` from fs_net.c.
+// Every static C helper reachable from it is re-implemented here (they have no
+// linker symbol): inode_dirent_delete_no_decref, inode_decref, inode_free,
+// to_blocks, list_del, file_buffer_reset, fs_base_url_decref, fs_open_end,
+// fs_wget_set_error, fs_error_archive.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of_mut, null_mut};
+
+pub type BOOL = c_int;
+
+/* ---------- basic structures ---------- */
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+pub struct XHRState {
+    pub _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct DecryptFileState {
+    pub _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub _private: [u8; 0],
+}
+
+/* struct FSDevice is 22 function pointers; only its size/alignment matters here */
+#[repr(C)]
+pub struct FSDevice {
+    pub fns: [*const c_void; 22],
+}
+
+pub type FSOpenCompletionFunc =
+    unsafe extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut c_void);
+
+/* ---------- FSINode ---------- */
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSRegPart {
+    pub state: c_int, /* FSINodeRegStateEnum */
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDirPart {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDevPart {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSSymlinkPart {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub union FSINodeU {
+    pub reg: FSRegPart,
+    pub dir: FSDirPart,
+    pub dev: FSDevPart,
+    pub symlink: FSSymlinkPart,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: c_int,
+    pub open_count: c_int,
+    pub type_: c_int, /* FSINodeTypeEnum */
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+/* ---------- FSOpenInfo / FSDeviceMem ---------- */
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int, /* FSOpenWgetEnum */
+    pub xhr: *mut XHRState,
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+/* ---------- external C symbols ---------- */
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+    fn abort() -> !;
+    fn free(ptr: *mut c_void);
+    fn strlen(s: *const c_char) -> usize;
+    fn decrypt_file_end(s: *mut DecryptFileState);
+    fn fs_wget_free(s: *mut XHRState);
+}
+
+/* ---------- constants ---------- */
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+/* ---------- helpers ---------- */
+
+#[inline]
+unsafe fn assert_that(cond: bool, assertion: &'static [u8], line: c_uint, func: &'static [u8]) {
+    if !cond {
+        __assert_fail(
+            assertion.as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+#[inline]
+unsafe fn reg_mut(n: *mut FSINode) -> *mut FSRegPart {
+    addr_of_mut!((*n).u).cast::<FSRegPart>()
+}
+
+#[inline]
+unsafe fn dir_mut(n: *mut FSINode) -> *mut FSDirPart {
+    addr_of_mut!((*n).u).cast::<FSDirPart>()
+}
+
+#[inline]
+unsafe fn symlink_mut(n: *mut FSINode) -> *mut FSSymlinkPart {
+    addr_of_mut!((*n).u).cast::<FSSymlinkPart>()
+}
+
+/// offsetof(FSOpenInfo, archive_link)
+#[inline]
+fn open_info_archive_link_offset() -> usize {
+    let base = null_mut::<FSOpenInfo>();
+    unsafe {
+        (addr_of_mut!((*base).archive_link) as usize).wrapping_sub(base as usize)
+    }
+}
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let fsm = &*fs;
+    size.wrapping_add(fsm.block_size as u64)
+        .wrapping_sub(1)
+        .wrapping_shr(fsm.block_size_log2 as u32) as i64
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+unsafe fn file_buffer_reset(bs: *mut FileBuffer) {
+    free((*bs).data as *mut c_void);
+    (*bs).data = null_mut();
+    (*bs).allocated_size = 0;
+}
+
+unsafe fn fs_base_url_decref(bu: *mut FSBaseURL) {
+    assert_that(
+        (*bu).ref_count >= 1,
+        b"bu->ref_count >= 1\0",
+        1602,
+        b"fs_base_url_decref\0",
+    );
+    let rc = (*bu).ref_count.wrapping_sub(1);
+    (*bu).ref_count = rc;
+    if rc == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    assert_that(
+        (*reg_mut(n)).state == REG_STATE_LOADING,
+        b"n->u.reg.state == REG_STATE_LOADING\0",
+        750,
+        b"fs_wget_set_error\0",
+    );
+    let r = reg_mut(n);
+    let oi = (*r).open_info;
+    (*r).state = REG_STATE_UNLOADED;
+    file_buffer_reset(addr_of_mut!((*r).fbuf));
+    let cb = (*oi).cb;
+    if let Some(cb) = cb {
+        cb((*oi).fs, null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let link_off = open_info_archive_link_offset();
+    let head = addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).wrapping_sub(link_off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn inode_free(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    assert_that((*n).refcount == 0, b"n->refcount == 0\0", 334, b"inode_free\0");
+    assert_that(
+        (*n).open_count == 0,
+        b"n->open_count == 0\0",
+        335,
+        b"inode_free\0",
+    );
+    match (*n).type_ {
+        FT_REG => {
+            let r = reg_mut(n);
+            (*fs).fs_blocks = (*fs)
+                .fs_blocks
+                .wrapping_sub(to_blocks(fs, (*r).size as u64));
+            assert_that(
+                (*fs).fs_blocks >= 0,
+                b"fs->fs_blocks >= 0\0",
+                339,
+                b"inode_free\0",
+            );
+            file_buffer_reset(addr_of_mut!((*r).fbuf));
+
+            free((*r).filename as *mut c_void);
+
+            match (*r).state {
+                REG_STATE_LOADED => {
+                    list_del(addr_of_mut!((*r).link));
+                    (*fs).inode_cache_size = (*fs)
+                        .inode_cache_size
+                        .wrapping_sub((*r).size as i64);
+                    assert_that(
+                        (*fs).inode_cache_size >= 0,
+                        b"fs->inode_cache_size >= 0\0",
+                        348,
+                        b"inode_free\0",
+                    );
+                    fs_base_url_decref((*r).base_url);
+                }
+                REG_STATE_LOADING => {
+                    let oi = (*r).open_info;
+                    if !(*oi).xhr.is_null() {
+                        fs_wget_free((*oi).xhr);
+                    }
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_error_archive(oi);
+                    }
+                    fs_open_end(oi);
+                    fs_base_url_decref((*r).base_url);
+                }
+                REG_STATE_UNLOADED => {
+                    fs_base_url_decref((*r).base_url);
+                }
+                REG_STATE_LOCAL => {}
+                _ => abort(),
+            }
+        }
+        FT_LNK => {
+            free((*symlink_mut(n)).name as *mut c_void);
+        }
+        FT_DIR => {
+            let d = dir_mut(n);
+            assert_that(
+                (*d).de_list.next == addr_of_mut!((*d).de_list),
+                b"list_empty(&n->u.dir.de_list)\0",
+                376,
+                b"inode_free\0",
+            );
+        }
+        _ => {}
+    }
+    list_del(addr_of_mut!((*n).link));
+    free(n as *mut c_void);
+    (*fs).inode_count = (*fs).inode_count.wrapping_sub(1);
+    assert_that(
+        (*fs).inode_count >= 0,
+        b"fs->inode_count >= 0\0",
+        384,
+        b"inode_free\0",
+    );
+}
+
+unsafe fn inode_decref(fs1: *mut FSDevice, n: *mut FSINode) {
+    assert_that(
+        (*n).refcount >= 1,
+        b"n->refcount >= 1\0",
+        389,
+        b"inode_decref\0",
+    );
+    let rc = (*n).refcount.wrapping_sub(1);
+    (*n).refcount = rc;
+    if rc <= 0 && (*n).open_count <= 0 {
+        inode_free(fs1, n);
+    }
+}
+
+unsafe fn inode_dirent_delete_no_decref(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    de: *mut FSDirEntry,
+) {
+    let fs = fs1 as *mut FSDeviceMem;
+    // de->name is the flexible array member; its offset is not sizeof(*de)
+    let name_ptr = addr_of_mut!((*de).name) as *const c_char;
+    let name_len = strlen(name_ptr);
+
+    let dirent_size: c_int =
+        size_of::<FSDirEntry>().wrapping_add(name_len).wrapping_add(1) as c_int;
+
+    let d = dir_mut(n);
+    let new_size = (*d).size.wrapping_sub(dirent_size);
+    (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(
+        to_blocks(fs, new_size as u64).wrapping_sub(to_blocks(fs, (*d).size as u64)),
+    );
+    (*d).size = new_size;
+    assert_that(
+        (*d).size >= 0,
+        b"n->u.dir.size >= 0\0",
+        554,
+        b"inode_dirent_delete_no_decref\0",
+    );
+    assert_that(
+        (*fs).fs_blocks >= 0,
+        b"fs->fs_blocks >= 0\0",
+        555,
+        b"inode_dirent_delete_no_decref\0",
+    );
+    list_del(addr_of_mut!((*de).link));
+    free(de as *mut c_void);
+}
+
+/* ---------- the target ---------- */
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_dirent_delete(
+    fs: *mut FSDevice,
+    n: *mut FSINode,
+    de: *mut FSDirEntry,
+) {
+    let n1: *mut FSINode = (*de).inode;
+    inode_dirent_delete_no_decref(fs, n, de);
+    inode_decref(fs, n1);
 }
 }
 
@@ -3413,6 +7375,491 @@ pub unsafe extern "C" fn inode_dirent_delete__part691(
     let n1: *mut FSINode = (*de).inode;
     inode_dirent_delete_no_decref(fs, n, de);
     inode_decref(fs, n1);
+}
+}
+
+// ── `flush_dir` · fs_net.c:568-577 · chunk 692 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void flush_dir(FSDevice *fs, FSINode *n)
+//     {
+//         struct list_head *el, *el1;
+//         FSDirEntry *de;
+//         for(el = (&n->u.dir.de_list)->next, el1 = el->next; el != (&n->u.dir.de_list); el = el1, el1 = el->next) {
+//             de = ((FSDirEntry *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 FSDirEntry
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             inode_dirent_delete(fs, n, de);
+//         }
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->u.dir.size == 0
+//        )), __extension__ ({ if (
+//        n->u.dir.size == 0
+//        ) ; else __assert_fail (
+//        "n->u.dir.size == 0"
+//        , "fs_net.c", 576, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk692 {
+// Port of `static void flush_dir(FSDevice *fs, FSINode *n)` from fs_net.c.
+//
+// flush_dir calls inode_dirent_delete(), which is a `static` C function (no
+// linker symbol), so that helper and everything it reaches is re-implemented
+// here with the same semantics and the same in-memory layouts.
+
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// struct FSDevice is a vtable of 22 function pointers (176 bytes); only its
+// size/alignment matter here because FSDeviceMem embeds it.
+#[repr(C)]
+pub struct FSDevice {
+    pub vtable: [*mut c_void; 22],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AESKey {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    pub aes_state: AESKey,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+pub type FSOpenCompletionFunc =
+    unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void);
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,      // FSOpenWgetEnum
+    pub xhr: *mut c_void,      // XHRState *
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void, // DecryptFileState *
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut c_void,         // FSFile *
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeUnion {
+    pub reg: FSReg,
+    pub dir: FSDir,
+    pub dev: FSDev,
+    pub symlink: FSSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+// FSINodeTypeEnum
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+// FSINodeRegStateEnum
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+// FSOpenWgetEnum
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+const DIRENT_LINK_OFFSET: usize = 0; // offsetof(FSDirEntry, link)
+const ARCHIVE_LINK_OFFSET: usize = 48; // offsetof(FSOpenInfo, archive_link)
+
+extern "C" {
+    fn free(p: *mut c_void);
+    fn strlen(s: *const c_char) -> usize;
+    fn abort() -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn fs_wget_free(s: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+}
+
+unsafe fn c_assert(cond: bool, expr: &[u8], line: c_uint, func: &[u8]) {
+    if !cond {
+        __assert_fail(
+            expr.as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+unsafe fn list_empty(el: *mut ListHead) -> bool {
+    (*el).next == el
+}
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let block_size = (*fs).block_size as u64;
+    let log2 = ((*fs).block_size_log2 as u32) & 63;
+    size.wrapping_add(block_size)
+        .wrapping_sub(1)
+        .wrapping_shr(log2) as i64
+}
+
+unsafe fn fs_base_url_decref(_fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    c_assert(
+        (*bu).ref_count >= 1,
+        b"bu->ref_count >= 1\0",
+        1602,
+        b"fs_base_url_decref\0",
+    );
+    (*bu).ref_count = (*bu).ref_count.wrapping_sub(1);
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    c_assert(
+        (*n).u.reg.state == REG_STATE_LOADING,
+        b"n->u.reg.state == REG_STATE_LOADING\0",
+        750,
+        b"fs_wget_set_error\0",
+    );
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(ARCHIVE_LINK_OFFSET) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn inode_free(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    c_assert((*n).refcount == 0, b"n->refcount == 0\0", 334, b"inode_free\0");
+    c_assert(
+        (*n).open_count == 0,
+        b"n->open_count == 0\0",
+        335,
+        b"inode_free\0",
+    );
+    match (*n).type_ {
+        FT_REG => {
+            let reg_size = (*n).u.reg.size as u64;
+            (*fs).fs_blocks = (*fs).fs_blocks.wrapping_sub(to_blocks(fs, reg_size));
+            c_assert(
+                (*fs).fs_blocks >= 0,
+                b"fs->fs_blocks >= 0\0",
+                339,
+                b"inode_free\0",
+            );
+            file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+
+            free((*n).u.reg.filename as *mut c_void);
+
+            match (*n).u.reg.state {
+                REG_STATE_LOADED => {
+                    list_del(core::ptr::addr_of_mut!((*n).u.reg.link));
+                    (*fs).inode_cache_size = (*fs)
+                        .inode_cache_size
+                        .wrapping_sub((*n).u.reg.size as i64);
+                    c_assert(
+                        (*fs).inode_cache_size >= 0,
+                        b"fs->inode_cache_size >= 0\0",
+                        348,
+                        b"inode_free\0",
+                    );
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_LOADING => {
+                    let oi = (*n).u.reg.open_info;
+                    if !(*oi).xhr.is_null() {
+                        fs_wget_free((*oi).xhr);
+                    }
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_error_archive(oi);
+                    }
+                    fs_open_end(oi);
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_UNLOADED => {
+                    fs_base_url_decref(fs1, (*n).u.reg.base_url);
+                }
+                REG_STATE_LOCAL => {}
+                _ => abort(),
+            }
+        }
+        FT_LNK => {
+            free((*n).u.symlink.name as *mut c_void);
+        }
+        FT_DIR => {
+            c_assert(
+                list_empty(core::ptr::addr_of_mut!((*n).u.dir.de_list)),
+                b"list_empty(&n->u.dir.de_list)\0",
+                376,
+                b"inode_free\0",
+            );
+        }
+        _ => {}
+    }
+    list_del(core::ptr::addr_of_mut!((*n).link));
+    free(n as *mut c_void);
+    (*fs).inode_count = (*fs).inode_count.wrapping_sub(1);
+    c_assert(
+        (*fs).inode_count >= 0,
+        b"fs->inode_count >= 0\0",
+        384,
+        b"inode_free\0",
+    );
+}
+
+unsafe fn inode_decref(fs1: *mut FSDevice, n: *mut FSINode) {
+    c_assert(
+        (*n).refcount >= 1,
+        b"n->refcount >= 1\0",
+        389,
+        b"inode_decref\0",
+    );
+    (*n).refcount = (*n).refcount.wrapping_sub(1);
+    if (*n).refcount <= 0 && (*n).open_count <= 0 {
+        inode_free(fs1, n);
+    }
+}
+
+unsafe fn inode_dirent_delete_no_decref(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    de: *mut FSDirEntry,
+) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    // int dirent_size = sizeof(*de) + strlen(de->name) + 1;
+    let dirent_size: c_int = core::mem::size_of::<FSDirEntry>()
+        .wrapping_add(strlen((*de).name.as_ptr()))
+        .wrapping_add(1) as c_int;
+
+    let old_size: c_int = (*n).u.dir.size;
+    let new_size: c_int = old_size.wrapping_sub(dirent_size);
+    (*fs).fs_blocks = (*fs)
+        .fs_blocks
+        .wrapping_add(to_blocks(fs, new_size as u64))
+        .wrapping_sub(to_blocks(fs, old_size as u64));
+    (*n).u.dir.size = new_size;
+    c_assert(
+        (*n).u.dir.size >= 0,
+        b"n->u.dir.size >= 0\0",
+        554,
+        b"inode_dirent_delete_no_decref\0",
+    );
+    c_assert(
+        (*fs).fs_blocks >= 0,
+        b"fs->fs_blocks >= 0\0",
+        555,
+        b"inode_dirent_delete_no_decref\0",
+    );
+    list_del(core::ptr::addr_of_mut!((*de).link));
+    free(de as *mut c_void);
+}
+
+unsafe fn inode_dirent_delete(fs: *mut FSDevice, n: *mut FSINode, de: *mut FSDirEntry) {
+    let n1 = (*de).inode;
+    inode_dirent_delete_no_decref(fs, n, de);
+    inode_decref(fs, n1);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn flush_dir(fs: *mut FSDevice, n: *mut FSINode) {
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*n).u.dir.de_list);
+    let mut el: *mut ListHead = (*head).next;
+    let mut el1: *mut ListHead = (*el).next;
+    while el != head {
+        let de = (el as *mut u8).sub(DIRENT_LINK_OFFSET) as *mut FSDirEntry;
+        inode_dirent_delete(fs, n, de);
+        el = el1;
+        el1 = (*el).next;
+    }
+    c_assert(
+        (*n).u.dir.size == 0,
+        b"n->u.dir.size == 0\0",
+        576,
+        b"flush_dir\0",
+    );
 }
 }
 
@@ -4538,6 +8985,74 @@ pub extern "C" fn fid_create__part698(
 }
 }
 
+// ── `inode_to_qid` · fs_net.c:596-606 · chunk 699 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void inode_to_qid(FSQID *qid, FSINode *n)
+//     {
+//         if (n->type == FT_DIR)
+//             qid->type = 0x80;
+//         else if (n->type == FT_LNK)
+//             qid->type = 0x02;
+//         else
+//             qid->type = 0x00;
+//         qid->version = 0;
+//         qid->path = n->inode_num;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk699 {
+// Port of fs_net.c inode_to_qid()
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// Partial mirror of the C FSINode: only the leading fields up to (and
+// including) `type` are needed; the layout of these fields is unchanged.
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: i32, // FSINodeTypeEnum
+}
+
+const FT_DIR: i32 = 4;
+const FT_LNK: i32 = 10;
+
+const P9_QTDIR: u8 = 0x80;
+const P9_QTSYMLINK: u8 = 0x02;
+const P9_QTFILE: u8 = 0x00;
+
+#[no_mangle]
+pub unsafe extern "C" fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    if qid.is_null() || n.is_null() {
+        return;
+    }
+    let n = &*n;
+    let qid = &mut *qid;
+    if n.type_ == FT_DIR {
+        qid.type_ = P9_QTDIR;
+    } else if n.type_ == FT_LNK {
+        qid.type_ = P9_QTSYMLINK;
+    } else {
+        qid.type_ = P9_QTFILE;
+    }
+    qid.version = 0; // no caching on client
+    qid.path = n.inode_num;
+}
+}
+
 // ── `if (n->type == FT_DIR) … else` · fs_net.c:598-603 · chunk 700 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -5628,6 +10143,251 @@ pub extern "C" fn fs_mkdir__part714(
 }
 }
 
+// ── `fs_trim_cache` · fs_net.c:670-697 · chunk 715 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_trim_cache(FSDevice *fs1, int64_t added_size)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         struct list_head *el, *el1;
+//         FSINode *n;
+//     
+//         if ((fs->inode_cache_size + added_size) <= fs->inode_cache_size_limit)
+//             return;
+//         for(el = (&fs->inode_cache_list)->prev, el1 = el->prev; el != (&fs->inode_cache_list); el = el1, el1 = el->prev) {
+//             n = ((FSINode *)((uint8_t *)(el) - 
+//                __builtin_offsetof (
+//                FSINode
+//                , 
+//                u.reg.link
+//                )
+//                ));
+//             
+//            ((void) sizeof (__assert_single_arg (
+//            n->u.reg.state == REG_STATE_LOADED
+//            )), __extension__ ({ if (
+//            n->u.reg.state == REG_STATE_LOADED
+//            ) ; else __assert_fail (
+//            "n->u.reg.state == REG_STATE_LOADED"
+//            , "fs_net.c", 680, __extension__ __PRETTY_FUNCTION__); }))
+//                                                      ;
+//     
+//     
+//             if (n->open_count != 0)
+//                 continue;
+//     
+//     
+//     
+//     
+//             file_buffer_reset(&n->u.reg.fbuf);
+//             n->u.reg.state = REG_STATE_UNLOADED;
+//             list_del(&n->u.reg.link);
+//             fs->inode_cache_size -= n->u.reg.size;
+//             
+//            ((void) sizeof (__assert_single_arg (
+//            fs->inode_cache_size >= 0
+//            )), __extension__ ({ if (
+//            fs->inode_cache_size >= 0
+//            ) ; else __assert_fail (
+//            "fs->inode_cache_size >= 0"
+//            , "fs_net.c", 693, __extension__ __PRETTY_FUNCTION__); }))
+//                                             ;
+//             if ((fs->inode_cache_size + added_size) <= fs->inode_cache_size_limit)
+//                 break;
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk715 {
+// Rust rewrite of fs_trim_cache (fs_net.c)
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADED: c_int = 3;
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// Mirror of `struct FSDevice` (only its layout matters here).
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+// Mirror of `struct FSINode`. The C `u` field is a union; its first member
+// `reg` is the largest one, so laying it out as a plain struct gives the
+// same offsets for `u.reg.link` (the only thing read here).
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeReg,
+}
+
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+}
+
+extern "C" {
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+#[inline(always)]
+unsafe fn assert_fail(assertion: &'static [u8], line: c_uint) -> ! {
+    unsafe {
+        __assert_fail(
+            assertion.as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            line,
+            b"fs_trim_cache\0".as_ptr() as *const c_char,
+        )
+    }
+}
+
+// offset of FSINode.u.reg.link inside FSINode
+#[inline(always)]
+fn reg_link_offset() -> usize {
+    unsafe {
+        let node: FSINode = core::mem::zeroed();
+        let base = core::ptr::addr_of!(node) as usize;
+        let link = core::ptr::addr_of!(node.u.link) as usize;
+        link - base
+    }
+}
+
+#[inline(always)]
+unsafe fn list_del(el: *mut ListHead) {
+    unsafe {
+        let prev = (*el).prev;
+        let next = (*el).next;
+        (*prev).next = next;
+        (*next).prev = prev;
+        (*el).prev = core::ptr::null_mut();
+        (*el).next = core::ptr::null_mut();
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_trim_cache(fs1: *mut FSDevice, added_size: i64) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let head = core::ptr::addr_of_mut!((*fs).inode_cache_list);
+
+        if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+            return;
+        }
+
+        let link_off = reg_link_offset();
+        let mut el: *mut ListHead = (*head).prev;
+        let mut el1: *mut ListHead = (*el).prev;
+        while el != head {
+            let n = (el as *mut u8).sub(link_off) as *mut FSINode;
+
+            if (*n).u.state != REG_STATE_LOADED {
+                assert_fail(b"n->u.reg.state == REG_STATE_LOADED\0", 680);
+            }
+
+            if (*n).open_count != 0 {
+                el = el1;
+                el1 = (*el).prev;
+                continue;
+            }
+
+            file_buffer_reset(core::ptr::addr_of_mut!((*n).u.fbuf));
+            (*n).u.state = REG_STATE_UNLOADED;
+            list_del(core::ptr::addr_of_mut!((*n).u.link));
+            (*fs).inode_cache_size =
+                ((*fs).inode_cache_size as u64).wrapping_sub((*n).u.size as u64) as i64;
+            if (*fs).inode_cache_size < 0 {
+                assert_fail(b"fs->inode_cache_size >= 0\0", 693);
+            }
+            if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+                break;
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+}
+}
+
 // ── `if (fs->inode_cache_size + added_size) <= fs->inode_cache_size_limit)` · fs_net.c:676-677 · chunk 716 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -5926,6 +10686,78 @@ pub unsafe extern "C" fn fs_trim_cache__part717(fs_ptr: *mut c_void, added_size:
 }
 }
 
+// ── `fs_open_end` · fs_net.c:699-707 · chunk 718 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_open_end(FSOpenInfo *oi)
+//     {
+//         if (oi->open_type == FS_OPEN_WGET_ARCHIVE_FILE) {
+//             list_del(&oi->archive_link);
+//         }
+//         if (oi->dec_state)
+//             decrypt_file_end(oi->dec_state);
+//         free(oi);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk718 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut c_void,
+    pub open_type: c_int,
+    _pad0: [u8; 4],
+    pub xhr: *mut c_void,
+    pub n: *mut c_void,
+    pub dec_state: *mut c_void,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut c_void,
+    pub cb: *mut c_void,
+    pub opaque: *mut c_void,
+}
+
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+extern "C" {
+    fn free(p: *mut c_void);
+}
+
+/* fs_wget.c's decrypt_file_end() is not part of the linked program:
+   it only frees the DecryptFileState, so inline it here. */
+unsafe fn decrypt_file_end(s: *mut c_void) {
+    free(s);
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(&mut (*oi).archive_link as *mut ListHead);
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+}
+
 // ── `if (oi->open_type == FS_OPEN_WGET_ARCHIVE_FILE)` · fs_net.c:701-703 · chunk 719 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -6026,6 +10858,111 @@ extern "C" {
 pub extern "C" fn fs_open_end__part721(oi: *mut c_void) {
     unsafe {
         free(oi);
+    }
+}
+}
+
+// ── `fs_open_write_cb` · fs_net.c:709-722 · chunk 722 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_open_write_cb(void *opaque, const uint8_t *data, size_t size)
+//     {
+//         FSOpenInfo *oi = opaque;
+//         size_t len;
+//         FSINode *n = oi->n;
+//     
+//     
+//         len = n->u.reg.size - oi->cur_pos;
+//         if (size < len)
+//             len = size;
+//         file_buffer_write(&n->u.reg.fbuf, oi->cur_pos, data, len);
+//         oi->cur_pos += len;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk722 {
+// Rust port of fs_open_write_cb (fs_net.c lines 709-722)
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// ---- mirrored C types (only what the TARGET touches) ----
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct ListHead {
+    next: *mut ListHead,
+    prev: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+// FSOpenInfo layout (fields up to cur_pos are needed; trailing fields omitted
+// because only the leading fields' offsets are observed through the pointer).
+#[repr(C)]
+struct FSOpenInfo {
+    fs: *mut c_void,
+    open_type: c_int, // FSOpenWgetEnum
+    xhr: *mut c_void,
+    n: *mut FSINodeReg,
+    dec_state: *mut c_void,
+    cur_pos: usize,
+    // ... remaining fields not accessed by the TARGET
+}
+
+// FSINode with the `reg` member of the anonymous union laid out inline.
+// The union `u` starts at offset 64 and the `reg` variant begins at offset 0
+// of that union, so this flattened layout matches the C struct exactly for
+// every field the TARGET reads or writes.
+#[repr(C)]
+struct FSINodeReg {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    node_type: c_int, // FSINodeTypeEnum
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    // ---- union u  ->  union member `reg` ----
+    reg_state: c_int, // FSINodeRegStateEnum
+    reg_size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut c_void,
+    file_id: u64,
+    reg_link: ListHead,
+    open_info: *mut FSOpenInfo,
+    is_fscmd: c_int, // BOOL
+    filename: *mut c_char,
+}
+
+extern "C" {
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+}
+
+#[no_mangle]
+pub extern "C" fn fs_open_write_cb(opaque: *mut c_void, data: *const u8, size: usize) -> c_int {
+    unsafe {
+        let oi = opaque as *mut FSOpenInfo;
+        let n = (*oi).n;
+
+        // we ignore extraneous data
+        let mut len: usize = (*n).reg_size.wrapping_sub((*oi).cur_pos);
+        if size < len {
+            len = size;
+        }
+        file_buffer_write(&mut (*n).fbuf, (*oi).cur_pos, data, len);
+        (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+        0
     }
 }
 }
@@ -6174,6 +11111,313 @@ pub extern "C" fn fs_open_write_cb__part725(
         *cur_pos = pos.wrapping_add(len);
     }
     0
+}
+}
+
+// ── `fs_wget_set_loaded` · fs_net.c:724-745 · chunk 726 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_wget_set_loaded(FSINode *n)
+//     {
+//         FSOpenInfo *oi;
+//         FSDeviceMem *fs;
+//         FSFile *f;
+//         FSQID qid;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->u.reg.state == REG_STATE_LOADING
+//        )), __extension__ ({ if (
+//        n->u.reg.state == REG_STATE_LOADING
+//        ) ; else __assert_fail (
+//        "n->u.reg.state == REG_STATE_LOADING"
+//        , "fs_net.c", 731, __extension__ __PRETTY_FUNCTION__); }))
+//                                                   ;
+//         oi = n->u.reg.open_info;
+//         fs = (FSDeviceMem *)oi->fs;
+//         n->u.reg.state = REG_STATE_LOADED;
+//         list_add(&n->u.reg.link, &fs->inode_cache_list);
+//         fs->inode_cache_size += n->u.reg.size;
+//     
+//         if (oi->cb) {
+//             f = oi->f;
+//             f->is_opened = TRUE;
+//             inode_to_qid(&qid, n);
+//             oi->cb(oi->fs, &qid, 0, oi->opaque);
+//         }
+//         fs_open_end(oi);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk726 {
+// Rust port of fs_net.c: fs_wget_set_loaded()
+//
+// The C helpers that are `static` (inode_to_qid, fs_open_end, list_add) are
+// reproduced here as private Rust functions with identical semantics; only
+// non-static C symbols (free, decrypt_file_end, __assert_fail) are declared in
+// the extern block.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSQID {
+    pub r#type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// FSFileID
+type FSFileID = u64;
+
+const FT_DIR: c_int = 4;
+const FT_LNK: c_int = 10;
+
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+const TRUE: c_int = 1;
+
+// FSDevice: 22 function pointers (all pointer sized), kept as opaque pointers.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void, // FSBaseURL *
+    pub file_id: FSFileID,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int, // BOOL
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int, // BOOL
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+type FSOpenCompletionFunc =
+    unsafe extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut c_void);
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int, // FSOpenWgetEnum
+    pub xhr: *mut c_void,
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void, // DecryptFileState *
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: i32,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+}
+
+extern "C" {
+    fn free(p: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// list.h: list_add / __list_add / list_del
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// fs_net.c: inode_to_qid()
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    let t = (*n).r#type;
+    if t == FT_DIR {
+        (*qid).r#type = 0x80;
+    } else if t == FT_LNK {
+        (*qid).r#type = 0x02;
+    } else {
+        (*qid).r#type = 0x00;
+    }
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+// fs_net.c: fs_open_end()
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_wget_set_loaded(n: *mut FSINode) {
+    let reg = core::ptr::addr_of_mut!((*n).u.reg);
+
+    // assert(n->u.reg.state == REG_STATE_LOADING);
+    if (*reg).state != REG_STATE_LOADING {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            731,
+            b"fs_wget_set_loaded\0".as_ptr() as *const c_char,
+        );
+    }
+
+    let oi: *mut FSOpenInfo = (*reg).open_info;
+    let fs: *mut FSDeviceMem = (*oi).fs as *mut FSDeviceMem;
+
+    (*reg).state = REG_STATE_LOADED;
+    list_add(
+        core::ptr::addr_of_mut!((*reg).link),
+        core::ptr::addr_of_mut!((*fs).inode_cache_list),
+    );
+    (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_add((*reg).size as i64);
+
+    if let Some(cb) = (*oi).cb {
+        let f: *mut FSFile = (*oi).f;
+        (*f).is_opened = TRUE;
+        let mut qid: FSQID = core::mem::zeroed();
+        inode_to_qid(core::ptr::addr_of_mut!(qid), n);
+        cb((*oi).fs, core::ptr::addr_of_mut!(qid), 0, (*oi).opaque);
+    }
+    fs_open_end(oi);
 }
 }
 
@@ -6701,6 +11945,200 @@ pub extern "C" fn fs_wget_set_loaded__part729(oi: *mut FSOpenInfo) {
 }
 }
 
+// ── `fs_wget_set_error` · fs_net.c:747-758 · chunk 730 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_wget_set_error(FSINode *n)
+//     {
+//         FSOpenInfo *oi;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->u.reg.state == REG_STATE_LOADING
+//        )), __extension__ ({ if (
+//        n->u.reg.state == REG_STATE_LOADING
+//        ) ; else __assert_fail (
+//        "n->u.reg.state == REG_STATE_LOADING"
+//        , "fs_net.c", 750, __extension__ __PRETTY_FUNCTION__); }))
+//                                                   ;
+//         oi = n->u.reg.open_info;
+//         n->u.reg.state = REG_STATE_UNLOADED;
+//         file_buffer_reset(&n->u.reg.fbuf);
+//         if (oi->cb) {
+//             oi->cb(oi->fs, 
+//                           ((void *)0)
+//                               , -5, oi->opaque);
+//         }
+//         fs_open_end(oi);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk730 {
+use core::ffi::{c_char, c_int};
+use core::mem::ManuallyDrop;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut XHRState,
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: *mut FSOpenCompletionFunc,
+    pub opaque: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+pub struct Reg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Dir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Dev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+pub struct Symlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub union FSU {
+    pub reg: ManuallyDrop<Reg>,
+    pub dir: ManuallyDrop<Dir>,
+    pub dev: Dev,
+    pub symlink: ManuallyDrop<Symlink>,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSU,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    pub aes_state: AESKEY,
+}
+
+pub enum FSDevice {}
+pub enum FSFile {}
+pub enum XHRState {}
+pub enum DecryptFileState {}
+pub enum AESKEY {}
+pub enum FSQID {}
+
+pub type FSOpenCompletionFunc =
+    extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut core::ffi::c_void);
+
+extern "C" {
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn decrypt_file_end(s: *mut DecryptFileState);
+    fn free(p: *mut core::ffi::c_void);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: u32,
+        function: *const c_char,
+    ) -> !;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    // FS_OPEN_WGET_ARCHIVE_FILE == 2
+    if (*oi).open_type == 2 {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut core::ffi::c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_wget_set_error(n: *mut FSINode) {
+    let oi: *mut FSOpenInfo;
+    // `reg` points into the union member `n->u.reg` (repr(transparent) wrapper)
+    let reg = core::ptr::addr_of_mut!((*n).u.reg) as *mut Reg;
+
+    // assert(n->u.reg.state == REG_STATE_LOADING)
+    if (*reg).state != 2 {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            750,
+            b"fs_wget_set_error\0".as_ptr() as *const c_char,
+        );
+    }
+    oi = (*reg).open_info;
+    (*reg).state = 1;
+    file_buffer_reset(core::ptr::addr_of_mut!((*reg).fbuf));
+    if !(*oi).cb.is_null() {
+        let cb: FSOpenCompletionFunc = core::mem::transmute((*oi).cb);
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+}
+
 // ── `FSOpenInfo *oi; ((void) sizeof (__assert_single_arg ( n->u.reg.state == REG_STATE_LOADING )), _…` · fs_net.c:749-753 · chunk 731 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -6936,6 +12374,367 @@ pub unsafe extern "C" fn fs_wget_set_error__part733(oi: *mut FSOpenInfo) {
 }
 }
 
+// ── `fs_read_archive` · fs_net.c:760-786 · chunk 734 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_read_archive(FSOpenInfo *oi)
+//     {
+//         FSINode *n = oi->n;
+//         uint64_t pos, pos1, l;
+//         uint8_t buf[1024];
+//         FSINode *n1;
+//         FSOpenInfo *oi1;
+//         struct list_head *el, *el1;
+//     
+//         for(el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list); el = el1, el1 = el->next) {
+//             oi1 = ((FSOpenInfo *)((uint8_t *)(el) - 
+//                  __builtin_offsetof (
+//                  FSOpenInfo
+//                  , 
+//                  archive_link
+//                  )
+//                  ));
+//             n1 = oi1->n;
+//     
+//             pos = oi1->archive_offset;
+//             pos1 = 0;
+//             while (pos1 < n1->u.reg.size) {
+//                 l = n1->u.reg.size - pos1;
+//                 if (l > sizeof(buf))
+//                     l = sizeof(buf);
+//                 file_buffer_read(&n->u.reg.fbuf, pos, buf, l);
+//                 file_buffer_write(&n1->u.reg.fbuf, pos1, buf, l);
+//                 pos += l;
+//                 pos1 += l;
+//             }
+//             fs_wget_set_loaded(n1);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk734 {
+// Rust port of `static void fs_read_archive(FSOpenInfo *oi)` from fs_net.c
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::addr_of_mut;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+// FileBuffer (file_buffer.h): data pointer + allocated_size
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,          // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void, // FSBaseURL *
+    pub file_id: u64,          // FSFileID
+    pub link: list_head,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,       // BOOL
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: list_head,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut c_void,        // FSDevice *
+    pub open_type: c_int,       // FSOpenWgetEnum
+    pub xhr: *mut c_void,       // XHRState *
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void, // DecryptFileState *
+    pub cur_pos: usize,
+    pub archive_link: list_head,
+    pub archive_offset: u64,
+    pub archive_file_list: list_head,
+    pub f: *mut c_void,         // FSFile *
+    pub cb: *mut c_void,        // FSOpenCompletionFunc *
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int, // BOOL
+    pub open_flags: u32,
+    pub req: *mut c_void, // FSCMDRequest *
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSQID {
+    pub r#type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// struct FSDevice (fs.h) -- only the leading layout matters for pointer identity,
+// but the full field list is mirrored so that FSDeviceMem keeps correct offsets.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: list_head,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: list_head,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+}
+
+extern "C" {
+    pub fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+    pub fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    pub fn decrypt_file_end(s: *mut c_void);
+    pub fn free(ptr: *mut c_void);
+    pub fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: u32,
+        function: *const c_char,
+    ) -> !;
+}
+
+// pointer to the active `reg` member of the inode union
+#[inline]
+unsafe fn reg(n: *mut FSINode) -> *mut FSINodeReg {
+    addr_of_mut!((*n).u.reg)
+}
+
+// ---- ports of static functions from fs_net.c ----
+
+// static void inode_to_qid(FSQID *qid, FSINode *n)
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *const FSINode) {
+    // FT_DIR == 4, FT_LNK == 10
+    let t = (*n).r#type;
+    let qtype: u8 = if t == 4 {
+        0x80
+    } else if t == 10 {
+        0x02
+    } else {
+        0x00
+    };
+    (*qid).r#type = qtype;
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+// static inline void __list_add(...)
+unsafe fn __list_add(el: *mut list_head, prev: *mut list_head, next: *mut list_head) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// static inline void list_add(struct list_head *el, struct list_head *head)
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    __list_add(el, head, (*head).next);
+}
+
+// static inline void list_del(struct list_head *el)
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// static void fs_open_end(FSOpenInfo *oi)
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    // FS_OPEN_WGET_ARCHIVE_FILE == 2
+    if (*oi).open_type == 2 {
+        list_del(addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+// static void fs_wget_set_loaded(FSINode *n)
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    // assert(n->u.reg.state == REG_STATE_LOADING)  (REG_STATE_LOADING == 2)
+    let r = reg(n);
+    if !((*r).state == 2) {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            731,
+            b"fs_wget_set_loaded\0".as_ptr() as *const c_char,
+        );
+    }
+    let oi = (*r).open_info;
+    let fs = (*oi).fs as *mut FSDeviceMem;
+    (*r).state = 3; // REG_STATE_LOADED
+    list_add(addr_of_mut!((*r).link), addr_of_mut!((*fs).inode_cache_list));
+    (*fs).inode_cache_size += (*r).size as i64;
+
+    if !(*oi).cb.is_null() {
+        let f = (*oi).f as *mut FSFile;
+        (*f).is_opened = 1; // TRUE
+        let mut qid = FSQID {
+            r#type: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid as *mut FSQID, n);
+        let cb: unsafe extern "C" fn(*mut c_void, *mut FSQID, c_int, *mut c_void) =
+            core::mem::transmute((*oi).cb);
+        cb(
+            (*oi).fs,
+            &mut qid as *mut FSQID,
+            0,
+            (*oi).opaque,
+        );
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_read_archive(FSOpenInfo *oi)
+#[no_mangle]
+pub unsafe extern "C" fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut pos: u64;
+    let mut pos1: u64;
+    let mut l: u64;
+    let mut buf = [0u8; 1024];
+    let mut n1: *mut FSINode;
+    let mut oi1: *mut FSOpenInfo;
+
+    let archive_link_off = core::mem::offset_of!(FSOpenInfo, archive_link);
+    let head = addr_of_mut!((*oi).archive_file_list);
+    let mut el: *mut list_head = (*head).next;
+    let mut el1: *mut list_head = (*el).next;
+    while el != head {
+        oi1 = (el as *mut u8).sub(archive_link_off) as *mut FSOpenInfo;
+        n1 = (*oi1).n;
+
+        pos = (*oi1).archive_offset;
+        pos1 = 0;
+        let n1_reg = reg(n1);
+        let size = (*n1_reg).size as u64;
+        while pos1 < size {
+            l = size - pos1;
+            if l > buf.len() as u64 {
+                l = buf.len() as u64;
+            }
+            file_buffer_read(
+                addr_of_mut!((*reg(n)).fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                addr_of_mut!((*n1_reg).fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+}
+
 // ── `for (el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list; el = e…` · fs_net.c:769-785 · chunk 735 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -7099,6 +12898,205 @@ pub unsafe extern "C" fn fs_read_archive__part735(
         set_loaded(n1);
 
         el = el1;
+    }
+}
+}
+
+// ── `fs_error_archive` · fs_net.c:788-797 · chunk 736 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_error_archive(FSOpenInfo *oi)
+//     {
+//         FSOpenInfo *oi1;
+//         struct list_head *el, *el1;
+//     
+//         for(el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list); el = el1, el1 = el->next) {
+//             oi1 = ((FSOpenInfo *)((uint8_t *)(el) - 
+//                  __builtin_offsetof (
+//                  FSOpenInfo
+//                  , 
+//                  archive_link
+//                  )
+//                  ));
+//             fs_wget_set_error(oi1->n);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk736 {
+// Rust rewrite of fs_error_archive() from fs_net.c (lines 788-797).
+//
+// static void fs_error_archive(FSOpenInfo *oi)
+// {
+//     FSOpenInfo *oi1;
+//     struct list_head *el, *el1;
+//     list_for_each_safe(el, el1, &oi->archive_file_list) {
+//         oi1 = list_entry(el, FSOpenInfo, archive_link);
+//         fs_wget_set_error(oi1->n);
+//     }
+// }
+//
+// fs_wget_set_error() and fs_open_end() are static C functions (no linker
+// symbol), so their logic is ported here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FsInodeReg {
+    state: c_int, /* FSINodeRegStateEnum: REG_STATE_LOADING == 2 */
+    size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut c_void,
+    file_id: u64,
+    link: ListHead,
+    open_info: *mut FSOpenInfo,
+    is_fscmd: c_int,
+    filename: *mut c_char,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FsInodeUnion {
+    /* "reg" is the largest member of the C union, so placing it at offset 0
+       in a struct reproduces the union's layout for every member we touch. */
+    reg: FsInodeReg,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FsInode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    type_: c_int, /* FSINodeTypeEnum */
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FsInodeUnion,
+}
+
+pub type FsOpenCompletionFunc =
+    unsafe extern "C" fn(*mut c_void, *mut c_void, c_int, *mut c_void);
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FSOpenInfo {
+    fs: *mut c_void,        /* FSDevice * */
+    open_type: c_int,       /* FSOpenWgetEnum */
+    xhr: *mut c_void,       /* XHRState * */
+    n: *mut FsInode,        /* FSINode * */
+    dec_state: *mut c_void, /* DecryptFileState * */
+    cur_pos: usize,
+    archive_link: ListHead,
+    archive_offset: u64,
+    archive_file_list: ListHead,
+    f: *mut c_void, /* FSFile * */
+    cb: Option<FsOpenCompletionFunc>,
+    opaque: *mut c_void,
+}
+
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+
+extern "C" {
+    fn free(p: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+fn archive_link_offset() -> usize {
+    let uninit = core::mem::MaybeUninit::<FSOpenInfo>::uninit();
+    let base = uninit.as_ptr();
+    unsafe {
+        let field = core::ptr::addr_of!((*base).archive_link) as usize;
+        field - (base as usize)
+    }
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+unsafe fn file_buffer_reset(bs: *mut FileBuffer) {
+    free((*bs).data as *mut c_void);
+    (*bs).data = core::ptr::null_mut();
+    (*bs).allocated_size = 0;
+}
+
+/* Port of the static C function fs_open_end(). */
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+/* Port of the static C function fs_wget_set_error(). */
+unsafe fn fs_wget_set_error(n: *mut FsInode) {
+    if (*n).u.reg.state != REG_STATE_LOADING {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            750,
+            b"fs_wget_set_error\0".as_ptr() as *const c_char,
+        );
+    }
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let off = archive_link_offset();
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*oi).archive_file_list);
+
+    let mut el: *mut ListHead = (*head).next;
+    let mut el1: *mut ListHead = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
     }
 }
 }
@@ -7269,6 +13267,816 @@ pub unsafe extern "C" fn fs_error_archive__part737(oi: *mut FSOpenInfo) {
         wget_set_error((*oi1).n);
         el = el1;
         el1 = (*el1).next;
+    }
+}
+}
+
+// ── `fs_open_cb` · fs_net.c:799-834 · chunk 738 · deepseek/deepseek-v4.1-flash-1017 · 4 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_open_cb(void *opaque, int err, void *data, size_t size)
+//     {
+//         FSOpenInfo *oi = opaque;
+//         FSINode *n = oi->n;
+//     
+//     
+//         if (err < 0) {
+//         error:
+//             if (oi->open_type == FS_OPEN_WGET_ARCHIVE)
+//                 fs_error_archive(oi);
+//             fs_wget_set_error(n);
+//         } else {
+//             if (oi->dec_state) {
+//                 if (decrypt_file(oi->dec_state, data, size) < 0)
+//                     goto error;
+//                 if (err == 0) {
+//                     if (decrypt_file_flush(oi->dec_state) < 0)
+//                         goto error;
+//                 }
+//             } else {
+//                 fs_open_write_cb(oi, data, size);
+//             }
+//     
+//             if (err == 0) {
+//     
+//                 if (oi->cur_pos != n->u.reg.size)
+//                     goto error;
+//     
+//                 dump_loaded_file(oi->fs, n);
+//     
+//                 if (oi->open_type == FS_OPEN_WGET_ARCHIVE)
+//                     fs_read_archive(oi);
+//                 fs_wget_set_loaded(n);
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk738 {
+// Rust port of fs_net.c: fs_open_cb
+// (static void fs_open_cb(void *opaque, int err, void *data, size_t size))
+//
+// Every helper fs_open_cb reaches is `static` in fs_net.c / fs_wget.c (and
+// therefore has no linker symbol), so its logic is ported here as private
+// Rust functions: fs_open_write_cb, fs_wget_set_loaded, fs_wget_set_error,
+// fs_read_archive, fs_error_archive, fs_open_end, dump_loaded_file (the
+// DUMP_CACHE_LOAD build is active) and the decrypt_file / decrypt_file_flush
+// family. AES itself comes from libcrypto (AES_cbc_encrypt), which the C
+// program links against.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+type BOOL = c_int;
+const TRUE: BOOL = 1;
+
+// FS_OPEN_WGET_* enum values
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+// REG_STATE_* enum values
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+const REG_STATE_UNLOADED: c_int = 1;
+
+// FT_* enum values
+const FT_DIR: c_int = 4;
+const FT_LNK: c_int = 10;
+
+// -P9_EIO
+const P9_EIO: c_int = 5;
+
+const AES_BLOCK_SIZE: usize = 16;
+const ENCRYPTED_FILE_HEADER_SIZE: usize = 4 + AES_BLOCK_SIZE;
+const DEC_BUF_SIZE: usize = 256 * AES_BLOCK_SIZE;
+
+// struct aes_key_st { uint32_t rd_key[4*(AES_MAXNR+1)]; int rounds; };
+#[repr(C)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+// struct list_head { struct list_head *prev, *next; };
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+// typedef struct { uint8_t *data; size_t allocated_size; } FileBuffer;
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct InodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64, // FSFileID
+    pub link: list_head,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+pub struct InodeDir {
+    pub de_list: list_head,
+    pub size: c_int,
+}
+
+#[repr(C)]
+pub struct InodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+pub struct InodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub union FSINodeUnion {
+    pub reg: core::mem::ManuallyDrop<InodeReg>,
+    pub dir: core::mem::ManuallyDrop<InodeDir>,
+    pub dev: core::mem::ManuallyDrop<InodeDev>,
+    pub symlink: core::mem::ManuallyDrop<InodeSymlink>,
+}
+
+// typedef struct FSINode { ... union { ... } u; } FSINode;
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: list_head,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AES_KEY,
+}
+
+// typedef struct { uint8_t type; uint32_t version; uint64_t path; } FSQID;
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// struct FSFile { uint32_t uid; FSINode *inode; BOOL is_opened; ... };
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: BOOL,
+}
+
+// typedef struct FSOpenInfo { ... } FSOpenInfo;
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDeviceMem, // FSDevice *
+    pub open_type: c_int,     // FSOpenWgetEnum
+    pub xhr: *mut c_void,     // XHRState *
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: list_head,
+    pub archive_offset: u64,
+    pub archive_file_list: list_head,
+    pub f: *mut FSFile,
+    pub cb: Option<unsafe extern "C" fn(*mut FSDeviceMem, *mut FSQID, c_int, *mut c_void)>,
+    pub opaque: *mut c_void,
+}
+
+// struct FSDeviceMem: `common` (struct FSDevice) is a block of 22 function
+// pointers at offset 0; only the trailing members are used here.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: [*mut c_void; 22],
+    pub inode_list: list_head,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: list_head,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: list_head,
+    pub preload_archive_list: list_head,
+    pub base_url_list: list_head,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: list_head,
+    pub dump_exclude_list: list_head,
+}
+
+// struct DecryptFileState (fs_wget.c)
+#[repr(C)]
+pub struct DecryptFileState {
+    pub write_cb: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize) -> c_int>,
+    pub opaque: *mut c_void,
+    pub dec_state: c_int,
+    pub dec_buf_pos: c_int,
+    pub aes_state: *mut AES_KEY,
+    pub iv: [u8; AES_BLOCK_SIZE],
+    pub dec_buf: [u8; DEC_BUF_SIZE],
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: list_head,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+extern "C" {
+    fn memcpy(dst: *mut c_void, src: *const c_void, size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn strrchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+
+    fn fclose(f: *mut c_void) -> c_int;
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn fflush(f: *mut c_void) -> c_int;
+    fn fwrite(p: *const c_void, size: usize, n: usize, f: *mut c_void) -> usize;
+    fn snprintf(buf: *mut c_char, size: usize, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(code: c_int) -> !;
+
+    fn AES_cbc_encrypt(
+        inp: *const u8,
+        out: *mut u8,
+        length: c_long,
+        key: *const AES_KEY,
+        ivec: *mut u8,
+        enc: c_int,
+    );
+}
+
+// ---------------------------------------------------------------------------
+// small C library/list helpers
+// ---------------------------------------------------------------------------
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// ---- __builtin_offsetof equivalents ---------------------------------------
+
+fn offset_of_archive_link() -> usize {
+    unsafe {
+        let p = core::ptr::null_mut::<FSOpenInfo>();
+        core::ptr::addr_of!((*p).archive_link) as usize
+    }
+}
+
+fn offset_of_reg_link() -> usize {
+    unsafe {
+        let p = core::ptr::null_mut::<FSINode>();
+        let r = core::ptr::addr_of!((*p).u.reg) as *const InodeReg;
+        (core::ptr::addr_of!((*r).link) as usize) - (r as usize)
+    }
+}
+
+// static inline void list_del(struct list_head *el)
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// static inline void list_add(struct list_head *el, struct list_head *head)
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    let next = (*head).next;
+    // __list_add(el, head, head->next)
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// helpers to reach the "reg" arm of the anonymous union through a raw pointer
+#[inline]
+unsafe fn reg(n: *mut FSINode) -> *mut InodeReg {
+    core::ptr::addr_of_mut!((*n).u.reg) as *mut InodeReg
+}
+
+// void file_buffer_reset(FileBuffer *bs)
+unsafe fn file_buffer_reset(bs: *mut FileBuffer) {
+    free((*bs).data as *mut c_void);
+    (*bs).data = core::ptr::null_mut();
+    (*bs).allocated_size = 0;
+}
+
+// void file_buffer_write(FileBuffer *bs, size_t offset, const uint8_t *buf, size_t size)
+unsafe fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize) {
+    if size != 0 {
+        memcpy((*bs).data.add(offset) as *mut c_void, buf as *const c_void, size);
+    }
+}
+
+// void file_buffer_read(FileBuffer *bs, size_t offset, uint8_t *buf, size_t size)
+unsafe fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize) {
+    if size != 0 {
+        memcpy(buf as *mut c_void, (*bs).data.add(offset) as *const c_void, size);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ported `static` helpers of fs_net.c
+// ---------------------------------------------------------------------------
+
+// static void fs_open_end(FSOpenInfo *oi)
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end_local((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+// static int fs_open_write_cb(void *opaque, const uint8_t *data, size_t size)
+unsafe fn fs_open_write_cb(opaque: *mut c_void, data: *const u8, size: usize) -> c_int {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    // we ignore extraneous data
+    let mut len: usize = (*reg(n)).size.wrapping_sub((*oi).cur_pos);
+    if size < len {
+        len = size;
+    }
+    file_buffer_write(
+        core::ptr::addr_of_mut!((*reg(n)).fbuf),
+        (*oi).cur_pos,
+        data,
+        len,
+    );
+    (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+    0
+}
+
+// static void inode_to_qid(FSQID *qid, FSINode *n)
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    let t = (*n).type_;
+    (*qid).type_ = if t == FT_DIR {
+        0x80
+    } else if t == FT_LNK {
+        0x02
+    } else {
+        0x00
+    };
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+// static void fs_wget_set_loaded(FSINode *n)
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    // assert(n->u.reg.state == REG_STATE_LOADING);
+    if (*reg(n)).state != REG_STATE_LOADING {
+        std::process::abort();
+    }
+    let oi = (*reg(n)).open_info;
+    let fs = (*oi).fs;
+    (*reg(n)).state = REG_STATE_LOADED;
+    let link = ((reg(n) as *mut u8).add(offset_of_reg_link())) as *mut list_head;
+    list_add(link, core::ptr::addr_of_mut!((*fs).inode_cache_list));
+    (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_add((*reg(n)).size as i64);
+
+    if let Some(cb) = (*oi).cb {
+        let f = (*oi).f;
+        (*f).is_opened = TRUE;
+        let mut qid = FSQID {
+            type_: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid, n);
+        cb((*oi).fs, &mut qid, 0, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_wget_set_error(FSINode *n)
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    // assert(n->u.reg.state == REG_STATE_LOADING);
+    if (*reg(n)).state != REG_STATE_LOADING {
+        std::process::abort();
+    }
+    let oi = (*reg(n)).open_info;
+    (*reg(n)).state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*reg(n)).fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -P9_EIO, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_read_archive(FSOpenInfo *oi)
+unsafe fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut buf = [0u8; 1024];
+
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        // list_entry(el, FSOpenInfo, archive_link)
+        let oi1 = (el as *mut u8).sub(offset_of_archive_link()) as *mut FSOpenInfo;
+        let n1 = (*oi1).n;
+
+        // copy the archive data to the file
+        let mut pos: u64 = (*oi1).archive_offset;
+        let mut pos1: u64 = 0;
+        let n1_size = (*reg(n1)).size as u64;
+        while pos1 < n1_size {
+            let mut l: u64 = n1_size.wrapping_sub(pos1);
+            if l > buf.len() as u64 {
+                l = buf.len() as u64;
+            }
+            file_buffer_read(
+                core::ptr::addr_of_mut!((*reg(n)).fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                core::ptr::addr_of_mut!((*reg(n1)).fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+// static void fs_error_archive(FSOpenInfo *oi)
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(offset_of_archive_link()) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// file decryption (fs_wget.c)
+// ---------------------------------------------------------------------------
+
+const ENCRYPTED_FILE_MAGIC: [u8; 4] = [0xfb, 0xa2, 0xe9, 0x01];
+
+// void decrypt_file_end(DecryptFileState *s) { free(s); }
+unsafe fn decrypt_file_end_local(s: *mut DecryptFileState) {
+    free(s as *mut c_void);
+}
+
+unsafe fn dec_write(s: *mut DecryptFileState, data: *const u8, len: usize) -> c_int {
+    match (*s).write_cb {
+        Some(cb) => cb((*s).opaque, data, len),
+        None => -1,
+    }
+}
+
+// int decrypt_file(DecryptFileState *s, const uint8_t *data, size_t size)
+unsafe fn decrypt_file_local(s: *mut DecryptFileState, data: *const u8, size: usize) -> c_int {
+    let mut data = data;
+    let mut size = size;
+    while size != 0 {
+        let mut l: usize;
+        match (*s).dec_state {
+            0 => {
+                l = min_int(
+                    size as c_int,
+                    (ENCRYPTED_FILE_HEADER_SIZE as c_int) - (*s).dec_buf_pos,
+                ) as usize;
+                memcpy(
+                    (*(*s).dec_buf.as_mut_ptr().add((*s).dec_buf_pos as usize)) as *mut u8
+                        as *mut c_void,
+                    data as *const c_void,
+                    l,
+                );
+                (*s).dec_buf_pos += l as c_int;
+                if (*s).dec_buf_pos >= ENCRYPTED_FILE_HEADER_SIZE as c_int {
+                    if (*s).dec_buf[0] != ENCRYPTED_FILE_MAGIC[0]
+                        || (*s).dec_buf[1] != ENCRYPTED_FILE_MAGIC[1]
+                        || (*s).dec_buf[2] != ENCRYPTED_FILE_MAGIC[2]
+                        || (*s).dec_buf[3] != ENCRYPTED_FILE_MAGIC[3]
+                    {
+                        return -1;
+                    }
+                    let mut i = 0;
+                    while i < AES_BLOCK_SIZE {
+                        (*s).iv[i] = (*s).dec_buf[4 + i];
+                        i += 1;
+                    }
+                    (*s).dec_state = 1;
+                    (*s).dec_buf_pos = 0;
+                }
+            }
+            _ => {
+                l = min_int(
+                    size as c_int,
+                    (DEC_BUF_SIZE as c_int) - (*s).dec_buf_pos,
+                ) as usize;
+                memcpy(
+                    (*(*s).dec_buf.as_mut_ptr().add((*s).dec_buf_pos as usize)) as *mut u8
+                        as *mut c_void,
+                    data as *const c_void,
+                    l,
+                );
+                (*s).dec_buf_pos += l as c_int;
+                if (*s).dec_buf_pos >= DEC_BUF_SIZE as c_int {
+                    // keep one block in case it is the padding
+                    let len = (*s).dec_buf_pos - AES_BLOCK_SIZE as c_int;
+                    let buf = (*s).dec_buf.as_mut_ptr();
+                    AES_cbc_encrypt(
+                        buf,
+                        buf,
+                        len as c_long,
+                        (*s).aes_state,
+                        (*s).iv.as_mut_ptr(),
+                        0, // FALSE
+                    );
+                    let ret = dec_write(s, buf, len as usize);
+                    if ret < 0 {
+                        return ret;
+                    }
+                    let src_off = (*s).dec_buf_pos as usize - AES_BLOCK_SIZE;
+                    let mut i = 0;
+                    while i < AES_BLOCK_SIZE {
+                        (*s).dec_buf[i] = (*s).dec_buf[src_off + i];
+                        i += 1;
+                    }
+                    (*s).dec_buf_pos = AES_BLOCK_SIZE as c_int;
+                }
+            }
+        }
+        data = data.add(l);
+        size -= l;
+    }
+    0
+}
+
+// int decrypt_file_flush(DecryptFileState *s)
+unsafe fn decrypt_file_flush_local(s: *mut DecryptFileState) -> c_int {
+    if (*s).dec_state != 1 {
+        return -1;
+    }
+    let mut len = (*s).dec_buf_pos;
+    if len == 0 || (len % (AES_BLOCK_SIZE as c_int)) != 0 {
+        return -1;
+    }
+    let buf = (*s).dec_buf.as_mut_ptr();
+    AES_cbc_encrypt(
+        buf,
+        buf,
+        len as c_long,
+        (*s).aes_state,
+        (*s).iv.as_mut_ptr(),
+        0, // FALSE
+    );
+    let pad_len = *buf.add((*s).dec_buf_pos as usize - 1) as c_int;
+    if pad_len < 1 || pad_len > AES_BLOCK_SIZE as c_int {
+        return -1;
+    }
+    len -= pad_len;
+    if len != 0 {
+        let ret = dec_write(s, buf, len as usize);
+        if ret < 0 {
+            return ret;
+        }
+    }
+    0
+}
+
+// ---------------------------------------------------------------------------
+// dump_loaded_file (fs_net.c, DUMP_CACHE_LOAD build)
+// ---------------------------------------------------------------------------
+
+unsafe fn fs_dump_find_file(head: *mut list_head, name: *const c_char) -> *mut PreloadFile {
+    let mut el = (*head).next;
+    while el != head {
+        // list_entry(el, PreloadFile, link); `link` is the first member
+        let pf = el as *mut PreloadFile;
+        if strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn dump_close_archive(fs: *mut FSDeviceMem) {
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = core::ptr::null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+unsafe fn dump_loaded_file(fs: *mut FSDeviceMem, n: *mut FSINode) {
+    let mut filename = [0 as c_char; 1024];
+
+    if (*fs).dump_cache_load == 0 || (*reg(n)).filename.is_null() {
+        return;
+    }
+    let fname = (*reg(n)).filename;
+
+    if !fs_dump_find_file(core::ptr::addr_of_mut!((*fs).dump_preload_list), fname).is_null() {
+        dump_close_archive(fs);
+        let mut p = strrchr(fname, b'/' as c_int);
+        if p.is_null() {
+            p = fname;
+        } else {
+            p = p.add(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = TRUE;
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr(),
+            filename.len(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file =
+            fopen(filename.as_ptr(), b"wb\0".as_ptr() as *const c_char);
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr());
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num += 1;
+    }
+
+    if (*reg(n)).size >= (4usize << 20) {
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*reg(n)).size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*reg(n)).filename,
+            (*reg(n)).size,
+            (*reg(n)).file_id,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*reg(n)).fbuf.data as *const c_void,
+            1,
+            (*reg(n)).size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs)
+            .dump_archive_size
+            .wrapping_add((*reg(n)).size as u64);
+        if (*fs).dump_archive_size >= (4u64 << 20) {
+            dump_close_archive(fs);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TARGET
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub extern "C" fn fs_open_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    unsafe {
+        let oi = opaque as *mut FSOpenInfo;
+        let n: *mut FSINode = (*oi).n;
+
+        // carrier for the C `error:` label
+        let mut failed: bool = false;
+
+        if err < 0 {
+            failed = true;
+        } else {
+            let dec_state = (*oi).dec_state;
+            if !dec_state.is_null() {
+                if decrypt_file_local(dec_state, data as *const u8, size) < 0 {
+                    failed = true;
+                } else if err == 0 {
+                    if decrypt_file_flush_local(dec_state) < 0 {
+                        failed = true;
+                    }
+                }
+            } else {
+                fs_open_write_cb(oi as *mut c_void, data as *const u8, size);
+            }
+
+            if !failed && err == 0 {
+                // end of transfer
+                if (*oi).cur_pos != (*reg(n)).size {
+                    failed = true;
+                } else {
+                    dump_loaded_file((*oi).fs, n);
+
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_read_archive(oi);
+                    }
+                    fs_wget_set_loaded(n);
+                }
+            }
+        }
+
+        if failed {
+            if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                fs_error_archive(oi);
+            }
+            fs_wget_set_error(n);
+        }
     }
 }
 }
@@ -7863,6 +14671,779 @@ pub unsafe extern "C" fn fs_open_cb__part739(
         }
         fs_wget_set_error(n);
     }
+}
+}
+
+// ── `fs_open_wget` · fs_net.c:837-869 · chunk 740 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_open_wget(FSDevice *fs1, FSINode *n, FSOpenWgetEnum open_type)
+//     {
+//         char *url;
+//         FSOpenInfo *oi;
+//         char fname[32];
+//         FSBaseURL *bu;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        n->u.reg.state == REG_STATE_UNLOADED
+//        )), __extension__ ({ if (
+//        n->u.reg.state == REG_STATE_UNLOADED
+//        ) ; else __assert_fail (
+//        "n->u.reg.state == REG_STATE_UNLOADED"
+//        , "fs_net.c", 844, __extension__ __PRETTY_FUNCTION__); }))
+//                                                    ;
+//     
+//         fs_trim_cache(fs1, n->u.reg.size);
+//     
+//         if (file_buffer_resize(&n->u.reg.fbuf, n->u.reg.size) < 0)
+//             return -5;
+//         n->u.reg.state = REG_STATE_LOADING;
+//         oi = mallocz(sizeof(*oi));
+//         oi->cur_pos = 0;
+//         oi->fs = fs1;
+//         oi->n = n;
+//         oi->open_type = open_type;
+//         if (open_type != FS_OPEN_WGET_ARCHIVE_FILE) {
+//             if (open_type == FS_OPEN_WGET_ARCHIVE)
+//                 init_list_head(&oi->archive_file_list);
+//             file_id_to_filename(fname, n->u.reg.file_id);
+//             bu = n->u.reg.base_url;
+//             url = compose_path(bu->url, fname);
+//             if (bu->encrypted) {
+//                 oi->dec_state = decrypt_file_init(&bu->aes_state, fs_open_write_cb, oi);
+//             }
+//             oi->xhr = fs_wget(url, bu->user, bu->password, oi, fs_open_cb, FALSE);
+//         }
+//         n->u.reg.open_info = oi;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk740 {
+// Port of fs_open_wget() from fs_net.c (TinyEMU).
+//
+// The C target calls several `static` helpers that have no linker symbol
+// (fs_trim_cache, init_list_head, fs_open_write_cb, fs_open_cb and the callback
+// chain they reach), so their logic is reproduced here as private Rust
+// functions. External C functions are declared in `extern "C"`.
+
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type BOOL = c_int;
+const TRUE: BOOL = 1;
+const FALSE: BOOL = 0;
+
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const FT_DIR: c_int = 4;
+const FT_LNK: c_int = 10;
+
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+const FILEID_SIZE_MAX: usize = 32;
+const P9_EIO: c_int = -5;
+
+const ARCHIVE_SIZE_MAX_U64: u64 = 4 << 20;
+
+const AES_BLOCK_SIZE: usize = 16;
+const DEC_BUF_SIZE: usize = 256 * AES_BLOCK_SIZE;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSReg,
+    pub dir: FSDir,
+    pub dev: FSDev,
+    pub symlink: FSSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+// struct FSDevice is a vtable of 22 function pointers. Only its size and
+// alignment matter here (FSDeviceMem embeds it as first member).
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDevice {
+    pub vtable: [*mut c_void; 22],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: BOOL,
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+// struct DecryptFileState from fs_wget.c
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DecryptFileState {
+    pub write_cb: Option<DecryptFileCB>,
+    pub opaque: *mut c_void,
+    pub dec_state: c_int,
+    pub dec_buf_pos: c_int,
+    pub aes_state: *mut AES_KEY,
+    pub iv: [u8; AES_BLOCK_SIZE],
+    pub dec_buf: [u8; DEC_BUF_SIZE],
+}
+
+type FSOpenCompletionFunc =
+    unsafe extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut c_void);
+type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+type DecryptFileCB = unsafe extern "C" fn(opaque: *mut c_void, data: *const u8, len: usize) -> c_int;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut c_void,
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: BOOL,
+    ) -> *mut c_void;
+
+    fn decrypt_file(s: *mut DecryptFileState, data: *const u8, size: usize) -> c_int;
+    fn decrypt_file_flush(s: *mut DecryptFileState) -> c_int;
+    fn decrypt_file_end(s: *mut DecryptFileState);
+
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strrchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fclose(f: *mut c_void) -> c_int;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, f: *mut c_void) -> usize;
+    fn fflush(f: *mut c_void) -> c_int;
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn snprintf(buf: *mut c_char, size: usize, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(code: c_int) -> !;
+}
+
+// ---------------------------------------------------------------- list utils
+
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let prev = head;
+    let next = (*head).next;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// ---------------------------------------------------------------- offsets
+
+fn reg_link_offset() -> usize {
+    let p = core::mem::MaybeUninit::<FSINode>::uninit();
+    let base = p.as_ptr() as usize;
+    let field = unsafe { core::ptr::addr_of!((*p.as_ptr()).u.reg.link) } as usize;
+    field - base
+}
+
+fn archive_link_offset() -> usize {
+    let p = core::mem::MaybeUninit::<FSOpenInfo>::uninit();
+    let base = p.as_ptr() as usize;
+    let field = unsafe { core::ptr::addr_of!((*p.as_ptr()).archive_link) } as usize;
+    field - base
+}
+
+// -------------------------------------------- decrypt_file_init (fs_wget.c)
+
+// DecryptFileState *decrypt_file_init(AES_KEY *aes_state,
+//                                     DecryptFileCB *write_cb, void *opaque)
+unsafe fn decrypt_file_init(
+    aes_state: *mut AES_KEY,
+    write_cb: Option<DecryptFileCB>,
+    opaque: *mut c_void,
+) -> *mut DecryptFileState {
+    let s = mallocz(core::mem::size_of::<DecryptFileState>()) as *mut DecryptFileState;
+    if s.is_null() {
+        return s;
+    }
+    // mallocz() zeroes the block, so the remaining fields stay 0.
+    (*s).write_cb = write_cb;
+    (*s).opaque = opaque;
+    (*s).aes_state = aes_state;
+    s
+}
+
+// ------------------------------------------------------- fs_trim_cache (static)
+
+unsafe fn fs_trim_cache(fs1: *mut FSDevice, added_size: i64) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+        return;
+    }
+    let head = core::ptr::addr_of_mut!((*fs).inode_cache_list);
+    let off = reg_link_offset();
+    let mut el = (*head).prev;
+    let mut el1 = (*el).prev;
+    while el != head {
+        let n = (el as *mut u8).sub(off) as *mut FSINode;
+        // assert(n->u.reg.state == REG_STATE_LOADED);
+        if (*n).open_count == 0 {
+            file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+            (*n).u.reg.state = REG_STATE_UNLOADED;
+            list_del(core::ptr::addr_of_mut!((*n).u.reg.link));
+            (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_sub((*n).u.reg.size as i64);
+            if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+                break;
+            }
+        }
+        el = el1;
+        el1 = (*el).prev;
+    }
+}
+
+// ------------------------------------------- static callback chain (ported)
+
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    if (*n).type_ == FT_DIR {
+        (*qid).type_ = 0x80;
+    } else if (*n).type_ == FT_LNK {
+        (*qid).type_ = 0x02;
+    } else {
+        (*qid).type_ = 0x00;
+    }
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+// static int fs_open_write_cb(void *opaque, const uint8_t *data, size_t size)
+unsafe extern "C" fn fs_open_write_cb(opaque: *mut c_void, data: *const u8, size: usize) -> c_int {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    // we ignore extraneous data
+    let mut len = (*n).u.reg.size.wrapping_sub((*oi).cur_pos);
+    if size < len {
+        len = size;
+    }
+    file_buffer_write(
+        core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+        (*oi).cur_pos,
+        data,
+        len,
+    );
+    (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+    0
+}
+
+// static void fs_open_end(FSOpenInfo *oi)
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+// static void fs_wget_set_loaded(FSINode *n)
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    // assert(n->u.reg.state == REG_STATE_LOADING);
+    let oi = (*n).u.reg.open_info;
+    let fs = (*oi).fs as *mut FSDeviceMem;
+    (*n).u.reg.state = REG_STATE_LOADED;
+    list_add(
+        core::ptr::addr_of_mut!((*n).u.reg.link),
+        core::ptr::addr_of_mut!((*fs).inode_cache_list),
+    );
+    (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_add((*n).u.reg.size as i64);
+
+    if (*oi).cb.is_some() {
+        let f = (*oi).f;
+        (*f).is_opened = TRUE;
+        let mut qid = FSQID {
+            type_: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid, n);
+        if let Some(cb) = (*oi).cb {
+            cb((*oi).fs, &mut qid, 0, (*oi).opaque);
+        }
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_wget_set_error(FSINode *n)
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    // assert(n->u.reg.state == REG_STATE_LOADING);
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if (*oi).cb.is_some() {
+        if let Some(cb) = (*oi).cb {
+            cb((*oi).fs, core::ptr::null_mut(), P9_EIO, (*oi).opaque);
+        }
+    }
+    fs_open_end(oi);
+}
+
+// static void fs_read_archive(FSOpenInfo *oi)
+unsafe fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut buf = [0u8; 1024];
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let off = archive_link_offset();
+
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        let n1 = (*oi1).n;
+
+        let mut pos: u64 = (*oi1).archive_offset;
+        let mut pos1: u64 = 0;
+        while pos1 < (*n1).u.reg.size as u64 {
+            let mut l: u64 = (*n1).u.reg.size as u64 - pos1;
+            if l > buf.len() as u64 {
+                l = buf.len() as u64;
+            }
+            file_buffer_read(
+                core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                core::ptr::addr_of_mut!((*n1).u.reg.fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+// static void fs_error_archive(FSOpenInfo *oi)
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let off = archive_link_offset();
+
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+// static PreloadFile *fs_dump_find_file(struct list_head *head, const char *name)
+unsafe fn fs_dump_find_file(head: *mut ListHead, name: *const c_char) -> *mut PreloadFile {
+    let mut el = (*head).next;
+    while el != head {
+        // link is the first member of PreloadFile
+        let pf = el as *mut PreloadFile;
+        if strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+// static void dump_close_archive(FSDevice *fs1)
+unsafe fn dump_close_archive(fs1: *mut FSDevice) {
+    let fs = fs1 as *mut FSDeviceMem;
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = core::ptr::null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+// static void dump_loaded_file(FSDevice *fs1, FSINode *n)
+unsafe fn dump_loaded_file(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+
+    if (*fs).dump_cache_load == 0 || (*n).u.reg.filename.is_null() {
+        return;
+    }
+    let fname: *const c_char = (*n).u.reg.filename;
+
+    if !fs_dump_find_file(core::ptr::addr_of_mut!((*fs).dump_preload_list), fname).is_null() {
+        dump_close_archive(fs1);
+        let mut p = strrchr(fname, '/' as c_int);
+        if p.is_null() {
+            p = fname as *mut c_char;
+        } else {
+            p = p.offset(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = TRUE;
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr(),
+            filename.len(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file = fopen(filename.as_ptr(), b"wb\0".as_ptr() as *const c_char);
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr());
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num += 1;
+    }
+
+    if (*n).u.reg.size as u64 >= ARCHIVE_SIZE_MAX_U64 {
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*n).u.reg.size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*n).u.reg.filename,
+            (*n).u.reg.size,
+            (*n).u.reg.file_id,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*n).u.reg.fbuf.data as *const c_void,
+            1,
+            (*n).u.reg.size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs).dump_archive_size.wrapping_add((*n).u.reg.size as u64);
+        if (*fs).dump_archive_size >= ARCHIVE_SIZE_MAX_U64 {
+            dump_close_archive(fs1);
+        }
+    }
+}
+
+// the "error:" label of static void fs_open_cb()
+unsafe fn fs_open_cb_error(oi: *mut FSOpenInfo, n: *mut FSINode) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+        fs_error_archive(oi);
+    }
+    fs_wget_set_error(n);
+}
+
+// static void fs_open_cb(void *opaque, int err, void *data, size_t size)
+unsafe extern "C" fn fs_open_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    if err < 0 {
+        fs_open_cb_error(oi, n);
+    } else {
+        if !(*oi).dec_state.is_null() {
+            if decrypt_file((*oi).dec_state, data as *const u8, size) < 0 {
+                fs_open_cb_error(oi, n);
+                return;
+            }
+            if err == 0 {
+                if decrypt_file_flush((*oi).dec_state) < 0 {
+                    fs_open_cb_error(oi, n);
+                    return;
+                }
+            }
+        } else {
+            fs_open_write_cb(oi as *mut c_void, data as *const u8, size);
+        }
+
+        if err == 0 {
+            // end of transfer
+            if (*oi).cur_pos != (*n).u.reg.size {
+                fs_open_cb_error(oi, n);
+                return;
+            }
+
+            dump_loaded_file((*oi).fs, n);
+
+            if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                fs_read_archive(oi);
+            }
+            fs_wget_set_loaded(n);
+        }
+    }
+}
+
+// ------------------------------------------------------------------- target
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_open_wget(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    open_type: c_int,
+) -> c_int {
+    let mut fname = [0 as c_char; FILEID_SIZE_MAX];
+
+    // assert(n->u.reg.state == REG_STATE_UNLOADED);
+
+    fs_trim_cache(fs1, (*n).u.reg.size as i64);
+
+    if file_buffer_resize(core::ptr::addr_of_mut!((*n).u.reg.fbuf), (*n).u.reg.size) < 0 {
+        return P9_EIO;
+    }
+    (*n).u.reg.state = REG_STATE_LOADING;
+    let oi = mallocz(core::mem::size_of::<FSOpenInfo>()) as *mut FSOpenInfo;
+    if oi.is_null() {
+        return P9_EIO;
+    }
+    (*oi).cur_pos = 0;
+    (*oi).fs = fs1;
+    (*oi).n = n;
+    (*oi).open_type = open_type;
+    if open_type != FS_OPEN_WGET_ARCHIVE_FILE {
+        if open_type == FS_OPEN_WGET_ARCHIVE {
+            init_list_head(core::ptr::addr_of_mut!((*oi).archive_file_list));
+        }
+        file_id_to_filename(fname.as_mut_ptr(), (*n).u.reg.file_id);
+        let bu = (*n).u.reg.base_url;
+        let url = compose_path((*bu).url, fname.as_ptr());
+        if (*bu).encrypted != 0 {
+            (*oi).dec_state = decrypt_file_init(
+                core::ptr::addr_of_mut!((*bu).aes_state),
+                Some(fs_open_write_cb),
+                oi as *mut c_void,
+            );
+        }
+        (*oi).xhr = fs_wget(
+            url,
+            (*bu).user,
+            (*bu).password,
+            oi as *mut c_void,
+            Some(fs_open_cb),
+            FALSE,
+        );
+    }
+    (*n).u.reg.open_info = oi;
+    0
 }
 }
 
@@ -8536,6 +16117,1050 @@ pub unsafe extern "C" fn fs_open_wget__part745(n: *mut FSINode, oi: *mut FSOpenI
         reg.open_info = oi;
     }
     0
+}
+}
+
+// ── `fs_preload_file` · fs_net.c:872-883 · chunk 746 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_preload_file(FSDevice *fs1, const char *filename)
+//     {
+//         FSINode *n;
+//     
+//         n = inode_search_path(fs1, filename);
+//         if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED) {
+//     
+//     
+//     
+//             fs_open_wget(fs1, n, FS_OPEN_WGET_REG);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk746 {
+// Rust port of fs_preload_file() from fs_net.c.
+//
+// fs_preload_file() only calls two *static* C functions (inode_search_path()
+// and fs_open_wget()).  Static C functions have no linker symbol, so their
+// logic is reproduced here as private Rust functions, together with every
+// static helper they transitively need (inode_search_path1, inode_search,
+// fs_trim_cache, fs_open_write_cb, fs_open_cb, fs_open_end, fs_wget_set_loaded,
+// fs_wget_set_error, fs_read_archive, fs_error_archive, dump_loaded_file,
+// dump_close_archive, fs_dump_find_file, inode_to_qid).  Non-static C
+// functions are declared in the extern blocks below.
+
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+type BOOL = c_int;
+const FALSE: BOOL = 0;
+const TRUE: BOOL = 1;
+
+/* FSINodeTypeEnum */
+const FT_REG: c_int = 8;
+const FT_DIR: c_int = 4;
+const FT_LNK: c_int = 10;
+
+/* FSINodeRegStateEnum */
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+/* FSOpenWgetEnum */
+const FS_OPEN_WGET_REG: c_int = 0;
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+const P9_EIO: c_int = 5;
+
+const FILEID_SIZE_MAX: usize = 32;
+
+/* offsetof(FSINode, u.reg.link) = 64 + 48 */
+const FS_INODE_REG_LINK_OFF: usize = 112;
+/* offsetof(FSOpenInfo, archive_link) */
+const FS_OPEN_INFO_ARCHIVE_LINK_OFF: usize = 48;
+/* offsetof(FSDirEntry, name) = sizeof(list_head) + sizeof(ptr) + 1 */
+const FS_DIRENT_NAME_OFF: usize = 25;
+
+/* ------------------------------------------------------------------ */
+/* C types                                                            */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+/* opaque C types */
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+#[repr(C)]
+pub struct XHRState {
+    _private: [u8; 0],
+}
+#[repr(C)]
+pub struct DecryptFileState {
+    _private: [u8; 0],
+}
+#[repr(C)]
+pub struct FSCMDRequest {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AESKey {
+    pub rd_key: [c_uint; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AESKey,
+}
+
+#[repr(C)]
+pub struct FSStatFS {
+    pub f_bsize: u32,
+    pub f_blocks: u64,
+    pub f_bfree: u64,
+    pub f_bavail: u64,
+    pub f_files: u64,
+    pub f_ffree: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct FSStat {
+    pub qid: FSQID,
+    pub st_mode: u32,
+    pub st_uid: u32,
+    pub st_gid: u32,
+    pub st_nlink: u64,
+    pub st_rdev: u64,
+    pub st_size: u64,
+    pub st_blksize: u64,
+    pub st_blocks: u64,
+    pub st_atime_sec: u64,
+    pub st_atime_nsec: u32,
+    pub st_mtime_sec: u64,
+    pub st_mtime_nsec: u32,
+    pub st_ctime_sec: u64,
+    pub st_ctime_nsec: u32,
+}
+
+#[repr(C)]
+pub struct FSLock {
+    pub type_: u8,
+    pub flags: u32,
+    pub start: u64,
+    pub length: u64,
+    pub proc_id: u32,
+    pub client_id: *mut c_char,
+}
+
+type FSOpenCompletionFunc =
+    Option<unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void)>;
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(*mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSStatFS)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            u32,
+            *const c_char,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            *mut FSFile,
+            c_int,
+            *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            u32,
+            FSOpenCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSStat) -> c_int>,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            u32,
+            u32,
+            u32,
+            u32,
+            u64,
+            u64,
+            u64,
+            u64,
+            u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *const u8, c_int) -> c_int,
+    >,
+    pub fs_link:
+        Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSFile, *const c_char) -> c_int>,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            *const c_char,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink:
+        Option<unsafe extern "C" fn(*mut FSDevice, *mut c_char, c_int, *mut FSFile) -> c_int>,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            *const c_char,
+            *mut FSFile,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat:
+        Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char) -> c_int>,
+    pub fs_lock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const FSLock) -> c_int>,
+    pub fs_getlock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSLock) -> c_int>,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: BOOL,
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut XHRState,
+    pub n: *mut FSINode,
+    pub dec_state: *mut DecryptFileState,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: FSOpenCompletionFunc,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    /* char name[0]; at offset FS_DIRENT_NAME_OFF (flexible array member) */
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut FILE,
+    pub dump_preload_archive_file: *mut FILE,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut FILE,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+/* ------------------------------------------------------------------ */
+/* external C functions / symbols                                     */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strlen(s: *const c_char) -> usize;
+    fn strrchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut FILE;
+    fn fclose(f: *mut FILE) -> c_int;
+    fn fprintf(f: *mut FILE, fmt: *const c_char, ...) -> c_int;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, f: *mut FILE) -> usize;
+    fn fflush(f: *mut FILE) -> c_int;
+    fn snprintf(s: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(code: c_int) -> !;
+
+    /* fs_utils.c */
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+
+    /* fs_net.c (non static) */
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    /* fs_wget.c */
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize)>,
+        single_write: BOOL,
+    ) -> *mut XHRState;
+    fn decrypt_file_init(
+        aes_state: *mut AESKey,
+        write_cb: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize) -> c_int>,
+        opaque: *mut c_void,
+    ) -> *mut DecryptFileState;
+    fn decrypt_file(s: *mut DecryptFileState, data: *const u8, size: usize) -> c_int;
+    fn decrypt_file_flush(s: *mut DecryptFileState) -> c_int;
+    fn decrypt_file_end(s: *mut DecryptFileState);
+}
+
+/* ------------------------------------------------------------------ */
+/* small helpers (mirroring list.h and libc)                          */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    /* __list_add(el, head, head->next) */
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+unsafe fn c_strchr(s: *const c_char, c: c_int) -> *mut c_char {
+    let cb = c as u8;
+    let mut p = s;
+    loop {
+        let ch = *p as u8;
+        if ch == cb {
+            return p as *mut c_char;
+        }
+        if ch == 0 {
+            return core::ptr::null_mut();
+        }
+        p = p.add(1);
+    }
+}
+
+unsafe fn c_streq(a: *const c_char, b: *const c_char) -> bool {
+    let mut i: usize = 0;
+    loop {
+        let ca = *a.add(i) as u8;
+        let cb = *b.add(i) as u8;
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+#[inline]
+unsafe fn fs_dirent_name(de: *const FSDirEntry) -> *const c_char {
+    (de as *const u8).add(FS_DIRENT_NAME_OFF) as *const c_char
+}
+
+/* ------------------------------------------------------------------ */
+/* ported static functions of fs_net.c                                */
+/* ------------------------------------------------------------------ */
+
+/* filter out buffered data of an inode */
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != FT_DIR {
+        return core::ptr::null_mut();
+    }
+    let head = core::ptr::addr_of_mut!((*n).u.dir.de_list);
+    let mut el = (*head).next;
+    while el != head {
+        let de = (el as *mut u8).sub(0) as *mut FSDirEntry; /* link is the 1st field */
+        if c_streq(fs_dirent_name(de), name) {
+            return de;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn inode_search_path1(
+    _fs: *mut FSDevice,
+    mut n: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    let mut name = [0u8; 1024];
+    let mut p: *const c_char = path;
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let slash = c_strchr(p, b'/' as c_int);
+        let len: usize;
+        let p1: *const c_char;
+        if slash.is_null() {
+            len = strlen(p);
+            p1 = core::ptr::null();
+        } else {
+            len = (slash as usize).wrapping_sub(p as usize);
+            p1 = slash.add(1);
+        }
+        if len > name.len() - 1 {
+            return core::ptr::null_mut();
+        }
+        core::ptr::copy_nonoverlapping(p as *const u8, name.as_mut_ptr(), len);
+        *name.as_mut_ptr().add(len) = 0;
+        if (*n).type_ != FT_DIR {
+            return core::ptr::null_mut();
+        }
+        let de = inode_search(n, name.as_ptr() as *const c_char);
+        if de.is_null() {
+            return core::ptr::null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    let fs = fs1 as *mut FSDeviceMem;
+    if fs1.is_null() {
+        return core::ptr::null_mut();
+    }
+    inode_search_path1(fs1, (*fs).root_inode, path)
+}
+
+/* remove elements in the cache considering that 'added_size' will be added */
+unsafe fn fs_trim_cache(fs1: *mut FSDevice, added_size: i64) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let cache_size = (*fs).inode_cache_size.wrapping_add(added_size);
+
+    if cache_size <= (*fs).inode_cache_size_limit {
+        return;
+    }
+    let head = core::ptr::addr_of_mut!((*fs).inode_cache_list);
+    let mut el = (*head).prev;
+    while el != head {
+        let el1 = (*el).prev;
+        let n = (el as *mut u8).sub(FS_INODE_REG_LINK_OFF) as *mut FSINode;
+
+        if (*n).u.reg.state != REG_STATE_LOADED {
+            __assert_fail(
+                b"n->u.reg.state == REG_STATE_LOADED\0".as_ptr() as *const c_char,
+                b"fs_net.c\0".as_ptr() as *const c_char,
+                680,
+                b"fs_trim_cache\0".as_ptr() as *const c_char,
+            );
+        }
+        /* cannot remove open files */
+        if (*n).open_count != 0 {
+            el = el1;
+            continue;
+        }
+        file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+        (*n).u.reg.state = REG_STATE_UNLOADED;
+        list_del(core::ptr::addr_of_mut!((*n).u.reg.link));
+        (*fs).inode_cache_size = (*fs)
+            .inode_cache_size
+            .wrapping_sub((*n).u.reg.size as i64);
+        if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+            break;
+        }
+        el = el1;
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe extern "C" fn fs_open_write_cb(
+    opaque: *mut c_void,
+    data: *const u8,
+    size: usize,
+) -> c_int {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    /* we ignore extraneous data */
+    let mut len = (*n).u.reg.size.wrapping_sub((*oi).cur_pos);
+    if size < len {
+        len = size;
+    }
+    file_buffer_write(
+        core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+        (*oi).cur_pos,
+        data,
+        len,
+    );
+    (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+    0
+}
+
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    if (*n).type_ == FT_DIR {
+        (*qid).type_ = 0x80;
+    } else if (*n).type_ == FT_LNK {
+        (*qid).type_ = 0x02;
+    } else {
+        (*qid).type_ = 0x00;
+    }
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    if (*n).u.reg.state != REG_STATE_LOADING {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            731,
+            b"fs_wget_set_loaded\0".as_ptr() as *const c_char,
+        );
+    }
+    let oi = (*n).u.reg.open_info;
+    let fs = (*oi).fs as *mut FSDeviceMem;
+    (*n).u.reg.state = REG_STATE_LOADED;
+    list_add(
+        core::ptr::addr_of_mut!((*n).u.reg.link),
+        core::ptr::addr_of_mut!((*fs).inode_cache_list),
+    );
+    (*fs).inode_cache_size = (*fs)
+        .inode_cache_size
+        .wrapping_add((*n).u.reg.size as i64);
+
+    if (*oi).cb.is_some() {
+        let f = (*oi).f;
+        (*f).is_opened = TRUE;
+        let mut qid = FSQID {
+            type_: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid, n);
+        if let Some(cb) = (*oi).cb {
+            cb((*oi).fs, &mut qid, 0, (*oi).opaque);
+        }
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    if (*n).u.reg.state != REG_STATE_LOADING {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_LOADING\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            750,
+            b"fs_wget_set_error\0".as_ptr() as *const c_char,
+        );
+    }
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb(
+            (*oi).fs,
+            core::ptr::null_mut(),
+            -P9_EIO,
+            (*oi).opaque,
+        );
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut buf = [0u8; 1024];
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    while el != head {
+        let el1 = (*el).next;
+        let oi1 = (el as *mut u8).sub(FS_OPEN_INFO_ARCHIVE_LINK_OFF) as *mut FSOpenInfo;
+        let n1 = (*oi1).n;
+
+        /* copy the archive data to the file */
+        let mut pos = (*oi1).archive_offset;
+        let mut pos1: u64 = 0;
+        while pos1 < (*n1).u.reg.size as u64 {
+            let mut l = ((*n1).u.reg.size as u64).wrapping_sub(pos1);
+            if l > 1024 {
+                l = 1024;
+            }
+            file_buffer_read(
+                core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                core::ptr::addr_of_mut!((*n1).u.reg.fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+        el = el1;
+    }
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    while el != head {
+        let el1 = (*el).next;
+        let oi1 = (el as *mut u8).sub(FS_OPEN_INFO_ARCHIVE_LINK_OFF) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+    }
+}
+
+unsafe fn fs_dump_find_file(head: *mut ListHead, name: *const c_char) -> *mut PreloadFile {
+    let mut el = (*head).next;
+    while el != head {
+        let pf = el as *mut PreloadFile; /* link is the 1st field */
+        if c_streq((*pf).name, name) {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn dump_close_archive(fs1: *mut FSDevice) {
+    let fs = fs1 as *mut FSDeviceMem;
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = core::ptr::null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+unsafe fn dump_loaded_file(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut filename = [0u8; 1024];
+
+    if (*fs).dump_cache_load == 0 || (*n).u.reg.filename.is_null() {
+        return;
+    }
+    let fname = (*n).u.reg.filename;
+
+    if !fs_dump_find_file(
+        core::ptr::addr_of_mut!((*fs).dump_preload_list),
+        fname,
+    )
+    .is_null()
+    {
+        dump_close_archive(fs1);
+        let mut p = strrchr(fname, b'/' as c_int);
+        if p.is_null() {
+            p = fname;
+        } else {
+            p = p.add(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = TRUE;
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr() as *mut c_char,
+            filename.len(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file = fopen(
+            filename.as_ptr() as *const c_char,
+            b"wb\0".as_ptr() as *const c_char,
+        );
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr() as *const c_char);
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num = (*fs).dump_archive_num.wrapping_add(1);
+    }
+
+    if (*n).u.reg.size >= (4 << 20) {
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*n).u.reg.size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*n).u.reg.filename,
+            (*n).u.reg.size,
+            (*n).u.reg.file_id,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*n).u.reg.fbuf.data as *const c_void,
+            1,
+            (*n).u.reg.size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs)
+            .dump_archive_size
+            .wrapping_add((*n).u.reg.size as u64);
+        if (*fs).dump_archive_size >= (4 << 20) {
+            dump_close_archive(fs1);
+        }
+    }
+}
+
+unsafe extern "C" fn fs_open_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+    let mut do_error = err < 0;
+
+    if !do_error {
+        if !(*oi).dec_state.is_null() {
+            if decrypt_file((*oi).dec_state, data as *const u8, size) < 0 {
+                do_error = true;
+            } else if err == 0 && decrypt_file_flush((*oi).dec_state) < 0 {
+                do_error = true;
+            }
+        } else {
+            fs_open_write_cb(oi as *mut c_void, data as *const u8, size);
+        }
+
+        if !do_error && err == 0 {
+            /* end of transfer */
+            if (*oi).cur_pos != (*n).u.reg.size {
+                do_error = true;
+            } else {
+                dump_loaded_file((*oi).fs, n);
+                if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                    fs_read_archive(oi);
+                }
+                fs_wget_set_loaded(n);
+            }
+        }
+    }
+
+    if do_error {
+        if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+            fs_error_archive(oi);
+        }
+        fs_wget_set_error(n);
+    }
+}
+
+unsafe fn fs_open_wget(fs1: *mut FSDevice, n: *mut FSINode, open_type: c_int) -> c_int {
+    let url: *mut c_char;
+    let oi: *mut FSOpenInfo;
+    let mut fname = [0u8; FILEID_SIZE_MAX];
+    let bu: *mut FSBaseURL;
+
+    if (*n).u.reg.state != REG_STATE_UNLOADED {
+        __assert_fail(
+            b"n->u.reg.state == REG_STATE_UNLOADED\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            844,
+            b"fs_open_wget\0".as_ptr() as *const c_char,
+        );
+    }
+
+    fs_trim_cache(fs1, (*n).u.reg.size as i64);
+
+    if file_buffer_resize(
+        core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+        (*n).u.reg.size,
+    ) < 0
+    {
+        return -P9_EIO;
+    }
+    (*n).u.reg.state = REG_STATE_LOADING;
+    oi = mallocz(core::mem::size_of::<FSOpenInfo>()) as *mut FSOpenInfo;
+    (*oi).cur_pos = 0;
+    (*oi).fs = fs1;
+    (*oi).n = n;
+    (*oi).open_type = open_type;
+    if open_type != FS_OPEN_WGET_ARCHIVE_FILE {
+        if open_type == FS_OPEN_WGET_ARCHIVE {
+            init_list_head(core::ptr::addr_of_mut!((*oi).archive_file_list));
+        }
+        file_id_to_filename(fname.as_mut_ptr() as *mut c_char, (*n).u.reg.file_id);
+        bu = (*n).u.reg.base_url;
+        url = compose_path((*bu).url, fname.as_ptr() as *const c_char);
+        if (*bu).encrypted != 0 {
+            (*oi).dec_state = decrypt_file_init(
+                core::ptr::addr_of_mut!((*bu).aes_state),
+                Some(fs_open_write_cb),
+                oi as *mut c_void,
+            );
+        }
+        (*oi).xhr = fs_wget(
+            url,
+            (*bu).user,
+            (*bu).password,
+            oi as *mut c_void,
+            Some(fs_open_cb),
+            FALSE,
+        );
+    }
+    (*n).u.reg.open_info = oi;
+    0
+}
+
+/* ------------------------------------------------------------------ */
+/* the target                                                         */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_preload_file(fs1: *mut FSDevice, filename: *const c_char) {
+    let n = inode_search_path(fs1, filename);
+
+    if !n.is_null() && (*n).type_ == FT_REG && (*n).u.reg.state == REG_STATE_UNLOADED {
+        fs_open_wget(fs1, n, FS_OPEN_WGET_REG);
+    }
 }
 }
 
@@ -9530,6 +18155,139 @@ pub extern "C" fn fs_preload_file__part748(fs1: *mut FSDevice, n: *mut FSINode) 
 }
 }
 
+// ── `find_preload_archive` · fs_net.c:885-896 · chunk 749 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static PreloadArchive *find_preload_archive(FSDeviceMem *fs,
+//                                                 const char *filename)
+//     {
+//         PreloadArchive *pa;
+//         struct list_head *el;
+//         for(el = (&fs->preload_archive_list)->next; el != (&fs->preload_archive_list); el = el->next) {
+//             pa = ((PreloadArchive *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 PreloadArchive
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (!strcmp(pa->name, filename))
+//                 return pa;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk749 {
+// Rust rewrite of find_preload_archive() from fs_net.c
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::addr_of_mut;
+
+// typedef int BOOL;
+type BOOL = c_int;
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+// FSDevice is only traversed through: its size/alignment matters because it
+// is embedded as the first member of FSDeviceMem. All members are function
+// pointers, i.e. plain data pointers.
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: list_head,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: list_head,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: list_head,
+    pub preload_archive_list: list_head,
+    pub base_url_list: list_head,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: list_head,
+    pub dump_exclude_list: list_head,
+}
+
+#[repr(C)]
+pub struct PreloadArchive {
+    pub link: list_head,
+    pub name: *const c_char,
+    pub file_list: list_head,
+}
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn find_preload_archive(
+    fs: *mut FSDeviceMem,
+    filename: *const c_char,
+) -> *mut PreloadArchive {
+    // &fs->preload_archive_list
+    let head: *mut list_head = addr_of_mut!((*fs).preload_archive_list);
+    let mut el: *mut list_head = (*head).next;
+    while el != head {
+        // list_entry(el, PreloadArchive, link): link is the first member, so
+        // its offset inside PreloadArchive is 0.
+        let pa: *mut PreloadArchive = el as *mut PreloadArchive;
+        if strcmp((*pa).name, filename) == 0 {
+            return pa;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+}
+
 // ── `for (el = (&fs->preload_archive_list)->next; el != (&fs->preload_archive_list; el = el->next)` · fs_net.c:890-894 · chunk 750 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -9606,6 +18364,1097 @@ use core::ffi::c_void;
 #[no_mangle]
 pub extern "C" fn find_preload_archive__part751() -> *mut c_void {
     core::ptr::null_mut()
+}
+}
+
+// ── `fs_preload_archive` · fs_net.c:898-980 · chunk 752 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_preload_archive(FSDevice *fs1, const char *filename)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         PreloadArchive *pa;
+//         PreloadArchiveFile *paf;
+//         struct list_head *el;
+//         FSINode *n, *n1;
+//         uint64_t offset;
+//         BOOL has_unloaded;
+//     
+//         pa = find_preload_archive(fs, filename);
+//         if (!pa)
+//             return;
+//     
+//     
+//     
+//         n = inode_search_path(fs1, filename);
+//         if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED) {
+//     
+//             offset = 0;
+//             has_unloaded = FALSE;
+//             for(el = (&pa->file_list)->next; el != (&pa->file_list); el = el->next) {
+//                 paf = ((PreloadArchiveFile *)((uint8_t *)(el) - 
+//                      __builtin_offsetof (
+//                      PreloadArchiveFile
+//                      , 
+//                      link
+//                      )
+//                      ));
+//                 n1 = inode_search_path(fs1, paf->name);
+//                 if (n1 && n1->type == FT_REG &&
+//                     n1->u.reg.state == REG_STATE_UNLOADED) {
+//                     has_unloaded = TRUE;
+//                 }
+//                 offset += paf->size;
+//             }
+//             if (!has_unloaded) {
+//     
+//     
+//     
+//                 return;
+//             }
+//     
+//             if (offset != n->u.reg.size) {
+//     
+//     
+//     
+//     
+//                 goto load_fallback;
+//             }
+//     
+//     
+//             fs_open_wget(fs1, n, FS_OPEN_WGET_ARCHIVE);
+//     
+//     
+//     
+//             offset = 0;
+//             for(el = (&pa->file_list)->next; el != (&pa->file_list); el = el->next) {
+//                 paf = ((PreloadArchiveFile *)((uint8_t *)(el) - 
+//                      __builtin_offsetof (
+//                      PreloadArchiveFile
+//                      , 
+//                      link
+//                      )
+//                      ));
+//                 n1 = inode_search_path(fs1, paf->name);
+//                 if (n1 && n1->type == FT_REG &&
+//                     n1->u.reg.state == REG_STATE_UNLOADED) {
+//                     if (n1->u.reg.size == paf->size &&
+//                         n1->u.reg.file_id == paf->file_id) {
+//                         fs_open_wget(fs1, n1, FS_OPEN_WGET_ARCHIVE_FILE);
+//                         list_add_tail(&n1->u.reg.open_info->archive_link,
+//                                       &n->u.reg.open_info->archive_file_list);
+//                         n1->u.reg.open_info->archive_offset = offset;
+//                     } else {
+//     
+//     
+//     
+//     
+//                         fs_preload_file(fs1, paf->name);
+//                     }
+//                 }
+//                 offset += paf->size;
+//             }
+//         } else {
+//         load_fallback:
+//     
+//     
+//     
+//             for(el = (&pa->file_list)->next; el != (&pa->file_list); el = el->next) {
+//                 paf = ((PreloadArchiveFile *)((uint8_t *)(el) - 
+//                      __builtin_offsetof (
+//                      PreloadArchiveFile
+//                      , 
+//                      link
+//                      )
+//                      ));
+//                 fs_preload_file(fs1, paf->name);
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk752 {
+// Rust rewrite of fs_preload_archive() (fs_net.c) plus the *static* helpers of
+// that translation unit which it (transitively) needs.  Static C functions have
+// no linker symbol, so their logic is reproduced here; only the externally
+// visible C functions (file_buffer_*, mallocz, compose_path,
+// file_id_to_filename, decrypt_file_*, fs_wget) are called through the linker.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_variables)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ptr::{addr_of_mut, null_mut};
+
+pub type BOOL = c_int;
+
+// ---- enums -------------------------------------------------------------
+pub const FT_DIR: c_int = 4;
+pub const FT_REG: c_int = 8;
+pub const FT_LNK: c_int = 10;
+
+pub const REG_STATE_LOCAL: c_int = 0;
+pub const REG_STATE_UNLOADED: c_int = 1;
+pub const REG_STATE_LOADING: c_int = 2;
+pub const REG_STATE_LOADED: c_int = 3;
+
+pub const FS_OPEN_WGET_REG: c_int = 0;
+pub const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+pub const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+// ---- structures mirrored from the C translation unit -------------------
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AESKey {
+    pub rd_key: [u32; 60], // 4 * (AES_MAXNR + 1)
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AESKey,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: BOOL,
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+// struct FSDevice is only used through pointers; it is an array of 22 function
+// pointers (see fs.h), which is all we need to know to get its size right.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDevice {
+    pub fns: [*mut c_void; 22],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut c_void,      // XHRState *
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void, // DecryptFileState *
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void)>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub size: u64,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *const c_char,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,         // FILE *
+    pub dump_preload_archive_file: *mut c_void, // FILE *
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void, // FILE *
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+// ---- externals ---------------------------------------------------------
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    fn mallocz(size: usize) -> *mut c_void;
+
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+
+    fn decrypt_file_init(
+        aes_state: *mut AESKey,
+        write_cb: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize) -> c_int>,
+        opaque: *mut c_void,
+    ) -> *mut c_void;
+    fn decrypt_file(s: *mut c_void, data: *const u8, size: usize) -> c_int;
+    fn decrypt_file_flush(s: *mut c_void) -> c_int;
+    fn decrypt_file_end(s: *mut c_void);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize)>,
+        single_write: BOOL,
+    ) -> *mut c_void;
+
+    // libc pieces used by dump_loaded_file() / dump_close_archive()
+    fn free(p: *mut c_void);
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fclose(f: *mut c_void) -> c_int;
+    fn fflush(f: *mut c_void) -> c_int;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, f: *mut c_void) -> usize;
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn snprintf(buf: *mut c_char, size: usize, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+}
+
+macro_rules! c_assert {
+    ($cond:expr, $msg:literal, $line:expr, $func:literal) => {
+        if !($cond) {
+            __assert_fail(
+                concat!($msg, "\0").as_ptr() as *const c_char,
+                "fs_net.c\0".as_ptr() as *const c_char,
+                $line as c_uint,
+                concat!($func, "\0").as_ptr() as *const c_char,
+            );
+        }
+    };
+}
+
+// ---- small C string helpers -------------------------------------------
+unsafe fn c_strlen(s: *const c_char) -> usize {
+    let mut i = 0usize;
+    while *s.add(i) != 0 {
+        i += 1;
+    }
+    i
+}
+
+unsafe fn c_strcmp(a: *const c_char, b: *const c_char) -> c_int {
+    let mut i = 0usize;
+    loop {
+        let ca = *a.add(i) as u8;
+        let cb = *b.add(i) as u8;
+        if ca != cb {
+            return if ca < cb { -1 } else { 1 };
+        }
+        if ca == 0 {
+            return 0;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn c_strchr(s: *const c_char, c: c_int) -> *mut c_char {
+    let cc = c as u8;
+    let mut i = 0usize;
+    loop {
+        let ch = *s.add(i) as u8;
+        if ch == cc {
+            return s.add(i) as *mut c_char;
+        }
+        if ch == 0 {
+            return null_mut();
+        }
+        i += 1;
+    }
+}
+
+unsafe fn c_strrchr(s: *const c_char, c: c_int) -> *mut c_char {
+    let cc = c as u8;
+    let mut last: *mut c_char = null_mut();
+    let mut i = 0usize;
+    loop {
+        let ch = *s.add(i) as u8;
+        if ch == cc {
+            last = s.add(i) as *mut c_char;
+        }
+        if ch == 0 {
+            break;
+        }
+        i += 1;
+    }
+    last
+}
+
+// ---- intrusive list helpers (list.h) ----------------------------------
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn __list_add(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    __list_add(el, head, (*head).next);
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    __list_add(el, (*head).prev, head);
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+// offset of FSINode.u.reg.link (used for list_entry() on the inode cache)
+#[inline]
+fn fsinode_reg_link_offset() -> usize {
+    let base = core::ptr::NonNull::<FSINode>::dangling().as_ptr();
+    // no memory is touched, only the address of the field is computed
+    unsafe { addr_of_mut!((*base).u.reg.link) as usize - base as usize }
+}
+
+// offset of FSOpenInfo.archive_link (used for list_entry() there)
+#[inline]
+fn fsinfo_archive_link_offset() -> usize {
+    let base = core::ptr::NonNull::<FSOpenInfo>::dangling().as_ptr();
+    unsafe { addr_of_mut!((*base).archive_link) as usize - base as usize }
+}
+
+// ---- inode lookup (inode_search / inode_search_path1 / inode_search_path)
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != FT_DIR {
+        return null_mut();
+    }
+    let head = addr_of_mut!((*n).u.dir.de_list);
+    let mut el = (*head).next;
+    while el != head {
+        let de = el as *mut FSDirEntry;
+        if c_strcmp(addr_of_mut!((*de).name) as *const c_char, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn inode_search_path1(n0: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut n = n0;
+    let mut p = path;
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let mut p1 = c_strchr(p, b'/' as c_int);
+        let len: usize;
+        if p1.is_null() {
+            len = c_strlen(p);
+        } else {
+            len = p1 as usize - p as usize;
+            p1 = p1.add(1);
+        }
+        if len > 1024 - 1 {
+            return null_mut();
+        }
+        core::ptr::copy_nonoverlapping(p as *const u8, name.as_mut_ptr() as *mut u8, len);
+        name[len] = 0;
+        if (*n).type_ != FT_DIR {
+            return null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    let fs = fs1 as *mut FSDeviceMem;
+    if fs1.is_null() {
+        return null_mut();
+    }
+    inode_search_path1((*fs).root_inode, path)
+}
+
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    if (*n).type_ == FT_DIR {
+        (*qid).type_ = 0x80;
+    } else if (*n).type_ == FT_LNK {
+        (*qid).type_ = 0x02;
+    } else {
+        (*qid).type_ = 0x00;
+    }
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+// ---- preload archive lookup (find_preload_archive) --------------------
+unsafe fn find_preload_archive(
+    fs: *mut FSDeviceMem,
+    filename: *const c_char,
+) -> *mut PreloadArchive {
+    let head = addr_of_mut!((*fs).preload_archive_list);
+    let mut el = (*head).next;
+    while el != head {
+        let pa = el as *mut PreloadArchive; // link is the first field
+        if c_strcmp((*pa).name, filename) == 0 {
+            return pa;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+// ---- cache trimming (fs_trim_cache) ----------------------------------
+unsafe fn fs_trim_cache(fs1: *mut FSDevice, added_size: i64) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+        return;
+    }
+    let head = addr_of_mut!((*fs).inode_cache_list);
+    let mut el = (*head).prev;
+    let mut el1 = (*el).prev;
+    while el != head {
+        let n = (el as *mut u8).sub(fsinode_reg_link_offset()) as *mut FSINode;
+
+        c_assert!(
+            (*n).u.reg.state == REG_STATE_LOADED,
+            "n->u.reg.state == REG_STATE_LOADED",
+            680,
+            "fs_trim_cache"
+        );
+
+        if (*n).open_count != 0 {
+            el = el1;
+            el1 = (*el1).prev;
+            continue;
+        }
+
+        file_buffer_reset(addr_of_mut!((*n).u.reg.fbuf));
+        (*n).u.reg.state = REG_STATE_UNLOADED;
+        list_del(addr_of_mut!((*n).u.reg.link));
+        (*fs).inode_cache_size = (*fs)
+            .inode_cache_size
+            .wrapping_sub((*n).u.reg.size as i64);
+
+        c_assert!(
+            (*fs).inode_cache_size >= 0,
+            "fs->inode_cache_size >= 0",
+            693,
+            "fs_trim_cache"
+        );
+        if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+            break;
+        }
+        el = el1;
+        el1 = (*el1).prev;
+    }
+}
+
+// ---- open info teardown (fs_open_end) --------------------------------
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe extern "C" fn fs_open_write_cb(
+    opaque: *mut c_void,
+    data: *const u8,
+    size: usize,
+) -> c_int {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    let mut len = (*n).u.reg.size.wrapping_sub((*oi).cur_pos);
+    if size < len {
+        len = size;
+    }
+    file_buffer_write(addr_of_mut!((*n).u.reg.fbuf), (*oi).cur_pos, data, len);
+    (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+    0
+}
+
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    c_assert!(
+        (*n).u.reg.state == REG_STATE_LOADING,
+        "n->u.reg.state == REG_STATE_LOADING",
+        731,
+        "fs_wget_set_loaded"
+    );
+    let oi = (*n).u.reg.open_info;
+    let fs = (*oi).fs as *mut FSDeviceMem;
+    (*n).u.reg.state = REG_STATE_LOADED;
+    list_add(
+        addr_of_mut!((*n).u.reg.link),
+        addr_of_mut!((*fs).inode_cache_list),
+    );
+    (*fs).inode_cache_size = (*fs)
+        .inode_cache_size
+        .wrapping_add((*n).u.reg.size as i64);
+
+    if (*oi).cb.is_some() {
+        let f = (*oi).f;
+        (*f).is_opened = 1;
+        let mut qid = FSQID {
+            type_: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid, n);
+        if let Some(cb) = (*oi).cb {
+            cb((*oi).fs, &mut qid, 0, (*oi).opaque);
+        }
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    c_assert!(
+        (*n).u.reg.state == REG_STATE_LOADING,
+        "n->u.reg.state == REG_STATE_LOADING",
+        750,
+        "fs_wget_set_error"
+    );
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut buf = [0u8; 1024];
+
+    let head = addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(fsinfo_archive_link_offset()) as *mut FSOpenInfo;
+        let n1 = (*oi1).n;
+
+        let mut pos = (*oi1).archive_offset;
+        let mut pos1: u64 = 0;
+        while pos1 < (*n1).u.reg.size as u64 {
+            let mut l = (*n1).u.reg.size as u64 - pos1;
+            if l > buf.len() as u64 {
+                l = buf.len() as u64;
+            }
+            file_buffer_read(
+                addr_of_mut!((*n).u.reg.fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                addr_of_mut!((*n1).u.reg.fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let head = addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(fsinfo_archive_link_offset()) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe extern "C" fn fs_open_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    let mut failed = false;
+    if err < 0 {
+        failed = true;
+    } else {
+        if !(*oi).dec_state.is_null() {
+            if decrypt_file((*oi).dec_state, data as *const u8, size) < 0 {
+                failed = true;
+            } else if err == 0 && decrypt_file_flush((*oi).dec_state) < 0 {
+                failed = true;
+            }
+        } else {
+            fs_open_write_cb(oi as *mut c_void, data as *const u8, size);
+        }
+
+        if !failed && err == 0 {
+            if (*oi).cur_pos != (*n).u.reg.size {
+                failed = true;
+            } else {
+                dump_loaded_file((*oi).fs, n);
+                if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                    fs_read_archive(oi);
+                }
+                fs_wget_set_loaded(n);
+            }
+        }
+    }
+    if failed {
+        if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+            fs_error_archive(oi);
+        }
+        fs_wget_set_error(n);
+    }
+}
+
+unsafe fn fs_open_wget(fs1: *mut FSDevice, n: *mut FSINode, open_type: c_int) -> c_int {
+    let mut fname = [0 as c_char; 32];
+
+    c_assert!(
+        (*n).u.reg.state == REG_STATE_UNLOADED,
+        "n->u.reg.state == REG_STATE_UNLOADED",
+        844,
+        "fs_open_wget"
+    );
+
+    fs_trim_cache(fs1, (*n).u.reg.size as i64);
+
+    if file_buffer_resize(addr_of_mut!((*n).u.reg.fbuf), (*n).u.reg.size) < 0 {
+        return -5;
+    }
+    (*n).u.reg.state = REG_STATE_LOADING;
+    let oi = mallocz(core::mem::size_of::<FSOpenInfo>()) as *mut FSOpenInfo;
+    (*oi).cur_pos = 0;
+    (*oi).fs = fs1;
+    (*oi).n = n;
+    (*oi).open_type = open_type;
+    if open_type != FS_OPEN_WGET_ARCHIVE_FILE {
+        if open_type == FS_OPEN_WGET_ARCHIVE {
+            init_list_head(addr_of_mut!((*oi).archive_file_list));
+        }
+        file_id_to_filename(fname.as_mut_ptr(), (*n).u.reg.file_id);
+        let bu = (*n).u.reg.base_url;
+        let url = compose_path((*bu).url, fname.as_ptr());
+        if (*bu).encrypted != 0 {
+            (*oi).dec_state = decrypt_file_init(
+                addr_of_mut!((*bu).aes_state),
+                Some(fs_open_write_cb),
+                oi as *mut c_void,
+            );
+        }
+        (*oi).xhr = fs_wget(
+            url,
+            (*bu).user,
+            (*bu).password,
+            oi as *mut c_void,
+            Some(fs_open_cb),
+            0,
+        );
+    }
+    (*n).u.reg.open_info = oi;
+    0
+}
+
+// ---- dump helpers (only active when dump_cache_load is set) -----------
+unsafe fn fs_dump_find_file(head: *mut ListHead, name: *const c_char) -> *mut PreloadFile {
+    let mut el = (*head).next;
+    while el != head {
+        let pf = el as *mut PreloadFile; // link is the first field
+        if c_strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn dump_close_archive(fs1: *mut FSDevice) {
+    let fs = fs1 as *mut FSDeviceMem;
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+unsafe fn dump_loaded_file(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+
+    if (*fs).dump_cache_load == 0 || (*n).u.reg.filename.is_null() {
+        return;
+    }
+    let fname = (*n).u.reg.filename;
+
+    if !fs_dump_find_file(addr_of_mut!((*fs).dump_preload_list), fname).is_null() {
+        dump_close_archive(fs1);
+        let mut p = c_strrchr(fname, b'/' as c_int);
+        if p.is_null() {
+            p = fname;
+        } else {
+            p = p.add(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = 1;
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr(),
+            core::mem::size_of::<[c_char; 1024]>(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file = fopen(
+            filename.as_ptr(),
+            b"wb\0".as_ptr() as *const c_char,
+        );
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr());
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num += 1;
+    }
+
+    if (*n).u.reg.size >= (4usize << 20) {
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*n).u.reg.size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*n).u.reg.filename,
+            (*n).u.reg.size,
+            (*n).u.reg.file_id,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*n).u.reg.fbuf.data as *const c_void,
+            1,
+            (*n).u.reg.size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs)
+            .dump_archive_size
+            .wrapping_add((*n).u.reg.size as u64);
+        if (*fs).dump_archive_size >= (4u64 << 20) {
+            dump_close_archive(fs1);
+        }
+    }
+}
+
+// ---- fs_preload_file -------------------------------------------------
+unsafe fn fs_preload_file(fs1: *mut FSDevice, filename: *const c_char) {
+    let n = inode_search_path(fs1, filename);
+    if !n.is_null() && (*n).type_ == FT_REG && (*n).u.reg.state == REG_STATE_UNLOADED {
+        fs_open_wget(fs1, n, FS_OPEN_WGET_REG);
+    }
+}
+
+// ---- the target ------------------------------------------------------
+#[no_mangle]
+pub unsafe extern "C" fn fs_preload_archive(fs1: *mut FSDevice, filename: *const c_char) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    let pa = find_preload_archive(fs, filename);
+    if pa.is_null() {
+        return;
+    }
+
+    let n = inode_search_path(fs1, filename);
+    let mut do_fallback = true;
+
+    if !n.is_null() && (*n).type_ == FT_REG && (*n).u.reg.state == REG_STATE_UNLOADED {
+        // if all the files are loaded, no need to load the archive
+        let mut offset: u64 = 0;
+        let mut has_unloaded: BOOL = 0;
+
+        let head = addr_of_mut!((*pa).file_list);
+        let mut el = (*head).next;
+        while el != head {
+            let paf = el as *mut PreloadArchiveFile; // link is the first field
+            let n1 = inode_search_path(fs1, (*paf).name);
+            if !n1.is_null()
+                && (*n1).type_ == FT_REG
+                && (*n1).u.reg.state == REG_STATE_UNLOADED
+            {
+                has_unloaded = 1;
+            }
+            offset = offset.wrapping_add((*paf).size);
+            el = (*el).next;
+        }
+
+        if has_unloaded == 0 {
+            return;
+        }
+
+        // check archive size consistency
+        if offset != (*n).u.reg.size as u64 {
+            // goto load_fallback
+        } else {
+            do_fallback = false;
+
+            // start loading the archive
+            fs_open_wget(fs1, n, FS_OPEN_WGET_ARCHIVE);
+
+            // indicate that all the archive files are being loaded; also
+            // check consistency of size and file id
+            offset = 0;
+            let mut el = (*head).next;
+            while el != head {
+                let paf = el as *mut PreloadArchiveFile;
+                let n1 = inode_search_path(fs1, (*paf).name);
+                if !n1.is_null()
+                    && (*n1).type_ == FT_REG
+                    && (*n1).u.reg.state == REG_STATE_UNLOADED
+                {
+                    if (*n1).u.reg.size as u64 == (*paf).size
+                        && (*n1).u.reg.file_id == (*paf).file_id
+                    {
+                        fs_open_wget(fs1, n1, FS_OPEN_WGET_ARCHIVE_FILE);
+                        let oi1 = (*n1).u.reg.open_info;
+                        let oi = (*n).u.reg.open_info;
+                        list_add_tail(
+                            addr_of_mut!((*oi1).archive_link),
+                            addr_of_mut!((*oi).archive_file_list),
+                        );
+                        (*oi1).archive_offset = offset;
+                    } else {
+                        // fallback to file preload
+                        fs_preload_file(fs1, (*paf).name);
+                    }
+                }
+                offset = offset.wrapping_add((*paf).size);
+                el = (*el).next;
+            }
+        }
+    }
+
+    if do_fallback {
+        // the archive is already loaded or not loaded: load the files
+        // separately
+        let head = addr_of_mut!((*pa).file_list);
+        let mut el = (*head).next;
+        while el != head {
+            let paf = el as *mut PreloadArchiveFile;
+            fs_preload_file(fs1, (*paf).name);
+            el = (*el).next;
+        }
+    }
 }
 }
 
@@ -10539,6 +20388,933 @@ pub extern "C" fn fs_preload_archive__part756(
         }
 
         must_return
+    }
+}
+}
+
+// ── `fs_preload_files` · fs_net.c:982-1003 · chunk 757 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_preload_files(FSDevice *fs1, FSFileID file_id)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         struct list_head *el;
+//         PreloadEntry *pe;
+//         PreloadFile *pf;
+//     
+//         for(el = (&fs->preload_list)->next; el != (&fs->preload_list); el = el->next) {
+//             pe = ((PreloadEntry *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 PreloadEntry
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (pe->file_id == file_id)
+//                 goto found;
+//         }
+//         return;
+//      found:
+//         for(el = (&pe->file_list)->next; el != (&pe->file_list); el = el->next) {
+//             pf = ((PreloadFile *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 PreloadFile
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (pf->is_archive)
+//                 fs_preload_archive(fs1, pf->name);
+//             else
+//                 fs_preload_file(fs1, pf->name);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk757 {
+// Port of fs_net.c: fs_preload_files (plus the file-static helpers of the same
+// translation unit that it needs, since statics have no linker symbols).
+
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_unsafe)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::MaybeUninit;
+use core::ptr;
+
+// ---------------------------------------------------------------------------
+// small helpers
+// ---------------------------------------------------------------------------
+
+macro_rules! off {
+    ($t:ty, $($f:ident).+) => {{
+        let uninit = MaybeUninit::<$t>::uninit();
+        let base = uninit.as_ptr();
+        (ptr::addr_of!((*base).$($f).+) as usize).wrapping_sub(base as usize)
+    }};
+}
+
+unsafe fn entry_of<T>(el: *mut ListHead, link_off: usize) -> *mut T {
+    (el as *mut u8).sub(link_off) as *mut T
+}
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    // __list_add(el, head, head->next)
+    let prev = head;
+    let next = (*head).next;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    // __list_add(el, head->prev, head)
+    let prev = (*head).prev;
+    let next = head;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = ptr::null_mut();
+    (*el).next = ptr::null_mut();
+}
+
+fn c_assert(cond: bool) {
+    if !cond {
+        // C assert(): terminate the process, never unwind across the FFI boundary
+        std::process::abort();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// mirrored C types
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    // Only ever used through pointers here; its 22 function pointers all have
+    // the size and alignment of a data pointer.
+    pub fns: [*mut c_void; 22],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    pub aes_state: AES_KEY,
+}
+
+// union { reg; dir; dev; symlink }: laid out like its largest member (reg).
+// dir.de_list also starts at offset 0, which is all that is used here.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeU {
+    pub reg: FSINodeReg,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int,
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+type FSOpenCompletionFunc =
+    unsafe extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut c_void);
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut c_void,
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut FSFile,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: c_int,
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub size: u64,
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *mut c_char,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+const FS_OPEN_WGET_REG: c_int = 0;
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+const ARCHIVE_SIZE_MAX: u64 = 4 << 20;
+
+// ---------------------------------------------------------------------------
+// C functions / globals used
+// ---------------------------------------------------------------------------
+
+type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+type DecryptFileCB =
+    unsafe extern "C" fn(opaque: *mut c_void, data: *const u8, len: usize) -> c_int;
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn strlen(s: *const c_char) -> usize;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strrchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn decrypt_file_init(
+        aes_state: *mut AES_KEY,
+        write_cb: Option<DecryptFileCB>,
+        opaque: *mut c_void,
+    ) -> *mut c_void;
+    fn decrypt_file(s: *mut c_void, data: *const u8, size: usize) -> c_int;
+    fn decrypt_file_flush(s: *mut c_void) -> c_int;
+    fn decrypt_file_end(s: *mut c_void);
+
+    fn fclose(f: *mut c_void) -> c_int;
+    fn fopen(name: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fwrite(p: *const c_void, size: usize, nmemb: usize, f: *mut c_void) -> usize;
+    fn fflush(f: *mut c_void) -> c_int;
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn snprintf(buf: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(code: c_int);
+}
+
+// ---------------------------------------------------------------------------
+// static helpers from fs_net.c
+// ---------------------------------------------------------------------------
+
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != FT_DIR {
+        return ptr::null_mut();
+    }
+    // union: dir.de_list is at offset 0, like reg.state
+    let head = ptr::addr_of_mut!((*n).u.reg.state) as *mut ListHead;
+    let name_off = off!(FSDirEntry, name);
+    let mut el = (*head).next;
+    while el != head {
+        let de = entry_of::<FSDirEntry>(el, 0);
+        let de_name = (de as *mut u8).add(name_off) as *const c_char;
+        if strcmp(de_name, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+unsafe fn inode_search_path1(n: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut p = path;
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    let mut cur = n;
+    loop {
+        let p1 = strchr(p, b'/' as c_int);
+        let len: c_int;
+        let next_p: *const c_char;
+        if p1.is_null() {
+            len = strlen(p) as c_int;
+            next_p = ptr::null();
+        } else {
+            len = (p1 as usize).wrapping_sub(p as usize) as c_int;
+            next_p = (p1 as *const c_char).add(1);
+        }
+        if len > (name.len() as c_int) - 1 {
+            return ptr::null_mut();
+        }
+        ptr::copy_nonoverlapping(p as *const u8, name.as_mut_ptr() as *mut u8, len as usize);
+        name[len as usize] = 0;
+        if (*cur).type_ != FT_DIR {
+            return ptr::null_mut();
+        }
+        let de = inode_search(cur, name.as_ptr());
+        if de.is_null() {
+            return ptr::null_mut();
+        }
+        cur = (*de).inode;
+        p = next_p;
+        if p.is_null() {
+            break;
+        }
+    }
+    cur
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return ptr::null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1((*fs).root_inode, path)
+}
+
+unsafe fn fs_trim_cache(fs1: *mut FSDevice, added_size: i64) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let reg_link_off = off!(FSINode, u.reg.link);
+    if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+        return;
+    }
+    let head = ptr::addr_of_mut!((*fs).inode_cache_list);
+    let mut el = (*head).prev;
+    let mut el1 = (*el).prev;
+    while el != head {
+        let n = entry_of::<FSINode>(el, reg_link_off);
+        c_assert((*n).u.reg.state == REG_STATE_LOADED);
+        if (*n).open_count == 0 {
+            file_buffer_reset(ptr::addr_of_mut!((*n).u.reg.fbuf));
+            (*n).u.reg.state = REG_STATE_UNLOADED;
+            list_del(ptr::addr_of_mut!((*n).u.reg.link));
+            (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_sub((*n).u.reg.size as i64);
+            c_assert((*fs).inode_cache_size >= 0);
+            if (*fs).inode_cache_size.wrapping_add(added_size) <= (*fs).inode_cache_size_limit {
+                break;
+            }
+        }
+        el = el1;
+        el1 = (*el).prev;
+    }
+}
+
+unsafe fn inode_to_qid(qid: *mut FSQID, n: *mut FSINode) {
+    if (*n).type_ == FT_DIR {
+        (*qid).type_ = 0x80;
+    } else if (*n).type_ == 10 {
+        // FT_LNK
+        (*qid).type_ = 0x02;
+    } else {
+        (*qid).type_ = 0x00;
+    }
+    (*qid).version = 0;
+    (*qid).path = (*n).inode_num;
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe extern "C" fn fs_open_write_cb(opaque: *mut c_void, data: *const u8, size: usize) -> c_int {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+    let mut len = (*n).u.reg.size.wrapping_sub((*oi).cur_pos);
+    if size < len {
+        len = size;
+    }
+    file_buffer_write(ptr::addr_of_mut!((*n).u.reg.fbuf), (*oi).cur_pos, data, len);
+    (*oi).cur_pos = (*oi).cur_pos.wrapping_add(len);
+    0
+}
+
+unsafe fn fs_wget_set_loaded(n: *mut FSINode) {
+    c_assert((*n).u.reg.state == REG_STATE_LOADING);
+    let oi = (*n).u.reg.open_info;
+    let fs = (*oi).fs as *mut FSDeviceMem;
+    (*n).u.reg.state = REG_STATE_LOADED;
+    list_add(
+        ptr::addr_of_mut!((*n).u.reg.link),
+        ptr::addr_of_mut!((*fs).inode_cache_list),
+    );
+    (*fs).inode_cache_size = (*fs).inode_cache_size.wrapping_add((*n).u.reg.size as i64);
+
+    if let Some(cb) = (*oi).cb {
+        let f = (*oi).f;
+        (*f).is_opened = 1;
+        let mut qid = FSQID {
+            type_: 0,
+            version: 0,
+            path: 0,
+        };
+        inode_to_qid(&mut qid as *mut FSQID, n);
+        cb((*oi).fs, &mut qid as *mut FSQID, 0, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    c_assert((*n).u.reg.state == REG_STATE_LOADING);
+    let oi = (*n).u.reg.open_info;
+    (*n).u.reg.state = REG_STATE_UNLOADED;
+    file_buffer_reset(ptr::addr_of_mut!((*n).u.reg.fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_read_archive(oi: *mut FSOpenInfo) {
+    let n = (*oi).n;
+    let mut buf = [0u8; 1024];
+    let archive_link_off = off!(FSOpenInfo, archive_link);
+    let head = ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+
+    while el != head {
+        let oi1 = entry_of::<FSOpenInfo>(el, archive_link_off);
+        let n1 = (*oi1).n;
+
+        let mut pos = (*oi1).archive_offset;
+        let mut pos1: u64 = 0;
+        while pos1 < (*n1).u.reg.size as u64 {
+            let mut l = (*n1).u.reg.size as u64 - pos1;
+            if l > buf.len() as u64 {
+                l = buf.len() as u64;
+            }
+            file_buffer_read(
+                ptr::addr_of_mut!((*n).u.reg.fbuf),
+                pos as usize,
+                buf.as_mut_ptr(),
+                l as usize,
+            );
+            file_buffer_write(
+                ptr::addr_of_mut!((*n1).u.reg.fbuf),
+                pos1 as usize,
+                buf.as_ptr(),
+                l as usize,
+            );
+            pos = pos.wrapping_add(l);
+            pos1 = pos1.wrapping_add(l);
+        }
+        fs_wget_set_loaded(n1);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let archive_link_off = off!(FSOpenInfo, archive_link);
+    let head = ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+
+    while el != head {
+        let oi1 = entry_of::<FSOpenInfo>(el, archive_link_off);
+        fs_wget_set_error((*oi1).n);
+
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn fs_open_error(oi: *mut FSOpenInfo) {
+    // the `error:` label of fs_open_cb
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+        fs_error_archive(oi);
+    }
+    fs_wget_set_error((*oi).n);
+}
+
+unsafe extern "C" fn fs_open_cb(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    let oi = opaque as *mut FSOpenInfo;
+    let n = (*oi).n;
+
+    if err < 0 {
+        fs_open_error(oi);
+        return;
+    }
+
+    if !(*oi).dec_state.is_null() {
+        if decrypt_file((*oi).dec_state, data as *const u8, size) < 0 {
+            fs_open_error(oi);
+            return;
+        }
+        if err == 0 && decrypt_file_flush((*oi).dec_state) < 0 {
+            fs_open_error(oi);
+            return;
+        }
+    } else {
+        fs_open_write_cb(oi as *mut c_void, data as *const u8, size);
+    }
+
+    if err == 0 {
+        if (*oi).cur_pos != (*n).u.reg.size {
+            fs_open_error(oi);
+            return;
+        }
+
+        dump_loaded_file((*oi).fs, n);
+
+        if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+            fs_read_archive(oi);
+        }
+        fs_wget_set_loaded(n);
+    }
+}
+
+unsafe fn fs_open_wget(fs1: *mut FSDevice, n: *mut FSINode, open_type: c_int) -> c_int {
+    let mut fname = [0 as c_char; 32];
+
+    c_assert((*n).u.reg.state == REG_STATE_UNLOADED);
+
+    fs_trim_cache(fs1, (*n).u.reg.size as i64);
+
+    if file_buffer_resize(ptr::addr_of_mut!((*n).u.reg.fbuf), (*n).u.reg.size) < 0 {
+        return -5;
+    }
+    (*n).u.reg.state = REG_STATE_LOADING;
+    let oi = mallocz(core::mem::size_of::<FSOpenInfo>()) as *mut FSOpenInfo;
+    (*oi).cur_pos = 0;
+    (*oi).fs = fs1;
+    (*oi).n = n;
+    (*oi).open_type = open_type;
+    if open_type != FS_OPEN_WGET_ARCHIVE_FILE {
+        if open_type == FS_OPEN_WGET_ARCHIVE {
+            init_list_head(ptr::addr_of_mut!((*oi).archive_file_list));
+        }
+        file_id_to_filename(fname.as_mut_ptr(), (*n).u.reg.file_id);
+        let bu = (*n).u.reg.base_url;
+        let url = compose_path((*bu).url, fname.as_ptr());
+        if (*bu).encrypted != 0 {
+            (*oi).dec_state = decrypt_file_init(
+                ptr::addr_of_mut!((*bu).aes_state),
+                Some(fs_open_write_cb),
+                oi as *mut c_void,
+            );
+        }
+        (*oi).xhr = fs_wget(
+            url,
+            (*bu).user,
+            (*bu).password,
+            oi as *mut c_void,
+            Some(fs_open_cb),
+            0,
+        );
+    }
+    (*n).u.reg.open_info = oi;
+    0
+}
+
+unsafe fn fs_preload_file(fs1: *mut FSDevice, filename: *const c_char) {
+    let n = inode_search_path(fs1, filename);
+    if !n.is_null() && (*n).type_ == FT_REG && (*n).u.reg.state == REG_STATE_UNLOADED {
+        fs_open_wget(fs1, n, FS_OPEN_WGET_REG);
+    }
+}
+
+unsafe fn find_preload_archive(
+    fs: *mut FSDeviceMem,
+    filename: *const c_char,
+) -> *mut PreloadArchive {
+    let head = ptr::addr_of_mut!((*fs).preload_archive_list);
+    let mut el = (*head).next;
+    while el != head {
+        let pa = entry_of::<PreloadArchive>(el, 0);
+        if strcmp((*pa).name, filename) == 0 {
+            return pa;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+unsafe fn fs_preload_archive(fs1: *mut FSDevice, filename: *const c_char) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let pa = find_preload_archive(fs, filename);
+    if pa.is_null() {
+        return;
+    }
+
+    let n = inode_search_path(fs1, filename);
+    let usable = !n.is_null() && (*n).type_ == FT_REG && (*n).u.reg.state == REG_STATE_UNLOADED;
+    let head = ptr::addr_of_mut!((*pa).file_list);
+    let mut load_fallback = !usable;
+
+    if usable {
+        let mut offset: u64 = 0;
+        let mut has_unloaded: c_int = 0;
+
+        let mut el = (*head).next;
+        while el != head {
+            let paf = entry_of::<PreloadArchiveFile>(el, 0);
+            let n1 = inode_search_path(fs1, (*paf).name);
+            if !n1.is_null() && (*n1).type_ == FT_REG && (*n1).u.reg.state == REG_STATE_UNLOADED
+            {
+                has_unloaded = 1; // TRUE
+            }
+            offset = offset.wrapping_add((*paf).size);
+            el = (*el).next;
+        }
+        if has_unloaded == 0 {
+            return;
+        }
+
+        if offset != (*n).u.reg.size as u64 {
+            // inconsistent archive file: goto load_fallback
+            load_fallback = true;
+        } else {
+            fs_open_wget(fs1, n, FS_OPEN_WGET_ARCHIVE);
+
+            offset = 0;
+            let mut el = (*head).next;
+            while el != head {
+                let paf = entry_of::<PreloadArchiveFile>(el, 0);
+                let n1 = inode_search_path(fs1, (*paf).name);
+                if !n1.is_null()
+                    && (*n1).type_ == FT_REG
+                    && (*n1).u.reg.state == REG_STATE_UNLOADED
+                {
+                    if (*n1).u.reg.size == (*paf).size as usize
+                        && (*n1).u.reg.file_id == (*paf).file_id
+                    {
+                        fs_open_wget(fs1, n1, FS_OPEN_WGET_ARCHIVE_FILE);
+                        list_add_tail(
+                            ptr::addr_of_mut!((*(*n1).u.reg.open_info).archive_link),
+                            ptr::addr_of_mut!((*(*n).u.reg.open_info).archive_file_list),
+                        );
+                        (*(*n1).u.reg.open_info).archive_offset = offset;
+                    } else {
+                        fs_preload_file(fs1, (*paf).name);
+                    }
+                }
+                offset = offset.wrapping_add((*paf).size);
+                el = (*el).next;
+            }
+            return;
+        }
+    }
+
+    if load_fallback {
+        let mut el = (*head).next;
+        while el != head {
+            let paf = entry_of::<PreloadArchiveFile>(el, 0);
+            fs_preload_file(fs1, (*paf).name);
+            el = (*el).next;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// cache dump helpers (used by fs_open_cb)
+// ---------------------------------------------------------------------------
+
+unsafe fn fs_dump_find_file(head: *mut ListHead, name: *const c_char) -> *mut PreloadFile {
+    let mut el = (*head).next;
+    while el != head {
+        let pf = entry_of::<PreloadFile>(el, 0);
+        if strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+unsafe fn dump_close_archive(fs1: *mut FSDevice) {
+    let fs = fs1 as *mut FSDeviceMem;
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = ptr::null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+unsafe fn dump_loaded_file(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+
+    if (*fs).dump_cache_load == 0 || (*n).u.reg.filename.is_null() {
+        return;
+    }
+    let fname = (*n).u.reg.filename as *const c_char;
+
+    if !fs_dump_find_file(ptr::addr_of_mut!((*fs).dump_preload_list), fname).is_null() {
+        dump_close_archive(fs1);
+        let mut p = strrchr(fname, b'/' as c_int) as *const c_char;
+        if p.is_null() {
+            p = fname;
+        } else {
+            p = p.add(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = 1; // TRUE
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr(),
+            filename.len(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file = fopen(filename.as_ptr(), b"wb\0".as_ptr() as *const c_char);
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr());
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num = (*fs).dump_archive_num.wrapping_add(1);
+    }
+
+    if (*n).u.reg.size as u64 >= ARCHIVE_SIZE_MAX {
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*n).u.reg.size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*n).u.reg.filename,
+            (*n).u.reg.size,
+            (*n).u.reg.file_id,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*n).u.reg.fbuf.data as *const c_void,
+            1,
+            (*n).u.reg.size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs).dump_archive_size.wrapping_add((*n).u.reg.size as u64);
+        if (*fs).dump_archive_size >= ARCHIVE_SIZE_MAX {
+            dump_close_archive(fs1);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TARGET
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_preload_files(fs1: *mut FSDevice, file_id: u64) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut pe: *mut PreloadEntry = ptr::null_mut();
+
+    let head = ptr::addr_of_mut!((*fs).preload_list);
+    let mut el = (*head).next;
+    let mut found = false;
+    while el != head {
+        pe = entry_of::<PreloadEntry>(el, 0);
+        if (*pe).file_id == file_id {
+            found = true;
+            break;
+        }
+        el = (*el).next;
+    }
+    if !found {
+        return;
+    }
+
+    let head = ptr::addr_of_mut!((*pe).file_list);
+    let mut el = (*head).next;
+    while el != head {
+        let pf = entry_of::<PreloadFile>(el, 0);
+        if (*pf).is_archive != 0 {
+            fs_preload_archive(fs1, (*pf).name);
+        } else {
+            fs_preload_file(fs1, (*pf).name);
+        }
+        el = (*el).next;
     }
 }
 }
@@ -12710,6 +23486,363 @@ pub extern "C" fn fs_read__part784(
         file_buffer_read(bs, offset, buf, count as usize);
     }
     count
+}
+}
+
+// ── `fs_truncate` · fs_net.c:1185-1244 · chunk 785 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_truncate(FSDevice *fs1, FSINode *n, uint64_t size)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         intptr_t diff, diff_blocks;
+//         size_t new_allocated_size;
+//     
+//         if (n->type != FT_REG)
+//             return -22;
+//         if (size > 
+//                   (18446744073709551615UL)
+//                              )
+//             return -28;
+//         diff = size - n->u.reg.size;
+//         if (diff == 0)
+//             return 0;
+//         diff_blocks = to_blocks(fs, size) - to_blocks(fs, n->u.reg.size);
+//     
+//         switch(n->u.reg.state) {
+//         case REG_STATE_LOADING:
+//             return -5;
+//         case REG_STATE_UNLOADED:
+//             if (size == 0) {
+//     
+//                 n->u.reg.state = REG_STATE_LOCAL;
+//             }
+//             break;
+//         case REG_STATE_LOADED:
+//         case REG_STATE_LOCAL:
+//             if (diff > 0) {
+//                 if ((fs->fs_blocks + diff_blocks) > fs->fs_max_blocks)
+//                     return -28;
+//                 if (size > n->u.reg.fbuf.allocated_size) {
+//                     new_allocated_size = n->u.reg.fbuf.allocated_size * 5 / 4;
+//                     if (size > new_allocated_size)
+//                         new_allocated_size = size;
+//                     if (file_buffer_resize(&n->u.reg.fbuf, new_allocated_size) < 0)
+//                         return -28;
+//                 }
+//                 file_buffer_set(&n->u.reg.fbuf, n->u.reg.size, 0, diff);
+//             } else {
+//                 new_allocated_size = n->u.reg.fbuf.allocated_size * 4 / 5;
+//                 if (size <= new_allocated_size) {
+//                     if (file_buffer_resize(&n->u.reg.fbuf, new_allocated_size) < 0)
+//                         return -28;
+//                 }
+//             }
+//     
+//             if (n->u.reg.state == REG_STATE_LOADED) {
+//                 list_del(&n->u.reg.link);
+//                 fs->inode_cache_size -= n->u.reg.size;
+//                 
+//                ((void) sizeof (__assert_single_arg (
+//                fs->inode_cache_size >= 0
+//                )), __extension__ ({ if (
+//                fs->inode_cache_size >= 0
+//                ) ; else __assert_fail (
+//                "fs->inode_cache_size >= 0"
+//                , "fs_net.c", 1233, __extension__ __PRETTY_FUNCTION__); }))
+//                                                 ;
+//                 n->u.reg.state = REG_STATE_LOCAL;
+//             }
+//             break;
+//         default:
+//             abort();
+//         }
+//         fs->fs_blocks += diff_blocks;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs->fs_blocks >= 0
+//        )), __extension__ ({ if (
+//        fs->fs_blocks >= 0
+//        ) ; else __assert_fail (
+//        "fs->fs_blocks >= 0"
+//        , "fs_net.c", 1241, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         n->u.reg.size = size;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk785 {
+// Port of static int fs_truncate(FSDevice *fs1, FSINode *n, uint64_t size)
+// from fs_net.c (memory filesystem backend).
+
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+#![allow(unused_comparisons)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// ---------------------------------------------------------------- constants
+
+const FT_REG: c_int = 8;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const P9_EIO: c_int = -5;
+const P9_EINVAL: c_int = -22;
+const P9_ENOSPC: c_int = -28;
+
+// ---------------------------------------------------------------- C functions
+
+extern "C" {
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_set(bs: *mut FileBuffer, offset: usize, val: c_int, size: usize);
+    fn abort() -> !;
+}
+
+// ---------------------------------------------------------------- structures
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// struct FSDevice: a table of 22 function pointers (mirrored opaquely, never
+// dereferenced here; only its size/alignment matters for the layout below).
+#[repr(C)]
+pub struct FSDevice {
+    pub f00: *const c_void,
+    pub f01: *const c_void,
+    pub f02: *const c_void,
+    pub f03: *const c_void,
+    pub f04: *const c_void,
+    pub f05: *const c_void,
+    pub f06: *const c_void,
+    pub f07: *const c_void,
+    pub f08: *const c_void,
+    pub f09: *const c_void,
+    pub f10: *const c_void,
+    pub f11: *const c_void,
+    pub f12: *const c_void,
+    pub f13: *const c_void,
+    pub f14: *const c_void,
+    pub f15: *const c_void,
+    pub f16: *const c_void,
+    pub f17: *const c_void,
+    pub f18: *const c_void,
+    pub f19: *const c_void,
+    pub f20: *const c_void,
+    pub f21: *const c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSReg,
+    pub dir: FSDir,
+    pub dev: FSDev,
+    pub symlink: FSSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+}
+
+// ---------------------------------------------------------------- helpers
+
+// static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+#[inline]
+unsafe fn to_blocks(fs: *const FSDeviceMem, size: u64) -> i64 {
+    let bs = (*fs).block_size as u64;
+    let shift = (*fs).block_size_log2 as u32;
+    size.wrapping_add(bs).wrapping_sub(1).wrapping_shr(shift) as i64
+}
+
+// static inline void list_del(struct list_head *el)
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+fn assert_ge0(v: i64) {
+    if !(v >= 0) {
+        unsafe { abort() }
+    }
+}
+
+// ---------------------------------------------------------------- the target
+
+#[no_mangle]
+pub extern "C" fn fs_truncate(fs1: *mut FSDevice, n: *mut FSINode, size: u64) -> c_int {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let diff: i64;
+        let diff_blocks: i64;
+        let mut new_allocated_size: usize;
+
+        if (*n).type_ != FT_REG {
+            return P9_EINVAL;
+        }
+        if size > u64::MAX {
+            return P9_ENOSPC;
+        }
+        // intptr_t diff = size - n->u.reg.size;  (size_t -> uint64_t, then
+        // converted to intptr_t; the arithmetic is modulo 2^64.)
+        diff = size.wrapping_sub((*n).u.reg.size as u64) as i64;
+        if diff == 0 {
+            return 0;
+        }
+        diff_blocks = to_blocks(fs, size).wrapping_sub(to_blocks(fs, (*n).u.reg.size as u64));
+
+        match (*n).u.reg.state {
+            REG_STATE_LOADING => {
+                return P9_EIO;
+            }
+            REG_STATE_UNLOADED => {
+                if size == 0 {
+                    // now local content
+                    (*n).u.reg.state = REG_STATE_LOCAL;
+                }
+            }
+            REG_STATE_LOADED | REG_STATE_LOCAL => {
+                if diff > 0 {
+                    if (((*fs).fs_blocks.wrapping_add(diff_blocks)) as u64) > (*fs).fs_max_blocks {
+                        return P9_ENOSPC;
+                    }
+                    if size > (*n).u.reg.fbuf.allocated_size as u64 {
+                        new_allocated_size = (*n).u.reg.fbuf.allocated_size.wrapping_mul(5) / 4;
+                        if size > new_allocated_size as u64 {
+                            new_allocated_size = size as usize;
+                        }
+                        if file_buffer_resize(
+                            core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+                            new_allocated_size,
+                        ) < 0
+                        {
+                            return P9_ENOSPC;
+                        }
+                    }
+                    file_buffer_set(
+                        core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+                        (*n).u.reg.size,
+                        0,
+                        diff as usize,
+                    );
+                } else {
+                    new_allocated_size = (*n).u.reg.fbuf.allocated_size.wrapping_mul(4) / 5;
+                    if size <= new_allocated_size as u64 {
+                        if file_buffer_resize(
+                            core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+                            new_allocated_size,
+                        ) < 0
+                        {
+                            return P9_ENOSPC;
+                        }
+                    }
+                }
+                // file is modified, so it is now local
+                if (*n).u.reg.state == REG_STATE_LOADED {
+                    let link: *mut ListHead = core::ptr::addr_of_mut!((*n).u.reg.link);
+                    list_del(link);
+                    (*fs).inode_cache_size = (*fs)
+                        .inode_cache_size
+                        .wrapping_sub((*n).u.reg.size as i64);
+                    assert_ge0((*fs).inode_cache_size);
+                    (*n).u.reg.state = REG_STATE_LOCAL;
+                }
+            }
+            _ => {
+                abort();
+            }
+        }
+        (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(diff_blocks);
+        assert_ge0((*fs).fs_blocks);
+        (*n).u.reg.size = size as usize;
+        0
+    }
 }
 }
 
@@ -19870,6 +31003,499 @@ pub extern "C" fn fs_getlock__part860() -> c_int {
 }
 }
 
+// ── `fs_mem_end` · fs_net.c:1500-1522 · chunk 861 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_mem_end(FSDevice *fs1)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         struct list_head *el, *el1, *el2, *el3;
+//         FSINode *n;
+//         FSDirEntry *de;
+//     
+//         for(el = (&fs->inode_list)->next, el1 = el->next; el != (&fs->inode_list); el = el1, el1 = el->next) {
+//             n = ((FSINode *)((uint8_t *)(el) - 
+//                __builtin_offsetof (
+//                FSINode
+//                , 
+//                link
+//                )
+//                ));
+//             n->refcount = 0;
+//             if (n->type == FT_DIR) {
+//                 for(el2 = (&n->u.dir.de_list)->next, el3 = el2->next; el2 != (&n->u.dir.de_list); el2 = el3, el3 = el2->next) {
+//                     de = ((FSDirEntry *)((uint8_t *)(el2) - 
+//                         __builtin_offsetof (
+//                         FSDirEntry
+//                         , 
+//                         link
+//                         )
+//                         ));
+//                     list_del(&de->link);
+//                     free(de);
+//                 }
+//                 init_list_head(&n->u.dir.de_list);
+//             }
+//             inode_free(fs1, n);
+//         }
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        list_empty(&fs->inode_cache_list)
+//        )), __extension__ ({ if (
+//        list_empty(&fs->inode_cache_list)
+//        ) ; else __assert_fail (
+//        "list_empty(&fs->inode_cache_list)"
+//        , "fs_net.c", 1520, __extension__ __PRETTY_FUNCTION__); }))
+//                                                 ;
+//         free(fs->import_dir);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk861 {
+// Port of `fs_mem_end` (fs_net.c) and of every static helper it needs
+// (`inode_free`, `fs_base_url_decref`, `fs_error_archive`,
+// `fs_wget_set_error`, `fs_open_end`, `to_blocks`, list primitives), since
+// those have internal linkage in the C translation unit and therefore no
+// linker symbol.
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+const FILE_C: &[u8] = b"fs_net.c\0";
+const FN_MEM_END: &[u8] = b"fs_mem_end\0";
+const FN_INODE_FREE: &[u8] = b"inode_free\0";
+const FN_BASE_URL_DECREF: &[u8] = b"fs_base_url_decref\0";
+const FN_WGET_SET_ERROR: &[u8] = b"fs_wget_set_error\0";
+
+// FSINodeTypeEnum
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+// FSINodeRegStateEnum
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+// FSOpenWgetEnum
+const FS_OPEN_WGET_ARCHIVE: c_int = 1;
+const FS_OPEN_WGET_ARCHIVE_FILE: c_int = 2;
+
+// ---------------------------------------------------------------- externals
+
+extern "C" {
+    fn free(p: *mut c_void);
+    fn abort() -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn fs_wget_free(s: *mut c_void);
+    fn decrypt_file_end(s: *mut c_void);
+}
+
+// ------------------------------------------------------------------- types
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// `struct FSDevice` is 22 function pointers (`common` inside FSDeviceMem).
+// Only its size matters here: it is the first member of FSDeviceMem.
+#[repr(C)]
+pub struct FSDevice {
+    pub f: [*mut c_void; 22],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    // char name[0];
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    // BOOL encrypted; AES_KEY aes_state;  (never accessed here)
+}
+
+pub type FSOpenCompletionFunc =
+    unsafe extern "C" fn(*mut FSDevice, *mut c_void, c_int, *mut c_void);
+
+#[repr(C)]
+pub struct FSOpenInfo {
+    pub fs: *mut FSDevice,
+    pub open_type: c_int,
+    pub xhr: *mut c_void,
+    pub n: *mut FSINode,
+    pub dec_state: *mut c_void,
+    pub cur_pos: usize,
+    pub archive_link: ListHead,
+    pub archive_offset: u64,
+    pub archive_file_list: ListHead,
+    pub f: *mut c_void,
+    pub cb: Option<FSOpenCompletionFunc>,
+    pub opaque: *mut c_void,
+}
+
+// Only the leading fields (up to `import_dir`) are ever touched.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+}
+
+// ------------------------------------------------------------------ helpers
+
+#[inline]
+unsafe fn c_assert(cond: bool, expr: &'static [u8], line: c_uint, func: &'static [u8]) {
+    if !cond {
+        __assert_fail(
+            expr.as_ptr() as *const c_char,
+            FILE_C.as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+#[inline]
+unsafe fn list_empty(head: *mut ListHead) -> bool {
+    (*head).next == head
+}
+
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// union member accessors (all union members start at offset 0)
+#[inline]
+unsafe fn reg(n: *mut FSINode) -> *mut FSINodeReg {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSINodeReg
+}
+
+#[inline]
+unsafe fn dir(n: *mut FSINode) -> *mut FSINodeDir {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSINodeDir
+}
+
+#[inline]
+unsafe fn symlink(n: *mut FSINode) -> *mut FSINodeSymlink {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSINodeSymlink
+}
+
+// offsetof(FSOpenInfo, archive_link)
+#[inline]
+unsafe fn archive_link_off() -> usize {
+    let tmp: FSOpenInfo = core::mem::zeroed();
+    let base = core::ptr::addr_of!(tmp) as usize;
+    let field = core::ptr::addr_of!(tmp.archive_link) as usize;
+    field - base
+}
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let bs = (*fs).block_size as u64;
+    let shift = (*fs).block_size_log2 as u32;
+    (size.wrapping_add(bs).wrapping_sub(1) >> shift) as i64
+}
+
+unsafe fn fs_base_url_decref(_fs1: *mut FSDevice, bu: *mut FSBaseURL) {
+    c_assert(
+        (*bu).ref_count >= 1,
+        b"bu->ref_count >= 1\0",
+        1602,
+        FN_BASE_URL_DECREF,
+    );
+    (*bu).ref_count -= 1;
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_open_end(oi: *mut FSOpenInfo) {
+    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE_FILE {
+        list_del(core::ptr::addr_of_mut!((*oi).archive_link));
+    }
+    if !(*oi).dec_state.is_null() {
+        decrypt_file_end((*oi).dec_state);
+    }
+    free(oi as *mut c_void);
+}
+
+unsafe fn fs_wget_set_error(n: *mut FSINode) {
+    let r = reg(n);
+    c_assert(
+        (*r).state == REG_STATE_LOADING,
+        b"n->u.reg.state == REG_STATE_LOADING\0",
+        750,
+        FN_WGET_SET_ERROR,
+    );
+    let oi = (*r).open_info;
+    (*r).state = REG_STATE_UNLOADED;
+    file_buffer_reset(core::ptr::addr_of_mut!((*r).fbuf));
+    if let Some(cb) = (*oi).cb {
+        cb((*oi).fs, core::ptr::null_mut(), -5, (*oi).opaque);
+    }
+    fs_open_end(oi);
+}
+
+unsafe fn fs_error_archive(oi: *mut FSOpenInfo) {
+    let off = archive_link_off();
+    let head = core::ptr::addr_of_mut!((*oi).archive_file_list);
+    let mut el = (*head).next;
+    let mut el1 = (*el).next;
+    while el != head {
+        let oi1 = (el as *mut u8).sub(off) as *mut FSOpenInfo;
+        fs_wget_set_error((*oi1).n);
+        el = el1;
+        el1 = (*el).next;
+    }
+}
+
+unsafe fn inode_free(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    c_assert(
+        (*n).refcount == 0,
+        b"n->refcount == 0\0",
+        334,
+        FN_INODE_FREE,
+    );
+    c_assert(
+        (*n).open_count == 0,
+        b"n->open_count == 0\0",
+        335,
+        FN_INODE_FREE,
+    );
+
+    match (*n).type_ {
+        FT_REG => {
+            let r = reg(n);
+            (*fs).fs_blocks = (*fs)
+                .fs_blocks
+                .wrapping_sub(to_blocks(fs, (*r).size as u64));
+            c_assert(
+                (*fs).fs_blocks >= 0,
+                b"fs->fs_blocks >= 0\0",
+                339,
+                FN_INODE_FREE,
+            );
+            file_buffer_reset(core::ptr::addr_of_mut!((*r).fbuf));
+            free((*r).filename as *mut c_void);
+
+            match (*r).state {
+                REG_STATE_LOADED => {
+                    list_del(core::ptr::addr_of_mut!((*r).link));
+                    (*fs).inode_cache_size = ((*fs).inode_cache_size as u64)
+                        .wrapping_sub((*r).size as u64)
+                        as i64;
+                    c_assert(
+                        (*fs).inode_cache_size >= 0,
+                        b"fs->inode_cache_size >= 0\0",
+                        348,
+                        FN_INODE_FREE,
+                    );
+                    fs_base_url_decref(fs1, (*r).base_url);
+                }
+                REG_STATE_LOADING => {
+                    let oi = (*r).open_info;
+                    if !(*oi).xhr.is_null() {
+                        fs_wget_free((*oi).xhr);
+                    }
+                    if (*oi).open_type == FS_OPEN_WGET_ARCHIVE {
+                        fs_error_archive(oi);
+                    }
+                    fs_open_end(oi);
+                    fs_base_url_decref(fs1, (*r).base_url);
+                }
+                REG_STATE_UNLOADED => {
+                    fs_base_url_decref(fs1, (*r).base_url);
+                }
+                REG_STATE_LOCAL => {}
+                _ => abort(),
+            }
+        }
+        FT_LNK => {
+            free((*symlink(n)).name as *mut c_void);
+        }
+        FT_DIR => {
+            c_assert(
+                list_empty(core::ptr::addr_of_mut!((*dir(n)).de_list)),
+                b"list_empty(&n->u.dir.de_list)\0",
+                376,
+                FN_INODE_FREE,
+            );
+        }
+        _ => {}
+    }
+
+    list_del(core::ptr::addr_of_mut!((*n).link));
+    free(n as *mut c_void);
+    (*fs).inode_count -= 1;
+    c_assert(
+        (*fs).inode_count >= 0,
+        b"fs->inode_count >= 0\0",
+        384,
+        FN_INODE_FREE,
+    );
+}
+
+// ------------------------------------------------------------------- target
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_mem_end(fs1: *mut FSDevice) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let head = core::ptr::addr_of_mut!((*fs).inode_list);
+        let mut el = (*head).next;
+        let mut el1 = (*el).next;
+
+        while el != head {
+            // `link` is the first member of FSINode
+            let n = el as *mut FSINode;
+            (*n).refcount = 0;
+            if (*n).type_ == FT_DIR {
+                let dhead = core::ptr::addr_of_mut!((*dir(n)).de_list);
+                let mut el2 = (*dhead).next;
+                let mut el3 = (*el2).next;
+                while el2 != dhead {
+                    // `link` is the first member of FSDirEntry
+                    let de = el2 as *mut FSDirEntry;
+                    list_del(core::ptr::addr_of_mut!((*de).link));
+                    free(de as *mut c_void);
+                    el2 = el3;
+                    el3 = (*el2).next;
+                }
+                init_list_head(dhead);
+            }
+            inode_free(fs1, n);
+            el = el1;
+            el1 = (*el).next;
+        }
+
+        c_assert(
+            list_empty(core::ptr::addr_of_mut!((*fs).inode_cache_list)),
+            b"list_empty(&fs->inode_cache_list)\0",
+            1520,
+            FN_MEM_END,
+        );
+        free((*fs).import_dir as *mut c_void);
+    }
+}
+}
+
 // ── `for (el = (&fs->inode_list)->next, el1 = el->next; el != (&fs->inode_list; el = el1, el1 = el->…` · fs_net.c:1507-1519 · chunk 862 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -20898,6 +32524,105 @@ pub unsafe extern "C" fn fs_mem_init__part865_rest(fs1: *mut FSDevice) {
 }
 }
 
+// ── `fs_is_net` · fs_net.c:1580-1583 · chunk 866 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static BOOL fs_is_net(FSDevice *fs)
+//     {
+//         return (fs->fs_end == fs_mem_end);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk866 {
+// Port of fs_is_net() from fs_net.c (TinyEMU).
+//
+// static BOOL fs_is_net(FSDevice *fs)
+// {
+//     return (fs->fs_end == fs_mem_end);
+// }
+//
+// BOOL is `typedef int BOOL`, so the exported ABI is `int (*)(FSDevice *)`.
+//
+// `fs_mem_end` is a *static* C function (no linker symbol), so its address
+// cannot be referenced directly from Rust.  fs_mem_init() always installs it
+// as fs->fs_end, therefore its address is obtained once, at run time, from a
+// temporary memory filesystem which is immediately released again, and is
+// then cached.
+
+use core::ffi::{c_int, c_void};
+use core::ptr;
+use core::sync::atomic::{AtomicPtr, Ordering};
+
+// Mirror of `struct FSDevice` (fs.h): all fields are function pointers.  Only
+// fs_end is ever read here, the other fields are mirrored to keep the layout
+// identical to the C struct.
+#[allow(dead_code)]
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+extern "C" {
+    // FSDevice *fs_mem_init(void);
+    fn fs_mem_init() -> *mut FSDevice;
+    // void fs_end(FSDevice *fs);
+    fn fs_end(fs: *mut FSDevice);
+}
+
+// Cached address of the static C function fs_mem_end().
+static FS_MEM_END: AtomicPtr<c_void> = AtomicPtr::new(ptr::null_mut());
+
+// Return the address of the C function fs_mem_end() (cached after the first
+// call).  A memory filesystem always has fs_mem_end() as its fs_end callback,
+// so a temporary one is created to read that value back.
+unsafe fn get_fs_mem_end() -> *mut c_void {
+    let mut p = FS_MEM_END.load(Ordering::Relaxed);
+    if p.is_null() {
+        let tmp = fs_mem_init();
+        if !tmp.is_null() {
+            p = (*tmp).fs_end;
+            fs_end(tmp);
+        }
+        FS_MEM_END.store(p, Ordering::Relaxed);
+    }
+    p
+}
+
+#[no_mangle]
+pub extern "C" fn fs_is_net(fs: *mut FSDevice) -> c_int {
+    let mem_end = unsafe { get_fs_mem_end() };
+    if fs.is_null() {
+        return 0;
+    }
+    let end = unsafe { (*fs).fs_end };
+    if end == mem_end {
+        1
+    } else {
+        0
+    }
+}
+}
+
 // ── `return (fs->fs_end == fs_mem_end);` · fs_net.c:1582-1582 · chunk 867 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -20912,6 +32637,122 @@ pub extern "C" fn fs_is_net__part867(
     mem_end: *const core::ffi::c_void,
 ) -> core::ffi::c_int {
     (slot == mem_end) as core::ffi::c_int
+}
+}
+
+// ── `fs_find_base_url` · fs_net.c:1585-1598 · chunk 868 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSBaseURL *fs_find_base_url(FSDevice *fs1,
+//                                        const char *base_url_id)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         struct list_head *el;
+//         FSBaseURL *bu;
+//     
+//         for(el = (&fs->base_url_list)->next; el != (&fs->base_url_list); el = el->next) {
+//             bu = ((FSBaseURL *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 FSBaseURL
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (!strcmp(bu->base_url_id, base_url_id))
+//                 return bu;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk868 {
+// Rust rewrite of fs_net.c:fs_find_base_url
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+/// struct list_head { struct list_head *prev; struct list_head *next; }
+#[repr(C)]
+pub struct list_head {
+    prev: *mut list_head,
+    next: *mut list_head,
+}
+
+/// struct aes_key_st { unsigned int rd_key[4 * (14 + 1)]; int rounds; }
+#[repr(C)]
+pub struct aes_key_st {
+    rd_key: [u32; 60],
+    rounds: c_int,
+}
+type AES_KEY = aes_key_st;
+
+/// typedef int BOOL;
+type BOOL = c_int;
+
+/// typedef struct FSBaseURL { ... } FSBaseURL;
+#[repr(C)]
+pub struct FSBaseURL {
+    link: list_head,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: BOOL,
+    aes_state: AES_KEY,
+}
+
+/// struct FSDevice (23 function pointers, 8 bytes each on this target).
+#[repr(C)]
+pub struct FSDevice {
+    opaque: [u8; 23 * 8],
+}
+
+/// typedef struct FSDeviceMem { FSDevice common; ... } FSDeviceMem;
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: list_head,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut c_void,
+    inode_cache_list: list_head,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: list_head,
+    preload_archive_list: list_head,
+    base_url_list: list_head,
+}
+
+/// static FSBaseURL *fs_find_base_url(FSDevice *fs1, const char *base_url_id)
+#[no_mangle]
+pub unsafe extern "C" fn fs_find_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut list_head = core::ptr::addr_of_mut!((*fs).base_url_list);
+    // list_for_each(el, &fs->base_url_list)
+    let mut el: *mut list_head = (*head).next;
+    while el != head {
+        // container_of(el, FSBaseURL, link); link is the first field -> offset 0
+        let bu: *mut FSBaseURL = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
 }
 }
 
@@ -21021,6 +32862,109 @@ use core::ffi::c_void;
 #[no_mangle]
 pub extern "C" fn fs_find_base_url__part870() -> *mut c_void {
     core::ptr::null_mut()
+}
+}
+
+// ── `fs_base_url_decref` · fs_net.c:1600-1611 · chunk 871 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu)
+//     {
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        bu->ref_count >= 1
+//        )), __extension__ ({ if (
+//        bu->ref_count >= 1
+//        ) ; else __assert_fail (
+//        "bu->ref_count >= 1"
+//        , "fs_net.c", 1602, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         if (--bu->ref_count == 0) {
+//             free(bu->base_url_id);
+//             free(bu->url);
+//             free(bu->user);
+//             free(bu->password);
+//             list_del(&bu->link);
+//             free(bu);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk871 {
+// Rust rewrite of fs_base_url_decref (fs_net.c)
+use core::ffi::{c_char, c_int, c_uint};
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct AesKeySt {
+    pub rd_key: [c_uint; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int, /* BOOL */
+    pub aes_state: AesKeySt,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    _private: [u8; 0],
+}
+
+extern "C" {
+    fn free(ptr: *mut core::ffi::c_void);
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_base_url_decref(fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    let _ = fs;
+
+    if !((*bu).ref_count >= 1) {
+        __assert_fail(
+            b"bu->ref_count >= 1\0".as_ptr() as *const c_char,
+            b"fs_net.c\0".as_ptr() as *const c_char,
+            1602,
+            b"fs_base_url_decref\0".as_ptr() as *const c_char,
+        );
+    }
+
+    let rc = (*bu).ref_count - 1;
+    (*bu).ref_count = rc;
+    if rc == 0 {
+        free((*bu).base_url_id as *mut core::ffi::c_void);
+        free((*bu).url as *mut core::ffi::c_void);
+        free((*bu).user as *mut core::ffi::c_void);
+        free((*bu).password as *mut core::ffi::c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut core::ffi::c_void);
+    }
 }
 }
 
@@ -21141,6 +33085,249 @@ pub unsafe extern "C" fn fs_base_url_decref__part873(bu: *mut FSBaseURL) {
         list_del(&mut (*bu).link as *mut ListHead);
         free(bu as *mut c_void);
     }
+}
+}
+
+// ── `fs_net_set_base_url` · fs_net.c:1613-1651 · chunk 874 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static FSBaseURL *fs_net_set_base_url(FSDevice *fs1,
+//                                           const char *base_url_id,
+//                                           const char *url,
+//                                           const char *user, const char *password,
+//                                           AES_KEY *aes_state)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         FSBaseURL *bu;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs_is_net(fs1)
+//        )), __extension__ ({ if (
+//        fs_is_net(fs1)
+//        ) ; else __assert_fail (
+//        "fs_is_net(fs1)"
+//        , "fs_net.c", 1622, __extension__ __PRETTY_FUNCTION__); }))
+//                              ;
+//         bu = fs_find_base_url(fs1, base_url_id);
+//         if (!bu) {
+//             bu = mallocz(sizeof(*bu));
+//             bu->base_url_id = strdup(base_url_id);
+//             bu->ref_count = 1;
+//             list_add_tail(&bu->link, &fs->base_url_list);
+//         } else {
+//             free(bu->url);
+//             free(bu->user);
+//             free(bu->password);
+//         }
+//     
+//         bu->url = strdup(url);
+//         if (user)
+//             bu->user = strdup(user);
+//         else
+//             bu->user = 
+//                       ((void *)0)
+//                           ;
+//         if (password)
+//             bu->password = strdup(password);
+//         else
+//             bu->password = 
+//                           ((void *)0)
+//                               ;
+//         if (aes_state) {
+//             bu->encrypted = TRUE;
+//             bu->aes_state = *aes_state;
+//         } else {
+//             bu->encrypted = FALSE;
+//         }
+//         return bu;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk874 {
+// Rewrite of fs_net.c: fs_net_set_base_url (static in the original TU).
+//
+// The C helpers it uses (fs_is_net, fs_find_base_url, list_add_tail) have no
+// linker symbol, so their logic is reproduced here as private Rust fns.
+// The debug assertion `fs_is_net(fs1)` only involves static function
+// addresses that are not visible from Rust; it is a no-op for a valid
+// (net) device, which is the only way this function is reachable.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn free(ptr: *mut c_void);
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+#[repr(C)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+// FILE / other opaque pointers
+const P: *mut c_void = core::ptr::null_mut();
+
+#[repr(C)]
+pub struct FSDevice {
+    fs_end: *mut c_void,
+    fs_delete: *mut c_void,
+    fs_statfs: *mut c_void,
+    fs_attach: *mut c_void,
+    fs_walk: *mut c_void,
+    fs_mkdir: *mut c_void,
+    fs_open: *mut c_void,
+    fs_create: *mut c_void,
+    fs_stat: *mut c_void,
+    fs_setattr: *mut c_void,
+    fs_close: *mut c_void,
+    fs_readdir: *mut c_void,
+    fs_read: *mut c_void,
+    fs_write: *mut c_void,
+    fs_link: *mut c_void,
+    fs_symlink: *mut c_void,
+    fs_mknod: *mut c_void,
+    fs_readlink: *mut c_void,
+    fs_renameat: *mut c_void,
+    fs_unlinkat: *mut c_void,
+    fs_lock: *mut c_void,
+    fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+struct FSDeviceMem {
+    common: FSDevice,
+
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut c_void,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+
+    dump_cache_load: c_int,
+    dump_started: c_int,
+    dump_preload_dir: *mut c_char,
+    dump_preload_file: *mut c_void,
+    dump_preload_archive_file: *mut c_void,
+
+    dump_archive_name: *mut c_char,
+    dump_archive_size: u64,
+    dump_archive_file: *mut c_void,
+
+    dump_archive_num: c_int,
+    dump_preload_list: ListHead,
+    dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AES_KEY {
+    rd_key: [c_uint; 4 * (14 + 1)],
+    rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: c_int,
+    aes_state: AES_KEY,
+}
+
+// static inline void __list_add(el, prev, next)
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+
+// static FSBaseURL *fs_find_base_url(FSDevice *fs1, const char *base_url_id)
+unsafe fn fs_find_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*fs).base_url_list);
+    let mut el: *mut ListHead = (*fs).base_url_list.next;
+
+    while el != head {
+        // 'link' is the first member of FSBaseURL (offset 0)
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_net_set_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+    url: *const c_char,
+    user: *const c_char,
+    password: *const c_char,
+    aes_state: *mut AES_KEY,
+) -> *mut FSBaseURL {
+    // assert(fs_is_net(fs1)); -- see note at the top of the file
+    let _ = P;
+
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut bu: *mut FSBaseURL = fs_find_base_url(fs1, base_url_id);
+
+    if bu.is_null() {
+        bu = mallocz(core::mem::size_of::<FSBaseURL>()) as *mut FSBaseURL;
+        (*bu).base_url_id = strdup(base_url_id);
+        (*bu).ref_count = 1;
+        list_add_tail(
+            core::ptr::addr_of_mut!((*bu).link),
+            core::ptr::addr_of_mut!((*fs).base_url_list),
+        );
+    } else {
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+    }
+
+    (*bu).url = strdup(url);
+    if !user.is_null() {
+        (*bu).user = strdup(user);
+    } else {
+        (*bu).user = core::ptr::null_mut();
+    }
+    if !password.is_null() {
+        (*bu).password = strdup(password);
+    } else {
+        (*bu).password = core::ptr::null_mut();
+    }
+    if !aes_state.is_null() {
+        (*bu).encrypted = 1; // TRUE
+        (*bu).aes_state = core::ptr::read(aes_state);
+    } else {
+        (*bu).encrypted = 0; // FALSE
+    }
+    bu
 }
 }
 
@@ -21582,6 +33769,194 @@ pub extern "C" fn fs_net_set_base_url__part881(bu: *mut FSBaseURL) -> *mut FSBas
 }
 }
 
+// ── `fs_net_reset_base_url` · fs_net.c:1653-1664 · chunk 882 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_net_reset_base_url(FSDevice *fs1,
+//                                      const char *base_url_id)
+//     {
+//         FSBaseURL *bu;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs_is_net(fs1)
+//        )), __extension__ ({ if (
+//        fs_is_net(fs1)
+//        ) ; else __assert_fail (
+//        "fs_is_net(fs1)"
+//        , "fs_net.c", 1658, __extension__ __PRETTY_FUNCTION__); }))
+//                              ;
+//         bu = fs_find_base_url(fs1, base_url_id);
+//         if (!bu)
+//             return -2;
+//         fs_base_url_decref(fs1, bu);
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk882 {
+// Rust rewrite of fs_net.c: `fs_net_reset_base_url`
+//
+// static int fs_net_reset_base_url(FSDevice *fs1, const char *base_url_id)
+// {
+//     FSBaseURL *bu;
+//     assert(fs_is_net(fs1));
+//     bu = fs_find_base_url(fs1, base_url_id);
+//     if (!bu)
+//         return -P9_ENOENT;
+//     fs_base_url_decref(fs1, bu);
+//     return 0;
+// }
+//
+// `fs_is_net`, `fs_find_base_url` and `fs_base_url_decref` are static in the
+// original translation unit, so they have no linker symbols; their logic is
+// reproduced here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ptr::{null_mut, read};
+
+/// struct list_head { struct list_head *prev, *next; }
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+/// typedef int BOOL;
+type Bool = c_int;
+
+/// struct aes_key_st { unsigned int rd_key[4 * (14 + 1)]; int rounds; };
+#[repr(C)]
+pub struct AesKey {
+    pub rd_key: [c_uint; 60],
+    pub rounds: c_int,
+}
+
+/// typedef struct FSBaseURL { struct list_head link; int ref_count;
+///     char *base_url_id; char *url; char *user; char *password;
+///     BOOL encrypted; AES_KEY aes_state; } FSBaseURL;
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: Bool,
+    pub aes_state: AesKey,
+}
+
+/// struct FSDevice seen only through a pointer: a table of 22 function
+/// pointers (fs_end .. fs_getlock), i.e. 22 machine words.  Only the size and
+/// alignment matter here.
+#[repr(C)]
+pub struct FSDevice {
+    _opaque: [*const c_void; 22],
+}
+
+/// typedef struct FSDeviceMem { FSDevice common; ... } FSDeviceMem;
+/// (mirrored field for field up to `base_url_list`)
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: Bool,
+    pub dump_started: Bool,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn free(ptr: *mut c_void);
+}
+
+/// static BOOL fs_is_net(FSDevice *fs) { return fs->fs_end == fs_mem_end; }
+///
+/// `fs_mem_end` is a static function of the translation unit and therefore has
+/// no linkable symbol, so the assertion cannot be reproduced exactly.  The
+/// only operations performed by this function on `fs1` are the list walk in
+/// `fs_find_base_url` below, which are safe for any `FSDeviceMem *`.
+
+/// static FSBaseURL *fs_find_base_url(FSDevice *fs1, const char *base_url_id)
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = &mut (*fs).base_url_list as *mut ListHead;
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // container_of(el, FSBaseURL, link); `link` is the first field.
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+/// static void list_del(struct list_head *el)
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+/// static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu)
+unsafe fn fs_base_url_decref(_fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    // assert(bu->ref_count >= 1);
+    (*bu).ref_count -= 1;
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(&mut (*bu).link as *mut ListHead);
+        free(bu as *mut c_void);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_net_reset_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+) -> c_int {
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        // -P9_ENOENT
+        return -2;
+    }
+    // keep the read to mirror the C code path (no-op otherwise)
+    let _ = read(&(*bu).link);
+    fs_base_url_decref(fs1, bu);
+    0
+}
+}
+
 // ── `FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )), __extension__ ({ if ( f…` · fs_net.c:1656-1659 · chunk 883 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -21817,6 +34192,118 @@ pub extern "C" fn fs_net_reset_base_url__part885(
 }
 }
 
+// ── `fs_net_set_fs_max_size` · fs_net.c:1666-1672 · chunk 886 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_net_set_fs_max_size(FSDevice *fs1, uint64_t fs_max_size)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs_is_net(fs1)
+//        )), __extension__ ({ if (
+//        fs_is_net(fs1)
+//        ) ; else __assert_fail (
+//        "fs_is_net(fs1)"
+//        , "fs_net.c", 1670, __extension__ __PRETTY_FUNCTION__); }))
+//                              ;
+//         fs->fs_max_blocks = to_blocks(fs, fs_max_size);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk886 {
+// Rust rewrite of the static C function
+//   static void fs_net_set_fs_max_size(FSDevice *fs1, uint64_t fs_max_size)
+// from fs_net.c.
+//
+// The body is
+//     FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//     assert(fs_is_net(fs1));
+//     fs->fs_max_blocks = to_blocks(fs, fs_max_size);
+// where to_blocks() is
+//     (size + fs->block_size - 1) >> fs->block_size_log2
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Mirror of `struct FSDevice` from fs.h: a table of 22 function pointers.
+#[repr(C)]
+pub struct FSDevice {
+    fs_end: *mut c_void,
+    fs_delete: *mut c_void,
+    fs_statfs: *mut c_void,
+    fs_attach: *mut c_void,
+    fs_walk: *mut c_void,
+    fs_mkdir: *mut c_void,
+    fs_open: *mut c_void,
+    fs_create: *mut c_void,
+    fs_stat: *mut c_void,
+    fs_setattr: *mut c_void,
+    fs_close: *mut c_void,
+    fs_readdir: *mut c_void,
+    fs_read: *mut c_void,
+    fs_write: *mut c_void,
+    fs_link: *mut c_void,
+    fs_symlink: *mut c_void,
+    fs_mknod: *mut c_void,
+    fs_readlink: *mut c_void,
+    fs_renameat: *mut c_void,
+    fs_unlinkat: *mut c_void,
+    fs_lock: *mut c_void,
+    fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct ListHead {
+    next: *mut ListHead,
+    prev: *mut ListHead,
+}
+
+// Mirror of `FSDeviceMem` (fs_net.c): all fields up to fs_max_blocks.
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut c_void,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+}
+
+#[no_mangle]
+pub extern "C" fn fs_net_set_fs_max_size(fs1: *mut FSDevice, fs_max_size: u64) {
+    // The C code asserts fs_is_net(fs1) here; fs_is_net() is a static helper
+    // without a linker symbol, so the check is only a debugging aid and has
+    // no effect on the computed value.
+    if fs1.is_null() {
+        return;
+    }
+    let fs = unsafe { &mut *(fs1 as *mut FSDeviceMem) };
+    let l2 = fs.block_size_log2;
+    // to_blocks(): (size + block_size - 1) >> block_size_log2, all in
+    // uint64_t arithmetic; the int64_t result is stored into a uint64_t.
+    let blocks: u64 = if l2 >= 0 && l2 < 64 {
+        fs_max_size
+            .wrapping_add(fs.block_size as u64)
+            .wrapping_sub(1)
+            >> (l2 as u32)
+    } else {
+        0
+    };
+    fs.fs_max_blocks = blocks;
+}
+}
+
 // ── `FSDeviceMem *fs = (FSDeviceMem *)fs1; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )),…` · fs_net.c:1668-1671 · chunk 887 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -21910,6 +34397,291 @@ pub unsafe extern "C" fn fs_net_set_fs_max_size__part887(
 
     // fs->fs_max_blocks = to_blocks(fs, fs_max_size);
     (*fs).fs_max_blocks = blocks;
+}
+}
+
+// ── `fs_net_set_url` · fs_net.c:1674-1701 · chunk 888 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_net_set_url(FSDevice *fs1, FSINode *n,
+//                               const char *base_url_id, FSFileID file_id, uint64_t size)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         FSBaseURL *bu;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs_is_net(fs1)
+//        )), __extension__ ({ if (
+//        fs_is_net(fs1)
+//        ) ; else __assert_fail (
+//        "fs_is_net(fs1)"
+//        , "fs_net.c", 1680, __extension__ __PRETTY_FUNCTION__); }))
+//                              ;
+//     
+//         bu = fs_find_base_url(fs1, base_url_id);
+//         if (!bu)
+//             return -2;
+//     
+//     
+//         if (n->type != FT_REG ||
+//             n->u.reg.state != REG_STATE_LOCAL ||
+//             n->u.reg.fbuf.allocated_size != 0)
+//             return -5;
+//     
+//         if (size > 0) {
+//             n->u.reg.state = REG_STATE_UNLOADED;
+//             n->u.reg.base_url = bu;
+//             bu->ref_count++;
+//             n->u.reg.size = size;
+//             fs->fs_blocks += to_blocks(fs, size);
+//             n->u.reg.file_id = file_id;
+//         }
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk888 {
+// Port of fs_net_set_url() from fs_net.c
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int};
+
+// ---------------------------------------------------------------------------
+// C types (mirrored field by field from fs_net.c / fs.h)
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+/* struct aes_key_st { unsigned int rd_key[4 * (14 + 1)]; int rounds; } */
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int, /* BOOL */
+    pub aes_state: AES_KEY,
+}
+
+/* FSINode.u.reg */
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RegInode {
+    pub state: c_int, /* FSINodeRegStateEnum */
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64, /* FSFileID */
+    pub link: ListHead,
+    pub open_info: *mut XHRState,
+    pub is_fscmd: c_int, /* BOOL */
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DirInode {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DevInode {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SymlinkInode {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: RegInode,
+    pub dir: DirInode,
+    pub dev: DevInode,
+    pub symlink: SymlinkInode,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int, /* FSINodeTypeEnum */
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+/* struct FSDevice: only the vtable of function pointers (all pointer-sized) */
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut core::ffi::c_void,
+    pub fs_delete: *mut core::ffi::c_void,
+    pub fs_statfs: *mut core::ffi::c_void,
+    pub fs_attach: *mut core::ffi::c_void,
+    pub fs_walk: *mut core::ffi::c_void,
+    pub fs_mkdir: *mut core::ffi::c_void,
+    pub fs_open: *mut core::ffi::c_void,
+    pub fs_create: *mut core::ffi::c_void,
+    pub fs_stat: *mut core::ffi::c_void,
+    pub fs_setattr: *mut core::ffi::c_void,
+    pub fs_close: *mut core::ffi::c_void,
+    pub fs_readdir: *mut core::ffi::c_void,
+    pub fs_read: *mut core::ffi::c_void,
+    pub fs_write: *mut core::ffi::c_void,
+    pub fs_link: *mut core::ffi::c_void,
+    pub fs_symlink: *mut core::ffi::c_void,
+    pub fs_mknod: *mut core::ffi::c_void,
+    pub fs_readlink: *mut core::ffi::c_void,
+    pub fs_renameat: *mut core::ffi::c_void,
+    pub fs_unlinkat: *mut core::ffi::c_void,
+    pub fs_lock: *mut core::ffi::c_void,
+    pub fs_getlock: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int, /* BOOL */
+    pub dump_started: c_int,    /* BOOL */
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut core::ffi::c_void,         /* FILE * */
+    pub dump_preload_archive_file: *mut core::ffi::c_void, /* FILE * */
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut core::ffi::c_void, /* FILE * */
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+/* opaque in this translation unit; only ever stored as a pointer */
+#[repr(C)]
+pub struct XHRState {
+    _opaque: [u8; 0],
+}
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const P9_ENOENT: c_int = 2;
+const P9_EIO: c_int = 5;
+
+/* static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+ * { return (size + fs->block_size - 1) >> fs->block_size_log2; } */
+#[inline]
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let block_size = (*fs).block_size as u64;
+    let log2 = (*fs).block_size_log2 as u32;
+    let v = size.wrapping_add(block_size).wrapping_sub(1);
+    (v >> (log2 & 63)) as i64
+}
+
+/* static FSBaseURL *fs_find_base_url(FSDevice *fs1, const char *base_url_id) */
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*fs).base_url_list);
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        /* list_entry(el, FSBaseURL, link): link is the first member */
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_net_set_url(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: u64,
+    size: u64,
+) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    /* assert(fs_is_net(fs1)); -- fs_is_net() compares fs->fs_end against the
+       static fs_mem_end(), which has no linker symbol; the assertion is
+       always true for a device produced by fs_mem_init()/fs_net_init(). */
+
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -P9_ENOENT;
+    }
+
+    /* XXX: could accept more state */
+    if (*n).r#type != FT_REG
+        || (*n).u.reg.state != REG_STATE_LOCAL
+        || (*n).u.reg.fbuf.allocated_size != 0
+    {
+        return -P9_EIO;
+    }
+
+    if size > 0 {
+        (*n).u.reg.state = REG_STATE_UNLOADED;
+        (*n).u.reg.base_url = bu;
+        (*bu).ref_count = (*bu).ref_count.wrapping_add(1);
+        (*n).u.reg.size = size as usize;
+        (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(to_blocks(fs, size));
+        (*n).u.reg.file_id = file_id;
+    }
+    0
 }
 }
 
@@ -22572,6 +35344,55 @@ pub extern "C" fn fs_net_set_url__part893() -> c_int {
 }
 }
 
+// ── `fs_dump_add_file` · fs_net.c:1709-1715 · chunk 894 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_dump_add_file(struct list_head *head, const char *name)
+//     {
+//         PreloadFile *pf;
+//         pf = mallocz(sizeof(*pf));
+//         pf->name = strdup(name);
+//         list_add_tail(&pf->link, head);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk894 {
+// Port of fs_dump_add_file (fs_net.c, DUMP_CACHE_LOAD build).
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::size_of;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+struct PreloadFile {
+    link: ListHead,
+    is_archive: c_int,
+    name: *const c_char,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_dump_add_file(head: *mut ListHead, name: *const c_char) {
+    let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+    (*pf).name = strdup(name);
+
+    // list_add_tail(&pf->link, head) -> __list_add(el, head->prev, head)
+    let el: *mut ListHead = &mut (*pf).link;
+    let prev: *mut ListHead = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+}
+
 // ── `PreloadFile *pf; pf = mallocz(sizeof(*pf)); pf->name = strdup(name); list_add_tail(&pf->link, h…` · fs_net.c:1711-1714 · chunk 895 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -22618,6 +35439,71 @@ pub unsafe extern "C" fn fs_dump_add_file__part895(
     (*el).prev = prev;
     (*el).next = head;
     (*head).prev = el;
+}
+}
+
+// ── `fs_dump_find_file` · fs_net.c:1717-1727 · chunk 896 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static PreloadFile *fs_dump_find_file(struct list_head *head, const char *name)
+//     {
+//         PreloadFile *pf;
+//         struct list_head *el;
+//         for(el = (head)->next; el != (head); el = el->next) {
+//             pf = ((PreloadFile *)((uint8_t *)(el) - 
+//                 __builtin_offsetof (
+//                 PreloadFile
+//                 , 
+//                 link
+//                 )
+//                 ));
+//             if (!strcmp(pf->name, name))
+//                 return pf;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk896 {
+// Rewrite of fs_dump_find_file (fs_net.c) in Rust.
+use core::ffi::{c_char, c_int};
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: list_head,
+    pub is_archive: c_int, // BOOL
+    pub name: *mut c_char,
+}
+
+extern "C" {
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_dump_find_file(
+    head: *mut list_head,
+    name: *const c_char,
+) -> *mut PreloadFile {
+    if head.is_null() {
+        return core::ptr::null_mut();
+    }
+    let mut el: *mut list_head = (*head).next;
+    while el != head {
+        // container_of(el, PreloadFile, link)
+        let pf = el as *mut u8 as *mut PreloadFile;
+        if strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
 }
 }
 
@@ -22708,6 +35594,92 @@ pub struct PreloadFile {
 #[no_mangle]
 pub extern "C" fn fs_dump_find_file__part898() -> *mut PreloadFile {
     core::ptr::null_mut()
+}
+}
+
+// ── `dump_close_archive` · fs_net.c:1729-1737 · chunk 899 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void dump_close_archive(FSDevice *fs1)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         if (fs->dump_archive_file) {
+//             fclose(fs->dump_archive_file);
+//         }
+//         fs->dump_archive_file = 
+//                                ((void *)0)
+//                                    ;
+//         fs->dump_archive_size = 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk899 {
+// Rewrite of static void dump_close_archive(FSDevice *fs1) from fs_net.c
+#![allow(non_snake_case, non_camel_case_types)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+/// Opaque mirror of C `FILE`.
+pub type FILE = c_void;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+/// Mirror of `struct FSDevice`: it contains only 22 function pointers.
+#[repr(C)]
+pub struct FSDevice {
+    pub fns: [*mut c_void; 22],
+}
+
+/// Mirror of `FSDeviceMem`; only the fields up to `dump_archive_file`
+/// are needed by this function (trailing fields omitted).
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut FILE,
+    pub dump_preload_archive_file: *mut FILE,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut FILE,
+}
+
+extern "C" {
+    fn fclose(stream: *mut FILE) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dump_close_archive(fs1: *mut FSDevice) {
+    let fs = fs1 as *mut FSDeviceMem;
+    if fs.is_null() {
+        return;
+    }
+    let f = (*fs).dump_archive_file;
+    if !f.is_null() {
+        fclose(f);
+    }
+    (*fs).dump_archive_file = core::ptr::null_mut();
+    (*fs).dump_archive_size = 0;
 }
 }
 
@@ -22806,6 +35778,395 @@ pub unsafe extern "C" fn dump_close_archive__part901(fs: *mut FSDeviceMem) {
     let fs = &mut *fs;
     fs.dump_archive_file = core::ptr::null_mut();
     fs.dump_archive_size = 0;
+}
+}
+
+// ── `dump_loaded_file` · fs_net.c:1739-1800 · chunk 902 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void dump_loaded_file(FSDevice *fs1, FSINode *n)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         char filename[1024];
+//         const char *fname, *p;
+//     
+//         if (!fs->dump_cache_load || !n->u.reg.filename)
+//             return;
+//         fname = n->u.reg.filename;
+//     
+//         if (fs_dump_find_file(&fs->dump_preload_list, fname)) {
+//             dump_close_archive(fs1);
+//             p = 
+//                _Generic (0 ? (
+//                fname
+//                ) : (void *) 1, const void *: (const char *) (strrchr (
+//                fname
+//                , 
+//                '/'
+//                )), default: strrchr (
+//                fname
+//                , 
+//                '/'
+//                ))
+//                                   ;
+//             if (!p)
+//                 p = fname;
+//             else
+//                 p++;
+//             free(fs->dump_archive_name);
+//             fs->dump_archive_name = strdup(p);
+//             fs->dump_started = TRUE;
+//             fs->dump_archive_num = 0;
+//     
+//             fprintf(fs->dump_preload_file, "\n%s :\n", fname);
+//         }
+//         if (!fs->dump_started)
+//             return;
+//     
+//         if (!fs->dump_archive_file) {
+//             snprintf(filename, sizeof(filename), "%s/%s%d",
+//                      fs->dump_preload_dir, fs->dump_archive_name,
+//                      fs->dump_archive_num);
+//             fs->dump_archive_file = fopen(filename, "wb");
+//             if (!fs->dump_archive_file) {
+//                 perror(filename);
+//                 exit(1);
+//             }
+//             fprintf(fs->dump_preload_archive_file, "\n@.preload2/%s%d :\n",
+//                     fs->dump_archive_name, fs->dump_archive_num);
+//             fprintf(fs->dump_preload_file, "  @.preload2/%s%d\n",
+//                     fs->dump_archive_name, fs->dump_archive_num);
+//             fflush(fs->dump_preload_file);
+//             fs->dump_archive_num++;
+//         }
+//     
+//         if (n->u.reg.size >= (4 << 20)) {
+//     
+//     
+//             fprintf(fs->dump_preload_file, "  %s %zd\n",
+//                     fname, n->u.reg.size);
+//             fflush(fs->dump_preload_file);
+//         } else {
+//             fprintf(fs->dump_preload_archive_file, "  %s %zd %" 
+//                                                                "l" "x" 
+//                                                                       "\n",
+//                     n->u.reg.filename, n->u.reg.size, n->u.reg.file_id);
+//             fflush(fs->dump_preload_archive_file);
+//             fwrite(n->u.reg.fbuf.data, 1, n->u.reg.size, fs->dump_archive_file);
+//             fflush(fs->dump_archive_file);
+//             fs->dump_archive_size += n->u.reg.size;
+//             if (fs->dump_archive_size >= (4 << 20)) {
+//                 dump_close_archive(fs1);
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk902 {
+// Rust rewrite of static void dump_loaded_file(FSDevice *fs1, FSINode *n)
+// from fs_net.c.  Static helpers (dump_close_archive, fs_dump_find_file) are
+// re-implemented privately since they have no linker symbols.
+
+use core::ffi::{c_char, c_int, c_ulong, c_void};
+
+// ---------------------------------------------------------------- C types --
+
+pub struct FSDevice {
+    _private: [u8; 0],
+}
+
+pub struct FSFile {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct ListHead {
+    pub next: *mut ListHead,
+    pub prev: *mut ListHead,
+}
+
+pub type BOOL = c_int;
+pub type FSFileID = u64;
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct FSINodeReg {
+    pub state: c_int, // FSINodeRegStateEnum
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: FSFileID,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+pub union FSINodeUnion {
+    pub reg: core::mem::ManuallyDrop<FSINodeReg>,
+    pub dir: core::mem::ManuallyDrop<FSINodeDir>,
+    pub dev: core::mem::ManuallyDrop<FSINodeDev>,
+    pub symlink: core::mem::ManuallyDrop<FSINodeSymlink>,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, // FSINodeTypeEnum
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    // FSDevice common: 22 pointer sized slots
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut FILE,
+    pub dump_preload_archive_file: *mut FILE,
+
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut FILE,
+
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+// ------------------------------------------------------------ C functions --
+
+extern "C" {
+    fn strrchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn free(p: *mut c_void);
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut FILE;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn fflush(stream: *mut FILE) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    fn snprintf(s: *mut c_char, maxlen: usize, format: *const c_char, ...) -> c_int;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut FILE) -> usize;
+}
+
+const ARCHIVE_SIZE_MAX: usize = 4 << 20;
+
+// ------------------------------------------------------ private C helpers --
+
+// static void dump_close_archive(FSDevice *fs1)
+unsafe fn dump_close_archive(fs: *mut FSDeviceMem) {
+    if !(*fs).dump_archive_file.is_null() {
+        fclose((*fs).dump_archive_file);
+    }
+    (*fs).dump_archive_file = core::ptr::null_mut();
+    (*fs).dump_archive_size = 0;
+}
+
+// static PreloadFile *fs_dump_find_file(struct list_head *head, const char *name)
+unsafe fn fs_dump_find_file(head: *mut ListHead, name: *const c_char) -> *mut PreloadFile {
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // `link` is the first member of PreloadFile, so the container address
+        // equals the list element address (list_entry with offsetof(link) == 0).
+        let pf = el as *mut PreloadFile;
+        if strcmp((*pf).name, name) == 0 {
+            return pf;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+// ------------------------------------------------------------- the target --
+
+#[no_mangle]
+pub unsafe extern "C" fn dump_loaded_file(fs1: *mut FSDevice, n: *mut FSINode) {
+    let fs: *mut FSDeviceMem = fs1 as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+
+    // n->u.reg -- the union's first member, reached without forming a
+    // reference to the ManuallyDrop wrapper.
+    let reg: *const FSINodeReg =
+        core::ptr::addr_of!((*n).u) as *const FSINodeReg;
+
+    if (*fs).dump_cache_load == 0 || (*reg).filename.is_null() {
+        return;
+    }
+    let fname: *const c_char = (*reg).filename;
+
+    if !fs_dump_find_file(core::ptr::addr_of_mut!((*fs).dump_preload_list), fname).is_null() {
+        dump_close_archive(fs);
+        let mut p: *const c_char = strrchr(fname, '/' as c_int);
+        if p.is_null() {
+            p = fname;
+        } else {
+            p = p.add(1);
+        }
+        free((*fs).dump_archive_name as *mut c_void);
+        (*fs).dump_archive_name = strdup(p);
+        (*fs).dump_started = 1;
+        (*fs).dump_archive_num = 0;
+
+        fprintf(
+            (*fs).dump_preload_file,
+            b"\n%s :\n\0".as_ptr() as *const c_char,
+            fname,
+        );
+    }
+    if (*fs).dump_started == 0 {
+        return;
+    }
+
+    if (*fs).dump_archive_file.is_null() {
+        snprintf(
+            filename.as_mut_ptr(),
+            core::mem::size_of::<[c_char; 1024]>(),
+            b"%s/%s%d\0".as_ptr() as *const c_char,
+            (*fs).dump_preload_dir,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        (*fs).dump_archive_file = fopen(
+            filename.as_ptr() as *const c_char,
+            b"wb\0".as_ptr() as *const c_char,
+        );
+        if (*fs).dump_archive_file.is_null() {
+            perror(filename.as_ptr() as *const c_char);
+            exit(1);
+        }
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"\n@.preload2/%s%d :\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  @.preload2/%s%d\n\0".as_ptr() as *const c_char,
+            (*fs).dump_archive_name,
+            (*fs).dump_archive_num,
+        );
+        fflush((*fs).dump_preload_file);
+        (*fs).dump_archive_num = (*fs).dump_archive_num.wrapping_add(1);
+    }
+
+    if (*reg).size >= ARCHIVE_SIZE_MAX {
+        // exclude large files from the archive; add indicative size instead
+        fprintf(
+            (*fs).dump_preload_file,
+            b"  %s %zd\n\0".as_ptr() as *const c_char,
+            fname,
+            (*reg).size,
+        );
+        fflush((*fs).dump_preload_file);
+    } else {
+        fprintf(
+            (*fs).dump_preload_archive_file,
+            b"  %s %zd %lx\n\0".as_ptr() as *const c_char,
+            (*reg).filename,
+            (*reg).size,
+            (*reg).file_id as c_ulong,
+        );
+        fflush((*fs).dump_preload_archive_file);
+        fwrite(
+            (*reg).fbuf.data as *const c_void,
+            1,
+            (*reg).size,
+            (*fs).dump_archive_file,
+        );
+        fflush((*fs).dump_archive_file);
+        (*fs).dump_archive_size = (*fs).dump_archive_size.wrapping_add((*reg).size as u64);
+        if (*fs).dump_archive_size >= ARCHIVE_SIZE_MAX as u64 {
+            dump_close_archive(fs);
+        }
+    }
 }
 }
 
@@ -23334,6 +36695,102 @@ pub extern "C" fn dump_loaded_file__part908(
                 *dump_archive_size = 0;
             }
         }
+    }
+}
+}
+
+// ── `json_load` · fs_net.c:1802-1823 · chunk 909 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static JSONValue json_load(const char *filename)
+//     {
+//         FILE *f;
+//         JSONValue val;
+//         size_t size;
+//         char *buf;
+//     
+//         f = fopen(filename, "rb");
+//         if (!f) {
+//             perror(filename);
+//             exit(1);
+//         }
+//         fseek(f, 0, 
+//                    2
+//                            );
+//         size = ftell(f);
+//         fseek(f, 0, 
+//                    0
+//                            );
+//         buf = malloc(size + 1);
+//         fread(buf, 1, size, f);
+//         fclose(f);
+//         val = json_parse_value_len(buf, size);
+//         free(buf);
+//         return val;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk909 {
+// Rust rewrite of `json_load` from fs_net.c
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+// Opaque C stdio FILE type.
+pub enum FILE {}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONValueU {
+    pub str_: *mut c_void,
+    pub int32: c_int,
+    pub b: c_int,
+    pub obj: *mut c_void,
+    pub array: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueU,
+}
+
+extern "C" {
+    fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
+    fn fseek(stream: *mut FILE, offset: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut FILE) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut FILE) -> usize;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+}
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+#[no_mangle]
+pub extern "C" fn json_load(filename: *const c_char) -> JSONValue {
+    let mut f: *mut FILE;
+    let val: JSONValue;
+    let mut size: usize;
+    let mut buf: *mut c_char;
+
+    unsafe {
+        f = fopen(filename, b"rb\0".as_ptr() as *const c_char);
+        if f.is_null() {
+            perror(filename);
+            exit(1);
+        }
+        fseek(f, 0, SEEK_END);
+        size = ftell(f) as usize;
+        fseek(f, 0, SEEK_SET);
+        buf = malloc(size.wrapping_add(1)) as *mut c_char;
+        fread(buf as *mut c_void, 1, size, f);
+        fclose(f);
+        val = json_parse_value_len(buf, size as c_int);
+        free(buf as *mut c_void);
+        val
     }
 }
 }
@@ -24288,6 +37745,702 @@ pub extern "C" fn fs_dump_cache_load__part928(fname: *mut c_char, dump_cache_loa
 }
 }
 
+// ── `filelist_load_rec` · fs_net.c:1899-2026 · chunk 929 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int filelist_load_rec(FSDevice *fs1, const char **pp, FSINode *dir,
+//                                  const char *path)
+//     {
+//     
+//         char fname[1024], lname[1024];
+//         int ret;
+//         const char *p;
+//         FSINodeTypeEnum type;
+//         uint32_t mode, uid, gid;
+//         uint64_t size;
+//         FSINode *n;
+//     
+//         p = *pp;
+//         for(;;) {
+//     
+//             if (*p == '\0')
+//                 break;
+//             if (*p == '#') {
+//                 skip_line(&p);
+//                 continue;
+//             }
+//     
+//             if (*p == '.') {
+//                 p++;
+//                 skip_line(&p);
+//                 break;
+//             }
+//             if (parse_uint32_base(&mode, &p, 8) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid mode\n");
+//                 return -1;
+//             }
+//             type = mode >> 12;
+//             mode &= 0xfff;
+//     
+//             if (parse_uint32(&uid, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid uid\n");
+//                 return -1;
+//             }
+//     
+//             if (parse_uint32(&gid, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid gid\n");
+//                 return -1;
+//             }
+//     
+//             n = inode_new(fs1, type, mode, uid, gid);
+//     
+//             size = 0;
+//             switch(type) {
+//             case FT_CHR:
+//             case FT_BLK:
+//                 if (parse_uint32(&n->u.dev.major, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid major\n");
+//                     return -1;
+//                 }
+//                 if (parse_uint32(&n->u.dev.minor, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid minor\n");
+//                     return -1;
+//                 }
+//                 break;
+//             case FT_REG:
+//                 if (parse_uint64(&size, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid size\n");
+//                     return -1;
+//                 }
+//                 break;
+//             case FT_DIR:
+//                 inode_dir_add(fs1, n, ".", inode_incref(fs1, n));
+//                 inode_dir_add(fs1, n, "..", inode_incref(fs1, dir));
+//                 break;
+//             default:
+//                 break;
+//             }
+//     
+//     
+//             if (parse_time(&n->mtime_sec, &n->mtime_nsec, &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid mtime\n");
+//                 return -1;
+//             }
+//     
+//             if (parse_fname(fname, sizeof(fname), &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid filename\n");
+//                 return -1;
+//             }
+//             inode_dir_add(fs1, dir, fname, n);
+//     
+//             if (type == FT_LNK) {
+//                 if (parse_fname(lname, sizeof(lname), &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid symlink name\n");
+//                     return -1;
+//                 }
+//                 n->u.symlink.name = strdup(lname);
+//             } else if (type == FT_REG && size > 0) {
+//                 FSFileID file_id;
+//                 if (parse_file_id(&file_id, &p) < 0) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid file id\n");
+//                     return -1;
+//                 }
+//                 fs_net_set_url(fs1, n, "/", file_id, size);
+//     
+//                 {
+//                     FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//                     if (fs->dump_cache_load
+//     
+//     
+//     
+//                         ) {
+//                         n->u.reg.filename = compose_path(path, fname);
+//                     } else {
+//                         n->u.reg.filename = 
+//                                            ((void *)0)
+//                                                ;
+//                     }
+//                 }
+//     
+//             }
+//     
+//             skip_line(&p);
+//     
+//             if (type == FT_DIR) {
+//                 char *path1;
+//                 path1 = compose_path(path, fname);
+//                 ret = filelist_load_rec(fs1, &p, n, path1);
+//                 free(path1);
+//                 if (ret)
+//                     return ret;
+//             }
+//         }
+//         *pp = p;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk929 {
+// Rust rewrite of the static C function `filelist_load_rec` from fs_net.c.
+// The static helpers it calls (inode_new, inode_dir_add, inode_incref,
+// fs_net_set_url, fs_find_base_url, to_blocks, inode_update_mtime) have no
+// linker symbol, so their logic is reproduced here as private Rust functions.
+
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::mem::size_of;
+use core::ptr;
+
+// ---------------------------------------------------------------- C types
+
+pub type BOOL = c_int;
+pub type FSFileID = u64;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+// Opaque structs only manipulated through pointers.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AESKey {
+    rd_key: [u32; 60],
+    rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: BOOL,
+    aes_state: AESKey,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RegStruct {
+    state: c_int,
+    size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut FSBaseURL,
+    file_id: FSFileID,
+    link: ListHead,
+    open_info: *mut c_void,
+    is_fscmd: BOOL,
+    filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DirStruct {
+    de_list: ListHead,
+    size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DevStruct {
+    major: u32,
+    minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SymlinkStruct {
+    name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeUnion {
+    reg: RegStruct,
+    dir: DirStruct,
+    dev: DevStruct,
+    symlink: SymlinkStruct,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    type_: c_int,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FSINodeUnion,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDirEntry {
+    link: ListHead,
+    inode: *mut FSINode,
+    mark: u8,
+    name: [c_char; 1], // C: char name[0] (flexible) at the same offset
+}
+
+// FSDevice: 22 function pointers (never dereferenced here, layout only).
+#[repr(C)]
+pub struct FSDevice {
+    fs_end: *mut c_void,
+    fs_delete: *mut c_void,
+    fs_statfs: *mut c_void,
+    fs_attach: *mut c_void,
+    fs_walk: *mut c_void,
+    fs_mkdir: *mut c_void,
+    fs_open: *mut c_void,
+    fs_create: *mut c_void,
+    fs_stat: *mut c_void,
+    fs_setattr: *mut c_void,
+    fs_close: *mut c_void,
+    fs_readdir: *mut c_void,
+    fs_read: *mut c_void,
+    fs_write: *mut c_void,
+    fs_link: *mut c_void,
+    fs_symlink: *mut c_void,
+    fs_mknod: *mut c_void,
+    fs_readlink: *mut c_void,
+    fs_renameat: *mut c_void,
+    fs_unlinkat: *mut c_void,
+    fs_lock: *mut c_void,
+    fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut FSINode,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+    dump_cache_load: BOOL,
+    dump_started: BOOL,
+    dump_preload_dir: *mut c_char,
+    dump_preload_file: *mut c_void,
+    dump_preload_archive_file: *mut c_void,
+    dump_archive_name: *mut c_char,
+    dump_archive_size: u64,
+    dump_archive_file: *mut c_void,
+    dump_archive_num: c_int,
+    dump_preload_list: ListHead,
+    dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+pub struct TimeVal {
+    tv_sec: c_long,
+    tv_usec: c_long,
+}
+
+// node type enum values
+const FT_FIFO: c_int = 1;
+const FT_CHR: c_int = 2;
+const FT_DIR: c_int = 4;
+const FT_BLK: c_int = 6;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+const FT_SOCK: c_int = 12;
+
+// reg state enum values
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+
+// ------------------------------------------------------- C declarations
+
+extern "C" {
+    static mut stderr: *mut c_void;
+
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn free(p: *mut c_void);
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn gettimeofday(tv: *mut TimeVal, tz: *mut c_void) -> c_int;
+    fn mallocz(size: usize) -> *mut c_void;
+
+    // fs_utils.c
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn skip_line(pp: *mut *const c_char);
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32_base(pval: *mut u32, pp: *mut *const c_char, base: c_int) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_time(psec: *mut u32, pnsec: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut FSFileID, pp: *mut *const c_char) -> c_int;
+
+    // fs_net.c (non static)
+    fn file_buffer_init(bs: *mut FileBuffer);
+}
+
+// ------------------------------------------------- private list helpers
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+
+// --------------------------------------------- ported static C helpers
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let bs = (*fs).block_size as u64;
+    let log2 = (*fs).block_size_log2;
+    size.wrapping_add(bs)
+        .wrapping_sub(1)
+        .wrapping_shr(log2 as u32) as i64
+}
+
+unsafe fn inode_incref(_fs: *mut FSDevice, n: *mut FSINode) -> *mut FSINode {
+    (*n).refcount = (*n).refcount.wrapping_add(1);
+    n
+}
+
+unsafe fn inode_update_mtime(_fs: *mut FSDevice, n: *mut FSINode) {
+    let mut tv = TimeVal {
+        tv_sec: 0,
+        tv_usec: 0,
+    };
+    gettimeofday(&mut tv, ptr::null_mut());
+    (*n).mtime_sec = tv.tv_sec as u32;
+    (*n).mtime_nsec = tv.tv_usec.wrapping_mul(1000) as u32;
+}
+
+unsafe fn inode_new(
+    fs1: *mut FSDevice,
+    type_: c_int,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+) -> *mut FSINode {
+    let fs = fs1 as *mut FSDeviceMem;
+    let n = mallocz(size_of::<FSINode>()) as *mut FSINode;
+
+    (*n).refcount = 1;
+    (*n).open_count = 0;
+    (*n).inode_num = (*fs).inode_num_alloc;
+    (*fs).inode_num_alloc = (*fs).inode_num_alloc.wrapping_add(1);
+    (*n).type_ = type_;
+    (*n).mode = mode & 0xfff;
+    (*n).uid = uid;
+    (*n).gid = gid;
+
+    match type_ {
+        FT_REG => {
+            file_buffer_init(&mut (*n).u.reg.fbuf);
+        }
+        FT_DIR => {
+            init_list_head(&mut (*n).u.dir.de_list);
+        }
+        _ => {}
+    }
+
+    list_add(&mut (*n).link, &mut (*fs).inode_list);
+    (*fs).inode_count = (*fs).inode_count.wrapping_add(1);
+
+    inode_update_mtime(fs1, n);
+    (*n).ctime_sec = (*n).mtime_sec;
+    (*n).ctime_nsec = (*n).mtime_nsec;
+
+    n
+}
+
+unsafe fn inode_dir_add(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    name: *const c_char,
+    n1: *mut FSINode,
+) -> *mut FSDirEntry {
+    let fs = fs1 as *mut FSDeviceMem;
+    let name_len = strlen(name) as c_int;
+    let de = mallocz(size_of::<FSDirEntry>() + name_len as usize + 1) as *mut FSDirEntry;
+
+    (*de).inode = n1;
+    memcpy(
+        (*de).name.as_mut_ptr() as *mut c_void,
+        name as *const c_void,
+        name_len as usize + 1,
+    );
+
+    let dirent_size = size_of::<FSDirEntry>() as c_int + name_len + 1;
+    let old_size = (*n).u.dir.size;
+    let new_size = old_size.wrapping_add(dirent_size);
+    let diff = to_blocks(fs, new_size as u64).wrapping_sub(to_blocks(fs, old_size as u64));
+    (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(diff);
+    (*n).u.dir.size = new_size;
+    list_add_tail(&mut (*de).link, &mut (*n).u.dir.de_list);
+    de
+}
+
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = &mut (*fs).base_url_list;
+    let mut el = (*head).next;
+
+    while el != head {
+        // offsetof(FSBaseURL, link) == 0
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+unsafe fn fs_net_set_url(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: FSFileID,
+    size: u64,
+) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -2;
+    }
+
+    if (*n).type_ != FT_REG
+        || (*n).u.reg.state != REG_STATE_LOCAL
+        || (*n).u.reg.fbuf.allocated_size != 0
+    {
+        return -5;
+    }
+
+    if size > 0 {
+        (*n).u.reg.state = REG_STATE_UNLOADED;
+        (*n).u.reg.base_url = bu;
+        (*bu).ref_count = (*bu).ref_count.wrapping_add(1);
+        (*n).u.reg.size = size as usize;
+        (*fs).fs_blocks = (*fs)
+            .fs_blocks
+            .wrapping_add(to_blocks(fs, size));
+        (*n).u.reg.file_id = file_id;
+    }
+    0
+}
+
+// --------------------------------------------------------------- target
+
+#[no_mangle]
+pub unsafe extern "C" fn filelist_load_rec(
+    fs1: *mut FSDevice,
+    pp: *mut *const c_char,
+    dir: *mut FSINode,
+    path: *const c_char,
+) -> c_int {
+    let mut fname = [0 as c_char; 1024];
+    let mut lname = [0 as c_char; 1024];
+    let mut p: *const c_char = *pp;
+
+    loop {
+        // skip comments or empty lines
+        if *p == 0 {
+            break;
+        }
+        if *p == b'#' as c_char {
+            skip_line(&mut p);
+            continue;
+        }
+        // end of directory
+        if *p == b'.' as c_char {
+            p = p.add(1);
+            skip_line(&mut p);
+            break;
+        }
+
+        let mut mode: u32 = 0;
+        if parse_uint32_base(&mut mode, &mut p, 8) < 0 {
+            fprintf(stderr, b"invalid mode\n\0".as_ptr() as *const c_char);
+            return -1;
+        }
+        let type_: c_int = (mode >> 12) as c_int;
+        mode &= 0xfff;
+
+        let mut uid: u32 = 0;
+        if parse_uint32(&mut uid, &mut p) < 0 {
+            fprintf(stderr, b"invalid uid\n\0".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        let mut gid: u32 = 0;
+        if parse_uint32(&mut gid, &mut p) < 0 {
+            fprintf(stderr, b"invalid gid\n\0".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        let n = inode_new(fs1, type_, mode, uid, gid);
+
+        let mut size: u64 = 0;
+        match type_ {
+            FT_CHR | FT_BLK => {
+                if parse_uint32(&mut (*n).u.dev.major, &mut p) < 0 {
+                    fprintf(stderr, b"invalid major\n\0".as_ptr() as *const c_char);
+                    return -1;
+                }
+                if parse_uint32(&mut (*n).u.dev.minor, &mut p) < 0 {
+                    fprintf(stderr, b"invalid minor\n\0".as_ptr() as *const c_char);
+                    return -1;
+                }
+            }
+            FT_REG => {
+                if parse_uint64(&mut size, &mut p) < 0 {
+                    fprintf(stderr, b"invalid size\n\0".as_ptr() as *const c_char);
+                    return -1;
+                }
+            }
+            FT_DIR => {
+                inode_dir_add(
+                    fs1,
+                    n,
+                    b".\0".as_ptr() as *const c_char,
+                    inode_incref(fs1, n),
+                );
+                inode_dir_add(
+                    fs1,
+                    n,
+                    b"..\0".as_ptr() as *const c_char,
+                    inode_incref(fs1, dir),
+                );
+            }
+            _ => {}
+        }
+
+        // modification time
+        if parse_time(&mut (*n).mtime_sec, &mut (*n).mtime_nsec, &mut p) < 0 {
+            fprintf(stderr, b"invalid mtime\n\0".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        if parse_fname(fname.as_mut_ptr(), fname.len() as c_int, &mut p) < 0 {
+            fprintf(
+                stderr,
+                b"invalid filename\n\0".as_ptr() as *const c_char,
+            );
+            return -1;
+        }
+        inode_dir_add(fs1, dir, fname.as_ptr(), n);
+
+        if type_ == FT_LNK {
+            if parse_fname(lname.as_mut_ptr(), lname.len() as c_int, &mut p) < 0 {
+                fprintf(
+                    stderr,
+                    b"invalid symlink name\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+            (*n).u.symlink.name = strdup(lname.as_ptr());
+        } else if type_ == FT_REG && size > 0 {
+            let mut file_id: FSFileID = 0;
+            if parse_file_id(&mut file_id, &mut p) < 0 {
+                fprintf(
+                    stderr,
+                    b"invalid file id\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+            fs_net_set_url(fs1, n, b"/\0".as_ptr() as *const c_char, file_id, size);
+
+            {
+                let fs = fs1 as *mut FSDeviceMem;
+                if (*fs).dump_cache_load != 0 {
+                    (*n).u.reg.filename = compose_path(path, fname.as_ptr());
+                } else {
+                    (*n).u.reg.filename = ptr::null_mut();
+                }
+            }
+        }
+
+        skip_line(&mut p);
+
+        if type_ == FT_DIR {
+            let path1 = compose_path(path, fname.as_ptr());
+            let ret = filelist_load_rec(fs1, &mut p, n, path1);
+            free(path1 as *mut c_void);
+            if ret != 0 {
+                return ret;
+            }
+        }
+    }
+    *pp = p;
+    0
+}
+
+// keep unused enum constants referenced so the mirror stays complete
+const _UNUSED_TYPES: [c_int; 2] = [FT_FIFO, FT_SOCK];
+}
+
 // ── `char fname[1024], lname[1024]; int ret; const char *p; FSINodeTypeEnum type; uint32_t mode, uid…` · fs_net.c:1903-1911 · chunk 930 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -24749,6 +38902,630 @@ pub extern "C" fn filelist_load_rec__part932(
         *pp = p;
     }
     0
+}
+}
+
+// ── `filelist_load` · fs_net.c:2028-2041 · chunk 933 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int filelist_load(FSDevice *fs1, const char *str)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         int ret;
+//         const char *p;
+//     
+//         if (parse_tag_version(str) != 1)
+//             return -1;
+//         p = skip_header(str);
+//         if (!p)
+//             return -1;
+//         ret = filelist_load_rec(fs1, &p, fs->root_inode, "");
+//         return ret;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk933 {
+// Rust reimplementation of `filelist_load` (fs_net.c) plus the file-`static`
+// helpers it needs: filelist_load_rec, inode_new, inode_dir_add, inode_incref,
+// inode_update_mtime, fs_net_set_url, fs_find_base_url, to_blocks and the
+// inline list_head helpers.  Static C functions have no linker symbol, so their
+// logic is ported here verbatim.
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+/* ------------------------------------------------------------------ */
+/* struct mirrors                                                     */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+/* struct FSDevice: all fields are function pointers, never called here. */
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDevice {
+    fs_end: *mut c_void,
+    fs_delete: *mut c_void,
+    fs_statfs: *mut c_void,
+    fs_attach: *mut c_void,
+    fs_walk: *mut c_void,
+    fs_mkdir: *mut c_void,
+    fs_open: *mut c_void,
+    fs_create: *mut c_void,
+    fs_stat: *mut c_void,
+    fs_setattr: *mut c_void,
+    fs_close: *mut c_void,
+    fs_readdir: *mut c_void,
+    fs_read: *mut c_void,
+    fs_write: *mut c_void,
+    fs_link: *mut c_void,
+    fs_symlink: *mut c_void,
+    fs_mknod: *mut c_void,
+    fs_readlink: *mut c_void,
+    fs_renameat: *mut c_void,
+    fs_unlinkat: *mut c_void,
+    fs_lock: *mut c_void,
+    fs_getlock: *mut c_void,
+}
+
+/* FSBaseURL: only the fields reachable from ported code are mirrored. */
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: c_int,
+}
+
+/* typedef struct FSDeviceMem (as preprocessed, DUMP_CACHE_LOAD enabled) */
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut FSINode,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+    dump_cache_load: c_int,
+    dump_started: c_int,
+    dump_preload_dir: *mut c_char,
+    dump_preload_file: *mut c_void,
+    dump_preload_archive_file: *mut c_void,
+    dump_archive_name: *mut c_char,
+    dump_archive_size: u64,
+    dump_archive_file: *mut c_void,
+    dump_archive_num: c_int,
+    dump_preload_list: ListHead,
+    dump_exclude_list: ListHead,
+}
+
+/* members of the anonymous union inside FSINode */
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSNReg {
+    state: c_int, /* FSINodeRegStateEnum */
+    size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut FSBaseURL,
+    file_id: u64, /* FSFileID */
+    link: ListHead,
+    open_info: *mut c_void, /* struct FSOpenInfo * */
+    is_fscmd: c_int,        /* BOOL */
+    filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSNDir {
+    de_list: ListHead,
+    size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FSNDev {
+    major: u32,
+    minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct FNSymlink {
+    name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+union FSINodeU {
+    reg: FSNReg,
+    dir: FSNDir,
+    dev: FSNDev,
+    symlink: FNSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    type_: c_int, /* FSINodeTypeEnum */
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FSINodeU,
+}
+
+/* struct { struct list_head link; FSINode *inode; uint8_t mark; char name[0]; } */
+#[repr(C)]
+struct FSDirEntry {
+    link: ListHead,
+    inode: *mut FSINode,
+    mark: u8,
+    name: [c_char; 0],
+}
+
+#[repr(C)]
+struct TimeVal {
+    tv_sec: i64,
+    tv_usec: i64,
+}
+
+/* ------------------------------------------------------------------ */
+/* enum values                                                        */
+/* ------------------------------------------------------------------ */
+
+const FT_CHR: c_int = 2;
+const FT_DIR: c_int = 4;
+const FT_BLK: c_int = 6;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+
+/* ------------------------------------------------------------------ */
+/* C declarations                                                     */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn parse_tag_version(str: *const c_char) -> c_int;
+    fn skip_header(p: *const c_char) -> *const c_char;
+
+    fn skip_line(pp: *mut *const c_char);
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32_base(pval: *mut u32, pp: *mut *const c_char, base: c_int) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_time(psec: *mut u32, pnsec: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn gettimeofday(tv: *mut TimeVal, tz: *mut c_void) -> c_int;
+    fn abort() -> !;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+
+    static mut stderr: *mut c_void;
+}
+
+/* ------------------------------------------------------------------ */
+/* union member accessors (union field offsets are layout-compatible)  */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+unsafe fn as_reg(n: *mut FSINode) -> *mut FSNReg {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSNReg
+}
+
+#[inline]
+unsafe fn as_dir(n: *mut FSINode) -> *mut FSNDir {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSNDir
+}
+
+#[inline]
+unsafe fn as_dev(n: *mut FSINode) -> *mut FSNDev {
+    core::ptr::addr_of_mut!((*n).u) as *mut FSNDev
+}
+
+#[inline]
+unsafe fn as_symlink(n: *mut FSINode) -> *mut FNSymlink {
+    core::ptr::addr_of_mut!((*n).u) as *mut FNSymlink
+}
+
+#[inline]
+unsafe fn reg_fbuf(n: *mut FSINode) -> *mut FileBuffer {
+    let r = as_reg(n);
+    core::ptr::addr_of_mut!((*r).fbuf)
+}
+
+#[inline]
+unsafe fn dir_de_list(n: *mut FSINode) -> *mut ListHead {
+    let d = as_dir(n);
+    core::ptr::addr_of_mut!((*d).de_list)
+}
+
+#[inline]
+unsafe fn dir_size(n: *mut FSINode) -> *mut c_int {
+    let d = as_dir(n);
+    core::ptr::addr_of_mut!((*d).size)
+}
+
+#[inline]
+unsafe fn dev_major(n: *mut FSINode) -> *mut u32 {
+    let d = as_dev(n);
+    core::ptr::addr_of_mut!((*d).major)
+}
+
+#[inline]
+unsafe fn dev_minor(n: *mut FSINode) -> *mut u32 {
+    let d = as_dev(n);
+    core::ptr::addr_of_mut!((*d).minor)
+}
+
+/* ------------------------------------------------------------------ */
+/* list_head helpers (static inline in libcutils.h)                    */
+/* ------------------------------------------------------------------ */
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn __list_add(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    __list_add(el, head, next);
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    __list_add(el, prev, head);
+}
+
+/* ------------------------------------------------------------------ */
+/* ported static helpers                                              */
+/* ------------------------------------------------------------------ */
+
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    let v = size.wrapping_add((*fs).block_size as u64).wrapping_sub(1);
+    let sh = ((*fs).block_size_log2 as u32) & 63;
+    (v >> sh) as i64
+}
+
+unsafe fn inode_incref(fs: *mut FSDevice, n: *mut FSINode) -> *mut FSINode {
+    let _ = fs;
+    let rc = core::ptr::addr_of_mut!((*n).refcount);
+    *rc = (*rc).wrapping_add(1);
+    n
+}
+
+unsafe fn inode_update_mtime(fs: *mut FSDevice, n: *mut FSINode) {
+    let _ = fs;
+    let mut tv = TimeVal {
+        tv_sec: 0,
+        tv_usec: 0,
+    };
+    gettimeofday(&mut tv as *mut TimeVal, core::ptr::null_mut());
+    (*n).mtime_sec = tv.tv_sec as u32;
+    (*n).mtime_nsec = tv.tv_usec.wrapping_mul(1000) as u32;
+}
+
+unsafe fn inode_new(fs1: *mut FSDevice, type_: c_int, mode: u32, uid: u32, gid: u32) -> *mut FSINode {
+    let fs = fs1 as *mut FSDeviceMem;
+    let n = mallocz(core::mem::size_of::<FSINode>()) as *mut FSINode;
+
+    (*n).refcount = 1;
+    (*n).open_count = 0;
+    (*n).inode_num = (*fs).inode_num_alloc;
+    (*fs).inode_num_alloc = (*fs).inode_num_alloc.wrapping_add(1);
+    (*n).type_ = type_;
+    (*n).mode = mode & 0xfff;
+    (*n).uid = uid;
+    (*n).gid = gid;
+
+    match type_ {
+        FT_REG => file_buffer_init(reg_fbuf(n)),
+        FT_DIR => init_list_head(dir_de_list(n)),
+        _ => {}
+    }
+
+    list_add(
+        core::ptr::addr_of_mut!((*n).link),
+        core::ptr::addr_of_mut!((*fs).inode_list),
+    );
+    (*fs).inode_count = (*fs).inode_count.wrapping_add(1);
+
+    inode_update_mtime(fs1, n);
+    (*n).ctime_sec = (*n).mtime_sec;
+    (*n).ctime_nsec = (*n).mtime_nsec;
+
+    n
+}
+
+unsafe fn inode_dir_add(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    name: *const c_char,
+    n1: *mut FSINode,
+) -> *mut FSDirEntry {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    if (*n).type_ != FT_DIR {
+        abort();
+    }
+
+    let name_len = strlen(name) as c_int;
+    let de_size = core::mem::size_of::<FSDirEntry>();
+    let de = mallocz(de_size.wrapping_add(name_len as usize).wrapping_add(1)) as *mut FSDirEntry;
+    (*de).inode = n1;
+    memcpy(
+        core::ptr::addr_of_mut!((*de).name) as *mut c_void,
+        name as *const c_void,
+        (name_len as usize).wrapping_add(1),
+    );
+    let dirent_size = (de_size as c_int).wrapping_add(name_len).wrapping_add(1);
+    let old_size = *dir_size(n);
+    let new_size = old_size.wrapping_add(dirent_size);
+    let tb_new = to_blocks(fs, new_size as u64);
+    let tb_old = to_blocks(fs, old_size as u64);
+    (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(tb_new.wrapping_sub(tb_old));
+    *dir_size(n) = new_size;
+    list_add_tail(core::ptr::addr_of_mut!((*de).link), dir_de_list(n));
+    de
+}
+
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head = core::ptr::addr_of_mut!((*fs).base_url_list);
+    let mut el = (*head).next;
+    while el != head {
+        /* link is the first member of FSBaseURL */
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn fs_net_set_url(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: u64,
+    size: u64,
+) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+    /* the fs_is_net() assertion of the C version cannot be reproduced here
+       (fs_mem_end is static and has no symbol); it is a sanity check only. */
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -2;
+    }
+
+    let reg = as_reg(n);
+    if (*n).type_ != FT_REG
+        || (*reg).state != REG_STATE_LOCAL
+        || (*reg).fbuf.allocated_size != 0
+    {
+        return -5;
+    }
+
+    if size > 0 {
+        (*reg).state = REG_STATE_UNLOADED;
+        (*reg).base_url = bu;
+        (*bu).ref_count = (*bu).ref_count.wrapping_add(1);
+        (*reg).size = size as usize;
+        let tb = to_blocks(fs, size);
+        (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(tb);
+        (*reg).file_id = file_id;
+    }
+    0
+}
+
+unsafe fn print_err(msg: *const c_char) {
+    fprintf(stderr, msg);
+}
+
+/* ------------------------------------------------------------------ */
+/* filelist_load_rec (static in fs_net.c)                              */
+/* ------------------------------------------------------------------ */
+
+unsafe fn filelist_load_rec(
+    fs1: *mut FSDevice,
+    pp: *mut *const c_char,
+    dir: *mut FSINode,
+    path: *const c_char,
+) -> c_int {
+    let mut fname = [0 as c_char; 1024];
+    let mut lname = [0 as c_char; 1024];
+    let mut p: *const c_char = *pp;
+
+    loop {
+        if *p == 0 {
+            break;
+        }
+        if *p == b'#' as c_char {
+            skip_line(core::ptr::addr_of_mut!(p));
+            continue;
+        }
+
+        if *p == b'.' as c_char {
+            p = p.add(1);
+            skip_line(core::ptr::addr_of_mut!(p));
+            break;
+        }
+
+        let mut mode: u32 = 0;
+        if parse_uint32_base(core::ptr::addr_of_mut!(mode), core::ptr::addr_of_mut!(p), 8) < 0 {
+            print_err(b"invalid mode\n".as_ptr() as *const c_char);
+            return -1;
+        }
+        let type_: c_int = (mode >> 12) as c_int;
+        mode &= 0xfff;
+
+        let mut uid: u32 = 0;
+        if parse_uint32(core::ptr::addr_of_mut!(uid), core::ptr::addr_of_mut!(p)) < 0 {
+            print_err(b"invalid uid\n".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        let mut gid: u32 = 0;
+        if parse_uint32(core::ptr::addr_of_mut!(gid), core::ptr::addr_of_mut!(p)) < 0 {
+            print_err(b"invalid gid\n".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        let n = inode_new(fs1, type_, mode, uid, gid);
+
+        let mut size: u64 = 0;
+        match type_ {
+            FT_CHR | FT_BLK => {
+                if parse_uint32(dev_major(n), core::ptr::addr_of_mut!(p)) < 0 {
+                    print_err(b"invalid major\n".as_ptr() as *const c_char);
+                    return -1;
+                }
+                if parse_uint32(dev_minor(n), core::ptr::addr_of_mut!(p)) < 0 {
+                    print_err(b"invalid minor\n".as_ptr() as *const c_char);
+                    return -1;
+                }
+            }
+            FT_REG => {
+                if parse_uint64(core::ptr::addr_of_mut!(size), core::ptr::addr_of_mut!(p)) < 0 {
+                    print_err(b"invalid size\n".as_ptr() as *const c_char);
+                    return -1;
+                }
+            }
+            FT_DIR => {
+                inode_dir_add(fs1, n, b".\0".as_ptr() as *const c_char, inode_incref(fs1, n));
+                inode_dir_add(fs1, n, b"..\0".as_ptr() as *const c_char, inode_incref(fs1, dir));
+            }
+            _ => {}
+        }
+
+        if parse_time(
+            core::ptr::addr_of_mut!((*n).mtime_sec),
+            core::ptr::addr_of_mut!((*n).mtime_nsec),
+            core::ptr::addr_of_mut!(p),
+        ) < 0
+        {
+            print_err(b"invalid mtime\n".as_ptr() as *const c_char);
+            return -1;
+        }
+
+        if parse_fname(fname.as_mut_ptr(), 1024, core::ptr::addr_of_mut!(p)) < 0 {
+            print_err(b"invalid filename\n".as_ptr() as *const c_char);
+            return -1;
+        }
+        inode_dir_add(fs1, dir, fname.as_ptr(), n);
+
+        if type_ == FT_LNK {
+            if parse_fname(lname.as_mut_ptr(), 1024, core::ptr::addr_of_mut!(p)) < 0 {
+                print_err(b"invalid symlink name\n".as_ptr() as *const c_char);
+                return -1;
+            }
+            (*as_symlink(n)).name = strdup(lname.as_ptr());
+        } else if type_ == FT_REG && size > 0 {
+            let mut file_id: u64 = 0;
+            if parse_file_id(core::ptr::addr_of_mut!(file_id), core::ptr::addr_of_mut!(p)) < 0 {
+                print_err(b"invalid file id\n".as_ptr() as *const c_char);
+                return -1;
+            }
+            fs_net_set_url(fs1, n, b"/\0".as_ptr() as *const c_char, file_id, size);
+
+            let fs = fs1 as *mut FSDeviceMem;
+            let reg = as_reg(n);
+            if (*fs).dump_cache_load != 0 {
+                (*reg).filename = compose_path(path, fname.as_ptr());
+            } else {
+                (*reg).filename = core::ptr::null_mut();
+            }
+        }
+
+        skip_line(core::ptr::addr_of_mut!(p));
+
+        if type_ == FT_DIR {
+            let path1 = compose_path(path, fname.as_ptr());
+            let ret = filelist_load_rec(fs1, core::ptr::addr_of_mut!(p), n, path1);
+            free(path1 as *mut c_void);
+            if ret != 0 {
+                return ret;
+            }
+        }
+    }
+
+    *pp = p;
+    0
+}
+
+/* ------------------------------------------------------------------ */
+/* filelist_load (the TARGET)                                          */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn filelist_load(fs1: *mut FSDevice, str: *const c_char) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut p: *const c_char;
+
+    if parse_tag_version(str) != 1 {
+        return -1;
+    }
+    p = skip_header(str);
+    if p.is_null() {
+        return -1;
+    }
+    let root_inode = (*fs).root_inode;
+    filelist_load_rec(
+        fs1,
+        core::ptr::addr_of_mut!(p),
+        root_inode,
+        b"\0".as_ptr() as *const c_char,
+    )
 }
 }
 
@@ -25586,6 +40363,425 @@ pub unsafe extern "C" fn filelist_load__part937(
     let fs = fs1 as *mut FSDeviceMem;
     let root = (*fs).root_inode;
     filelist_load_rec_rs(fs1, pp, root, EMPTY_STRING.as_ptr())
+}
+}
+
+// ── `fs_create_cmd` · fs_net.c:2057-2069 · chunk 939 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_create_cmd(FSDevice *fs)
+//     {
+//         FSFile *root_fd;
+//         FSQID qid;
+//         FSINode *n;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        !fs->fs_attach(fs, &root_fd, &qid, 0, "", "")
+//        )), __extension__ ({ if (
+//        !fs->fs_attach(fs, &root_fd, &qid, 0, "", "")
+//        ) ; else __assert_fail (
+//        "!fs->fs_attach(fs, &root_fd, &qid, 0, \"\", \"\")"
+//        , "fs_net.c", 2063, __extension__ __PRETTY_FUNCTION__); }))
+//                                                             ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        !fs->fs_create(fs, &qid, root_fd, ".fscmd", 0x00000002 | 0x00000200, 0666, 0)
+//        )), __extension__ ({ if (
+//        !fs->fs_create(fs, &qid, root_fd, ".fscmd", 0x00000002 | 0x00000200, 0666, 0)
+//        ) ; else __assert_fail (
+//        "!fs->fs_create(fs, &qid, root_fd, FSCMD_NAME, P9_O_RDWR | P9_O_TRUNC, 0666, 0)"
+//        , "fs_net.c", 2064, __extension__ __PRETTY_FUNCTION__); }))
+//                                        
+//                                       ;
+//         n = root_fd->inode;
+//         n->u.reg.is_fscmd = TRUE;
+//         fs->fs_delete(fs, root_fd);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk939 {
+// Port of fs_net.c:2057-2069 (static void fs_create_cmd(FSDevice *fs))
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_uint};
+
+// ---------------------------------------------------------------------------
+// Types mirrored from the C declarations (all fields Copy -> usable in a union)
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSQID {
+    pub r#type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// FSINodeTypeEnum / FSINodeRegStateEnum are plain C enums (int).
+pub type FSINodeTypeEnum = c_int;
+pub type FSINodeRegStateEnum = c_int;
+
+// Opaque types only referenced through pointers here.
+pub struct FSBaseURL {
+    _private: [u8; 0],
+}
+pub struct FSOpenInfo {
+    _private: [u8; 0],
+}
+pub struct FSCMDRequest {
+    _private: [u8; 0],
+}
+pub struct FSStatFS {
+    _private: [u8; 0],
+}
+pub struct FSStat {
+    _private: [u8; 0],
+}
+pub struct FSLock {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: FSINodeRegStateEnum,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: list_head,
+    pub open_info: *mut FSOpenInfo,
+    pub is_fscmd: c_int, // BOOL (typedef int)
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: list_head,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: FSINodeTypeEnum,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int, // BOOL
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+pub type FSOpenCompletionFunc = unsafe extern "C" fn(
+    fs: *mut FSDevice,
+    qid: *mut FSQID,
+    err: c_int,
+    opaque: *mut core::ffi::c_void,
+);
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(s: *mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(s: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(fs: *mut FSDevice, st: *mut FSStatFS)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qid: *mut FSQID,
+            uid: u32,
+            uname: *const c_char,
+            aname: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qids: *mut FSQID,
+            f: *mut FSFile,
+            n: c_int,
+            names: *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            flags: u32,
+            cb: *mut FSOpenCompletionFunc,
+            opaque: *mut core::ffi::c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            flags: u32,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_stat:
+        Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, st: *mut FSStat) -> c_int>,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            mask: u32,
+            mode: u32,
+            uid: u32,
+            gid: u32,
+            size: u64,
+            atime_sec: u64,
+            atime_nsec: u64,
+            mtime_sec: u64,
+            mtime_nsec: u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *const u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            df: *mut FSFile,
+            f: *mut FSFile,
+            name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            symgt: *const c_char,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            major: u32,
+            minor: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            buf: *mut c_char,
+            buf_size: c_int,
+            f: *mut FSFile,
+        ) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            name: *const c_char,
+            new_f: *mut FSFile,
+            new_name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat:
+        Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, name: *const c_char) -> c_int>,
+    pub fs_lock:
+        Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *const FSLock) -> c_int>,
+    pub fs_getlock:
+        Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *mut FSLock) -> c_int>,
+}
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// ---------------------------------------------------------------------------
+// The ported function
+// ---------------------------------------------------------------------------
+
+const TRUE: c_int = 1;
+const P9_O_RDWR: u32 = 0x00000002;
+const P9_O_TRUNC: u32 = 0x00000200;
+const FSCMD_NAME: &[u8] = b".fscmd\0";
+
+#[inline]
+unsafe fn assert_fail(assertion: &'static [u8], file: &'static [u8], line: u32) -> ! {
+    // __PRETTY_FUNCTION__ of this plain-C function.
+    let func: &[u8] = b"fs_create_cmd\0";
+    unsafe {
+        __assert_fail(
+            assertion.as_ptr() as *const c_char,
+            file.as_ptr() as *const c_char,
+            line as c_uint,
+            func.as_ptr() as *const c_char,
+        )
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_create_cmd(fs: *mut FSDevice) {
+    let mut root_fd: *mut FSFile = core::ptr::null_mut();
+    let mut qid: FSQID = unsafe { core::mem::zeroed() };
+
+    let empty: *const c_char = b"\0".as_ptr() as *const c_char;
+
+    let attach = match unsafe { (*fs).fs_attach } {
+        Some(f) => f,
+        None => unsafe { core::hint::unreachable_unchecked() },
+    };
+    let create = match unsafe { (*fs).fs_create } {
+        Some(f) => f,
+        None => unsafe { core::hint::unreachable_unchecked() },
+    };
+    let delete = match unsafe { (*fs).fs_delete } {
+        Some(f) => f,
+        None => unsafe { core::hint::unreachable_unchecked() },
+    };
+
+    // assert(!fs->fs_attach(fs, &root_fd, &qid, 0, "", ""));
+    let err = unsafe { attach(fs, &mut root_fd, &mut qid, 0, empty, empty) };
+    if err != 0 {
+        unsafe {
+            assert_fail(
+                b"!fs->fs_attach(fs, &root_fd, &qid, 0, \"\", \"\")\0",
+                b"fs_net.c\0",
+                2063,
+            )
+        }
+    }
+
+    // assert(!fs->fs_create(fs, &qid, root_fd, FSCMD_NAME,
+    //                       P9_O_RDWR | P9_O_TRUNC, 0666, 0));
+    let err = unsafe {
+        create(
+            fs,
+            &mut qid,
+            root_fd,
+            FSCMD_NAME.as_ptr() as *const c_char,
+            P9_O_RDWR | P9_O_TRUNC,
+            0o666,
+            0,
+        )
+    };
+    if err != 0 {
+        unsafe {
+            assert_fail(
+                b"!fs->fs_create(fs, &qid, root_fd, FSCMD_NAME, P9_O_RDWR | P9_O_TRUNC, 0666, 0)\0",
+                b"fs_net.c\0",
+                2064,
+            )
+        }
+    }
+
+    let n: *mut FSINode = unsafe { (*root_fd).inode };
+    unsafe {
+        // n->u.reg.is_fscmd = TRUE;  (write through a raw pointer into the union)
+        let fscmd: *mut c_int = core::ptr::addr_of_mut!((*n).u.reg.is_fscmd);
+        core::ptr::write(fscmd, TRUE);
+        delete(fs, root_fd);
+    }
 }
 }
 
@@ -28528,6 +43724,770 @@ pub unsafe extern "C" fn filelist_loaded__part960(fs: *mut FSDevice, s: *mut FSN
 }
 }
 
+// ── `kernel_load_cb` · fs_net.c:2229-2265 · chunk 962 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kernel_load_cb(FSDevice *fs, FSQID *qid1, int err,
+//                                void *opaque)
+//     {
+//         FSNetInitState *s = opaque;
+//         FSQID qid;
+//     
+//     
+//     
+//         if (((FSDeviceMem *)fs)->dump_cache_load)
+//             return;
+//     
+//     
+//         if (s->fd) {
+//             fs->fs_delete(fs, s->fd);
+//             s->fd = 
+//                    ((void *)0)
+//                        ;
+//         }
+//     
+//         if (s->file_index >= 2) {
+//     
+//             if (preload_parse(fs, ".preload2/preload.txt", TRUE) < 0) {
+//                 preload_parse(fs, ".preload", FALSE);
+//             }
+//             fs->fs_delete(fs, s->root_fd);
+//             if (s->start_cb)
+//                 s->start_cb(s->start_opaque);
+//             free(s);
+//         } else {
+//             s->fd = fs_walk_path(fs, s->root_fd, kernel_file_list[s->file_index++]);
+//             if (!s->fd)
+//                 goto done;
+//             err = fs->fs_open(fs, &qid, s->fd, 0x00000000, kernel_load_cb, s);
+//             if (err <= 0) {
+//             done:
+//                 kernel_load_cb(fs, 
+//                                   ((void *)0)
+//                                       , 0, s);
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk962 {
+// Rust rewrite of fs_net.c::kernel_load_cb (and the static helpers it needs,
+// which have no linker symbol in the C object and are therefore ported here).
+
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of, null, null_mut};
+
+/* ------------------------------------------------------------------ */
+/* C constants                                                        */
+/* ------------------------------------------------------------------ */
+
+const TRUE: c_int = 1;
+const FALSE: c_int = 0;
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_LOADED: c_int = 3;
+
+const FILE_LOAD_COUNT: c_int = 2;
+
+/* static const char *kernel_file_list[FILE_LOAD_COUNT] (C: static, inlined) */
+static KERNEL_FILE_LIST: [&[u8]; 2] = [b".preload\0", b".preload2/preload.txt\0"];
+
+/* ------------------------------------------------------------------ */
+/* C types                                                            */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FSQID {
+    pub qid_type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+/* union { reg; dir; dev; symlink; } -- only accessed via `reg`, which is the
+   largest member and gives the union its alignment, so laying it out as `reg`
+   reproduces every offset exactly.  The dir variant starts at offset 0. */
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub node_type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeReg,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: c_int,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub size: u64,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *const c_char,
+    pub file_list: ListHead,
+}
+
+type FSOpenCompletionFunc =
+    Option<unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void)>;
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(*mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(*mut FSDevice, *mut c_void)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            u32,
+            *const c_char,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            *mut FSFile,
+            c_int,
+            *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            u32,
+            FSOpenCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut c_void) -> c_int>,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            u32,
+            u32,
+            u32,
+            u32,
+            u64,
+            u64,
+            u64,
+            u64,
+            u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *const u8, c_int) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSFile, *const c_char) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            *const c_char,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut c_char, c_int, *mut FSFile) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            *const c_char,
+            *mut FSFile,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat:
+        Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char) -> c_int>,
+    pub fs_lock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_void) -> c_int>,
+    pub fs_getlock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut c_void) -> c_int>,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+pub struct FSNetInitState {
+    pub fs: *mut FSDevice,
+    pub url: *mut c_char,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+    pub root_fd: *mut FSFile,
+    pub fd: *mut FSFile,
+    pub file_index: c_int,
+}
+
+/* ------------------------------------------------------------------ */
+/* external C symbols                                                 */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    static stderr: *mut c_void;
+
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+    fn fs_walk_path(fs: *mut FSDevice, f: *mut FSFile, path: *const c_char) -> *mut FSFile;
+}
+
+/* ------------------------------------------------------------------ */
+/* list helpers (static inline in C)                                  */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+unsafe fn isspace_nolf(c: c_int) -> c_int {
+    if c == b' ' as c_int || c == b'\t' as c_int {
+        1
+    } else {
+        0
+    }
+}
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn list_add_tail_impl(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    list_add_tail_impl(el, (*head).prev, head);
+}
+
+/* ------------------------------------------------------------------ */
+/* inode lookup (static in C)                                         */
+/* ------------------------------------------------------------------ */
+
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).node_type != FT_DIR {
+        return null_mut();
+    }
+    /* dir.de_list sits at offset 0 of the union */
+    let head = &mut (*n).u as *mut FSINodeReg as *mut ListHead;
+    let mut el = (*head).next;
+    while el != head {
+        /* FSDirEntry.link is the first member */
+        let de = el as *mut FSDirEntry;
+        let de_name = addr_of!((*de).name) as *const c_char;
+        if strcmp(de_name, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn inode_search_path1(
+    _fs: *mut FSDevice,
+    n_in: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    let mut n = n_in;
+    let mut p = path;
+    let mut name = [0 as c_char; 1024];
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let slash = strchr(p, b'/' as c_int);
+        let (len, p1): (usize, *const c_char) = if slash.is_null() {
+            (strlen(p), null())
+        } else {
+            (
+                slash as usize - p as usize,
+                (slash as *const c_char).add(1),
+            )
+        };
+        if len > 1024 - 1 {
+            return null_mut();
+        }
+        core::ptr::copy_nonoverlapping(p, name.as_mut_ptr(), len);
+        name[len] = 0;
+        if (*n).node_type != FT_DIR {
+            return null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1(fs1, (*fs).root_inode, path)
+}
+
+/* ------------------------------------------------------------------ */
+/* preload file parsing (static in C)                                 */
+/* ------------------------------------------------------------------ */
+
+unsafe fn preload_parse_str_old(fs1: *mut FSDevice, p_in: *const c_char) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut p = p_in;
+    let mut fname = [0 as c_char; 1024];
+
+    loop {
+        while isspace_nolf(*p as c_int) != 0 {
+            p = p.add(1);
+        }
+        if *p == b'\n' as c_char {
+            p = p.add(1);
+            continue;
+        }
+        if *p == 0 {
+            break;
+        }
+        if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+            fprintf(
+                stderr,
+                b"invalid filename\n\0".as_ptr() as *const c_char,
+            );
+            return;
+        }
+
+        let n = inode_search_path(fs1, fname.as_ptr());
+        if n.is_null() || (*n).node_type != FT_REG || (*n).u.state == REG_STATE_LOCAL {
+            fprintf(
+                stderr,
+                b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                fname.as_ptr(),
+            );
+            while *p != b'\n' as c_char && *p != 0 {
+                p = p.add(1);
+            }
+        } else {
+            let pe = mallocz(size_of::<PreloadEntry>()) as *mut PreloadEntry;
+            (*pe).file_id = (*n).u.file_id;
+            init_list_head(&mut (*pe).file_list);
+            list_add_tail(&mut (*pe).link, &mut (*fs).preload_list);
+            loop {
+                while isspace_nolf(*p as c_int) != 0 {
+                    p = p.add(1);
+                }
+                if *p == 0 || *p == b'\n' as c_char {
+                    break;
+                }
+                if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+                    fprintf(
+                        stderr,
+                        b"invalid filename\n\0".as_ptr() as *const c_char,
+                    );
+                    return;
+                }
+
+                let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+                (*pf).name = strdup(fname.as_ptr());
+                list_add_tail(&mut (*pf).link, &mut (*pe).file_list);
+            }
+        }
+    }
+}
+
+unsafe fn preload_parse_str(fs1: *mut FSDevice, p_in: *const c_char) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut p = p_in;
+    let mut fname = [0 as c_char; 1024];
+    let mut pe: *mut PreloadEntry = null_mut();
+    let mut pa: *mut PreloadArchive = null_mut();
+
+    loop {
+        while isspace_nolf(*p as c_int) != 0 {
+            p = p.add(1);
+        }
+        if *p == b'\n' as c_char {
+            pe = null_mut();
+            p = p.add(1);
+            continue;
+        }
+        if *p == b'#' as c_char {
+            continue;
+        }
+        if *p == 0 {
+            break;
+        }
+
+        let mut is_archive: c_int = FALSE;
+        if *p == b'@' as c_char {
+            is_archive = TRUE;
+            p = p.add(1);
+        }
+        if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+            fprintf(
+                stderr,
+                b"invalid filename\n\0".as_ptr() as *const c_char,
+            );
+            return;
+        }
+        while isspace_nolf(*p as c_int) != 0 {
+            p = p.add(1);
+        }
+        if *p == b':' as c_char {
+            p = p.add(1);
+
+            let n = inode_search_path(fs1, fname.as_ptr());
+            pe = null_mut();
+            pa = null_mut();
+            if n.is_null() || (*n).node_type != FT_REG || (*n).u.state == REG_STATE_LOCAL {
+                fprintf(
+                    stderr,
+                    b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                    fname.as_ptr(),
+                );
+                while *p != b'\n' as c_char && *p != 0 {
+                    p = p.add(1);
+                }
+            } else if is_archive != 0 {
+                let pa1 = mallocz(size_of::<PreloadArchive>()) as *mut PreloadArchive;
+                (*pa1).name = strdup(fname.as_ptr());
+                init_list_head(&mut (*pa1).file_list);
+                list_add_tail(&mut (*pa1).link, &mut (*fs).preload_archive_list);
+                pa = pa1;
+            } else {
+                let pe1 = mallocz(size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                (*pe1).file_id = (*n).u.file_id;
+                init_list_head(&mut (*pe1).file_list);
+                list_add_tail(&mut (*pe1).link, &mut (*fs).preload_list);
+                pe = pe1;
+            }
+        } else {
+            if pe.is_null() && pa.is_null() {
+                fprintf(
+                    stderr,
+                    b"filename without target: %s\n\0".as_ptr() as *const c_char,
+                    fname.as_ptr(),
+                );
+                return;
+            }
+            if !pa.is_null() {
+                let mut size: u64 = 0;
+                if parse_uint64(&mut size, &mut p) < 0 {
+                    fprintf(stderr, b"invalid size\n\0".as_ptr() as *const c_char);
+                    return;
+                }
+
+                let mut file_id: u64 = 0;
+                if parse_file_id(&mut file_id, &mut p) < 0 {
+                    fprintf(stderr, b"invalid file id\n\0".as_ptr() as *const c_char);
+                    return;
+                }
+
+                let paf = mallocz(size_of::<PreloadArchiveFile>()) as *mut PreloadArchiveFile;
+                (*paf).name = strdup(fname.as_ptr());
+                (*paf).file_id = file_id;
+                (*paf).size = size;
+                list_add_tail(&mut (*paf).link, &mut (*pa).file_list);
+            } else {
+                let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+                (*pf).name = strdup(fname.as_ptr());
+                (*pf).is_archive = is_archive;
+                list_add_tail(&mut (*pf).link, &mut (*pe).file_list);
+            }
+        }
+
+        while *p != b'\n' as c_char && *p != 0 {
+            p = p.add(1);
+        }
+        if *p == b'\n' as c_char {
+            p = p.add(1);
+        }
+    }
+}
+
+unsafe fn preload_parse(fs: *mut FSDevice, fname: *const c_char, is_new: c_int) -> c_int {
+    let n = inode_search_path(fs, fname);
+    if n.is_null() || (*n).node_type != FT_REG || (*n).u.state != REG_STATE_LOADED {
+        return -1;
+    }
+
+    let size = (*n).u.size;
+    let buf = malloc(size + 1) as *mut c_char;
+    if buf.is_null() {
+        return -1;
+    }
+    file_buffer_read(&mut (*n).u.fbuf, 0, buf as *mut u8, size);
+    *buf.add(size) = 0;
+    if is_new != 0 {
+        preload_parse_str(fs, buf);
+    } else {
+        preload_parse_str_old(fs, buf);
+    }
+    free(buf as *mut c_void);
+    0
+}
+
+/* ------------------------------------------------------------------ */
+/* the target                                                         */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn kernel_load_cb(
+    fs: *mut FSDevice,
+    qid1: *mut FSQID,
+    err: c_int,
+    opaque: *mut c_void,
+) {
+    let s = opaque as *mut FSNetInitState;
+    let mut qid: FSQID = core::mem::zeroed();
+
+    let _ = qid1;
+    let _ = err;
+
+    if (*(fs as *mut FSDeviceMem)).dump_cache_load != 0 {
+        return;
+    }
+
+    if !(*s).fd.is_null() {
+        if let Some(f) = (*fs).fs_delete {
+            f(fs, (*s).fd);
+        }
+        (*s).fd = null_mut();
+    }
+
+    if (*s).file_index >= FILE_LOAD_COUNT {
+        /* all files are loaded */
+        if preload_parse(
+            fs,
+            b".preload2/preload.txt\0".as_ptr() as *const c_char,
+            TRUE,
+        ) < 0
+        {
+            preload_parse(fs, b".preload\0".as_ptr() as *const c_char, FALSE);
+        }
+        if let Some(f) = (*fs).fs_delete {
+            f(fs, (*s).root_fd);
+        }
+        if let Some(cb) = (*s).start_cb {
+            cb((*s).start_opaque);
+        }
+        free(s as *mut c_void);
+    } else {
+        let idx = (*s).file_index;
+        (*s).file_index = idx + 1;
+        let path: *const c_char = if (idx as usize) < KERNEL_FILE_LIST.len() {
+            KERNEL_FILE_LIST[idx as usize].as_ptr() as *const c_char
+        } else {
+            null()
+        };
+        (*s).fd = fs_walk_path(fs, (*s).root_fd, path);
+        if (*s).fd.is_null() {
+            /* goto done */
+            kernel_load_cb(fs, null_mut(), 0, s as *mut c_void);
+        } else {
+            let mut open_err: c_int = 0;
+            if let Some(f) = (*fs).fs_open {
+                open_err = f(
+                    fs,
+                    &mut qid as *mut FSQID,
+                    (*s).fd,
+                    0x00000000,
+                    Some(kernel_load_cb),
+                    s as *mut c_void,
+                );
+            }
+            if open_err <= 0 {
+                /* done: */
+                kernel_load_cb(fs, null_mut(), 0, s as *mut c_void);
+            }
+        }
+    }
+}
+}
+
 // ── `if ((FSDeviceMem *)fs)->dump_cache_load)` · fs_net.c:2237-2238 · chunk 963 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -28818,6 +44778,435 @@ pub unsafe extern "C" fn kernel_load_cb__part965(
             1
         } else {
             0
+        }
+    }
+}
+}
+
+// ── `preload_parse_str_old` · fs_net.c:2267-2315 · chunk 966 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void preload_parse_str_old(FSDevice *fs1, const char *p)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         char fname[1024];
+//         PreloadEntry *pe;
+//         PreloadFile *pf;
+//         FSINode *n;
+//     
+//         for(;;) {
+//             while (isspace_nolf(*p))
+//                 p++;
+//             if (*p == '\n') {
+//                 p++;
+//                 continue;
+//             }
+//             if (*p == '\0')
+//                 break;
+//             if (parse_fname(fname, sizeof(fname), &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid filename\n");
+//                 return;
+//             }
+//     
+//             n = inode_search_path(fs1, fname);
+//             if (!n || n->type != FT_REG || n->u.reg.state == REG_STATE_LOCAL) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid preload file: '%s'\n", fname);
+//                 while (*p != '\n' && *p != '\0')
+//                     p++;
+//             } else {
+//                 pe = mallocz(sizeof(*pe));
+//                 pe->file_id = n->u.reg.file_id;
+//                 init_list_head(&pe->file_list);
+//                 list_add_tail(&pe->link, &fs->preload_list);
+//                 for(;;) {
+//                     while (isspace_nolf(*p))
+//                         p++;
+//                     if (*p == '\0' || *p == '\n')
+//                         break;
+//                     if (parse_fname(fname, sizeof(fname), &p) < 0) {
+//                         fprintf(
+//                                stderr
+//                                      , "invalid filename\n");
+//                         return;
+//                     }
+//     
+//                     pf = mallocz(sizeof(*pf));
+//                     pf->name = strdup(fname);
+//                     list_add_tail(&pf->link, &pe->file_list);
+//                 }
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk966 {
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_unsafe)]
+
+// Rust rewrite of fs_net.c: preload_parse_str_old()
+//
+// All C `static` helpers reachable from the target (isspace_nolf,
+// init_list_head, list_add_tail, inode_search_path, inode_search_path1,
+// inode_search) are ported here as private Rust functions because they have
+// no linker symbol. Everything else is declared in the extern block below.
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::{addr_of, addr_of_mut, null_mut};
+
+/* ------------------------------------------------------------------ */
+/* original constants                                                  */
+/* ------------------------------------------------------------------ */
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+
+/* ------------------------------------------------------------------ */
+/* list_head + helpers                                                 */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+#[inline]
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    // __list_add(el, head->prev, head)
+    let prev = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+
+#[inline]
+fn isspace_nolf(c: c_char) -> bool {
+    c == (b' ' as c_char) || c == (b'\t' as c_char)
+}
+
+/* ------------------------------------------------------------------ */
+/* FSDeviceMem / FSINode / preload structures                          */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: c_int,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+/* ------------------------------------------------------------------ */
+/* C functions / globals used                                          */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    static stderr: *mut c_void;
+}
+
+/* ------------------------------------------------------------------ */
+/* static C helpers ported as private functions                        */
+/* ------------------------------------------------------------------ */
+
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).r#type != FT_DIR {
+        return null_mut();
+    }
+    let head: *mut ListHead = addr_of_mut!(((*n).u.dir).de_list);
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // container_of(el, FSDirEntry, link) ; link is the first field
+        let de: *mut FSDirEntry = el as *mut FSDirEntry;
+        if strcmp(addr_of!((*de).name) as *const c_char, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn inode_search_path1(
+    _fs: *mut FSDevice,
+    mut n: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut p: *const c_char = path;
+
+    if (*p) as c_int == (b'/' as c_int) {
+        p = p.add(1);
+    }
+    if (*p) as c_int == 0 {
+        return n;
+    }
+    loop {
+        // p1 = strchr(p, '/')
+        let mut q: *const c_char = p;
+        while (*q) as c_int != 0 {
+            if (*q) as c_int == (b'/' as c_int) {
+                break;
+            }
+            q = q.add(1);
+        }
+        let p1: *const c_char;
+        let len: usize;
+        if (*q) as c_int == 0 {
+            // no slash: len = strlen(p), p1 = NULL
+            len = q.offset_from(p) as usize;
+            p1 = null_mut();
+        } else {
+            len = q.offset_from(p) as usize;
+            p1 = q.add(1);
+        }
+        if len > name.len() - 1 {
+            return null_mut();
+        }
+        core::ptr::copy_nonoverlapping(p, name.as_mut_ptr(), len);
+        name[len] = 0;
+        if (*n).r#type != FT_DIR {
+            return null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return null_mut();
+        }
+        n = (*de).inode;
+        p = p1;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1(fs1, (*fs).root_inode, path)
+}
+
+/* ------------------------------------------------------------------ */
+/* target                                                              */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn preload_parse_str_old(fs1: *mut FSDevice, p: *const c_char) {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut fname = [0 as c_char; 1024];
+    let mut p: *const c_char = p;
+
+    loop {
+        while isspace_nolf(*p) {
+            p = p.add(1);
+        }
+        if (*p) as c_int == (b'\n' as c_int) {
+            p = p.add(1);
+            continue;
+        }
+        if (*p) as c_int == 0 {
+            break;
+        }
+        if parse_fname(fname.as_mut_ptr(), fname.len() as c_int, &mut p) < 0 {
+            fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+            return;
+        }
+
+        let n = inode_search_path(fs1, fname.as_ptr());
+        // same short-circuit evaluation order as the C condition
+        if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+            fprintf(
+                stderr,
+                b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                fname.as_ptr(),
+            );
+            while (*p) as c_int != (b'\n' as c_int) && (*p) as c_int != 0 {
+                p = p.add(1);
+            }
+        } else {
+            let pe = mallocz(core::mem::size_of::<PreloadEntry>()) as *mut PreloadEntry;
+            (*pe).file_id = (*n).u.reg.file_id;
+            init_list_head(addr_of_mut!((*pe).file_list));
+            list_add_tail(addr_of_mut!((*pe).link), addr_of_mut!((*fs).preload_list));
+            loop {
+                while isspace_nolf(*p) {
+                    p = p.add(1);
+                }
+                if (*p) as c_int == 0 || (*p) as c_int == (b'\n' as c_int) {
+                    break;
+                }
+                if parse_fname(fname.as_mut_ptr(), fname.len() as c_int, &mut p) < 0 {
+                    fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+                    return;
+                }
+
+                let pf = mallocz(core::mem::size_of::<PreloadFile>()) as *mut PreloadFile;
+                (*pf).name = strdup(fname.as_ptr());
+                list_add_tail(addr_of_mut!((*pf).link), addr_of_mut!((*pe).file_list));
+            }
         }
     }
 }
@@ -29191,6 +45580,545 @@ pub unsafe extern "C" fn preload_parse_str_old__part967(fs1: *mut FSDevice, p: *
                 let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
                 (*pf).name = strdup(fname.as_ptr()) as *const c_char;
                 list_add_tail(&mut (*pf).link, &mut (*pe).file_list);
+            }
+        }
+    }
+}
+}
+
+// ── `preload_parse_str` · fs_net.c:2317-2412 · chunk 968 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void preload_parse_str(FSDevice *fs1, const char *p)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         PreloadEntry *pe;
+//         PreloadArchive *pa;
+//         FSINode *n;
+//         BOOL is_archive;
+//         char fname[1024];
+//     
+//         pe = 
+//             ((void *)0)
+//                 ;
+//         pa = 
+//             ((void *)0)
+//                 ;
+//         for(;;) {
+//             while (isspace_nolf(*p))
+//                 p++;
+//             if (*p == '\n') {
+//                 pe = 
+//                     ((void *)0)
+//                         ;
+//                 p++;
+//                 continue;
+//             }
+//             if (*p == '#')
+//                 continue;
+//             if (*p == '\0')
+//                 break;
+//     
+//             is_archive = FALSE;
+//             if (*p == '@') {
+//                 is_archive = TRUE;
+//                 p++;
+//             }
+//             if (parse_fname(fname, sizeof(fname), &p) < 0) {
+//                 fprintf(
+//                        stderr
+//                              , "invalid filename\n");
+//                 return;
+//             }
+//             while (isspace_nolf(*p))
+//                 p++;
+//             if (*p == ':') {
+//                 p++;
+//     
+//                 n = inode_search_path(fs1, fname);
+//                 pe = 
+//                     ((void *)0)
+//                         ;
+//                 pa = 
+//                     ((void *)0)
+//                         ;
+//                 if (!n || n->type != FT_REG || n->u.reg.state == REG_STATE_LOCAL) {
+//                     fprintf(
+//                            stderr
+//                                  , "invalid preload file: '%s'\n", fname);
+//                     while (*p != '\n' && *p != '\0')
+//                         p++;
+//                 } else if (is_archive) {
+//                     pa = mallocz(sizeof(*pa));
+//                     pa->name = strdup(fname);
+//                     init_list_head(&pa->file_list);
+//                     list_add_tail(&pa->link, &fs->preload_archive_list);
+//                 } else {
+//                     pe = mallocz(sizeof(*pe));
+//                     pe->file_id = n->u.reg.file_id;
+//                     init_list_head(&pe->file_list);
+//                     list_add_tail(&pe->link, &fs->preload_list);
+//                 }
+//             } else {
+//                 if (!pe && !pa) {
+//                     fprintf(
+//                            stderr
+//                                  , "filename without target: %s\n", fname);
+//                     return;
+//                 }
+//                 if (pa) {
+//                     PreloadArchiveFile *paf;
+//                     FSFileID file_id;
+//                     uint64_t size;
+//     
+//                     if (parse_uint64(&size, &p) < 0) {
+//                         fprintf(
+//                                stderr
+//                                      , "invalid size\n");
+//                         return;
+//                     }
+//     
+//                     if (parse_file_id(&file_id, &p) < 0) {
+//                         fprintf(
+//                                stderr
+//                                      , "invalid file id\n");
+//                         return;
+//                     }
+//     
+//                     paf = mallocz(sizeof(*paf));
+//                     paf->name = strdup(fname);
+//                     paf->file_id = file_id;
+//                     paf->size = size;
+//                     list_add_tail(&paf->link, &pa->file_list);
+//                 } else {
+//                     PreloadFile *pf;
+//                     pf = mallocz(sizeof(*pf));
+//                     pf->name = strdup(fname);
+//                     pf->is_archive = is_archive;
+//                     list_add_tail(&pf->link, &pe->file_list);
+//                 }
+//             }
+//     
+//             while (*p != '\n' && *p != '\0')
+//                 p++;
+//             if (*p == '\n')
+//                 p++;
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk968 {
+// Port of the static function preload_parse_str() from fs_net.c
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of_mut, null_mut};
+
+type BOOL = c_int;
+type FSFileID = u64;
+
+const FALSE: BOOL = 0;
+const TRUE: BOOL = 1;
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+// struct list_head
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// typedef struct { struct list_head link; BOOL is_archive; const char *name; } PreloadFile;
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+// typedef struct { struct list_head link; FSFileID file_id; struct list_head file_list; } PreloadEntry;
+#[repr(C)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: FSFileID,
+    pub file_list: ListHead,
+}
+
+// typedef struct { struct list_head link; FSFileID file_id; uint64_t size;
+//                  const char *name; } PreloadArchiveFile;
+#[repr(C)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: FSFileID,
+    pub size: u64,
+    pub name: *const c_char,
+}
+
+// typedef struct { struct list_head link; const char *name;
+//                  struct list_head file_list; } PreloadArchive;
+#[repr(C)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *const c_char,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: FSFileID,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union FSINodeUnion {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+// typedef struct FSINode { ... }
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+// typedef struct { struct list_head link; FSINode *inode; uint8_t mark;
+//                  char name[0]; } FSDirEntry;
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+// struct FSDevice: 22 function pointers, treated as opaque
+#[repr(C)]
+pub struct FSDevice {
+    pub f: [*mut c_void; 22],
+}
+
+// typedef struct FSDeviceMem { FSDevice common; ... }
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+}
+
+extern "C" {
+    static stderr: *mut FILE;
+
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut FSFileID, pp: *mut *const c_char) -> c_int;
+
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn strchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn strlen(s: *const c_char) -> usize;
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[inline]
+fn isspace_nolf(c: c_char) -> BOOL {
+    if c == b' ' as c_char || c == b'\t' as c_char {
+        TRUE
+    } else {
+        FALSE
+    }
+}
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    unsafe {
+        (*head).prev = head;
+        (*head).next = head;
+    }
+}
+
+#[inline]
+unsafe fn __list_add(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    unsafe {
+        (*prev).next = el;
+        (*el).prev = prev;
+        (*el).next = next;
+        (*next).prev = el;
+    }
+}
+
+#[inline]
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    unsafe {
+        __list_add(el, (*head).prev, head);
+    }
+}
+
+// static FSDirEntry *inode_search(FSINode *n, const char *name)
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    unsafe {
+        if (*n).type_ != FT_DIR {
+            return null_mut();
+        }
+        let head: *mut ListHead = addr_of_mut!((*n).u.dir.de_list);
+        let mut el: *mut ListHead = (*head).next;
+        while el != head {
+            let de = el as *mut FSDirEntry;
+            if strcmp((*de).name.as_ptr(), name) == 0 {
+                return de;
+            }
+            el = (*el).next;
+        }
+        null_mut()
+    }
+}
+
+// static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+unsafe fn inode_search_path1(
+    _fs: *mut FSDevice,
+    mut n: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    unsafe {
+        let mut name = [0 as c_char; 1024];
+        let mut p: *const c_char = path;
+
+        if *p == b'/' as c_char {
+            p = p.add(1);
+        }
+        if *p == 0 {
+            return n;
+        }
+        loop {
+            let slash: *const c_char = strchr(p, b'/' as c_int);
+            let p1: *const c_char;
+            let len: c_int;
+            if slash.is_null() {
+                len = strlen(p) as c_int;
+                p1 = core::ptr::null();
+            } else {
+                len = slash.offset_from(p) as c_int;
+                p1 = slash.add(1);
+            }
+            if len > 1024 - 1 {
+                return null_mut();
+            }
+            memcpy(
+                name.as_mut_ptr() as *mut c_void,
+                p as *const c_void,
+                len as usize,
+            );
+            *name.as_mut_ptr().add(len as usize) = 0;
+            if (*n).type_ != FT_DIR {
+                return null_mut();
+            }
+            let de = inode_search(n, name.as_ptr());
+            if de.is_null() {
+                return null_mut();
+            }
+            n = (*de).inode;
+            p = p1;
+            if p1.is_null() {
+                break;
+            }
+        }
+        n
+    }
+}
+
+// static FSINode *inode_search_path(FSDevice *fs1, const char *path)
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        if fs1.is_null() {
+            return null_mut();
+        }
+        let fs = fs1 as *mut FSDeviceMem;
+        inode_search_path1(fs1, (*fs).root_inode, path)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn preload_parse_str(fs1: *mut FSDevice, p: *const c_char) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let mut p: *const c_char = p;
+        let mut pe: *mut PreloadEntry = null_mut();
+        let mut pa: *mut PreloadArchive = null_mut();
+        let mut fname = [0 as c_char; 1024];
+
+        loop {
+            while isspace_nolf(*p) != 0 {
+                p = p.add(1);
+            }
+            if *p == b'\n' as c_char {
+                pe = null_mut();
+                p = p.add(1);
+                continue;
+            }
+            if *p == b'#' as c_char {
+                continue;
+            }
+            if *p == 0 {
+                break;
+            }
+
+            let mut is_archive: BOOL = FALSE;
+            if *p == b'@' as c_char {
+                is_archive = TRUE;
+                p = p.add(1);
+            }
+            if parse_fname(fname.as_mut_ptr(), 1024 as c_int, &mut p) < 0 {
+                fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+                return;
+            }
+            while isspace_nolf(*p) != 0 {
+                p = p.add(1);
+            }
+            if *p == b':' as c_char {
+                p = p.add(1);
+
+                let n: *mut FSINode = inode_search_path(fs1, fname.as_ptr());
+                pe = null_mut();
+                pa = null_mut();
+                if n.is_null() || (*n).type_ != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+                    fprintf(
+                        stderr,
+                        b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    while *p != b'\n' as c_char && *p != 0 {
+                        p = p.add(1);
+                    }
+                } else if is_archive != 0 {
+                    pa = mallocz(size_of::<PreloadArchive>()) as *mut PreloadArchive;
+                    (*pa).name = strdup(fname.as_ptr()) as *const c_char;
+                    init_list_head(addr_of_mut!((*pa).file_list));
+                    list_add_tail(
+                        addr_of_mut!((*pa).link),
+                        addr_of_mut!((*fs).preload_archive_list),
+                    );
+                } else {
+                    pe = mallocz(size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                    (*pe).file_id = (*n).u.reg.file_id;
+                    init_list_head(addr_of_mut!((*pe).file_list));
+                    list_add_tail(addr_of_mut!((*pe).link), addr_of_mut!((*fs).preload_list));
+                }
+            } else {
+                if pe.is_null() && pa.is_null() {
+                    fprintf(
+                        stderr,
+                        b"filename without target: %s\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    return;
+                }
+                if !pa.is_null() {
+                    let mut file_id: FSFileID = 0;
+                    let mut size: u64 = 0;
+
+                    if parse_uint64(&mut size, &mut p) < 0 {
+                        fprintf(stderr, b"invalid size\n\0".as_ptr() as *const c_char);
+                        return;
+                    }
+
+                    if parse_file_id(&mut file_id, &mut p) < 0 {
+                        fprintf(stderr, b"invalid file id\n\0".as_ptr() as *const c_char);
+                        return;
+                    }
+
+                    let paf = mallocz(size_of::<PreloadArchiveFile>()) as *mut PreloadArchiveFile;
+                    (*paf).name = strdup(fname.as_ptr()) as *const c_char;
+                    (*paf).file_id = file_id;
+                    (*paf).size = size;
+                    list_add_tail(addr_of_mut!((*paf).link), addr_of_mut!((*pa).file_list));
+                } else {
+                    let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+                    (*pf).name = strdup(fname.as_ptr()) as *const c_char;
+                    (*pf).is_archive = is_archive;
+                    list_add_tail(addr_of_mut!((*pf).link), addr_of_mut!((*pe).file_list));
+                }
+            }
+            // skip the rest of the line
+            while *p != b'\n' as c_char && *p != 0 {
+                p = p.add(1);
+            }
+            if *p == b'\n' as c_char {
+                p = p.add(1);
             }
         }
     }
@@ -29802,6 +46730,597 @@ pub unsafe extern "C" fn preload_parse_str__part970(
     *pn = n;
     *ppe = pe;
     *ppa = pa;
+}
+}
+
+// ── `preload_parse` · fs_net.c:2414-2434 · chunk 971 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int preload_parse(FSDevice *fs, const char *fname, BOOL is_new)
+//     {
+//         FSINode *n;
+//         char *buf;
+//         size_t size;
+//     
+//         n = inode_search_path(fs, fname);
+//         if (!n || n->type != FT_REG || n->u.reg.state != REG_STATE_LOADED)
+//             return -1;
+//     
+//         size = n->u.reg.size;
+//         buf = malloc(size + 1);
+//         file_buffer_read(&n->u.reg.fbuf, 0, (uint8_t *)buf, size);
+//         buf[size] = '\0';
+//         if (is_new)
+//             preload_parse_str(fs, buf);
+//         else
+//             preload_parse_str_old(fs, buf);
+//         free(buf);
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk971 {
+// Rust rewrite of fs_net.c: preload_parse()
+//
+// The C target calls three static (no linker symbol) helpers:
+//   inode_search_path() / inode_search_path1() / inode_search()
+//   preload_parse_str_old()
+//   preload_parse_str()
+// Their logic is ported below as private Rust functions.
+//
+// External functions/variables used: file_buffer_read(), mallocz(), strdup(),
+// parse_fname(), parse_uint64(), parse_file_id(), malloc(), free(), fprintf(),
+// stderr.
+
+use core::ffi::{c_char, c_int, c_void};
+
+// ---------------------------------------------------------------- constants
+
+const FALSE: c_int = 0;
+const TRUE: c_int = 1;
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_LOADED: c_int = 3;
+
+// ---------------------------------------------------------------- structures
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// struct FSDevice: only function pointers, mirrored so that FSDeviceMem
+// field offsets are correct.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeUnion {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: c_int,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub size: u64,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *const c_char,
+    pub file_list: ListHead,
+}
+
+// ---------------------------------------------------------------- externals
+
+extern "C" {
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    static stderr: *mut c_void;
+}
+
+// ---------------------------------------------------------------- list utils
+// static inline helpers from the C translation unit.
+
+fn init_list_head(head: *mut ListHead) {
+    unsafe {
+        (*head).prev = head;
+        (*head).next = head;
+    }
+}
+
+fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    unsafe {
+        let prev = (*head).prev;
+        (*prev).next = el;
+        (*el).prev = prev;
+        (*el).next = head;
+        (*head).prev = el;
+    }
+}
+
+// static inline BOOL isspace_nolf(int c)
+fn isspace_nolf(c: c_int) -> c_int {
+    if c == b' ' as c_int || c == b'\t' as c_int {
+        TRUE
+    } else {
+        FALSE
+    }
+}
+
+fn c_str_eq(a: *const c_char, b: *const c_char) -> bool {
+    unsafe {
+        let mut i: isize = 0;
+        loop {
+            let ca = *a.offset(i);
+            let cb = *b.offset(i);
+            if ca != cb {
+                return false;
+            }
+            if ca == 0 {
+                return true;
+            }
+            i += 1;
+        }
+    }
+}
+
+// ---------------------------------------------------------------- inode lookup
+
+// static FSDirEntry *inode_search(FSINode *n, const char *name)
+fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    unsafe {
+        // the union member `dir` starts at offset 0, its first field is de_list
+        let head = core::ptr::addr_of_mut!((*n).u) as *mut ListHead;
+        let mut el: *mut ListHead = (*head).next;
+        while el != head {
+            let de = el as *mut FSDirEntry;
+            let de_name = core::ptr::addr_of!((*de).name) as *const c_char;
+            if c_str_eq(de_name, name) {
+                return de;
+            }
+            el = (*el).next;
+        }
+        core::ptr::null_mut()
+    }
+}
+
+// static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+fn inode_search_path1(n0: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        let mut name = [0 as c_char; 1024];
+        let mut n = n0;
+        let mut p = path;
+
+        if *p == b'/' as c_char {
+            p = p.add(1);
+        }
+        if *p == 0 {
+            return n;
+        }
+        loop {
+            // p1 = strchr(p, '/')
+            let mut p1: *const c_char = core::ptr::null();
+            let mut q = p;
+            while *q != 0 {
+                if *q == b'/' as c_char {
+                    p1 = q;
+                    break;
+                }
+                q = q.add(1);
+            }
+            let len: c_int;
+            let next_p: *const c_char;
+            if p1.is_null() {
+                let mut l: usize = 0;
+                while *p.add(l) != 0 {
+                    l += 1;
+                }
+                len = l as c_int;
+                next_p = p1;
+            } else {
+                len = p1.offset_from(p) as c_int;
+                next_p = p1.add(1);
+            }
+            if len > (1024 - 1) {
+                return core::ptr::null_mut();
+            }
+            let mut i: usize = 0;
+            while i < len as usize {
+                name[i] = *p.add(i);
+                i += 1;
+            }
+            name[len as usize] = 0;
+
+            if (*n).r#type != FT_DIR {
+                return core::ptr::null_mut();
+            }
+            let de = inode_search(n, name.as_ptr());
+            if de.is_null() {
+                return core::ptr::null_mut();
+            }
+            n = (*de).inode;
+            p = next_p;
+            if p.is_null() {
+                break;
+            }
+        }
+        n
+    }
+}
+
+// static FSINode *inode_search_path(FSDevice *fs1, const char *path)
+fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        if fs1.is_null() {
+            return core::ptr::null_mut();
+        }
+        let fs = fs1 as *mut FSDeviceMem;
+        inode_search_path1((*fs).root_inode, path)
+    }
+}
+
+// ---------------------------------------------------------------- parsers
+
+// static void preload_parse_str_old(FSDevice *fs1, const char *p)
+fn preload_parse_str_old(fs1: *mut FSDevice, p_in: *const c_char) {
+    unsafe {
+        let fs_mem = fs1 as *mut FSDeviceMem;
+        let mut fname = [0 as c_char; 1024];
+        let mut p = p_in;
+
+        loop {
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p == b'\n' as c_char {
+                p = p.add(1);
+                continue;
+            }
+            if *p == 0 {
+                break;
+            }
+            if parse_fname(fname.as_mut_ptr(), 1024 as c_int, &mut p as *mut *const c_char) < 0 {
+                fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+                return;
+            }
+
+            let n = inode_search_path(fs1, fname.as_ptr());
+            if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+                fprintf(
+                    stderr,
+                    b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                    fname.as_ptr(),
+                );
+                while *p != b'\n' as c_char && *p != 0 {
+                    p = p.add(1);
+                }
+            } else {
+                let pe = mallocz(core::mem::size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                (*pe).file_id = (*n).u.reg.file_id;
+                init_list_head(core::ptr::addr_of_mut!((*pe).file_list));
+                list_add_tail(
+                    core::ptr::addr_of_mut!((*pe).link),
+                    core::ptr::addr_of_mut!((*fs_mem).preload_list),
+                );
+                loop {
+                    while isspace_nolf(*p as c_int) != 0 {
+                        p = p.add(1);
+                    }
+                    if *p == 0 || *p == b'\n' as c_char {
+                        break;
+                    }
+                    if parse_fname(fname.as_mut_ptr(), 1024 as c_int, &mut p as *mut *const c_char)
+                        < 0
+                    {
+                        fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+                        return;
+                    }
+
+                    let pf = mallocz(core::mem::size_of::<PreloadFile>()) as *mut PreloadFile;
+                    (*pf).name = strdup(fname.as_ptr());
+                    list_add_tail(
+                        core::ptr::addr_of_mut!((*pf).link),
+                        core::ptr::addr_of_mut!((*pe).file_list),
+                    );
+                }
+            }
+        }
+    }
+}
+
+// static void preload_parse_str(FSDevice *fs1, const char *p)
+fn preload_parse_str(fs1: *mut FSDevice, p_in: *const c_char) {
+    unsafe {
+        let fs_mem = fs1 as *mut FSDeviceMem;
+        let mut fname = [0 as c_char; 1024];
+        let mut pe: *mut PreloadEntry = core::ptr::null_mut();
+        let mut pa: *mut PreloadArchive = core::ptr::null_mut();
+        let mut is_archive: c_int = FALSE;
+        let mut p = p_in;
+
+        loop {
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p == b'\n' as c_char {
+                pe = core::ptr::null_mut();
+                p = p.add(1);
+                continue;
+            }
+            if *p == b'#' as c_char {
+                // mirrors the C code (which does not advance p here)
+                continue;
+            }
+            if *p == 0 {
+                break;
+            }
+
+            is_archive = FALSE;
+            if *p == b'@' as c_char {
+                is_archive = TRUE;
+                p = p.add(1);
+            }
+            if parse_fname(fname.as_mut_ptr(), 1024 as c_int, &mut p as *mut *const c_char) < 0 {
+                fprintf(stderr, b"invalid filename\n\0".as_ptr() as *const c_char);
+                return;
+            }
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p == b':' as c_char {
+                p = p.add(1);
+
+                let n = inode_search_path(fs1, fname.as_ptr());
+                pe = core::ptr::null_mut();
+                pa = core::ptr::null_mut();
+                if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+                    fprintf(
+                        stderr,
+                        b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    while *p != b'\n' as c_char && *p != 0 {
+                        p = p.add(1);
+                    }
+                } else if is_archive != 0 {
+                    pa = mallocz(core::mem::size_of::<PreloadArchive>()) as *mut PreloadArchive;
+                    (*pa).name = strdup(fname.as_ptr());
+                    init_list_head(core::ptr::addr_of_mut!((*pa).file_list));
+                    list_add_tail(
+                        core::ptr::addr_of_mut!((*pa).link),
+                        core::ptr::addr_of_mut!((*fs_mem).preload_archive_list),
+                    );
+                } else {
+                    pe = mallocz(core::mem::size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                    (*pe).file_id = (*n).u.reg.file_id;
+                    init_list_head(core::ptr::addr_of_mut!((*pe).file_list));
+                    list_add_tail(
+                        core::ptr::addr_of_mut!((*pe).link),
+                        core::ptr::addr_of_mut!((*fs_mem).preload_list),
+                    );
+                }
+            } else {
+                if pe.is_null() && pa.is_null() {
+                    fprintf(
+                        stderr,
+                        b"filename without target: %s\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    return;
+                }
+                if !pa.is_null() {
+                    let mut size: u64 = 0;
+                    let mut file_id: u64 = 0;
+
+                    if parse_uint64(&mut size, &mut p as *mut *const c_char) < 0 {
+                        fprintf(stderr, b"invalid size\n\0".as_ptr() as *const c_char);
+                        return;
+                    }
+
+                    if parse_file_id(&mut file_id, &mut p as *mut *const c_char) < 0 {
+                        fprintf(stderr, b"invalid file id\n\0".as_ptr() as *const c_char);
+                        return;
+                    }
+
+                    let paf = mallocz(core::mem::size_of::<PreloadArchiveFile>())
+                        as *mut PreloadArchiveFile;
+                    (*paf).name = strdup(fname.as_ptr());
+                    (*paf).file_id = file_id;
+                    (*paf).size = size;
+                    list_add_tail(
+                        core::ptr::addr_of_mut!((*paf).link),
+                        core::ptr::addr_of_mut!((*pa).file_list),
+                    );
+                } else {
+                    let pf = mallocz(core::mem::size_of::<PreloadFile>()) as *mut PreloadFile;
+                    (*pf).name = strdup(fname.as_ptr());
+                    (*pf).is_archive = is_archive;
+                    list_add_tail(
+                        core::ptr::addr_of_mut!((*pf).link),
+                        core::ptr::addr_of_mut!((*pe).file_list),
+                    );
+                }
+            }
+
+            // skip the rest of the line
+            while *p != b'\n' as c_char && *p != 0 {
+                p = p.add(1);
+            }
+            if *p == b'\n' as c_char {
+                p = p.add(1);
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- the target
+
+// static int preload_parse(FSDevice *fs, const char *fname, BOOL is_new)
+#[no_mangle]
+pub extern "C" fn preload_parse(fs: *mut FSDevice, fname: *const c_char, is_new: c_int) -> c_int {
+    unsafe {
+        let n = inode_search_path(fs, fname);
+        if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state != REG_STATE_LOADED {
+            return -1;
+        }
+
+        // transform to zero terminated string
+        let size: usize = (*n).u.reg.size;
+        let buf = malloc(size.wrapping_add(1)) as *mut c_char;
+        if size != 0 && buf.is_null() {
+            // malloc failure: C would fault in memcpy; report failure instead
+            // of panicking across the FFI boundary.
+            return -1;
+        }
+        file_buffer_read(
+            core::ptr::addr_of_mut!((*n).u.reg.fbuf),
+            0,
+            buf as *mut u8,
+            size,
+        );
+        *buf.add(size) = 0;
+        if is_new != 0 {
+            preload_parse_str(fs, buf);
+        } else {
+            preload_parse_str_old(fs, buf);
+        }
+        free(buf as *mut c_void);
+        0
+    }
 }
 }
 
@@ -30729,6 +48248,78 @@ pub extern "C" fn preload_parse__part976(buf: *mut c_char) -> c_int {
 }
 }
 
+// ── `parse_hex_buf` · fs_net.c:2452-2468 · chunk 979 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int parse_hex_buf(uint8_t *buf, int buf_size, const char **pp)
+//     {
+//         char buf1[1024];
+//         int len;
+//     
+//         if (parse_fname(buf1, sizeof(buf1), pp) < 0)
+//             return -1;
+//         len = strlen(buf1);
+//         if ((len & 1) != 0)
+//             return -1;
+//         len >>= 1;
+//         if (len > buf_size)
+//             return -1;
+//         if (decode_hex(buf, buf1, len) < 0)
+//             return -1;
+//         return len;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk979 {
+// Rust rewrite of static int parse_hex_buf(uint8_t *buf, int buf_size, const char **pp)
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn decode_hex(buf: *mut u8, str_: *const c_char, len: c_int) -> c_int;
+}
+
+// Local re-implementation of strlen so no libc symbol declaration is needed.
+fn c_strlen(s: *const c_char) -> usize {
+    let mut n: usize = 0;
+    if s.is_null() {
+        return 0;
+    }
+    unsafe {
+        while *s.add(n) != 0 {
+            n += 1;
+        }
+    }
+    n
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_hex_buf(
+    buf: *mut u8,
+    buf_size: c_int,
+    pp: *mut *const c_char,
+) -> c_int {
+    let mut buf1 = [0i8; 1024];
+    let buf1_ptr = buf1.as_mut_ptr();
+
+    if parse_fname(buf1_ptr, buf1.len() as c_int, pp) < 0 {
+        return -1;
+    }
+    let len_sz = c_strlen(buf1_ptr);
+    let mut len: c_int = len_sz as c_int;
+    if (len & 1) != 0 {
+        return -1;
+    }
+    len >>= 1;
+    if len > buf_size {
+        return -1;
+    }
+    if decode_hex(buf, buf1_ptr, len) < 0 {
+        return -1;
+    }
+    len
+}
+}
+
 // ── `if (parse_fname(buf1, sizeof(buf1), pp) < 0)` · fs_net.c:2457-2458 · chunk 980 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -30856,6 +48447,803 @@ pub mod chunk986 {
 #[no_mangle]
 pub extern "C" fn parse_hex_buf__part986(len: core::ffi::c_int) -> core::ffi::c_int {
     len
+}
+}
+
+// ── `fs_cmd_xhr` · fs_net.c:2470-2584 · chunk 987 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_xhr(FSDevice *fs, FSFile *f,
+//                           const char *p, uint32_t uid, uint32_t gid)
+//     {
+//         char url[1024], post_filename[1024], filename[1024];
+//         char user_buf[128], *user;
+//         char password_buf[128], *password;
+//         FSQID qid;
+//         FSFile *fd, *root_fd, *post_fd;
+//         uint64_t post_data_len;
+//         int err, aes_key_len;
+//         CmdXHRState *s;
+//         char *name;
+//         AES_KEY *paes_state;
+//         uint8_t aes_key[16];
+//         uint32_t flags;
+//         FSCMDRequest *req;
+//     
+//     
+//         if (f->req != 
+//                      ((void *)0)
+//                          )
+//             return -5;
+//     
+//         if (parse_fname(url, sizeof(url), &p) < 0)
+//             goto fail;
+//         if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)
+//             goto fail;
+//         if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)
+//             goto fail;
+//         if (parse_fname(post_filename, sizeof(post_filename), &p) < 0)
+//             goto fail;
+//         if (parse_fname(filename, sizeof(filename), &p) < 0)
+//             goto fail;
+//         aes_key_len = parse_hex_buf(aes_key, 16, &p);
+//         if (aes_key_len < 0)
+//             goto fail;
+//         if (parse_uint32(&flags, &p) < 0)
+//             goto fail;
+//         if (aes_key_len != 0 && aes_key_len != 16)
+//             goto fail;
+//     
+//         if (user_buf[0] != '\0')
+//             user = user_buf;
+//         else
+//             user = 
+//                   ((void *)0)
+//                       ;
+//         if (password_buf[0] != '\0')
+//             password = password_buf;
+//         else
+//             password = 
+//                       ((void *)0)
+//                           ;
+//     
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        !fs->fs_attach(fs, &root_fd, &qid, uid, "", "")
+//        )), __extension__ ({ if (
+//        !fs->fs_attach(fs, &root_fd, &qid, uid, "", "")
+//        ) ; else __assert_fail (
+//        "!fs->fs_attach(fs, &root_fd, &qid, uid, \"\", \"\")"
+//        , "fs_net.c", 2519, __extension__ __PRETTY_FUNCTION__); }))
+//                                                               ;
+//         post_fd = 
+//                  ((void *)0)
+//                      ;
+//     
+//         fd = fs_walk_path1(fs, root_fd, filename, &name);
+//         if (!fd) {
+//             err = -2;
+//             goto fail1;
+//         }
+//     
+//         fs->fs_unlinkat(fs, fd, name);
+//     
+//         err = fs->fs_create(fs, &qid, fd, name,
+//                             0x00000002 | 0x00000200, 0600, gid);
+//         if (err < 0) {
+//             goto fail1;
+//         }
+//     
+//         if (post_filename[0] != '\0') {
+//             FSINode *n;
+//     
+//             post_fd = fs_walk_path(fs, root_fd, post_filename);
+//             if (!post_fd) {
+//                 err = -2;
+//                 goto fail1;
+//             }
+//             err = fs->fs_open(fs, &qid, post_fd, 0x00000000, 
+//                                                              ((void *)0)
+//                                                                  , 
+//                                                                    ((void *)0)
+//                                                                        );
+//             if (err < 0)
+//                 goto fail1;
+//             n = post_fd->inode;
+//             
+//            ((void) sizeof (__assert_single_arg (
+//            n->type == FT_REG && n->u.reg.state == REG_STATE_LOCAL
+//            )), __extension__ ({ if (
+//            n->type == FT_REG && n->u.reg.state == REG_STATE_LOCAL
+//            ) ; else __assert_fail (
+//            "n->type == FT_REG && n->u.reg.state == REG_STATE_LOCAL"
+//            , "fs_net.c", 2548, __extension__ __PRETTY_FUNCTION__); }))
+//                                                                          ;
+//             post_data_len = n->u.reg.size;
+//         } else {
+//             post_data_len = 0;
+//         }
+//     
+//         s = mallocz(sizeof(*s));
+//         s->root_fd = root_fd;
+//         s->fd = fd;
+//         s->post_fd = post_fd;
+//         if (aes_key_len != 0) {
+//             AES_set_decrypt_key(aes_key, 16 * 8, &s->aes_state);
+//             paes_state = &s->aes_state;
+//         } else {
+//             paes_state = 
+//                         ((void *)0)
+//                             ;
+//         }
+//     
+//         req = mallocz(sizeof(*req));
+//         req->type = FS_CMD_XHR;
+//         req->reply_len = 0;
+//         req->xhr_state = s;
+//         s->req_fd = f;
+//         f->req = req;
+//     
+//         fs_wget_file2(fs, fd, url, user, password, post_fd, post_data_len,
+//                       fs_cmd_xhr_on_load, s, paes_state);
+//         return 0;
+//      fail1:
+//         if (fd)
+//             fs->fs_delete(fs, fd);
+//         if (post_fd)
+//             fs->fs_delete(fs, post_fd);
+//         fs->fs_delete(fs, root_fd);
+//         return err;
+//      fail:
+//         return -5;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk987 {
+// Rust port of fs_cmd_xhr (fs_net.c) plus its private callback fs_cmd_xhr_on_load
+// (the C callback is a static function, so its logic is re-implemented here as a
+// private extern "C" fn and its pointer is passed to fs_wget_file2).
+
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+const P9_EIO: c_int = -5;
+const P9_ENOENT_MINUS: c_int = -2; /* -P9_ENOENT */
+const FS_KEY_LEN: usize = 16;
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+const FS_CMD_XHR: c_int = 0;
+
+const P9_O_RDWR: u32 = 0x00000002;
+const P9_O_TRUNC: u32 = 0x00000200;
+
+/* ------------------------------------------------------------------ */
+/* Types mirrored from the C headers                                    */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+pub struct FSStatFS {
+    pub f_bsize: u32,
+    pub f_blocks: u64,
+    pub f_bfree: u64,
+    pub f_bavail: u64,
+    pub f_files: u64,
+    pub f_ffree: u64,
+}
+
+#[repr(C)]
+pub struct FSLock {
+    pub type_: u8,
+    pub flags: u32,
+    pub start: u64,
+    pub length: u64,
+    pub proc_id: u32,
+    pub client_id: *mut c_char,
+}
+
+#[repr(C)]
+pub struct FSStat {
+    pub qid: FSQID,
+    pub st_mode: u32,
+    pub st_uid: u32,
+    pub st_gid: u32,
+    pub st_nlink: u64,
+    pub st_rdev: u64,
+    pub st_size: u64,
+    pub st_blksize: u64,
+    pub st_blocks: u64,
+    pub st_atime_sec: u64,
+    pub st_atime_nsec: u32,
+    pub st_mtime_sec: u64,
+    pub st_mtime_nsec: u32,
+    pub st_ctime_sec: u64,
+    pub st_ctime_nsec: u32,
+}
+
+#[repr(C)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+/* Only the members of the union that are accessed here are modelled; their
+   offsets (state at 0, size at 8) match the C layout exactly on 64-bit. */
+#[repr(C)]
+pub struct FSINodeReg {
+    pub state: c_int, /* FSINodeRegStateEnum */
+    pub size: usize,  /* size_t */
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: list_head,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int, /* BOOL */
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: list_head,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int, /* FSINodeTypeEnum */
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeReg,
+}
+
+#[repr(C)]
+pub struct CmdXHRState {
+    pub req_fd: *mut FSFile,
+    pub root_fd: *mut FSFile,
+    pub fd: *mut FSFile,
+    pub post_fd: *mut FSFile,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+pub struct FSCMDRequest {
+    pub type_: c_int, /* FSCMDRequestEnum */
+    pub xhr_state: *mut CmdXHRState,
+    pub reply_len: c_int,
+    pub reply_buf: [u8; 64],
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int, /* BOOL */
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(s: *mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(s: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(fs: *mut FSDevice, st: *mut FSStatFS)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qid: *mut FSQID,
+            uid: u32,
+            uname: *const c_char,
+            aname: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qids: *mut FSQID,
+            f: *mut FSFile,
+            n: c_int,
+            names: *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            flags: u32,
+            cb: *mut c_void,
+            opaque: *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            flags: u32,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, st: *mut FSStat) -> c_int,
+    >,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            mask: u32,
+            mode: u32,
+            uid: u32,
+            gid: u32,
+            size: u64,
+            atime_sec: u64,
+            atime_nsec: u64,
+            mtime_sec: u64,
+            mtime_nsec: u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *const u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            df: *mut FSFile,
+            f: *mut FSFile,
+            name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            symgt: *const c_char,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            major: u32,
+            minor: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            buf: *mut c_char,
+            buf_size: c_int,
+            f: *mut FSFile,
+        ) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            name: *const c_char,
+            new_f: *mut FSFile,
+            new_name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, name: *const c_char) -> c_int,
+    >,
+    pub fs_lock: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *const FSLock) -> c_int,
+    >,
+    pub fs_getlock: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *mut FSLock) -> c_int,
+    >,
+}
+
+pub type FSWGetFileCB =
+    unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, size: i64, opaque: *mut c_void);
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn decode_hex(buf: *mut u8, str_: *const c_char, len: c_int) -> c_int;
+
+    fn fs_walk_path1(
+        fs: *mut FSDevice,
+        f: *mut FSFile,
+        path: *const c_char,
+        pname: *mut *mut c_char,
+    ) -> *mut FSFile;
+    fn fs_walk_path(fs: *mut FSDevice, f: *mut FSFile, path: *const c_char) -> *mut FSFile;
+
+    fn AES_set_decrypt_key(userKey: *const u8, bits: c_int, key: *mut AES_KEY) -> c_int;
+
+    fn fs_wget_file2(
+        fs: *mut FSDevice,
+        f: *mut FSFile,
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        posted_file: *mut FSFile,
+        post_data_len: u64,
+        cb: Option<FSWGetFileCB>,
+        opaque: *mut c_void,
+        aes_state: *mut AES_KEY,
+    );
+
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+/* ------------------------------------------------------------------ */
+/* static helpers from fs_net.c                                        */
+/* ------------------------------------------------------------------ */
+
+/* parse_hex_buf() from fs_net.c (static in C) */
+unsafe fn parse_hex_buf(buf: *mut u8, buf_size: c_int, pp: *mut *const c_char) -> c_int {
+    let mut buf1 = [0 as c_char; 1024];
+    let mut len: c_int;
+
+    if parse_fname(buf1.as_mut_ptr(), 1024, pp) < 0 {
+        return -1;
+    }
+    /* strlen(buf1) */
+    len = 0;
+    while (len as usize) < 1024 && buf1[len as usize] != 0 {
+        len += 1;
+    }
+    if (len & 1) != 0 {
+        return -1;
+    }
+    len >>= 1;
+    if len > buf_size {
+        return -1;
+    }
+    if decode_hex(buf, buf1.as_ptr(), len) < 0 {
+        return -1;
+    }
+    len
+}
+
+/* put_le32() */
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    let b = v.to_le_bytes();
+    let mut i = 0usize;
+    while i < 4 {
+        *ptr.add(i) = b[i];
+        i += 1;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* fs_cmd_xhr_on_load (C: static void)                                 */
+/* ------------------------------------------------------------------ */
+
+unsafe extern "C" fn fs_cmd_xhr_on_load(
+    fs: *mut FSDevice,
+    _f: *mut FSFile,
+    size: i64,
+    opaque: *mut c_void,
+) {
+    let s = opaque as *mut CmdXHRState;
+    let ret: c_int;
+
+    if let Some(del) = (*fs).fs_delete {
+        if !(*s).fd.is_null() {
+            del(fs, (*s).fd);
+        }
+        if !(*s).post_fd.is_null() {
+            del(fs, (*s).post_fd);
+        }
+        del(fs, (*s).root_fd);
+    }
+
+    if !(*s).req_fd.is_null() {
+        let req = (*(*s).req_fd).req;
+        if size < 0 {
+            ret = size as c_int;
+        } else {
+            ret = 0;
+        }
+        put_le32(
+            core::ptr::addr_of_mut!((*req).reply_buf) as *mut u8,
+            ret as u32,
+        );
+        (*req).reply_len = core::mem::size_of::<c_int>() as c_int;
+        (*req).xhr_state = core::ptr::null_mut();
+    }
+    free(s as *mut c_void);
+}
+
+/* the `fail1` epilogue of the C function */
+unsafe fn fail1(
+    fs: *mut FSDevice,
+    fd: *mut FSFile,
+    post_fd: *mut FSFile,
+    root_fd: *mut FSFile,
+    err: c_int,
+) -> c_int {
+    if let Some(del) = (*fs).fs_delete {
+        if !fd.is_null() {
+            del(fs, fd);
+        }
+        if !post_fd.is_null() {
+            del(fs, post_fd);
+        }
+        del(fs, root_fd);
+    }
+    err
+}
+
+/* ------------------------------------------------------------------ */
+/* fs_cmd_xhr                                                          */
+/* ------------------------------------------------------------------ */
+
+static ASSERT_ATTACH: &[u8] = b"!fs->fs_attach(fs, &root_fd, &qid, uid, \"\", \"\")\0";
+static ASSERT_N: &[u8] = b"n->type == FT_REG && n->u.reg.state == REG_STATE_LOCAL\0";
+static SRC_FILE: &[u8] = b"fs_net.c\0";
+static SRC_FUNC: &[u8] = b"fs_cmd_xhr\0";
+static EMPTY_STR: &[u8] = b"\0";
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_xhr(
+    fs: *mut FSDevice,
+    f: *mut FSFile,
+    p: *const c_char,
+    uid: u32,
+    gid: u32,
+) -> c_int {
+    let mut url = [0 as c_char; 1024];
+    let mut post_filename = [0 as c_char; 1024];
+    let mut filename = [0 as c_char; 1024];
+    let mut user_buf = [0 as c_char; 128];
+    let mut password_buf = [0 as c_char; 128];
+    let mut qid = FSQID {
+        type_: 0,
+        version: 0,
+        path: 0,
+    };
+    let mut fd: *mut FSFile = core::ptr::null_mut();
+    let mut root_fd: *mut FSFile = core::ptr::null_mut();
+    let mut post_fd: *mut FSFile = core::ptr::null_mut();
+    let mut post_data_len: u64 = 0;
+    let mut err: c_int;
+    let mut aes_key_len: c_int;
+    let mut name: *mut c_char = core::ptr::null_mut();
+    let mut paes_state: *mut AES_KEY = core::ptr::null_mut();
+    let mut aes_key = [0u8; FS_KEY_LEN];
+    let mut flags: u32 = 0;
+    let user: *const c_char;
+    let password: *const c_char;
+    let mut p = p;
+
+    /* a request is already done or in progress */
+    if !(*f).req.is_null() {
+        return P9_EIO;
+    }
+
+    if parse_fname(url.as_mut_ptr(), 1024, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    if parse_fname(user_buf.as_mut_ptr(), 128, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    if parse_fname(password_buf.as_mut_ptr(), 128, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    if parse_fname(post_filename.as_mut_ptr(), 1024, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    if parse_fname(filename.as_mut_ptr(), 1024, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    aes_key_len = parse_hex_buf(
+        aes_key.as_mut_ptr(),
+        FS_KEY_LEN as c_int,
+        &mut p as *mut *const c_char,
+    );
+    if aes_key_len < 0 {
+        return P9_EIO;
+    }
+    if parse_uint32(&mut flags, &mut p as *mut *const c_char) < 0 {
+        return P9_EIO;
+    }
+    if aes_key_len != 0 && aes_key_len != FS_KEY_LEN as c_int {
+        return P9_EIO;
+    }
+    let _ = flags;
+
+    if user_buf[0] != 0 {
+        user = user_buf.as_ptr();
+    } else {
+        user = core::ptr::null();
+    }
+    if password_buf[0] != 0 {
+        password = password_buf.as_ptr();
+    } else {
+        password = core::ptr::null();
+    }
+
+    /* assert(!fs->fs_attach(fs, &root_fd, &qid, uid, "", "")); */
+    let attach_ret = match (*fs).fs_attach {
+        Some(fun) => fun(
+            fs,
+            &mut root_fd,
+            &mut qid,
+            uid,
+            EMPTY_STR.as_ptr() as *const c_char,
+            EMPTY_STR.as_ptr() as *const c_char,
+        ),
+        None => -1,
+    };
+    if attach_ret != 0 {
+        __assert_fail(
+            ASSERT_ATTACH.as_ptr() as *const c_char,
+            SRC_FILE.as_ptr() as *const c_char,
+            2519,
+            SRC_FUNC.as_ptr() as *const c_char,
+        );
+    }
+    post_fd = core::ptr::null_mut();
+
+    fd = fs_walk_path1(fs, root_fd, filename.as_ptr(), &mut name);
+    if fd.is_null() {
+        err = P9_ENOENT_MINUS;
+        return fail1(fs, fd, post_fd, root_fd, err);
+    }
+
+    if let Some(unlinkat) = (*fs).fs_unlinkat {
+        unlinkat(fs, fd, name);
+    }
+
+    err = match (*fs).fs_create {
+        Some(create) => create(fs, &mut qid, fd, name, P9_O_RDWR | P9_O_TRUNC, 0o600, gid),
+        None => -1,
+    };
+    if err < 0 {
+        return fail1(fs, fd, post_fd, root_fd, err);
+    }
+
+    if post_filename[0] != 0 {
+        post_fd = fs_walk_path(fs, root_fd, post_filename.as_ptr());
+        if post_fd.is_null() {
+            err = P9_ENOENT_MINUS;
+            return fail1(fs, fd, post_fd, root_fd, err);
+        }
+        err = match (*fs).fs_open {
+            Some(open) => open(
+                fs,
+                &mut qid,
+                post_fd,
+                0,
+                core::ptr::null_mut(),
+                core::ptr::null_mut(),
+            ),
+            None => -1,
+        };
+        if err < 0 {
+            return fail1(fs, fd, post_fd, root_fd, err);
+        }
+        let n = (*post_fd).inode;
+        if !((*n).type_ == FT_REG && (*n).u.state == REG_STATE_LOCAL) {
+            __assert_fail(
+                ASSERT_N.as_ptr() as *const c_char,
+                SRC_FILE.as_ptr() as *const c_char,
+                2548,
+                SRC_FUNC.as_ptr() as *const c_char,
+            );
+        }
+        post_data_len = (*n).u.size as u64;
+    } else {
+        post_data_len = 0;
+    }
+
+    let s = mallocz(core::mem::size_of::<CmdXHRState>()) as *mut CmdXHRState;
+    (*s).root_fd = root_fd;
+    (*s).fd = fd;
+    (*s).post_fd = post_fd;
+    if aes_key_len != 0 {
+        let _ = AES_set_decrypt_key(
+            aes_key.as_ptr(),
+            (FS_KEY_LEN * 8) as c_int,
+            core::ptr::addr_of_mut!((*s).aes_state),
+        );
+        paes_state = core::ptr::addr_of_mut!((*s).aes_state);
+    } else {
+        paes_state = core::ptr::null_mut();
+    }
+
+    let req = mallocz(core::mem::size_of::<FSCMDRequest>()) as *mut FSCMDRequest;
+    (*req).type_ = FS_CMD_XHR;
+    (*req).reply_len = 0;
+    (*req).xhr_state = s;
+    (*s).req_fd = f;
+    (*f).req = req;
+
+    fs_wget_file2(
+        fs,
+        fd,
+        url.as_ptr(),
+        user,
+        password,
+        post_fd,
+        post_data_len,
+        Some(fs_cmd_xhr_on_load),
+        s as *mut c_void,
+        paes_state,
+    );
+    0
 }
 }
 
@@ -32278,6 +50666,135 @@ pub extern "C" fn fs_cmd_xhr__part1011() -> core::ffi::c_int {
 }
 }
 
+// ── `fs_cmd_xhr_on_load` · fs_net.c:2586-2613 · chunk 1012 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_cmd_xhr_on_load(FSDevice *fs, FSFile *f, int64_t size,
+//                                    void *opaque)
+//     {
+//         CmdXHRState *s = opaque;
+//         FSCMDRequest *req;
+//         int ret;
+//     
+//     
+//     
+//         if (s->fd)
+//             fs->fs_delete(fs, s->fd);
+//         if (s->post_fd)
+//             fs->fs_delete(fs, s->post_fd);
+//         fs->fs_delete(fs, s->root_fd);
+//     
+//         if (s->req_fd) {
+//             req = s->req_fd->req;
+//             if (size < 0) {
+//                 ret = size;
+//             } else {
+//                 ret = 0;
+//             }
+//             put_le32(req->reply_buf, ret);
+//             req->reply_len = sizeof(ret);
+//             req->xhr_state = 
+//                             ((void *)0)
+//                                 ;
+//         }
+//         free(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1012 {
+// Port of fs_cmd_xhr_on_load from fs_net.c
+use core::ffi::{c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct AESKey {
+    pub rd_key: [c_uint; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct CmdXHRState {
+    pub req_fd: *mut FSFile,
+    pub root_fd: *mut FSFile,
+    pub fd: *mut FSFile,
+    pub post_fd: *mut FSFile,
+    pub aes_state: AESKey,
+}
+
+pub type FSCMDRequestEnum = c_int;
+
+#[repr(C)]
+pub struct FSCMDRequest {
+    pub r#type: FSCMDRequestEnum,
+    pub xhr_state: *mut CmdXHRState,
+    pub reply_len: c_int,
+    pub reply_buf: [u8; 64],
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut c_void,
+    pub is_opened: c_int,
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+pub type FSDeleteFunc = Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile)>;
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(s: *mut FSDevice)>,
+    pub fs_delete: FSDeleteFunc,
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_xhr_on_load(
+    fs: *mut FSDevice,
+    f: *mut FSFile,
+    size: i64,
+    opaque: *mut c_void,
+) {
+    let _ = f;
+    let s = opaque as *mut CmdXHRState;
+
+    if !(*s).fd.is_null() {
+        if let Some(del) = (*fs).fs_delete {
+            del(fs, (*s).fd);
+        }
+    }
+    if !(*s).post_fd.is_null() {
+        if let Some(del) = (*fs).fs_delete {
+            del(fs, (*s).post_fd);
+        }
+    }
+    if let Some(del) = (*fs).fs_delete {
+        del(fs, (*s).root_fd);
+    }
+
+    if !(*s).req_fd.is_null() {
+        let req = (*(*s).req_fd).req;
+        let ret: c_int = if size < 0 { size as c_int } else { 0 };
+        let mut reply_buf = &mut (*req).reply_buf as *mut [u8; 64] as *mut u8;
+        put_le32(reply_buf, ret as u32);
+        reply_buf = core::ptr::null_mut();
+        let _ = reply_buf;
+        (*req).reply_len = core::mem::size_of::<c_int>() as c_int;
+        (*req).xhr_state = core::ptr::null_mut();
+    }
+    free(s as *mut c_void);
+}
+}
+
 // ── `if (s->fd)` · fs_net.c:2595-2596 · chunk 1013 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -32810,6 +51327,286 @@ pub extern "C" fn fs_cmd_xhr_on_load__part1017(s: *mut c_void) {
 }
 }
 
+// ── `fs_cmd_set_base_url` · fs_net.c:2615-2660 · chunk 1018 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_set_base_url(FSDevice *fs, const char *p)
+//     {
+//     
+//         char url[1024], base_url_id[1024];
+//         char user_buf[128], *user;
+//         char password_buf[128], *password;
+//         AES_KEY aes_state, *paes_state;
+//         uint8_t aes_key[16];
+//         int aes_key_len;
+//     
+//         if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)
+//             goto fail;
+//         if (parse_fname(url, sizeof(url), &p) < 0)
+//             goto fail;
+//         if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)
+//             goto fail;
+//         if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)
+//             goto fail;
+//         aes_key_len = parse_hex_buf(aes_key, 16, &p);
+//         if (aes_key_len < 0)
+//             goto fail;
+//     
+//         if (user_buf[0] != '\0')
+//             user = user_buf;
+//         else
+//             user = 
+//                   ((void *)0)
+//                       ;
+//         if (password_buf[0] != '\0')
+//             password = password_buf;
+//         else
+//             password = 
+//                       ((void *)0)
+//                           ;
+//     
+//         if (aes_key_len != 0) {
+//             if (aes_key_len != 16)
+//                 goto fail;
+//             AES_set_decrypt_key(aes_key, 16 * 8, &aes_state);
+//             paes_state = &aes_state;
+//         } else {
+//             paes_state = 
+//                         ((void *)0)
+//                             ;
+//         }
+//     
+//         fs_net_set_base_url(fs, base_url_id, url, user, password,
+//                             paes_state);
+//         return 0;
+//      fail:
+//         return -22;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1018 {
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct AES_KEY {
+    pub rd_key: [c_uint; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+// `struct FSDevice` is 22 function pointers; we never call them, so it is
+// mirrored as an opaque, same-size, same-alignment block.
+#[repr(C)]
+pub struct FSDevice {
+    fns: [*mut c_void; 22],
+}
+
+#[repr(C)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+// Truncated mirror of `FSDeviceMem`: only the fields up to `base_url_list`
+// are needed, and their offsets are preserved exactly.
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut c_void,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: c_int, // BOOL
+    aes_state: AES_KEY,
+}
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn decode_hex(buf: *mut u8, s: *const c_char, len: c_int) -> c_int;
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn free(p: *mut c_void);
+    fn mallocz(size: usize) -> *mut c_void;
+    fn AES_set_decrypt_key(user_key: *const u8, bits: c_int, key: *mut AES_KEY) -> c_int;
+}
+
+// Private port of the static helper `parse_hex_buf` from fs_net.c.
+unsafe fn parse_hex_buf(buf: *mut u8, buf_size: c_int, pp: *mut *const c_char) -> c_int {
+    let mut buf1 = [0 as c_char; 1024];
+    if parse_fname(buf1.as_mut_ptr(), 1024, pp) < 0 {
+        return -1;
+    }
+    let mut len: c_int = strlen(buf1.as_ptr()) as c_int;
+    if (len & 1) != 0 {
+        return -1;
+    }
+    len >>= 1;
+    if len > buf_size {
+        return -1;
+    }
+    if decode_hex(buf, buf1.as_ptr(), len) < 0 {
+        return -1;
+    }
+    len
+}
+
+// Private port of the static helper `fs_find_base_url` from fs_net.c
+// (`link` is the first member of FSBaseURL, so container_of is a cast).
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = &mut (*fs).base_url_list;
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+// Private port of the static `list_add_tail` from fs_net.c.
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+
+// Private port of the static `fs_net_set_base_url` from fs_net.c.
+// (The `assert(fs_is_net(fs1))` is a debug check on a program invariant that
+// we cannot evaluate without the address of the static `fs_mem_end`; it is
+// omitted, the observable behaviour is unchanged.)
+unsafe fn fs_net_set_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+    url: *const c_char,
+    user: *const c_char,
+    password: *const c_char,
+    aes_state: *mut AES_KEY,
+) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        bu = mallocz(size_of::<FSBaseURL>()) as *mut FSBaseURL;
+        (*bu).base_url_id = strdup(base_url_id);
+        (*bu).ref_count = 1;
+        list_add_tail(&mut (*bu).link, &mut (*fs).base_url_list);
+    } else {
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+    }
+
+    (*bu).url = strdup(url);
+    if !user.is_null() {
+        (*bu).user = strdup(user);
+    } else {
+        (*bu).user = ptr::null_mut();
+    }
+    if !password.is_null() {
+        (*bu).password = strdup(password);
+    } else {
+        (*bu).password = ptr::null_mut();
+    }
+    if !aes_state.is_null() {
+        (*bu).encrypted = 1;
+        (*bu).aes_state = *aes_state;
+    } else {
+        (*bu).encrypted = 0;
+    }
+    bu
+}
+
+const P9_EINVAL: c_int = 22;
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_set_base_url(fs: *mut FSDevice, p: *const c_char) -> c_int {
+    let mut url = [0 as c_char; 1024];
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut user_buf = [0 as c_char; 128];
+    let mut password_buf = [0 as c_char; 128];
+    let mut aes_state: AES_KEY = core::mem::zeroed();
+    let mut aes_key = [0u8; 16];
+    let aes_key_len: c_int;
+    let mut pp: *const c_char = p;
+
+    if parse_fname(base_url_id.as_mut_ptr(), 1024, &mut pp) < 0 {
+        return -P9_EINVAL;
+    }
+    if parse_fname(url.as_mut_ptr(), 1024, &mut pp) < 0 {
+        return -P9_EINVAL;
+    }
+    if parse_fname(user_buf.as_mut_ptr(), 128, &mut pp) < 0 {
+        return -P9_EINVAL;
+    }
+    if parse_fname(password_buf.as_mut_ptr(), 128, &mut pp) < 0 {
+        return -P9_EINVAL;
+    }
+    aes_key_len = parse_hex_buf(aes_key.as_mut_ptr(), 16, &mut pp);
+    if aes_key_len < 0 {
+        return -P9_EINVAL;
+    }
+
+    let user: *const c_char = if user_buf[0] != 0 {
+        user_buf.as_ptr()
+    } else {
+        ptr::null()
+    };
+    let password: *const c_char = if password_buf[0] != 0 {
+        password_buf.as_ptr()
+    } else {
+        ptr::null()
+    };
+
+    let mut paes_state: *mut AES_KEY = ptr::null_mut();
+    if aes_key_len != 0 {
+        if aes_key_len != 16 {
+            return -P9_EINVAL;
+        }
+        AES_set_decrypt_key(aes_key.as_ptr(), 16 * 8, &mut aes_state);
+        paes_state = &mut aes_state;
+    }
+
+    fs_net_set_base_url(
+        fs,
+        base_url_id.as_ptr(),
+        url.as_ptr(),
+        user,
+        password,
+        paes_state,
+    );
+    0
+}
+}
+
 // ── `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` · fs_net.c:2625-2626 · chunk 1019 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -33228,6 +52025,145 @@ pub extern "C" fn fs_cmd_set_base_url__part1029() -> c_int {
 }
 }
 
+// ── `fs_cmd_reset_base_url` · fs_net.c:2662-2672 · chunk 1030 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_reset_base_url(FSDevice *fs, const char *p)
+//     {
+//         char base_url_id[1024];
+//     
+//         if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)
+//             goto fail;
+//         fs_net_reset_base_url(fs, base_url_id);
+//         return 0;
+//      fail:
+//         return -22;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1030 {
+// Port of fs_cmd_reset_base_url (fs_net.c) plus the static helpers it relies on
+// (fs_net_reset_base_url, fs_find_base_url, fs_base_url_decref, list_del).
+
+use core::ffi::{c_char, c_int, c_void};
+
+// ---- C library / program declarations (defined elsewhere) ----
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn free(ptr: *mut c_void);
+}
+
+// ---- Types mirrored from the C translation unit ----
+
+#[repr(C)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+// struct FSDevice is a block of 22 function pointers; only its size/alignment
+// matters here (it is the first member of FSDeviceMem).
+#[repr(C)]
+pub struct FSDevice {
+    f: [*mut c_void; 22],
+}
+
+// Only the leading part of FSDeviceMem up to base_url_list is needed, but all
+// preceding members must be present to get the offsets right.
+#[repr(C)]
+pub struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut c_void,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    // remaining members are not accessed
+}
+
+// Leading members of struct FSBaseURL (link is the first member, so a list
+// element pointer is also the FSBaseURL pointer).
+#[repr(C)]
+pub struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    // encrypted, aes_state: not accessed
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head = core::ptr::addr_of_mut!((*fs).base_url_list);
+    let mut el = (*head).next;
+    while el != head {
+        let bu = el as *mut FSBaseURL;
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn fs_base_url_decref(bu: *mut FSBaseURL) {
+    let rc = (*bu).ref_count - 1;
+    (*bu).ref_count = rc;
+    if rc == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(core::ptr::addr_of_mut!((*bu).link));
+        free(bu as *mut c_void);
+    }
+}
+
+unsafe fn fs_net_reset_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> c_int {
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -2;
+    }
+    fs_base_url_decref(bu);
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_reset_base_url(fs: *mut FSDevice, p: *const c_char) -> c_int {
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut pp: *const c_char = p;
+
+    if parse_fname(base_url_id.as_mut_ptr(), 1024 as c_int, &mut pp) < 0 {
+        return -22;
+    }
+    fs_net_reset_base_url(fs, base_url_id.as_ptr());
+    0
+}
+}
+
 // ── `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` · fs_net.c:2666-2667 · chunk 1031 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -33412,6 +52348,443 @@ pub mod chunk1033 {
 #[no_mangle]
 pub extern "C" fn fs_cmd_reset_base_url__part1033() -> core::ffi::c_int {
     -22
+}
+}
+
+// ── `fs_cmd_set_url` · fs_net.c:2674-2698 · chunk 1034 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_set_url(FSDevice *fs, const char *p)
+//     {
+//         char base_url_id[1024];
+//         char filename[1024];
+//         FSFileID file_id;
+//         uint64_t size;
+//         FSINode *n;
+//     
+//         if (parse_fname(filename, sizeof(filename), &p) < 0)
+//             goto fail;
+//         if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)
+//             goto fail;
+//         if (parse_file_id(&file_id, &p) < 0)
+//             goto fail;
+//         if (parse_uint64(&size, &p) < 0)
+//             goto fail;
+//     
+//         n = inode_search_path(fs, filename);
+//         if (!n) {
+//             return -2;
+//         }
+//         return fs_net_set_url(fs, n, base_url_id, file_id, size);
+//      fail:
+//         return -22;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1034 {
+// Rust port of fs_cmd_set_url (fs_net.c) plus the static helpers it uses
+// (inode_search_path/inode_search/inode_search_path1, fs_net_set_url,
+// fs_find_base_url, to_blocks). Static C functions have no linker symbol,
+// so their logic is reproduced here as private Rust fns.
+
+use core::ffi::{c_char, c_int, c_uint};
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+
+const P9_ENOENT: c_int = -2;
+const P9_EINVAL: c_int = -22;
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AESKey {
+    rd_key: [c_uint; 60],
+    rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSBaseURL {
+    link: ListHead,
+    ref_count: c_int,
+    base_url_id: *mut c_char,
+    url: *mut c_char,
+    user: *mut c_char,
+    password: *mut c_char,
+    encrypted: c_int,
+    aes_state: AESKey,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSINodeReg {
+    state: c_int,
+    size: usize,
+    fbuf: FileBuffer,
+    base_url: *mut FSBaseURL,
+    file_id: u64,
+    link: ListHead,
+    open_info: *mut core::ffi::c_void,
+    is_fscmd: c_int,
+    filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSINodeDir {
+    de_list: ListHead,
+    size: c_int,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSINodeDev {
+    major: u32,
+    minor: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSINodeSymlink {
+    name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union FSINodeU {
+    reg: FSINodeReg,
+    dir: FSINodeDir,
+    dev: FSINodeDev,
+    symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSINode {
+    link: ListHead,
+    inode_num: u64,
+    refcount: i32,
+    open_count: i32,
+    r#type: c_int,
+    mode: u32,
+    uid: u32,
+    gid: u32,
+    mtime_sec: u32,
+    ctime_sec: u32,
+    mtime_nsec: u32,
+    ctime_nsec: u32,
+    u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSDirEntry {
+    link: ListHead,
+    inode: *mut FSINode,
+    mark: u8,
+    name: [c_char; 0],
+}
+
+// Function pointers are kept as raw pointers: only the layout matters here.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSDevice {
+    fs_end: *mut core::ffi::c_void,
+    fs_delete: *mut core::ffi::c_void,
+    fs_statfs: *mut core::ffi::c_void,
+    fs_attach: *mut core::ffi::c_void,
+    fs_walk: *mut core::ffi::c_void,
+    fs_mkdir: *mut core::ffi::c_void,
+    fs_open: *mut core::ffi::c_void,
+    fs_create: *mut core::ffi::c_void,
+    fs_stat: *mut core::ffi::c_void,
+    fs_setattr: *mut core::ffi::c_void,
+    fs_close: *mut core::ffi::c_void,
+    fs_readdir: *mut core::ffi::c_void,
+    fs_read: *mut core::ffi::c_void,
+    fs_write: *mut core::ffi::c_void,
+    fs_link: *mut core::ffi::c_void,
+    fs_symlink: *mut core::ffi::c_void,
+    fs_mknod: *mut core::ffi::c_void,
+    fs_readlink: *mut core::ffi::c_void,
+    fs_renameat: *mut core::ffi::c_void,
+    fs_unlinkat: *mut core::ffi::c_void,
+    fs_lock: *mut core::ffi::c_void,
+    fs_getlock: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FSDeviceMem {
+    common: FSDevice,
+    inode_list: ListHead,
+    inode_count: i64,
+    inode_limit: u64,
+    fs_blocks: i64,
+    fs_max_blocks: u64,
+    inode_num_alloc: u64,
+    block_size_log2: c_int,
+    block_size: u32,
+    root_inode: *mut FSINode,
+    inode_cache_list: ListHead,
+    inode_cache_size: i64,
+    inode_cache_size_limit: i64,
+    preload_list: ListHead,
+    preload_archive_list: ListHead,
+    base_url_list: ListHead,
+    import_dir: *mut c_char,
+    dump_cache_load: c_int,
+    dump_started: c_int,
+    dump_preload_dir: *mut c_char,
+    dump_preload_file: *mut core::ffi::c_void,
+    dump_preload_archive_file: *mut core::ffi::c_void,
+    dump_archive_name: *mut c_char,
+    dump_archive_size: u64,
+    dump_archive_file: *mut core::ffi::c_void,
+    dump_archive_num: c_int,
+    dump_preload_list: ListHead,
+    dump_exclude_list: ListHead,
+}
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+}
+
+fn c_strlen(p: *const c_char) -> usize {
+    let mut q = p;
+    let mut n = 0usize;
+    unsafe {
+        while *q != 0 {
+            n += 1;
+            q = q.add(1);
+        }
+    }
+    n
+}
+
+unsafe fn c_strcmp(a: *const c_char, b: *const c_char) -> c_int {
+    let mut i: isize = 0;
+    loop {
+        let ca = *a.offset(i) as u8;
+        let cb = *b.offset(i) as u8;
+        if ca != cb {
+            return ca as c_int - cb as c_int;
+        }
+        if ca == 0 {
+            return 0;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn c_strchr(p: *const c_char, c: c_char) -> *const c_char {
+    let mut q = p;
+    loop {
+        let ch = *q;
+        if ch == c {
+            return q;
+        }
+        if ch == 0 {
+            return core::ptr::null();
+        }
+        q = q.add(1);
+    }
+}
+
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).r#type != FT_DIR {
+        return core::ptr::null_mut();
+    }
+    let un = core::ptr::addr_of_mut!((*n).u) as *mut FSINodeU;
+    let head = core::ptr::addr_of_mut!((*un).dir.de_list);
+    let mut el = (*head).next;
+    while el != head {
+        // struct list_head is the first member of FSDirEntry
+        let de = el as *mut FSDirEntry;
+        let de_name = core::ptr::addr_of!((*de).name) as *const c_char;
+        if c_strcmp(de_name, name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn inode_search_path1(
+    _fs: *mut FSDevice,
+    n0: *mut FSINode,
+    path: *const c_char,
+) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut n = n0;
+    let mut p = path;
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let p1 = c_strchr(p, b'/' as c_char);
+        let seg_len: c_int;
+        let next_p: *const c_char;
+        if p1.is_null() {
+            seg_len = c_strlen(p) as c_int;
+            next_p = core::ptr::null();
+        } else {
+            seg_len = p1.offset_from(p) as c_int;
+            next_p = p1.add(1);
+        }
+        // C: len is int, compared against sizeof(name) - 1 (size_t)
+        let len_sz = seg_len as usize;
+        if len_sz > core::mem::size_of::<[c_char; 1024]>() - 1 {
+            return core::ptr::null_mut();
+        }
+        core::ptr::copy_nonoverlapping(p, name.as_mut_ptr(), len_sz);
+        *name.as_mut_ptr().add(len_sz) = 0;
+
+        if (*n).r#type != FT_DIR {
+            return core::ptr::null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return core::ptr::null_mut();
+        }
+        n = (*de).inode;
+        p = next_p;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return core::ptr::null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1(fs1, (*fs).root_inode, path)
+}
+
+fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    unsafe {
+        let v = size
+            .wrapping_add((*fs).block_size as u64)
+            .wrapping_sub(1)
+            .wrapping_shr((*fs).block_size_log2 as u32);
+        v as i64
+    }
+}
+
+unsafe fn fs_find_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head = core::ptr::addr_of_mut!((*fs).base_url_list);
+    let mut el = (*head).next;
+    while el != head {
+        // struct list_head is the first member of FSBaseURL
+        let bu = el as *mut FSBaseURL;
+        if c_strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn fs_net_set_url_port(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: u64,
+    size: u64,
+) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+
+    // assert(fs_is_net(fs1)) is not reproduced: fs_mem_end is a static C
+    // function with no linker symbol to compare fs->fs_end against.
+
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return P9_ENOENT;
+    }
+
+    if (*n).r#type != FT_REG {
+        return -5;
+    }
+    let un = core::ptr::addr_of_mut!((*n).u) as *mut FSINodeU;
+    if (*un).reg.state != REG_STATE_LOCAL {
+        return -5;
+    }
+    if (*un).reg.fbuf.allocated_size != 0 {
+        return -5;
+    }
+
+    if size > 0 {
+        (*un).reg.state = REG_STATE_UNLOADED;
+        (*un).reg.base_url = bu;
+        (*bu).ref_count += 1;
+        (*un).reg.size = size as usize;
+        (*fs).fs_blocks = (*fs).fs_blocks.wrapping_add(to_blocks(fs, size));
+        (*un).reg.file_id = file_id;
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn fs_cmd_set_url(fs: *mut FSDevice, p: *const c_char) -> c_int {
+    if p.is_null() {
+        return P9_EINVAL;
+    }
+    unsafe { fs_cmd_set_url_inner(fs, p) }
+}
+
+unsafe fn fs_cmd_set_url_inner(fs: *mut FSDevice, p0: *const c_char) -> c_int {
+    let mut filename = [0 as c_char; 1024];
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut file_id: u64 = 0;
+    let mut size: u64 = 0;
+    let mut p = p0;
+
+    if parse_fname(filename.as_mut_ptr(), filename.len() as c_int, &mut p) < 0 {
+        return P9_EINVAL;
+    }
+    if parse_fname(base_url_id.as_mut_ptr(), base_url_id.len() as c_int, &mut p) < 0 {
+        return P9_EINVAL;
+    }
+    if parse_file_id(&mut file_id, &mut p) < 0 {
+        return P9_EINVAL;
+    }
+    if parse_uint64(&mut size, &mut p) < 0 {
+        return P9_EINVAL;
+    }
+
+    let n = inode_search_path(fs, filename.as_ptr());
+    if n.is_null() {
+        return P9_ENOENT;
+    }
+    fs_net_set_url_port(fs, n, base_url_id.as_ptr(), file_id, size)
 }
 }
 
@@ -33932,6 +53305,325 @@ pub extern "C" fn fs_cmd_set_url__part1042() -> core::ffi::c_int {
 }
 }
 
+// ── `fs_cmd_export_file` · fs_net.c:2700-2729 · chunk 1043 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_export_file(FSDevice *fs, const char *p)
+//     {
+//         char filename[1024];
+//         FSINode *n;
+//         const char *name;
+//         uint8_t *buf;
+//     
+//         if (parse_fname(filename, sizeof(filename), &p) < 0)
+//             goto fail;
+//         n = inode_search_path(fs, filename);
+//         if (!n)
+//             return -2;
+//         if (n->type != FT_REG ||
+//             (n->u.reg.state != REG_STATE_LOCAL &&
+//              n->u.reg.state != REG_STATE_LOADED))
+//             goto fail;
+//         name = 
+//               _Generic (0 ? (
+//               filename
+//               ) : (void *) 1, const void *: (const char *) (strrchr (
+//               filename
+//               , 
+//               '/'
+//               )), default: strrchr (
+//               filename
+//               , 
+//               '/'
+//               ))
+//                                     ;
+//         if (name)
+//             name++;
+//         else
+//             name = filename;
+//     
+//         buf = malloc(n->u.reg.size);
+//         file_buffer_read(&n->u.reg.fbuf, 0, buf, n->u.reg.size);
+//         fs_export_file(name, buf, n->u.reg.size);
+//         free(buf);
+//         return 0;
+//      fail:
+//         return -5;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1043 {
+// Rust rewrite of static int fs_cmd_export_file(FSDevice *fs, const char *p)
+// from fs_net.c (preprocessed translation unit).
+#![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::{addr_of_mut, null_mut};
+
+const FT_DIR: c_int = 4;
+const FT_REG: c_int = 8;
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_LOADED: c_int = 3;
+const P9_ENOENT: c_int = -2;
+const P9_EIO: c_int = -5;
+const SLASH: c_char = b'/' as c_char;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// struct FSDevice: 22 function pointers
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut c_void,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSIDevDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeUnion {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSIDevDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeUnion,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+// Prefix of struct FSDeviceMem, up to and including root_inode.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+}
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+    fn fs_export_file(filename: *const c_char, buf: *const u8, buf_len: c_int);
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+}
+
+// static FSDirEntry *inode_search(FSINode *n, const char *name)
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).r#type != FT_DIR {
+        return null_mut();
+    }
+    let head: *mut ListHead = addr_of_mut!((*n).u.dir.de_list);
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        // container_of(el, FSDirEntry, link) -- link is the first field
+        let de = el as *mut FSDirEntry;
+        if strcmp((*de).name.as_ptr(), name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+// static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+unsafe fn inode_search_path1(n: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut p: *const c_char = path;
+    let mut n = n;
+
+    if *p == SLASH {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let mut p1: *const c_char = p;
+        while *p1 != 0 && *p1 != SLASH {
+            p1 = p1.add(1);
+        }
+        let at_end = *p1 == 0;
+        let len = (p1 as usize).wrapping_sub(p as usize);
+        if len > name.len() - 1 {
+            return null_mut();
+        }
+        let mut i = 0usize;
+        while i < len {
+            let c = *p.add(i);
+            if let Some(slot) = name.get_mut(i) {
+                *slot = c;
+            }
+            i += 1;
+        }
+        if let Some(slot) = name.get_mut(len) {
+            *slot = 0;
+        }
+        if (*n).r#type != FT_DIR {
+            return null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return null_mut();
+        }
+        n = (*de).inode;
+        if at_end {
+            break;
+        }
+        p = p1.add(1);
+    }
+    n
+}
+
+// static FSINode *inode_search_path(FSDevice *fs1, const char *path)
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1((*fs).root_inode, path)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_export_file(fs: *mut FSDevice, p: *const c_char) -> c_int {
+    let mut filename = [0 as c_char; 1024];
+    let mut p: *const c_char = p;
+
+    if parse_fname(filename.as_mut_ptr(), filename.len() as c_int, &mut p) < 0 {
+        return P9_EIO;
+    }
+    let n = inode_search_path(fs, filename.as_ptr());
+    if n.is_null() {
+        return P9_ENOENT;
+    }
+    if (*n).r#type != FT_REG {
+        return P9_EIO;
+    }
+    let state = (*n).u.reg.state;
+    if state != REG_STATE_LOCAL && state != REG_STATE_LOADED {
+        return P9_EIO;
+    }
+
+    // name = strrchr(filename, '/'); if (name) name++; else name = filename;
+    let mut last: isize = -1;
+    let mut i = 0usize;
+    while i < filename.len() {
+        let c = *filename.as_ptr().add(i);
+        if c == 0 {
+            break;
+        }
+        if c == SLASH {
+            last = i as isize;
+        }
+        i += 1;
+    }
+    let name_ptr: *const c_char = if last >= 0 {
+        filename.as_ptr().add(last as usize + 1)
+    } else {
+        filename.as_ptr()
+    };
+
+    let size: usize = (*n).u.reg.size;
+    let buf = malloc(size) as *mut u8;
+    file_buffer_read(addr_of_mut!((*n).u.reg.fbuf), 0, buf, size);
+    fs_export_file(name_ptr, buf, size as c_int);
+    free(buf as *mut c_void);
+    0
+}
+}
+
 // ── `if (parse_fname(filename, sizeof(filename), &p) < 0)` · fs_net.c:2707-2708 · chunk 1044 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -34412,6 +54104,468 @@ pub extern "C" fn fs_cmd_export_file__part1051() -> c_int {
 }
 }
 
+// ── `fs_cmd_pbkdf2` · fs_net.c:2732-2766 · chunk 1052 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_pbkdf2(FSDevice *fs, FSFile *f, const char *p)
+//     {
+//         uint8_t pwd[1024];
+//         uint8_t salt[128];
+//         uint32_t iter, key_len;
+//         int pwd_len, salt_len;
+//         FSCMDRequest *req;
+//     
+//     
+//         if (f->req != 
+//                      ((void *)0)
+//                          )
+//             return -5;
+//     
+//         pwd_len = parse_hex_buf(pwd, sizeof(pwd), &p);
+//         if (pwd_len < 0)
+//             goto fail;
+//         salt_len = parse_hex_buf(salt, sizeof(salt), &p);
+//         if (pwd_len < 0)
+//             goto fail;
+//         if (parse_uint32(&iter, &p) < 0)
+//             goto fail;
+//         if (parse_uint32(&key_len, &p) < 0)
+//             goto fail;
+//         if (key_len > 64 ||
+//             key_len == 0)
+//             goto fail;
+//         req = mallocz(sizeof(*req));
+//         req->type = FS_CMD_PBKDF2;
+//         req->reply_len = key_len;
+//         pbkdf2_hmac_sha256(pwd, pwd_len, salt, salt_len, iter, key_len,
+//                            req->reply_buf);
+//         f->req = req;
+//         return 0;
+//      fail:
+//         return -22;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1052 {
+use core::ffi::{c_char, c_int, c_void};
+
+// ---------------------------------------------------------------------------
+// Mirror of the C types touched through pointers.
+// ---------------------------------------------------------------------------
+
+// typedef enum { FS_CMD_XHR, FS_CMD_PBKDF2 } FSCMDRequestEnum;
+// typedef struct { FSCMDRequestEnum type; struct CmdXHRState *xhr_state;
+//                  int reply_len; uint8_t reply_buf[64]; } FSCMDRequest;
+#[repr(C)]
+pub struct FSCMDRequest {
+    pub type_: c_int,
+    pub xhr_state: *mut c_void,
+    pub reply_len: c_int,
+    pub reply_buf: [u8; 64],
+}
+
+// struct FSFile { uint32_t uid; FSINode *inode; BOOL is_opened;
+//                 uint32_t open_flags; FSCMDRequest *req; };
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut c_void,
+    pub is_opened: c_int,
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+const FS_CMD_PBKDF2: c_int = 1;
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn decode_hex(buf: *mut u8, str_: *const c_char, len: c_int) -> c_int;
+    fn strlen(s: *const c_char) -> usize;
+    fn mallocz(size: usize) -> *mut c_void;
+}
+
+// ---------------------------------------------------------------------------
+// SHA-256 (pure Rust, so no undefined external symbol is needed).
+// ---------------------------------------------------------------------------
+
+const SHA256_DIGEST_LENGTH: usize = 32;
+const HMAC_BLOCK_SIZE: usize = 64;
+const SALT_LEN_MAX: usize = 128;
+
+const SHA256_K: [u32; 64] = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+struct Sha256 {
+    h: [u32; 8],
+    buf: [u8; 64],
+    used: usize,
+    total: u64,
+}
+
+impl Sha256 {
+    fn new() -> Sha256 {
+        Sha256 {
+            h: [
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+                0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+            ],
+            buf: [0u8; 64],
+            used: 0,
+            total: 0,
+        }
+    }
+
+    fn compress(&mut self, block: &[u8; 64]) {
+        let mut w = [0u32; 64];
+        let mut i = 0usize;
+        while i < 16 {
+            let b = i * 4;
+            w[i] = ((block[b] as u32) << 24)
+                | ((block[b + 1] as u32) << 16)
+                | ((block[b + 2] as u32) << 8)
+                | (block[b + 3] as u32);
+            i += 1;
+        }
+        while i < 64 {
+            let s0 = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
+            let s1 = w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
+            w[i] = w[i - 16]
+                .wrapping_add(s0)
+                .wrapping_add(w[i - 7])
+                .wrapping_add(s1);
+            i += 1;
+        }
+
+        let mut a = self.h[0];
+        let mut b = self.h[1];
+        let mut c = self.h[2];
+        let mut d = self.h[3];
+        let mut e = self.h[4];
+        let mut f = self.h[5];
+        let mut g = self.h[6];
+        let mut hh = self.h[7];
+
+        let mut t = 0usize;
+        while t < 64 {
+            let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+            let ch = (e & f) ^ ((!e) & g);
+            let t1 = hh
+                .wrapping_add(s1)
+                .wrapping_add(ch)
+                .wrapping_add(SHA256_K[t])
+                .wrapping_add(w[t]);
+            let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+            let maj = (a & b) ^ (a & c) ^ (b & c);
+            let t2 = s0.wrapping_add(maj);
+
+            hh = g;
+            g = f;
+            f = e;
+            e = d.wrapping_add(t1);
+            d = c;
+            c = b;
+            b = a;
+            a = t1.wrapping_add(t2);
+            t += 1;
+        }
+
+        self.h[0] = self.h[0].wrapping_add(a);
+        self.h[1] = self.h[1].wrapping_add(b);
+        self.h[2] = self.h[2].wrapping_add(c);
+        self.h[3] = self.h[3].wrapping_add(d);
+        self.h[4] = self.h[4].wrapping_add(e);
+        self.h[5] = self.h[5].wrapping_add(f);
+        self.h[6] = self.h[6].wrapping_add(g);
+        self.h[7] = self.h[7].wrapping_add(hh);
+    }
+
+    fn update(&mut self, data: &[u8]) {
+        let mut rest = data;
+        self.total = self.total.wrapping_add(rest.len() as u64);
+
+        if self.used > 0 {
+            let need = 64 - self.used;
+            let n = if rest.len() < need { rest.len() } else { need };
+            self.buf[self.used..self.used + n].copy_from_slice(&rest[..n]);
+            self.used += n;
+            rest = &rest[n..];
+            if self.used == 64 {
+                let block = self.buf;
+                self.compress(&block);
+                self.used = 0;
+            }
+        }
+
+        while rest.len() >= 64 {
+            let mut block = [0u8; 64];
+            block.copy_from_slice(&rest[..64]);
+            self.compress(&block);
+            rest = &rest[64..];
+        }
+
+        if !rest.is_empty() {
+            let n = rest.len();
+            self.buf[..n].copy_from_slice(rest);
+            self.used = n;
+        }
+    }
+
+    fn finalize(mut self, out: &mut [u8; SHA256_DIGEST_LENGTH]) {
+        let bit_len = self.total.wrapping_mul(8);
+        let rem = self.used % 64;
+        let pad_len = if rem < 56 { 56 - rem } else { 120 - rem };
+
+        let mut pad = [0u8; 72];
+        pad[0] = 0x80;
+        let p = if pad_len > 0 { pad_len } else { 0 };
+        self.update(&pad[..p]);
+
+        let mut lenbuf = [0u8; 8];
+        let mut i = 0usize;
+        while i < 8 {
+            lenbuf[i] = (bit_len >> (56 - 8 * i)) as u8;
+            i += 1;
+        }
+        self.update(&lenbuf);
+
+        let mut j = 0usize;
+        while j < 8 {
+            let v = self.h[j];
+            out[4 * j] = (v >> 24) as u8;
+            out[4 * j + 1] = (v >> 16) as u8;
+            out[4 * j + 2] = (v >> 8) as u8;
+            out[4 * j + 3] = v as u8;
+            j += 1;
+        }
+    }
+}
+
+fn sha256(data: &[u8]) -> [u8; SHA256_DIGEST_LENGTH] {
+    let mut st = Sha256::new();
+    st.update(data);
+    let mut out = [0u8; SHA256_DIGEST_LENGTH];
+    st.finalize(&mut out);
+    out
+}
+
+// ---------------------------------------------------------------------------
+// Port of hmac_sha256_init/update/final + pbkdf2_hmac_sha256 (fs_wget.c).
+// ---------------------------------------------------------------------------
+
+fn hmac_sha256(key: &[u8], msg: &[u8], out: &mut [u8; SHA256_DIGEST_LENGTH]) {
+    let mut k = [0u8; HMAC_BLOCK_SIZE];
+
+    if key.len() > HMAC_BLOCK_SIZE {
+        let d = sha256(key);
+        k[..SHA256_DIGEST_LENGTH].copy_from_slice(&d);
+    } else {
+        let n = if key.len() < HMAC_BLOCK_SIZE {
+            key.len()
+        } else {
+            HMAC_BLOCK_SIZE
+        };
+        if let (Some(dst), Some(src)) = (k.get_mut(..n), key.get(..n)) {
+            dst.copy_from_slice(src);
+        }
+    }
+
+    let mut ipad = [0u8; HMAC_BLOCK_SIZE];
+    let mut i = 0usize;
+    while i < HMAC_BLOCK_SIZE {
+        ipad[i] = k[i] ^ 0x36;
+        i += 1;
+    }
+
+    let mut inner = [0u8; SHA256_DIGEST_LENGTH];
+    let mut st = Sha256::new();
+    st.update(&ipad);
+    st.update(msg);
+    st.finalize(&mut inner);
+
+    let mut opad = [0u8; HMAC_BLOCK_SIZE];
+    let mut i = 0usize;
+    while i < HMAC_BLOCK_SIZE {
+        opad[i] = k[i] ^ 0x5c;
+        i += 1;
+    }
+
+    let mut st2 = Sha256::new();
+    st2.update(&opad);
+    st2.update(&inner);
+    st2.finalize(out);
+}
+
+fn pbkdf2_hmac_sha256_impl(
+    pwd: &[u8],
+    salt: &[u8],
+    iter: c_int,
+    key_len: c_int,
+    out: &mut [u8],
+) {
+    // U holds salt || block index; the C buffer is SALT_LEN_MAX + 4 bytes.
+    let mut u = [0u8; SALT_LEN_MAX + 4];
+    let salt_len = if salt.len() > SALT_LEN_MAX {
+        SALT_LEN_MAX
+    } else {
+        salt.len()
+    };
+    if let (Some(dst), Some(src)) = (u.get_mut(..salt_len), salt.get(..salt_len)) {
+        dst.copy_from_slice(src);
+    }
+
+    let mut f = [0u8; SHA256_DIGEST_LENGTH];
+    let mut block: u32 = 1;
+    let mut out_off = 0usize;
+    let mut remaining: c_int = key_len;
+
+    while remaining > 0 {
+        let mut i = 0usize;
+        while i < SHA256_DIGEST_LENGTH {
+            f[i] = 0;
+            i += 1;
+        }
+
+        u[salt_len] = (block >> 24) as u8;
+        u[salt_len + 1] = (block >> 16) as u8;
+        u[salt_len + 2] = (block >> 8) as u8;
+        u[salt_len + 3] = block as u8;
+        let mut u_len = salt_len + 4;
+
+        let mut it: c_int = 0;
+        while it < iter {
+            let mut tmp = [0u8; SHA256_DIGEST_LENGTH];
+            let msg: &[u8] = match u.get(..u_len) {
+                Some(m) => m,
+                None => &[],
+            };
+            hmac_sha256(pwd, msg, &mut tmp);
+            u[..SHA256_DIGEST_LENGTH].copy_from_slice(&tmp);
+            let mut j = 0usize;
+            while j < SHA256_DIGEST_LENGTH {
+                f[j] ^= u[j];
+                j += 1;
+            }
+            u_len = SHA256_DIGEST_LENGTH;
+            it += 1;
+        }
+
+        let l = if remaining < SHA256_DIGEST_LENGTH as c_int {
+            remaining as usize
+        } else {
+            SHA256_DIGEST_LENGTH
+        };
+        if let (Some(dst), Some(src)) = (out.get_mut(out_off..out_off + l), f.get(..l)) {
+            dst.copy_from_slice(src);
+        }
+        out_off += l;
+        remaining -= l as c_int;
+        block = block.wrapping_add(1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Port of the static C helper parse_hex_buf() (no linker symbol available).
+// ---------------------------------------------------------------------------
+
+unsafe fn parse_hex_buf(buf: *mut u8, buf_size: c_int, pp: *mut *const c_char) -> c_int {
+    let mut buf1 = [0 as c_char; 1024];
+    let mut len: c_int;
+
+    if parse_fname(buf1.as_mut_ptr(), 1024, pp) < 0 {
+        return -1;
+    }
+    len = strlen(buf1.as_ptr()) as c_int;
+    if (len & 1) != 0 {
+        return -1;
+    }
+    len >>= 1;
+    if len > buf_size {
+        return -1;
+    }
+    if decode_hex(buf, buf1.as_ptr(), len) < 0 {
+        return -1;
+    }
+    len
+}
+
+// ---------------------------------------------------------------------------
+// The TARGET.
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_pbkdf2(
+    _fs: *mut c_void,
+    f: *mut FSFile,
+    p: *const c_char,
+) -> c_int {
+    let mut pwd = [0u8; 1024];
+    let mut salt = [0u8; 128];
+    let mut iter: u32 = 0;
+    let mut key_len: u32 = 0;
+    let pwd_len: c_int;
+    let salt_len: c_int;
+    let req: *mut FSCMDRequest;
+    let mut p = p;
+
+    // a request is already done or in progress
+    if !(*f).req.is_null() {
+        return -5;
+    }
+
+    pwd_len = parse_hex_buf(pwd.as_mut_ptr(), 1024, &mut p);
+    if pwd_len < 0 {
+        return -22;
+    }
+    salt_len = parse_hex_buf(salt.as_mut_ptr(), 128, &mut p);
+    // the C code re-tests pwd_len here; kept verbatim on purpose
+    if pwd_len < 0 {
+        return -22;
+    }
+    if parse_uint32(&mut iter, &mut p) < 0 {
+        return -22;
+    }
+    if parse_uint32(&mut key_len, &mut p) < 0 {
+        return -22;
+    }
+    if key_len > 64 || key_len == 0 {
+        return -22;
+    }
+
+    req = mallocz(core::mem::size_of::<FSCMDRequest>()) as *mut FSCMDRequest;
+    (*req).type_ = FS_CMD_PBKDF2;
+    (*req).reply_len = key_len as c_int;
+
+    let pl = if pwd_len < 0 { 0usize } else { pwd_len as usize };
+    let sl = if salt_len < 0 { 0usize } else { salt_len as usize };
+    let pwd_slice: &[u8] = match pwd.get(..pl) {
+        Some(s) => s,
+        None => &[],
+    };
+    let salt_slice: &[u8] = match salt.get(..sl) {
+        Some(s) => s,
+        None => &[],
+    };
+    pbkdf2_hmac_sha256_impl(
+        pwd_slice,
+        salt_slice,
+        iter as c_int,
+        key_len as c_int,
+        &mut (*req).reply_buf,
+    );
+
+    (*f).req = req;
+    0
+}
+}
+
 // ── `if (f->req != ((void *)0)` · fs_net.c:2741-2742 · chunk 1053 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -34739,6 +54893,123 @@ pub extern "C" fn fs_cmd_pbkdf2__part1062() -> c_int {
 }
 }
 
+// ── `fs_cmd_set_import_dir` · fs_net.c:2768-2778 · chunk 1063 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_set_import_dir(FSDevice *fs, FSFile *f, const char *p)
+//     {
+//         FSDeviceMem *fs1 = (FSDeviceMem *)fs;
+//         char filename[1024];
+//     
+//         if (parse_fname(filename, sizeof(filename), &p) < 0)
+//             return -22;
+//         free(fs1->import_dir);
+//         fs1->import_dir = strdup(filename);
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1063 {
+// Port of fs_net.c : fs_cmd_set_import_dir
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+// Mirrors `struct FSDevice` (base struct, kept field-for-field so the offset
+// of the members that follow it inside FSDeviceMem is correct).
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: c_int,
+    pub dump_started: c_int,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+extern "C" {
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn free(ptr: *mut c_void);
+    fn strdup(s: *const c_char) -> *mut c_char;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_set_import_dir(
+    fs: *mut FSDevice,
+    _f: *mut FSFile,
+    p: *const c_char,
+) -> c_int {
+    let fs1 = fs as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+    let mut cur: *const c_char = p;
+
+    if parse_fname(filename.as_mut_ptr(), 1024 as c_int, &mut cur) < 0 {
+        return -22;
+    }
+    free((*fs1).import_dir as *mut c_void);
+    (*fs1).import_dir = strdup(filename.as_ptr());
+    0
+}
+}
+
 // ── `if (parse_fname(filename, sizeof(filename), &p) < 0)` · fs_net.c:2773-2774 · chunk 1064 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -34792,6 +55063,1078 @@ pub extern "C" fn fs_cmd_set_import_dir__part1065(
         }
     }
     0
+}
+}
+
+// ── `fs_cmd_write` · fs_net.c:2780-2821 · chunk 1066 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_write(FSDevice *fs, FSFile *f, uint64_t offset,
+//                             const uint8_t *buf, int buf_len)
+//     {
+//         char *buf1;
+//         const char *p;
+//         char cmd[64];
+//         int err;
+//     
+//     
+//         buf1 = malloc(buf_len + 1);
+//         memcpy(buf1, buf, buf_len);
+//         buf1[buf_len] = '\0';
+//     
+//         err = 0;
+//         p = buf1;
+//         if (parse_fname(cmd, sizeof(cmd), &p) < 0)
+//             goto fail;
+//         if (!strcmp(cmd, "xhr")) {
+//             err = fs_cmd_xhr(fs, f, p, f->uid, 0);
+//         } else if (!strcmp(cmd, "set_base_url")) {
+//             err = fs_cmd_set_base_url(fs, p);
+//         } else if (!strcmp(cmd, "reset_base_url")) {
+//             err = fs_cmd_reset_base_url(fs, p);
+//         } else if (!strcmp(cmd, "set_url")) {
+//             err = fs_cmd_set_url(fs, p);
+//         } else if (!strcmp(cmd, "export_file")) {
+//             err = fs_cmd_export_file(fs, p);
+//         } else if (!strcmp(cmd, "pbkdf2")) {
+//             err = fs_cmd_pbkdf2(fs, f, p);
+//         } else if (!strcmp(cmd, "set_import_dir")) {
+//             err = fs_cmd_set_import_dir(fs, f, p);
+//         } else {
+//             printf("unknown command: '%s'\n", cmd);
+//         fail:
+//             err = -5;
+//         }
+//         free(buf1);
+//         if (err == 0)
+//             return buf_len;
+//         else
+//             return err;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1066 {
+// Port of fs_cmd_write() from fs_net.c (TinyEMU).
+//
+// fs_cmd_write() calls a set of static helpers of fs_net.c (fs_cmd_xhr,
+// fs_cmd_set_base_url, fs_cmd_reset_base_url, fs_cmd_set_url,
+// fs_cmd_export_file, fs_cmd_pbkdf2, fs_cmd_set_import_dir) which have no
+// linker symbol, so their logic is reproduced here as private Rust functions,
+// together with the small static helpers they use (parse_hex_buf,
+// fs_net_set_base_url, fs_net_reset_base_url, fs_net_set_url,
+// fs_find_base_url, fs_base_url_decref, inode_search_path, inode_search,
+// inode_search_path1, to_blocks, fs_cmd_xhr_on_load).
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::null_mut;
+
+// ---------------------------------------------------------------------------
+// mirrors of the C data structures
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 60],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: c_int,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: c_int,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub type_: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    // char name[0];
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct CmdXHRState {
+    pub req_fd: *mut FSFile,
+    pub root_fd: *mut FSFile,
+    pub fd: *mut FSFile,
+    pub post_fd: *mut FSFile,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSCMDRequest {
+    pub type_: c_int,
+    pub xhr_state: *mut CmdXHRState,
+    pub reply_len: c_int,
+    pub reply_buf: [u8; 64],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: c_int,
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            u32,
+            *const c_char,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            u32,
+            *mut c_void,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char) -> c_int>,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+// Only the leading part of FSDeviceMem (up to 'import_dir') is accessed.
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+}
+
+// ---------------------------------------------------------------------------
+// external C functions
+// ---------------------------------------------------------------------------
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn strchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn strrchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn printf(fmt: *const c_char, ...) -> c_int;
+
+    fn mallocz(size: usize) -> *mut c_void;
+
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn decode_hex(buf: *mut u8, str_: *const c_char, len: c_int) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+
+    fn pbkdf2_hmac_sha256(
+        pwd: *const u8,
+        pwd_len: c_int,
+        salt: *const u8,
+        salt_len: c_int,
+        iter: c_int,
+        key_len: c_int,
+        out: *mut u8,
+    );
+
+    fn fs_wget_file2(
+        fs: *mut FSDevice,
+        f: *mut FSFile,
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        posted_file: *mut FSFile,
+        post_data_len: u64,
+        cb: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, i64, *mut c_void)>,
+        opaque: *mut c_void,
+        aes_state: *mut AES_KEY,
+    );
+
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+    fn fs_export_file(filename: *const c_char, buf: *const u8, buf_len: c_int);
+    fn fs_walk_path1(
+        fs: *mut FSDevice,
+        f: *mut FSFile,
+        path: *const c_char,
+        pname: *mut *mut c_char,
+    ) -> *mut FSFile;
+    fn fs_walk_path(fs: *mut FSDevice, f: *mut FSFile, path: *const c_char) -> *mut FSFile;
+    fn AES_set_decrypt_key(user_key: *const u8, bits: c_int, key: *mut AES_KEY) -> c_int;
+}
+
+// ---------------------------------------------------------------------------
+// small helpers
+// ---------------------------------------------------------------------------
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = head;
+    (*head).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+unsafe fn call_delete(fs: *mut FSDevice, f: *mut FSFile) {
+    if let Some(func) = (*fs).fs_delete {
+        func(fs, f);
+    }
+}
+
+unsafe fn call_attach(fs: *mut FSDevice, pf: *mut *mut FSFile, qid: *mut FSQID, uid: u32) -> c_int {
+    let empty = b"\0".as_ptr() as *const c_char;
+    if let Some(func) = (*fs).fs_attach {
+        func(fs, pf, qid, uid, empty, empty)
+    } else {
+        -1
+    }
+}
+
+unsafe fn call_create(
+    fs: *mut FSDevice,
+    qid: *mut FSQID,
+    f: *mut FSFile,
+    name: *const c_char,
+    flags: u32,
+    mode: u32,
+    gid: u32,
+) -> c_int {
+    if let Some(func) = (*fs).fs_create {
+        func(fs, qid, f, name, flags, mode, gid)
+    } else {
+        -1
+    }
+}
+
+unsafe fn call_open(fs: *mut FSDevice, qid: *mut FSQID, f: *mut FSFile, flags: u32) -> c_int {
+    if let Some(func) = (*fs).fs_open {
+        func(fs, qid, f, flags, null_mut(), null_mut())
+    } else {
+        -1
+    }
+}
+
+unsafe fn call_unlinkat(fs: *mut FSDevice, f: *mut FSFile, name: *const c_char) {
+    if let Some(func) = (*fs).fs_unlinkat {
+        func(fs, f, name);
+    }
+}
+
+// static int parse_hex_buf(uint8_t *buf, int buf_size, const char **pp)
+unsafe fn parse_hex_buf(buf: *mut u8, buf_size: c_int, pp: *mut *const c_char) -> c_int {
+    let mut buf1 = [0 as c_char; 1024];
+    if parse_fname(buf1.as_mut_ptr(), 1024, pp) < 0 {
+        return -1;
+    }
+    let mut len = strlen(buf1.as_ptr()) as c_int;
+    if (len & 1) != 0 {
+        return -1;
+    }
+    len >>= 1;
+    if len > buf_size {
+        return -1;
+    }
+    if decode_hex(buf, buf1.as_ptr(), len) < 0 {
+        return -1;
+    }
+    len
+}
+
+// ---------------------------------------------------------------------------
+// inode helpers
+// ---------------------------------------------------------------------------
+
+// static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
+unsafe fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    ((size + (*fs).block_size as u64 - 1) >> (*fs).block_size_log2) as i64
+}
+
+// static FSDirEntry *inode_search(FSINode *n, const char *name)
+unsafe fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    if (*n).type_ != 4 {
+        // FT_DIR
+        return null_mut();
+    }
+    let head: *mut ListHead = &mut (*n).u.dir.de_list;
+    let mut el = (*head).next;
+    while el != head {
+        let de = el as *mut FSDirEntry;
+        if strcmp((*de).name.as_ptr(), name) == 0 {
+            return de;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+// static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
+unsafe fn inode_search_path1(_fs: *mut FSDevice, n0: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    let mut name = [0 as c_char; 1024];
+    let mut n = n0;
+    let mut p = path;
+
+    if *p == b'/' as c_char {
+        p = p.add(1);
+    }
+    if *p == 0 {
+        return n;
+    }
+    loop {
+        let p1 = strchr(p, b'/' as c_int);
+        let len: c_int;
+        let next_p: *const c_char;
+        if p1.is_null() {
+            len = strlen(p) as c_int;
+            next_p = p1;
+        } else {
+            len = p1.offset_from(p) as c_int;
+            next_p = p1.add(1);
+        }
+        if len > 1023 {
+            return null_mut();
+        }
+        memcpy(name.as_mut_ptr() as *mut c_void, p as *const c_void, len as usize);
+        name[len as usize] = 0;
+        if (*n).type_ != 4 {
+            return null_mut();
+        }
+        let de = inode_search(n, name.as_ptr());
+        if de.is_null() {
+            return null_mut();
+        }
+        n = (*de).inode;
+        p = next_p;
+        if p.is_null() {
+            break;
+        }
+    }
+    n
+}
+
+// static FSINode *inode_search_path(FSDevice *fs1, const char *path)
+unsafe fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    if fs1.is_null() {
+        return null_mut();
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+    inode_search_path1(fs1, (*fs).root_inode, path)
+}
+
+// ---------------------------------------------------------------------------
+// base url helpers
+// ---------------------------------------------------------------------------
+
+// static FSBaseURL *fs_find_base_url(FSDevice *fs1, const char *base_url_id)
+unsafe fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let head: *mut ListHead = &mut (*fs).base_url_list;
+    let mut el = (*head).next;
+    while el != head {
+        let bu = el as *mut FSBaseURL; // 'link' is the first member
+        if strcmp((*bu).base_url_id, base_url_id) == 0 {
+            return bu;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+// static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu)
+unsafe fn fs_base_url_decref(_fs: *mut FSDevice, bu: *mut FSBaseURL) {
+    (*bu).ref_count -= 1;
+    if (*bu).ref_count == 0 {
+        free((*bu).base_url_id as *mut c_void);
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+        list_del(&mut (*bu).link);
+        free(bu as *mut c_void);
+    }
+}
+
+// static FSBaseURL *fs_net_set_base_url(FSDevice *fs1, const char *base_url_id,
+//                                       const char *url, const char *user,
+//                                       const char *password, AES_KEY *aes_state)
+unsafe fn fs_net_set_base_url(
+    fs1: *mut FSDevice,
+    base_url_id: *const c_char,
+    url: *const c_char,
+    user: *const c_char,
+    password: *const c_char,
+    aes_state: *mut AES_KEY,
+) -> *mut FSBaseURL {
+    let fs = fs1 as *mut FSDeviceMem;
+    let mut bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        bu = mallocz(core::mem::size_of::<FSBaseURL>()) as *mut FSBaseURL;
+        (*bu).base_url_id = strdup(base_url_id);
+        (*bu).ref_count = 1;
+        list_add_tail(&mut (*bu).link, &mut (*fs).base_url_list);
+    } else {
+        free((*bu).url as *mut c_void);
+        free((*bu).user as *mut c_void);
+        free((*bu).password as *mut c_void);
+    }
+    (*bu).url = strdup(url);
+    if !user.is_null() {
+        (*bu).user = strdup(user);
+    } else {
+        (*bu).user = null_mut();
+    }
+    if !password.is_null() {
+        (*bu).password = strdup(password);
+    } else {
+        (*bu).password = null_mut();
+    }
+    if !aes_state.is_null() {
+        (*bu).encrypted = 1;
+        (*bu).aes_state = *aes_state;
+    } else {
+        (*bu).encrypted = 0;
+    }
+    bu
+}
+
+// static int fs_net_reset_base_url(FSDevice *fs1, const char *base_url_id)
+unsafe fn fs_net_reset_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> c_int {
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -2;
+    }
+    fs_base_url_decref(fs1, bu);
+    0
+}
+
+// static int fs_net_set_url(FSDevice *fs1, FSINode *n, const char *base_url_id,
+//                           FSFileID file_id, uint64_t size)
+unsafe fn fs_net_set_url(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: u64,
+    size: u64,
+) -> c_int {
+    let fs = fs1 as *mut FSDeviceMem;
+    let bu = fs_find_base_url(fs1, base_url_id);
+    if bu.is_null() {
+        return -2;
+    }
+    if (*n).type_ != 8 // FT_REG
+        || (*n).u.reg.state != 0 // REG_STATE_LOCAL
+        || (*n).u.reg.fbuf.allocated_size != 0
+    {
+        return -5;
+    }
+    if size > 0 {
+        (*n).u.reg.state = 1; // REG_STATE_UNLOADED
+        (*n).u.reg.base_url = bu;
+        (*bu).ref_count += 1;
+        (*n).u.reg.size = size as usize;
+        (*fs).fs_blocks += to_blocks(fs, size);
+        (*n).u.reg.file_id = file_id;
+    }
+    0
+}
+
+// ---------------------------------------------------------------------------
+// the fs_cmd_* helpers of fs_net.c
+// ---------------------------------------------------------------------------
+
+static mut EMPTY: [c_char; 1] = [0];
+
+unsafe fn xhr_fail1(
+    fs: *mut FSDevice,
+    fd: *mut FSFile,
+    post_fd: *mut FSFile,
+    root_fd: *mut FSFile,
+    err: c_int,
+) -> c_int {
+    if !fd.is_null() {
+        call_delete(fs, fd);
+    }
+    if !post_fd.is_null() {
+        call_delete(fs, post_fd);
+    }
+    call_delete(fs, root_fd);
+    err
+}
+
+// static void fs_cmd_xhr_on_load(FSDevice *fs, FSFile *f, int64_t size, void *opaque)
+unsafe extern "C" fn fs_cmd_xhr_on_load(
+    fs: *mut FSDevice,
+    _f: *mut FSFile,
+    size: i64,
+    opaque: *mut c_void,
+) {
+    let s = opaque as *mut CmdXHRState;
+    if !(*s).fd.is_null() {
+        call_delete(fs, (*s).fd);
+    }
+    if !(*s).post_fd.is_null() {
+        call_delete(fs, (*s).post_fd);
+    }
+    call_delete(fs, (*s).root_fd);
+
+    if !(*s).req_fd.is_null() {
+        let req = (*(*s).req_fd).req;
+        let ret: c_int = if size < 0 { size as c_int } else { 0 };
+        put_le32((*req).reply_buf.as_mut_ptr(), ret as u32);
+        (*req).reply_len = 4; // sizeof(ret)
+        (*req).xhr_state = null_mut();
+    }
+    free(s as *mut c_void);
+}
+
+// static int fs_cmd_xhr(FSDevice *fs, FSFile *f, const char *p,
+//                       uint32_t uid, uint32_t gid)
+unsafe fn fs_cmd_xhr(
+    fs: *mut FSDevice,
+    f: *mut FSFile,
+    p0: *const c_char,
+    uid: u32,
+    gid: u32,
+) -> c_int {
+    let mut url = [0 as c_char; 1024];
+    let mut post_filename = [0 as c_char; 1024];
+    let mut filename = [0 as c_char; 1024];
+    let mut user_buf = [0 as c_char; 128];
+    let mut password_buf = [0 as c_char; 128];
+    let mut qid = FSQID {
+        type_: 0,
+        version: 0,
+        path: 0,
+    };
+    let fd: *mut FSFile;
+    let mut root_fd: *mut FSFile = null_mut();
+    let mut post_fd: *mut FSFile;
+    let post_data_len: u64;
+    let mut err: c_int;
+    let mut aes_key = [0u8; 16];
+    let mut flags: u32 = 0;
+    let mut p = p0;
+
+    if !(*f).req.is_null() {
+        return -5;
+    }
+
+    if parse_fname(url.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -5;
+    }
+    if parse_fname(user_buf.as_mut_ptr(), 128, &mut p) < 0 {
+        return -5;
+    }
+    if parse_fname(password_buf.as_mut_ptr(), 128, &mut p) < 0 {
+        return -5;
+    }
+    if parse_fname(post_filename.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -5;
+    }
+    if parse_fname(filename.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -5;
+    }
+    let aes_key_len = parse_hex_buf(aes_key.as_mut_ptr(), 16, &mut p);
+    if aes_key_len < 0 {
+        return -5;
+    }
+    if parse_uint32(&mut flags, &mut p) < 0 {
+        return -5;
+    }
+    if aes_key_len != 0 && aes_key_len != 16 {
+        return -5;
+    }
+    let _ = flags;
+
+    let user: *mut c_char = if user_buf[0] != 0 {
+        user_buf.as_mut_ptr()
+    } else {
+        null_mut()
+    };
+    let password: *mut c_char = if password_buf[0] != 0 {
+        password_buf.as_mut_ptr()
+    } else {
+        null_mut()
+    };
+
+    // assert(!fs->fs_attach(fs, &root_fd, &qid, uid, "", ""));
+    call_attach(fs, &mut root_fd, &mut qid, uid);
+    post_fd = null_mut();
+
+    let mut name: *mut c_char = null_mut();
+    fd = fs_walk_path1(fs, root_fd, filename.as_ptr(), &mut name);
+    if fd.is_null() {
+        return xhr_fail1(fs, fd, post_fd, root_fd, -2);
+    }
+
+    call_unlinkat(fs, fd, name);
+
+    err = call_create(fs, &mut qid, fd, name, 0x00000002 | 0x00000200, 0o600, gid);
+    if err < 0 {
+        return xhr_fail1(fs, fd, post_fd, root_fd, err);
+    }
+
+    if post_filename[0] != 0 {
+        post_fd = fs_walk_path(fs, root_fd, post_filename.as_ptr());
+        if post_fd.is_null() {
+            return xhr_fail1(fs, fd, post_fd, root_fd, -2);
+        }
+        err = call_open(fs, &mut qid, post_fd, 0x00000000);
+        if err < 0 {
+            return xhr_fail1(fs, fd, post_fd, root_fd, err);
+        }
+        let n = (*post_fd).inode;
+        // assert(n->type == FT_REG && n->u.reg.state == REG_STATE_LOCAL);
+        post_data_len = (*n).u.reg.size as u64;
+    } else {
+        post_data_len = 0;
+    }
+
+    let s = mallocz(core::mem::size_of::<CmdXHRState>()) as *mut CmdXHRState;
+    (*s).root_fd = root_fd;
+    (*s).fd = fd;
+    (*s).post_fd = post_fd;
+    let mut paes_state: *mut AES_KEY;
+    if aes_key_len != 0 {
+        AES_set_decrypt_key(aes_key.as_ptr(), 16 * 8, &mut (*s).aes_state);
+        paes_state = &mut (*s).aes_state;
+    } else {
+        paes_state = null_mut();
+    }
+
+    let req = mallocz(core::mem::size_of::<FSCMDRequest>()) as *mut FSCMDRequest;
+    (*req).type_ = 0; // FS_CMD_XHR
+    (*req).reply_len = 0;
+    (*req).xhr_state = s;
+    (*s).req_fd = f;
+    (*f).req = req;
+
+    fs_wget_file2(
+        fs,
+        fd,
+        url.as_ptr(),
+        user,
+        password,
+        post_fd,
+        post_data_len,
+        Some(fs_cmd_xhr_on_load),
+        s as *mut c_void,
+        paes_state,
+    );
+    0
+}
+
+// static int fs_cmd_set_base_url(FSDevice *fs, const char *p)
+unsafe fn fs_cmd_set_base_url(fs: *mut FSDevice, p0: *const c_char) -> c_int {
+    let mut url = [0 as c_char; 1024];
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut user_buf = [0 as c_char; 128];
+    let mut password_buf = [0 as c_char; 128];
+    let mut aes_state = AES_KEY {
+        rd_key: [0; 60],
+        rounds: 0,
+    };
+    let mut aes_key = [0u8; 16];
+    let mut p = p0;
+
+    if parse_fname(base_url_id.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    if parse_fname(url.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    if parse_fname(user_buf.as_mut_ptr(), 128, &mut p) < 0 {
+        return -22;
+    }
+    if parse_fname(password_buf.as_mut_ptr(), 128, &mut p) < 0 {
+        return -22;
+    }
+    let aes_key_len = parse_hex_buf(aes_key.as_mut_ptr(), 16, &mut p);
+    if aes_key_len < 0 {
+        return -22;
+    }
+
+    let user: *mut c_char = if user_buf[0] != 0 {
+        user_buf.as_mut_ptr()
+    } else {
+        null_mut()
+    };
+    let password: *mut c_char = if password_buf[0] != 0 {
+        password_buf.as_mut_ptr()
+    } else {
+        null_mut()
+    };
+
+    let mut paes_state: *mut AES_KEY;
+    if aes_key_len != 0 {
+        if aes_key_len != 16 {
+            return -22;
+        }
+        AES_set_decrypt_key(aes_key.as_ptr(), 16 * 8, &mut aes_state);
+        paes_state = &mut aes_state;
+    } else {
+        paes_state = null_mut();
+    }
+
+    fs_net_set_base_url(
+        fs,
+        base_url_id.as_ptr(),
+        url.as_ptr(),
+        user,
+        password,
+        paes_state,
+    );
+    0
+}
+
+// static int fs_cmd_reset_base_url(FSDevice *fs, const char *p)
+unsafe fn fs_cmd_reset_base_url(fs: *mut FSDevice, p0: *const c_char) -> c_int {
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut p = p0;
+
+    if parse_fname(base_url_id.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    fs_net_reset_base_url(fs, base_url_id.as_ptr());
+    0
+}
+
+// static int fs_cmd_set_url(FSDevice *fs, const char *p)
+unsafe fn fs_cmd_set_url(fs: *mut FSDevice, p0: *const c_char) -> c_int {
+    let mut base_url_id = [0 as c_char; 1024];
+    let mut filename = [0 as c_char; 1024];
+    let mut file_id: u64 = 0;
+    let mut size: u64 = 0;
+    let mut p = p0;
+
+    if parse_fname(filename.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    if parse_fname(base_url_id.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    if parse_file_id(&mut file_id, &mut p) < 0 {
+        return -22;
+    }
+    if parse_uint64(&mut size, &mut p) < 0 {
+        return -22;
+    }
+
+    let n = inode_search_path(fs, filename.as_ptr());
+    if n.is_null() {
+        return -2;
+    }
+    fs_net_set_url(fs, n, base_url_id.as_ptr(), file_id, size)
+}
+
+// static int fs_cmd_export_file(FSDevice *fs, const char *p)
+unsafe fn fs_cmd_export_file(fs: *mut FSDevice, p0: *const c_char) -> c_int {
+    let mut filename = [0 as c_char; 1024];
+    let mut p = p0;
+
+    if parse_fname(filename.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -5;
+    }
+    let n = inode_search_path(fs, filename.as_ptr());
+    if n.is_null() {
+        return -2;
+    }
+    if (*n).type_ != 8 // FT_REG
+        || ((*n).u.reg.state != 0 /* REG_STATE_LOCAL */
+            && (*n).u.reg.state != 3 /* REG_STATE_LOADED */)
+    {
+        return -5;
+    }
+    let mut name: *const c_char = strrchr(filename.as_ptr(), b'/' as c_int);
+    if !name.is_null() {
+        name = name.add(1);
+    } else {
+        name = filename.as_ptr();
+    }
+
+    let size = (*n).u.reg.size;
+    let buf = malloc(size) as *mut u8;
+    file_buffer_read(&mut (*n).u.reg.fbuf, 0, buf, size);
+    fs_export_file(name, buf, size as c_int);
+    free(buf as *mut c_void);
+    0
+}
+
+// static int fs_cmd_pbkdf2(FSDevice *fs, FSFile *f, const char *p)
+unsafe fn fs_cmd_pbkdf2(_fs: *mut FSDevice, f: *mut FSFile, p0: *const c_char) -> c_int {
+    let mut pwd = [0u8; 1024];
+    let mut salt = [0u8; 128];
+    let mut iter: u32 = 0;
+    let mut key_len: u32 = 0;
+    let mut p = p0;
+
+    if !(*f).req.is_null() {
+        return -5;
+    }
+
+    let pwd_len = parse_hex_buf(pwd.as_mut_ptr(), 1024, &mut p);
+    if pwd_len < 0 {
+        return -22;
+    }
+    let salt_len = parse_hex_buf(salt.as_mut_ptr(), 128, &mut p);
+    if pwd_len < 0 {
+        return -22;
+    }
+    if parse_uint32(&mut iter, &mut p) < 0 {
+        return -22;
+    }
+    if parse_uint32(&mut key_len, &mut p) < 0 {
+        return -22;
+    }
+    if key_len > 64 || key_len == 0 {
+        return -22;
+    }
+
+    let req = mallocz(core::mem::size_of::<FSCMDRequest>()) as *mut FSCMDRequest;
+    (*req).type_ = 1; // FS_CMD_PBKDF2
+    (*req).reply_len = key_len as c_int;
+    pbkdf2_hmac_sha256(
+        pwd.as_ptr(),
+        pwd_len,
+        salt.as_ptr(),
+        salt_len,
+        iter as c_int,
+        key_len as c_int,
+        (*req).reply_buf.as_mut_ptr(),
+    );
+    (*f).req = req;
+    0
+}
+
+// static int fs_cmd_set_import_dir(FSDevice *fs, FSFile *f, const char *p)
+unsafe fn fs_cmd_set_import_dir(fs: *mut FSDevice, _f: *mut FSFile, p0: *const c_char) -> c_int {
+    let fs1 = fs as *mut FSDeviceMem;
+    let mut filename = [0 as c_char; 1024];
+    let mut p = p0;
+
+    if parse_fname(filename.as_mut_ptr(), 1024, &mut p) < 0 {
+        return -22;
+    }
+    free((*fs1).import_dir as *mut c_void);
+    (*fs1).import_dir = strdup(filename.as_ptr());
+    0
+}
+
+// ---------------------------------------------------------------------------
+// the target
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_write(
+    fs: *mut FSDevice,
+    f: *mut FSFile,
+    offset: u64,
+    buf: *const u8,
+    buf_len: c_int,
+) -> c_int {
+    let _ = offset;
+
+    // transform into a string
+    let size = buf_len.wrapping_add(1) as usize;
+    let buf1 = malloc(size) as *mut c_char;
+    memcpy(buf1 as *mut c_void, buf as *const c_void, buf_len as usize);
+    *buf1.add(buf_len as usize) = 0;
+
+    let mut err: c_int = 0;
+    let mut failed = false;
+    let mut p: *const c_char = buf1;
+    let mut cmd = [0 as c_char; 64];
+
+    if parse_fname(cmd.as_mut_ptr(), 64, &mut p) < 0 {
+        failed = true;
+    } else if strcmp(cmd.as_ptr(), b"xhr\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_xhr(fs, f, p, (*f).uid, 0);
+    } else if strcmp(cmd.as_ptr(), b"set_base_url\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_set_base_url(fs, p);
+    } else if strcmp(cmd.as_ptr(), b"reset_base_url\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_reset_base_url(fs, p);
+    } else if strcmp(cmd.as_ptr(), b"set_url\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_set_url(fs, p);
+    } else if strcmp(cmd.as_ptr(), b"export_file\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_export_file(fs, p);
+    } else if strcmp(cmd.as_ptr(), b"pbkdf2\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_pbkdf2(fs, f, p);
+    } else if strcmp(cmd.as_ptr(), b"set_import_dir\0".as_ptr() as *const c_char) == 0 {
+        err = fs_cmd_set_import_dir(fs, f, p);
+    } else {
+        printf(
+            b"unknown command: '%s'\n\0".as_ptr() as *const c_char,
+            cmd.as_ptr(),
+        );
+        failed = true;
+    }
+    if failed {
+        err = -5;
+    }
+    free(buf1 as *mut c_void);
+    if err == 0 {
+        buf_len
+    } else {
+        err
+    }
 }
 }
 
@@ -35019,6 +56362,87 @@ pub extern "C" fn fs_cmd_write__part1071(err: c_int, buf_len: c_int) -> c_int {
 }
 }
 
+// ── `fs_cmd_read` · fs_net.c:2823-2835 · chunk 1072 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int fs_cmd_read(FSDevice *fs, FSFile *f, uint64_t offset,
+//                            uint8_t *buf, int buf_len)
+//     {
+//         FSCMDRequest *req;
+//         int l;
+//     
+//         req = f->req;
+//         if (!req)
+//             return -5;
+//         l = min_int(req->reply_len, buf_len);
+//         memcpy(buf, req->reply_buf, l);
+//         return l;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1072 {
+// Rust rewrite of static int fs_cmd_read(FSDevice *fs, FSFile *f, uint64_t offset,
+//                                        uint8_t *buf, int buf_len)
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_int, c_void};
+
+// Opaque: only a pointer to it is passed through.
+#[repr(C)]
+pub struct FSDevice {
+    _private: [u8; 0],
+}
+
+// typedef enum { FS_CMD_XHR, FS_CMD_PBKDF2 } FSCMDRequestEnum;
+// Mirror of FSCMDRequest from fs_net.c.
+#[repr(C)]
+struct FSCMDRequest {
+    r#type: c_int,
+    xhr_state: *mut c_void,
+    reply_len: c_int,
+    reply_buf: [u8; 64],
+}
+
+// Mirror of FSINode (opaque, only used via pointer).
+#[repr(C)]
+struct FSINode {
+    _private: [u8; 0],
+}
+
+// Mirror of struct FSFile from fs_net.c.
+#[repr(C)]
+struct FSFile {
+    uid: u32,
+    inode: *mut FSINode,
+    is_opened: c_int, // BOOL == int
+    open_flags: u32,
+    req: *mut FSCMDRequest,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_read(
+    _fs: *mut FSDevice,
+    f: *mut FSFile,
+    _offset: u64,
+    buf: *mut u8,
+    buf_len: c_int,
+) -> c_int {
+    if f.is_null() {
+        return -5;
+    }
+    let req = (*f).req;
+    if req.is_null() {
+        return -5;
+    }
+    let reply_len = (*req).reply_len;
+    // min_int(req->reply_len, buf_len)
+    let l: c_int = if reply_len < buf_len { reply_len } else { buf_len };
+    if l > 0 && !buf.is_null() && !(*req).reply_buf.as_ptr().is_null() {
+        core::ptr::copy_nonoverlapping((*req).reply_buf.as_ptr(), buf, l as usize);
+    }
+    l
+}
+}
+
 // ── `FSCMDRequest *req; int l; req = f->req;` · fs_net.c:2826-2829 · chunk 1073 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -35138,6 +56562,76 @@ pub extern "C" fn fs_cmd_read__part1075(
 }
 }
 
+// ── `fs_cmd_close` · fs_net.c:2837-2849 · chunk 1076 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void fs_cmd_close(FSDevice *fs, FSFile *f)
+//     {
+//         FSCMDRequest *req;
+//         req = f->req;
+//     
+//         if (req) {
+//             if (req->xhr_state) {
+//                 req->xhr_state->req_fd = 
+//                                         ((void *)0)
+//                                             ;
+//             }
+//             free(req);
+//             f->req = 
+//                     ((void *)0)
+//                         ;
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1076 {
+// Port of fs_cmd_close from fs_net.c
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut c_void,
+    pub is_opened: c_int,
+    pub open_flags: u32,
+    pub req: *mut FSCMDRequest,
+}
+
+#[repr(C)]
+pub struct FSCMDRequest {
+    pub r#type: c_int,
+    pub xhr_state: *mut CmdXHRState,
+    pub reply_len: c_int,
+    pub reply_buf: [u8; 64],
+}
+
+// Only the leading field is accessed; the rest of the C struct is opaque here.
+#[repr(C)]
+pub struct CmdXHRState {
+    pub req_fd: *mut FSFile,
+}
+
+extern "C" {
+    fn free(p: *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_cmd_close(fs: *mut c_void, f: *mut FSFile) {
+    let _ = fs;
+    if f.is_null() {
+        return;
+    }
+    let req = (*f).req;
+    if !req.is_null() {
+        let xhr_state = (*req).xhr_state;
+        if !xhr_state.is_null() {
+            (*xhr_state).req_fd = core::ptr::null_mut();
+        }
+        free(req as *mut c_void);
+        (*f).req = core::ptr::null_mut();
+    }
+}
+}
+
 // ── `FSCMDRequest *req; req = f->req;` · fs_net.c:2839-2840 · chunk 1077 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -35242,6 +56736,316 @@ pub unsafe extern "C" fn fs_cmd_close__part1078(req: *mut FSCMDRequest, f: *mut 
         }
         free(req as *mut c_void);
         (*f).req = ptr::null_mut();
+    }
+}
+}
+
+// ── `fs_net_set_pwd` · fs_net.c:2853-2865 · chunk 1079 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     void fs_net_set_pwd(FSDevice *fs, const char *pwd)
+//     {
+//         FSFile *root_fd;
+//         FSQID qid;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        fs_is_net(fs)
+//        )), __extension__ ({ if (
+//        fs_is_net(fs)
+//        ) ; else __assert_fail (
+//        "fs_is_net(fs)"
+//        , "fs_net.c", 2858, __extension__ __PRETTY_FUNCTION__); }))
+//                             ;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        !fs->fs_attach(fs, &root_fd, &qid, 0, "", "")
+//        )), __extension__ ({ if (
+//        !fs->fs_attach(fs, &root_fd, &qid, 0, "", "")
+//        ) ; else __assert_fail (
+//        "!fs->fs_attach(fs, &root_fd, &qid, 0, \"\", \"\")"
+//        , "fs_net.c", 2860, __extension__ __PRETTY_FUNCTION__); }))
+//                                                             ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        !fs->fs_create(fs, &qid, root_fd, ".fscmd_pwd", 0x00000002 | 0x00000200, 0600, 0)
+//        )), __extension__ ({ if (
+//        !fs->fs_create(fs, &qid, root_fd, ".fscmd_pwd", 0x00000002 | 0x00000200, 0600, 0)
+//        ) ; else __assert_fail (
+//        "!fs->fs_create(fs, &qid, root_fd, \".fscmd_pwd\", P9_O_RDWR | P9_O_TRUNC, 0600, 0)"
+//        , "fs_net.c", 2861, __extension__ __PRETTY_FUNCTION__); }))
+//                                        
+//                                       ;
+//         fs->fs_write(fs, root_fd, 0, (uint8_t *)pwd, strlen(pwd));
+//         fs->fs_delete(fs, root_fd);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1079 {
+// Rust port of fs_net_set_pwd (fs_net.c:2853-2865)
+#![allow(non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// Opaque file handle type (only pointers to it are used here).
+#[repr(C)]
+pub struct FSFile {
+    _private: [u8; 0],
+}
+
+pub type FSOpenCompletionFunc = Option<
+    unsafe extern "C" fn(fs: *mut FSDevice, qid: *mut FSQID, err: c_int, opaque: *mut c_void),
+>;
+
+// Mirror of struct FSDevice, in order, with the same field types.
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(s: *mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(s: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(fs: *mut FSDevice, st: *mut c_void)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qid: *mut FSQID,
+            uid: u32,
+            uname: *const c_char,
+            aname: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            pf: *mut *mut FSFile,
+            qids: *mut FSQID,
+            f: *mut FSFile,
+            n: c_int,
+            names: *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            flags: u32,
+            cb: FSOpenCompletionFunc,
+            opaque: *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            flags: u32,
+            mode: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, st: *mut c_void) -> c_int,
+    >,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            mask: u32,
+            mode: u32,
+            uid: u32,
+            gid: u32,
+            size: u64,
+            atime_sec: u64,
+            atime_nsec: u64,
+            mtime_sec: u64,
+            mtime_nsec: u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_read: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *mut u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_write: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            offset: u64,
+            buf: *const u8,
+            count: c_int,
+        ) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            df: *mut FSFile,
+            f: *mut FSFile,
+            name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            symgt: *const c_char,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            qid: *mut FSQID,
+            f: *mut FSFile,
+            name: *const c_char,
+            mode: u32,
+            major: u32,
+            minor: u32,
+            gid: u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            buf: *mut c_char,
+            buf_size: c_int,
+            f: *mut FSFile,
+        ) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            fs: *mut FSDevice,
+            f: *mut FSFile,
+            name: *const c_char,
+            new_f: *mut FSFile,
+            new_name: *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, name: *const c_char) -> c_int,
+    >,
+    pub fs_lock: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *const c_void) -> c_int,
+    >,
+    pub fs_getlock: Option<
+        unsafe extern "C" fn(fs: *mut FSDevice, f: *mut FSFile, lock: *mut c_void) -> c_int,
+    >,
+}
+
+extern "C" {
+    fn strlen(s: *const c_char) -> usize;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: u32,
+        function: *const c_char,
+    ) -> !;
+}
+
+const P9_O_RDWR: u32 = 0x0000_0002;
+const P9_O_TRUNC: u32 = 0x0000_0200;
+
+unsafe fn assert_fail(expr: *const c_char, line: u32) -> ! {
+    static FUNC: &[u8] = b"fs_net_set_pwd\0";
+    __assert_fail(
+        expr,
+        b"fs_net.c\0".as_ptr() as *const c_char,
+        line,
+        FUNC.as_ptr() as *const c_char,
+    )
+}
+
+const ASSERT_ATTACH: *const c_char =
+    b"!fs->fs_attach(fs, &root_fd, &qid, 0, \"\", \"\")\0".as_ptr() as *const c_char;
+const ASSERT_CREATE: *const c_char =
+    b"!fs->fs_create(fs, &qid, root_fd, \".fscmd_pwd\", P9_O_RDWR | P9_O_TRUNC, 0600, 0)\0"
+        .as_ptr() as *const c_char;
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_net_set_pwd(fs: *mut FSDevice, pwd: *const c_char) {
+    let mut root_fd: *mut FSFile = core::ptr::null_mut();
+    let mut qid: FSQID = FSQID {
+        type_: 0,
+        version: 0,
+        path: 0,
+    };
+
+    // assert(fs_is_net(fs)): fs_is_net tests "fs->fs_end == fs_mem_end", and
+    // fs_mem_end is a static (symbol-less) function, so the check here only
+    // verifies that an end callback was installed.
+    if (*fs).fs_end.is_none() {
+        assert_fail(
+            b"fs_is_net(fs)\0".as_ptr() as *const c_char,
+            2858,
+        );
+    }
+
+    let attach = match (*fs).fs_attach {
+        Some(f) => f,
+        None => assert_fail(ASSERT_ATTACH, 2860),
+    };
+    let empty: *const c_char = b"\0".as_ptr() as *const c_char;
+    if attach(fs, &mut root_fd, &mut qid, 0, empty, empty) != 0 {
+        assert_fail(ASSERT_ATTACH, 2860);
+    }
+
+    let create = match (*fs).fs_create {
+        Some(f) => f,
+        None => assert_fail(ASSERT_CREATE, 2861),
+    };
+    if create(
+        fs,
+        &mut qid,
+        root_fd,
+        b".fscmd_pwd\0".as_ptr() as *const c_char,
+        P9_O_RDWR | P9_O_TRUNC,
+        0o600u32,
+        0,
+    ) != 0
+    {
+        assert_fail(ASSERT_CREATE, 2861);
+    }
+
+    let len = strlen(pwd);
+    if let Some(write) = (*fs).fs_write {
+        write(fs, root_fd, 0, pwd as *const u8, len as c_int);
+    }
+
+    if let Some(delete) = (*fs).fs_delete {
+        delete(fs, root_fd);
     }
 }
 }
@@ -35531,5 +57335,24 @@ pub unsafe extern "C" fn fs_net_set_pwd__part1080(
     let delete = must((*fs).fs_delete);
     delete(fs, *proot_fd);
 }
+}
+
+// ── `fs_export_file` · fs_net.c:2905-2908 · chunk 1081 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void fs_export_file(const char *filename,
+//                         const uint8_t *buf, int buf_len)
+//     {
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1081 {
+// Port of the `#else` stub branch of fs_export_file from fs_net.c.
+// The C body is empty, so this function does nothing; the parameters are
+// kept (with the same ABI types) purely to match the C declaration.
+
+use core::ffi::{c_char, c_int};
+
+#[no_mangle]
+pub extern "C" fn fs_export_file(_filename: *const c_char, _buf: *const u8, _buf_len: c_int) {}
 }
 

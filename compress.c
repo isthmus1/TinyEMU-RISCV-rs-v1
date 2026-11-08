@@ -3168,44 +3168,9 @@ typedef enum {
     ALGORITHM_GZIP,
 } algorithm_t;
 
-static algorithm_t detect_algorithm(const uint8_t *buf, int len)
-{
-    extern int detect_algorithm__part401(const uint8_t *buf, int len); if (detect_algorithm__part401(buf, len)) return ALGORITHM_UNKNOWN;
+static algorithm_t detect_algorithm(const uint8_t *buf, int len);
 
-    { algorithm_t detect_algorithm__part402(const uint8_t *buf, int len); return detect_algorithm__part402(buf, len); }
-}
-
-int compress_detect_magic(const uint8_t *buf, int len)
-{
-    extern int compress_detect_magic__part404(const uint8_t *buf, int len);
-return compress_detect_magic__part404(buf, len);
-}
+int compress_detect_magic(const uint8_t *buf, int len);
 
 int decompress(const uint8_t *in_buf, int in_len,
-               const uint8_t *out_buf, int out_len)
-{
-    int windowBits;
-    int decompress__part406(const uint8_t *in_buf, int in_len);
-    windowBits = decompress__part406(in_buf, in_len);
-
-    void decompress__part407(z_stream *strm);
-z_stream strm;
-decompress__part407(&strm);
-    int decompress__part408(z_stream *strm, int windowBits);
-if (decompress__part408(&strm, windowBits) != 0) return -1;
-
-    // Prototype for the Rust function that replaces the TARGET assignments
-void decompress__part409(z_stream *strm, const uint8_t *in_buf, int in_len, const uint8_t *out_buf, int out_len);
-
-// Call in place of the TARGET: strm.avail_in = in_len; strm.next_in = (Bytef *)in_buf; strm.avail_out = out_len; strm.next_out = (Bytef *)out_buf;
-decompress__part409(&strm, in_buf, in_len, out_buf, out_len);
-    int decompress__part410(z_stream *strm);
-
-if (decompress__part410(&strm) == -1) {
-    fprintf(stderr, "inflate() failed: %s\n", strm.msg);
-    return -1;
-}
-
-    unsigned long decompress__part411(unsigned long total_out);
-return decompress__part411(strm.total_out);
-}
+               const uint8_t *out_buf, int out_len);

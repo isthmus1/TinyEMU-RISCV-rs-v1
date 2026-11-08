@@ -5025,291 +5025,42 @@ char *compose_path(const char *path, const char *name)
 return compose_path__part1086(d);
 }
 
-char *compose_url(const char *base_url, const char *name)
-{
-    char *compose_url__part1088(const char *base_url, const char *name);
-    return compose_url__part1088(base_url, name);
+char *compose_url(const char *base_url, const char *name);
 
-}
+void skip_line(const char **pp);
 
-void skip_line(const char **pp)
-{
-    const char *skip_line__part1090(const char **pp);
-    const char *p;
-    p = skip_line__part1090(pp);
-    const char *skip_line__part1091(const char *p);
-    p = skip_line__part1091(p);
-        const char *skip_line__part1092(const char *p);
-    p = skip_line__part1092(p);
+char *quoted_str(const char *str);
 
-    void skip_line__part1093(const char **pp, const char *p);
-    skip_line__part1093(pp, p);
-}
+int parse_fname(char *buf, int buf_size, const char **pp);
 
-char *quoted_str(const char *str)
-{
-    const char *s;
-    char *q;
-    int c;
-    char *buf;
+int parse_uint32_base(uint32_t *pval, const char **pp, int base);
 
-        {
-        int quoted_str__part1095(const char *str);
-        if (quoted_str__part1095(str))
-            goto use_quote;
-    }
+int parse_uint64_base(uint64_t *pval, const char **pp, int base);
 
-        const char *quoted_str__part1096(const char *str);
-    s = quoted_str__part1096(str);
+int parse_uint64(uint64_t *pval, const char **pp);
 
-        {
-        int quoted_str__part1097(const char *str);
-        if (quoted_str__part1097(str))
-            goto use_quote;
-    }
-        {
-        char *quoted_str__part1098(const char *s);
-        return quoted_str__part1098(str);
-    }
+int parse_uint32(uint32_t *pval, const char **pp);
 
- use_quote:
-    {
-        char *quoted_str__part1099(const char *str);
-        buf = quoted_str__part1099(str);
-    }
+int parse_time(uint32_t *psec, uint32_t *pnsec, const char **pp);
 
-    void quoted_str__part1100(char *buf, const char *str, char **q_out, const char **s_out);
-    quoted_str__part1100(buf, str, &q, &s);
+int parse_file_id(FSFileID *pval, const char **pp);
 
-    void quoted_str__part1101(const char **ps, char **pq);
-    quoted_str__part1101(&s, &q);
+char *file_id_to_filename(char *buf, FSFileID file_id);
 
-        char *quoted_str__part1102(char *q, char *buf);
-    return quoted_str__part1102(q, buf);
-}
+void encode_hex(char *str, const uint8_t *buf, int len);
 
-int parse_fname(char *buf, int buf_size, const char **pp)
-{
-    const char *parse_fname__part1104(const char **pp);
-    const char *p;
-    char *q;
-    int c, h;
-
-    p = parse_fname__part1104(pp);
-
-    const char *parse_fname__part1105(const char *p);
-    p = parse_fname__part1105(p);
-
-    int parse_fname__part1106(const char *p);
-    if (parse_fname__part1106(p))
-        return -1;
-
-    char *parse_fname__part1107(char *buf);
-    q = parse_fname__part1107(buf);
-
-        {
-        int parse_fname__part1108(char *buf, int buf_size, const char **pp, char **qq);
-        if (parse_fname__part1108(buf, buf_size, &p, &q) < 0)
-            return -1;
-    }
-
-        int parse_fname__part1109(char *q, const char **pp, const char *p);
-    return parse_fname__part1109(q, pp, p);
-
-}
-
-int parse_uint32_base(uint32_t *pval, const char **pp, int base)
-{
-    const char *p, *p1;
-const char *parse_uint32_base__part1111(const char **pp);
-p = parse_uint32_base__part1111(pp);
-
-    const char *parse_uint32_base__part1112(const char *p);
-    p = parse_uint32_base__part1112(p);
-
-        void parse_uint32_base__part1113(uint32_t *pval, const char **p1_out, const char *p, int base);
-    parse_uint32_base__part1113(pval, &p1, p, base);
-
-    int parse_uint32_base__part1114(const char *p1, const char *p);
-    if (parse_uint32_base__part1114(p1, p))
-        return -1;
-
-    int parse_uint32_base__part1115(const char **pp, const char *p1);
-    return parse_uint32_base__part1115(pp, p1);
-
-}
-
-int parse_uint64_base(uint64_t *pval, const char **pp, int base)
-{
-    const char *p, *p1;
-    const char *parse_uint64_base__part1117(const char **pp);
-    p = parse_uint64_base__part1117(pp);
-    const char *parse_uint64_base__part1118(const char *p);
-    p = parse_uint64_base__part1118(p);
-
-    void parse_uint64_base__part1119(uint64_t *pval, const char *p, const char **p1, int base);
-parse_uint64_base__part1119(pval, p, &p1, base);
-    int parse_uint64_base__part1120(const char *p1, const char *p);
-    if (parse_uint64_base__part1120(p1, p))
-        return -1;
-
-        int parse_uint64_base__part1121(const char **pp, const char *p1);
-    *pp = p1;
-    return 0;
-
-}
-
-int parse_uint64(uint64_t *pval, const char **pp)
-{
-        int parse_uint64__part1123(uint64_t *pval, const char **pp);
-    return parse_uint64__part1123(pval, pp);
-
-}
-
-int parse_uint32(uint32_t *pval, const char **pp)
-{
-    int parse_uint32__part1125(uint32_t *pval, const char **pp);
-return parse_uint32__part1125(pval, pp);
-}
-
-int parse_time(uint32_t *psec, uint32_t *pnsec, const char **pp)
-{
-        void parse_time__part1127(const char **pp, const char **p_out);
-    const char *p;
-    uint32_t v, m;
-    parse_time__part1127(pp, &p);
-    int parse_time__part1128(uint32_t *psec, const char **pp);
-    if (parse_time__part1128(psec, &p) < 0)
-        return -1;
-    uint32_t parse_time__part1129(void);
-    v = parse_time__part1129();
-    uint32_t parse_time__part1130(const char **pp, uint32_t v);
-    v = parse_time__part1130(&p, v);
-
-    int parse_time__part1131(uint32_t *pnsec, uint32_t v, const char **pp, const char *p);
-    return parse_time__part1131(pnsec, v, pp, p);
-
-}
-
-int parse_file_id(FSFileID *pval, const char **pp)
-{
-    int parse_file_id__part1133(uint64_t *pval, const char **pp);
-    return parse_file_id__part1133(pval, pp);
-
-}
-
-char *file_id_to_filename(char *buf, FSFileID file_id)
-{
-        char *file_id_to_filename__part1135(char *buf, FSFileID file_id);
-    return file_id_to_filename__part1135(buf, file_id);
-
-}
-
-void encode_hex(char *str, const uint8_t *buf, int len)
-{
-    int i;
-    void encode_hex__part1137(char *out, const uint8_t *buf, int len);
-    encode_hex__part1137(str, buf, len);
-
-}
-
-int decode_hex(uint8_t *buf, const char *str, int len)
-{
-    int h0, h1, i;
-
-    int decode_hex__part1139(uint8_t *buf, const char *str, int len);
-    {
-        int _r = decode_hex__part1139(buf, str, len);
-        if (_r < 0)
-            return _r;
-    }
-
-    int decode_hex__part1140(void);
-    return decode_hex__part1140();
-}
+int decode_hex(uint8_t *buf, const char *str, int len);
 
 
-const char *skip_header(const char *p)
-{
-    const char *skip_header__part1142(const char *p);
-    p = skip_header__part1142(p);
-
-    int skip_header__part1143(const char *p);
-    if (skip_header__part1143(p))
-        return
-              ((void *)0)
-                  ;
-
-    const char *skip_header__part1144(const char *p);
-    return skip_header__part1144(p);
-
-}
+const char *skip_header(const char *p);
 
 
-int parse_tag(char *buf, int buf_size, const char *str, const char *tag)
-{
-    char tagname[128], *q;
-    const char *p, *p1;
-    int len;
+int parse_tag(char *buf, int buf_size, const char *str, const char *tag);
 
-    void parse_tag__part1146(char *tagname_, char **q_, const char **p_, const char **p1_, int *len_, const char *str_);
-    parse_tag__part1146(tagname, &q, &p, &p1, &len, str);
+int parse_tag_uint64(uint64_t *pval, const char *str, const char *tag);
 
-    int parse_tag__part1147(char *buf, int buf_size, const char *str, const char *tag);
-    (void)tagname;
-    (void)q;
-    (void)p1;
-    (void)len;
-    (void)p;
-    return parse_tag__part1147(buf, buf_size, str, tag);
+int parse_tag_file_id(FSFileID *pval, const char *str, const char *tag);
 
-    int parse_tag__part1148(void);
-    return parse_tag__part1148();
-}
+int parse_tag_version(const char *str);
 
-int parse_tag_uint64(uint64_t *pval, const char *str, const char *tag)
-{
-    char buf[64];
-    const char *p;
-        {
-        int parse_tag_uint64__part1150(char *buf, int buf_size, const char *str, const char *tag);
-        if (parse_tag_uint64__part1150(buf, sizeof(buf), str, tag))
-            return -1;
-    }
-
-    int parse_tag_uint64__part1151(uint64_t *pval, const char *buf);
-    return parse_tag_uint64__part1151(pval, buf);
-
-}
-
-int parse_tag_file_id(FSFileID *pval, const char *str, const char *tag)
-{
-    char buf[64];
-    const char *p;
-    int parse_tag_file_id__part1153(char *buf, int buf_size, const char *str, const char *tag);
-    if (parse_tag_file_id__part1153(buf, (int)sizeof(buf), str, tag))
-        return -1;
-
-    int parse_tag_file_id__part1154(FSFileID *pval, const char *buf);
-    p = buf;
-    (void)p;
-    return parse_tag_file_id__part1154(pval, buf);
-
-}
-
-int parse_tag_version(const char *str)
-{
-    uint64_t version;
-    int parse_tag_version__part1156(uint64_t *version, const char *str);
-    if (parse_tag_version__part1156(&version, str))
-        return -1;
-    int parse_tag_version__part1157(unsigned long int version);
-return parse_tag_version__part1157(version);
-
-}
-
-BOOL is_url(const char *path)
-{
-    int is_url__part1159(const char *path);
-    return is_url__part1159(path);
-}
+BOOL is_url(const char *path);

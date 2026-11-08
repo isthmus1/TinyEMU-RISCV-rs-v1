@@ -1,5 +1,1028 @@
 //! From `slirp/tcp_output.c`.
 
+// ── `tcp_output` · slirp/tcp_output.c:55-477 · chunk 2738 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     int
+//     tcp_output(struct tcpcb *tp)
+//     {
+//      register struct socket *so = tp->t_socket;
+//      register long len, win;
+//      int off, flags, error;
+//      register struct mbuf *m;
+//      register struct tcpiphdr *ti;
+//      u_char opt[32];
+//      unsigned optlen, hdrlen;
+//      int idle, sendalot;
+//     
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      idle = (tp->snd_max == tp->snd_una);
+//      if (idle && tp->t_idle >= tp->t_rxtcur)
+//     
+//     
+//     
+//     
+//     
+//       tp->snd_cwnd = tp->t_maxseg;
+//     again:
+//      sendalot = 0;
+//      off = tp->snd_nxt - tp->snd_una;
+//      win = ((tp->snd_wnd) < (tp->snd_cwnd) ? (tp->snd_wnd) : (tp->snd_cwnd));
+//     
+//      flags = tcp_outflags[tp->t_state];
+//     
+//      ;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (tp->t_force) {
+//       if (win == 0) {
+//        if (off < so->so_snd.sb_cc)
+//         flags &= ~0x01;
+//        win = 1;
+//       } else {
+//        tp->t_timer[1] = 0;
+//        tp->t_rxtshift = 0;
+//       }
+//      }
+//     
+//      len = ((so->so_snd.sb_cc) < (win) ? (so->so_snd.sb_cc) : (win)) - off;
+//     
+//      if (len < 0) {
+//       len = 0;
+//       if (win == 0) {
+//        tp->t_timer[0] = 0;
+//        tp->snd_nxt = tp->snd_una;
+//       }
+//      }
+//     
+//      if (len > tp->t_maxseg) {
+//       len = tp->t_maxseg;
+//       sendalot = 1;
+//      }
+//      if (((int)((tp->snd_nxt + len)-(tp->snd_una + so->so_snd.sb_cc)) < 0))
+//       flags &= ~0x01;
+//     
+//      win = ((&so->so_rcv)->sb_datalen - (&so->so_rcv)->sb_cc);
+//      if (len) {
+//       if (len == tp->t_maxseg)
+//        goto send;
+//       if ((1 || idle || tp->t_flags & 0x0004) &&
+//           len + off >= so->so_snd.sb_cc)
+//        goto send;
+//       if (tp->t_force)
+//        goto send;
+//       if (len >= tp->max_sndwnd / 2 && tp->max_sndwnd > 0)
+//        goto send;
+//       if (((int)((tp->snd_nxt)-(tp->snd_max)) < 0))
+//        goto send;
+//      }
+//      if (win > 0) {
+//     
+//     
+//     
+//     
+//     
+//       long adv = ((win) < ((long)65535 << tp->rcv_scale) ? (win) : ((long)65535 << tp->rcv_scale)) -
+//        (tp->rcv_adv - tp->rcv_nxt);
+//     
+//       if (adv >= (long) (2 * tp->t_maxseg))
+//        goto send;
+//       if (2 * adv >= (long) so->so_rcv.sb_datalen)
+//        goto send;
+//      }
+//     
+//     
+//     
+//     
+//      if (tp->t_flags & 0x0001)
+//       goto send;
+//      if (flags & (0x02|0x04))
+//       goto send;
+//      if (((int)((tp->snd_up)-(tp->snd_una)) > 0))
+//       goto send;
+//     
+//     
+//     
+//     
+//     
+//      if (flags & 0x01 &&
+//          ((tp->t_flags & 0x0010) == 0 || tp->snd_nxt == tp->snd_una))
+//       goto send;
+//      if (so->so_snd.sb_cc && tp->t_timer[0] == 0 &&
+//          tp->t_timer[1] == 0) {
+//       tp->t_rxtshift = 0;
+//       tcp_setpersist(tp);
+//      }
+//     
+//     
+//     
+//     
+//      return (0);
+//     
+//     send:
+//      optlen = 0;
+//      hdrlen = sizeof (struct tcpiphdr);
+//      if (flags & 0x02) {
+//       tp->snd_nxt = tp->iss;
+//       if ((tp->t_flags & 0x0008) == 0) {
+//        uint16_t mss;
+//     
+//        opt[0] = 2;
+//        opt[1] = 4;
+//        mss = htons((uint16_t) tcp_mss(tp, 0));
+//        memcpy((caddr_t)(opt + 2), (caddr_t)&mss, sizeof(mss));
+//        optlen = 4;
+//       }
+//       }
+//     
+//       hdrlen += optlen;
+//     
+//     
+//     
+//     
+//     
+//       if (len > tp->t_maxseg - optlen) {
+//       len = tp->t_maxseg - optlen;
+//       sendalot = 1;
+//       }
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (len) {
+//       m = m_get(so->slirp);
+//       if (m == 
+//               ((void *)0)
+//                   ) {
+//        error = 1;
+//        goto out;
+//       }
+//       m->m_hdr.mh_data += (2 + 14 + 40);
+//       m->m_hdr.mh_len = hdrlen;
+//     
+//       sbcopy(&so->so_snd, off, (int) len, ((caddr_t)(m)->m_hdr.mh_data) + hdrlen);
+//       m->m_hdr.mh_len += len;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       if (off + len == so->so_snd.sb_cc)
+//        flags |= 0x08;
+//      } else {
+//       m = m_get(so->slirp);
+//       if (m == 
+//               ((void *)0)
+//                   ) {
+//        error = 1;
+//        goto out;
+//       }
+//       m->m_hdr.mh_data += (2 + 14 + 40);
+//       m->m_hdr.mh_len = hdrlen;
+//      }
+//     
+//      ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);
+//     
+//      memcpy((caddr_t)ti, &tp->t_template, sizeof (struct tcpiphdr));
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (flags & 0x01 && tp->t_flags & 0x0010 &&
+//          tp->snd_nxt == tp->snd_max)
+//       tp->snd_nxt--;
+//      if (len || (flags & (0x02|0x01)) || tp->t_timer[1])
+//       ti->ti_t.th_seq = htonl(tp->snd_nxt);
+//      else
+//       ti->ti_t.th_seq = htonl(tp->snd_max);
+//      ti->ti_t.th_ack = htonl(tp->rcv_nxt);
+//      if (optlen) {
+//       memcpy((caddr_t)(ti + 1), (caddr_t)opt, optlen);
+//       ti->ti_t.th_off = (sizeof (struct tcphdr) + optlen) >> 2;
+//      }
+//      ti->ti_t.th_flags = flags;
+//     
+//     
+//     
+//     
+//      if (win < (long)(so->so_rcv.sb_datalen / 4) && win < (long)tp->t_maxseg)
+//       win = 0;
+//      if (win > (long)65535 << tp->rcv_scale)
+//       win = (long)65535 << tp->rcv_scale;
+//      if (win < (long)(tp->rcv_adv - tp->rcv_nxt))
+//       win = (long)(tp->rcv_adv - tp->rcv_nxt);
+//      ti->ti_t.th_win = htons((uint16_t) (win>>tp->rcv_scale));
+//     
+//      if (((int)((tp->snd_up)-(tp->snd_una)) > 0)) {
+//       ti->ti_t.th_urp = htons((uint16_t)(tp->snd_up - ntohl(ti->ti_t.th_seq)));
+//       ti->ti_t.th_flags |= 0x20;
+//      } else
+//     
+//     
+//     
+//     
+//     
+//     
+//       tp->snd_up = tp->snd_una;
+//     
+//     
+//     
+//     
+//     
+//      if (len + optlen)
+//       ti->ti_i.ih_len = htons((uint16_t)(sizeof (struct tcphdr) +
+//           optlen + len));
+//      ti->ti_t.th_sum = cksum(m, (int)(hdrlen + len));
+//     
+//     
+//     
+//     
+//     
+//      if (tp->t_force == 0 || tp->t_timer[1] == 0) {
+//       tcp_seq startseq = tp->snd_nxt;
+//     
+//     
+//     
+//     
+//       if (flags & (0x02|0x01)) {
+//        if (flags & 0x02)
+//         tp->snd_nxt++;
+//        if (flags & 0x01) {
+//         tp->snd_nxt++;
+//         tp->t_flags |= 0x0010;
+//        }
+//       }
+//       tp->snd_nxt += len;
+//       if (((int)((tp->snd_nxt)-(tp->snd_max)) > 0)) {
+//        tp->snd_max = tp->snd_nxt;
+//     
+//     
+//     
+//     
+//        if (tp->t_rtt == 0) {
+//         tp->t_rtt = 1;
+//         tp->t_rtseq = startseq;
+//        }
+//       }
+//       if (tp->t_timer[0] == 0 &&
+//           tp->snd_nxt != tp->snd_una) {
+//        tp->t_timer[0] = tp->t_rxtcur;
+//        if (tp->t_timer[1]) {
+//         tp->t_timer[1] = 0;
+//         tp->t_rxtshift = 0;
+//        }
+//       }
+//      } else
+//       if (((int)((tp->snd_nxt + len)-(tp->snd_max)) > 0))
+//        tp->snd_max = tp->snd_nxt + len;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      m->m_hdr.mh_len = hdrlen + len;
+//     
+//         {
+//     
+//      ((struct ip *)ti)->ip_len = m->m_hdr.mh_len;
+//     
+//      ((struct ip *)ti)->ip_ttl = 64;
+//      ((struct ip *)ti)->ip_tos = so->so_iptos;
+//     
+//      error = ip_output(so, m);
+//         }
+//      if (error) {
+//     out:
+//       return (error);
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (win > 0 && ((int)((tp->rcv_nxt+win)-(tp->rcv_adv)) > 0))
+//       tp->rcv_adv = tp->rcv_nxt + win;
+//      tp->last_ack_sent = tp->rcv_nxt;
+//      tp->t_flags &= ~(0x0001|0x0002);
+//      if (sendalot)
+//       goto again;
+//     
+//      return (0);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2738 {
+// Rust port of slirp's tcp_output() (slirp/tcp_output.c lines 55-477).
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_parens)]
+
+use std::ffi::{c_char, c_int, c_uint};
+use std::mem::size_of;
+use std::ptr::{addr_of, addr_of_mut, copy_nonoverlapping};
+
+// TCP header flags
+const TH_FIN: c_int = 0x01;
+const TH_SYN: c_int = 0x02;
+const TH_RST: c_int = 0x04;
+const TH_PUSH: c_int = 0x08;
+const TH_ACK: c_int = 0x10;
+const TH_URG: c_int = 0x20;
+
+// tcpcb flags
+const TF_ACKNOW: u16 = 0x0001;
+const TF_DELACK: u16 = 0x0002;
+const TF_NODELAY: u16 = 0x0004;
+const TF_NOOPT: u16 = 0x0008;
+const TF_SENTFIN: u16 = 0x0010;
+
+// timer indices
+const TCPT_REXMT: usize = 0;
+const TCPT_PERSIST: usize = 1;
+
+const TCP_MAXWIN: i64 = 65535;
+const IF_MAXLINKHDR: usize = 2 + 14 + 40;
+const TCPOPT_MAXSEG: u8 = 2;
+// sizeof(struct tcphdr) == 20
+const TCPHDR_SIZE: i64 = 20;
+const IPDEFTTL: u8 = 64;
+// sizeof(struct tcpiphdr) == 40
+const TCPIPHDR_SIZE: usize = 40;
+
+// static const u_char tcp_outflags[TCP_NSTATES] (a file-scope static in the C,
+// therefore not a linker symbol: replicated here).
+const TCP_OUTFLAGS: [u8; 11] = [
+    (TH_RST | TH_ACK) as u8, // 0x14
+    0,
+    TH_SYN as u8,            // 0x02
+    (TH_SYN | TH_ACK) as u8, // 0x12
+    TH_ACK as u8,            // 0x10
+    TH_ACK as u8,            // 0x10
+    (TH_FIN | TH_ACK) as u8, // 0x11
+    (TH_FIN | TH_ACK) as u8, // 0x11
+    (TH_FIN | TH_ACK) as u8, // 0x11
+    TH_ACK as u8,            // 0x10
+    TH_ACK as u8,            // 0x10
+];
+
+#[inline]
+fn tcp_outflags_at(state: i16) -> c_int {
+    let i = state as i32;
+    if i >= 0 && i < TCP_OUTFLAGS.len() as i32 {
+        TCP_OUTFLAGS[i as usize] as c_int
+    } else {
+        0
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Mirrored C structures
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+// struct ip (packed).  The `u_int ip_hl:4, ip_v:4;` bitfield occupies the
+// first byte on little-endian hosts, immediately followed by ip_tos.
+#[repr(C, packed)]
+pub struct ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: in_addr,
+    pub ip_dst: in_addr,
+}
+
+// struct mbuf_ptr (packed): a single pointer.
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct mbuf_ptr {
+    pub mptr: *mut mbuf,
+}
+
+// struct ipovly (packed)
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipovly {
+    pub ih_mbuf: mbuf_ptr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+// struct tcphdr.  The `u_int th_x2:4, th_off:4;` bitfield lives in the byte at
+// offset 12 (th_x2 in the low nibble, th_off in the high nibble on
+// little-endian hosts); th_flags follows at offset 13.  Total size 20.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    pub th_x2_off: u8,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+// struct tcpiphdr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct tcpiphdr {
+    pub ti_i: ipovly,
+    pub ti_t: tcphdr,
+}
+
+#[repr(C)]
+pub struct sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+// union M_dat { char m_dat_[1]; char *m_ext_; }
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union M_dat {
+    pub m_dat_: [u8; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[repr(C)]
+pub struct tcpcb {
+    pub seg_next: *mut tcpiphdr,
+    pub seg_prev: *mut tcpiphdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: u16,
+    pub t_force: i8,
+    pub t_flags: u16,
+    pub t_template: tcpiphdr,
+    pub t_socket: *mut socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: i16,
+    pub t_rtt: i16,
+    pub t_rtseq: u32,
+    pub t_srtt: i16,
+    pub t_rttvar: i16,
+    pub t_rttmin: u16,
+    pub max_sndwnd: u32,
+    pub t_oobflags: i8,
+    pub t_iobc: i8,
+    pub t_softerror: i16,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+#[repr(C)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut tcpcb,
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut std::ffi::c_void,
+}
+
+unsafe extern "C" {
+    fn m_get(slirp: *mut Slirp) -> *mut mbuf;
+    fn sbcopy(sb: *mut sbuf, off: c_int, len: c_int, to: *mut c_char);
+    fn cksum(m: *mut mbuf, len: c_int) -> c_int;
+    fn ip_output(so: *mut socket, m: *mut mbuf) -> c_int;
+    fn tcp_mss(tp: *mut tcpcb, offer: c_uint) -> c_int;
+    fn tcp_setpersist(tp: *mut tcpcb);
+    fn htons(x: u16) -> u16;
+    fn htonl(x: u32) -> u32;
+    fn ntohl(x: u32) -> u32;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_output(tp: *mut tcpcb) -> c_int {
+    unsafe {
+        let so: *mut socket = (*tp).t_socket;
+        let mut len: i64;
+        let mut win: i64;
+        let mut off: c_int;
+        let mut flags: c_int;
+        let mut m: *mut mbuf;
+        let mut ti: *mut tcpiphdr;
+        let mut opt = [0u8; 32];
+        let mut optlen: u32;
+        let mut hdrlen: u32;
+        let mut sendalot: c_int;
+
+        /*
+         * Determine length of data that should be transmitted,
+         * and flags that will be used.
+         */
+        let idle: c_int = if (*tp).snd_max == (*tp).snd_una { 1 } else { 0 };
+        if idle != 0 && (*tp).t_idle >= (*tp).t_rxtcur {
+            /*
+             * We have been idle for "a while" and no acks are
+             * expected to clock out any data we send --
+             * slow start to get ack "clock" running again.
+             */
+            (*tp).snd_cwnd = (*tp).t_maxseg as u32;
+        }
+
+        'again: loop {
+            sendalot = 0;
+            off = (*tp).snd_nxt.wrapping_sub((*tp).snd_una) as c_int;
+            {
+                let w = (*tp).snd_wnd;
+                let c = (*tp).snd_cwnd;
+                win = (if w < c { w } else { c }) as i64;
+            }
+
+            flags = tcp_outflags_at((*tp).t_state);
+
+            /*
+             * If in persist timeout with window of 0, send 1 byte.
+             * Otherwise, if window is small but nonzero and the timer
+             * expired, we will send what we can and go to transmit state.
+             */
+            if (*tp).t_force != 0 {
+                if win == 0 {
+                    /*
+                     * If we still have some data to send, then clear the FIN
+                     * bit.  We can't just blindly clear the FIN bit, because
+                     * if we don't have any more data to send then the probe
+                     * will be the FIN itself.
+                     */
+                    if (off as u32) < (*so).so_snd.sb_cc {
+                        flags &= !TH_FIN;
+                    }
+                    win = 1;
+                } else {
+                    (*tp).t_timer[TCPT_PERSIST] = 0;
+                    (*tp).t_rxtshift = 0;
+                }
+            }
+
+            let sb_cc_snd: i64 = (*so).so_snd.sb_cc as i64;
+            len = (if sb_cc_snd < win { sb_cc_snd } else { win }) - (off as i64);
+
+            if len < 0 {
+                /*
+                 * If FIN has been sent but not acked, but we haven't been
+                 * called to retransmit, len will be -1.  If window shrank to
+                 * 0, cancel pending retransmit and pull snd_nxt back to the
+                 * (closed) window.
+                 */
+                len = 0;
+                if win == 0 {
+                    (*tp).t_timer[TCPT_REXMT] = 0;
+                    (*tp).snd_nxt = (*tp).snd_una;
+                }
+            }
+
+            if len > (*tp).t_maxseg as i64 {
+                len = (*tp).t_maxseg as i64;
+                sendalot = 1;
+            }
+            // SEQ_LT(tp->snd_nxt + len, tp->snd_una + so->so_snd.sb_cc)
+            {
+                let a: i64 = ((*tp).snd_nxt as i64).wrapping_add(len);
+                let b: u32 = (*tp).snd_una.wrapping_add((*so).so_snd.sb_cc);
+                if (a.wrapping_sub(b as i64) as c_int) < 0 {
+                    flags &= !TH_FIN;
+                }
+            }
+
+            // win = sbspace(&so->so_rcv);
+            win = (*so).so_rcv.sb_datalen.wrapping_sub((*so).so_rcv.sb_cc) as i64;
+
+            /*
+             * Sender silly window avoidance.
+             */
+            let mut go: bool = false;
+            if len != 0 {
+                if len == (*tp).t_maxseg as i64 {
+                    go = true;
+                }
+                if !go && len + (off as i64) >= (*so).so_snd.sb_cc as i64 {
+                    go = true;
+                }
+                if !go && (*tp).t_force != 0 {
+                    go = true;
+                }
+                if !go && len >= ((*tp).max_sndwnd / 2) as i64 && (*tp).max_sndwnd > 0 {
+                    go = true;
+                }
+                if !go && ((*tp).snd_nxt.wrapping_sub((*tp).snd_max) as c_int) < 0 {
+                    go = true;
+                }
+            }
+
+            /*
+             * Compare available window to amount of window known to peer.
+             * If the difference is at least two max size segments, or at
+             * least 50% of the maximum possible window, then we want to
+             * send a window update to peer.
+             */
+            if !go && win > 0 {
+                let maxwin: i64 = TCP_MAXWIN.wrapping_shl((*tp).rcv_scale as u32);
+                let basis: i64 = if win < maxwin { win } else { maxwin };
+                let adv: i64 = basis
+                    .wrapping_sub((*tp).rcv_adv.wrapping_sub((*tp).rcv_nxt) as i64);
+
+                if adv >= (2i32.wrapping_mul((*tp).t_maxseg as i32)) as i64 {
+                    go = true;
+                }
+                if !go && 2i64.wrapping_mul(adv) >= (*so).so_rcv.sb_datalen as i64 {
+                    go = true;
+                }
+            }
+
+            /*
+             * Send if we owe peer an ACK.
+             */
+            if !go && ((*tp).t_flags & TF_ACKNOW) != 0 {
+                go = true;
+            }
+            if !go && (flags & (TH_SYN | TH_RST)) != 0 {
+                go = true;
+            }
+            if !go && ((*tp).snd_up.wrapping_sub((*tp).snd_una) as c_int) > 0 {
+                go = true;
+            }
+            /*
+             * If our state indicates that FIN should be sent and we have not
+             * yet done so, or we're retransmitting the FIN, then we need to
+             * send.
+             */
+            if !go
+                && (flags & TH_FIN) != 0
+                && (((*tp).t_flags & TF_SENTFIN) == 0 || (*tp).snd_nxt == (*tp).snd_una)
+            {
+                go = true;
+            }
+
+            if !go {
+                /*
+                 * If send window is too small, there is data to transmit, and
+                 * no retransmit or persist is pending, then go to persist
+                 * state.
+                 */
+                if (*so).so_snd.sb_cc != 0
+                    && (*tp).t_timer[TCPT_REXMT] == 0
+                    && (*tp).t_timer[TCPT_PERSIST] == 0
+                {
+                    (*tp).t_rxtshift = 0;
+                    tcp_setpersist(tp);
+                }
+
+                /*
+                 * No reason to send a segment, just return.
+                 */
+                return 0;
+            }
+
+            // -------------------------------------------------------------
+            // send:
+            // -------------------------------------------------------------
+            optlen = 0;
+            hdrlen = TCPIPHDR_SIZE as u32;
+            if (flags & TH_SYN) != 0 {
+                (*tp).snd_nxt = (*tp).iss;
+                if ((*tp).t_flags & TF_NOOPT) == 0 {
+                    let mss: u16 = htons(tcp_mss(tp, 0) as u16);
+                    opt[0] = TCPOPT_MAXSEG;
+                    opt[1] = 4;
+                    copy_nonoverlapping(addr_of!(mss) as *const u8, opt.as_mut_ptr().add(2), 2);
+                    optlen = 4;
+                }
+            }
+
+            hdrlen = hdrlen.wrapping_add(optlen);
+
+            /*
+             * Adjust data length if insertion of options will bump the packet
+             * length beyond the t_maxseg length.
+             */
+            {
+                let maxseg: u32 = (*tp).t_maxseg as u32;
+                let limit: i64 = maxseg.wrapping_sub(optlen) as i64;
+                if len > limit {
+                    len = limit;
+                    sendalot = 1;
+                }
+            }
+
+            /*
+             * Grab a header mbuf, attaching a copy of data to be transmitted.
+             */
+            if len != 0 {
+                m = m_get((*so).slirp);
+                if m.is_null() {
+                    return 1;
+                }
+                (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.add(IF_MAXLINKHDR);
+                (*m).m_hdr.mh_len = hdrlen as c_int;
+
+                sbcopy(
+                    addr_of_mut!((*so).so_snd),
+                    off,
+                    len as c_int,
+                    (*m).m_hdr.mh_data.add(hdrlen as usize),
+                );
+                (*m).m_hdr.mh_len = ((*m).m_hdr.mh_len as i64).wrapping_add(len) as c_int;
+
+                /*
+                 * If we're sending everything we've got, set PUSH.
+                 */
+                if (off as i64).wrapping_add(len) == (*so).so_snd.sb_cc as i64 {
+                    flags |= TH_PUSH;
+                }
+            } else {
+                m = m_get((*so).slirp);
+                if m.is_null() {
+                    return 1;
+                }
+                (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.add(IF_MAXLINKHDR);
+                (*m).m_hdr.mh_len = hdrlen as c_int;
+            }
+
+            ti = (*m).m_hdr.mh_data as *mut tcpiphdr;
+
+            copy_nonoverlapping(
+                addr_of!((*tp).t_template) as *const u8,
+                ti as *mut u8,
+                size_of::<tcpiphdr>(),
+            );
+
+            /*
+             * Fill in fields, remembering maximum advertised window for use in
+             * delaying messages about window sizes.  If resending a FIN, be
+             * sure not to use a new sequence number.
+             */
+            if (flags & TH_FIN) != 0
+                && ((*tp).t_flags & TF_SENTFIN) != 0
+                && (*tp).snd_nxt == (*tp).snd_max
+            {
+                (*tp).snd_nxt = (*tp).snd_nxt.wrapping_sub(1);
+            }
+            /*
+             * For ACK only packets, we do not want the sequence number of the
+             * retransmitted packet, we want the sequence number of the next
+             * unsent octet.  But if we are in persist state, use snd_nxt, since
+             * we know we aren't doing a retransmission.
+             */
+            if len != 0
+                || (flags & (TH_SYN | TH_FIN)) != 0
+                || (*tp).t_timer[TCPT_PERSIST] != 0
+            {
+                (*ti).ti_t.th_seq = htonl((*tp).snd_nxt);
+            } else {
+                (*ti).ti_t.th_seq = htonl((*tp).snd_max);
+            }
+            (*ti).ti_t.th_ack = htonl((*tp).rcv_nxt);
+            if optlen != 0 {
+                copy_nonoverlapping(
+                    opt.as_ptr(),
+                    (ti as *mut u8).add(TCPIPHDR_SIZE),
+                    optlen as usize,
+                );
+                // ti->ti_off = (sizeof (struct tcphdr) + optlen) >> 2;
+                let thoff: u8 = (TCPHDR_SIZE.wrapping_add(optlen as i64) >> 2) as u8;
+                let p = addr_of_mut!((*ti).ti_t.th_x2_off);
+                *p = (*p & 0x0f) | ((thoff & 0x0f) << 4);
+            }
+            (*ti).ti_t.th_flags = flags as u8;
+
+            /*
+             * Calculate receive window.  Don't shrink window, but avoid silly
+             * window syndrome.
+             */
+            if win < ((*so).so_rcv.sb_datalen / 4) as i64 && win < (*tp).t_maxseg as i64 {
+                win = 0;
+            }
+            {
+                let maxwin: i64 = TCP_MAXWIN.wrapping_shl((*tp).rcv_scale as u32);
+                if win > maxwin {
+                    win = maxwin;
+                }
+            }
+            {
+                let advwin: i64 = (*tp).rcv_adv.wrapping_sub((*tp).rcv_nxt) as i64;
+                if win < advwin {
+                    win = advwin;
+                }
+            }
+            (*ti).ti_t.th_win = htons(win.wrapping_shr((*tp).rcv_scale as u32) as u16);
+
+            if ((*tp).snd_up.wrapping_sub((*tp).snd_una) as c_int) > 0 {
+                (*ti).ti_t.th_urp =
+                    htons((*tp).snd_up.wrapping_sub(ntohl((*ti).ti_t.th_seq)) as u16);
+                (*ti).ti_t.th_flags |= TH_URG as u8;
+            } else {
+                /*
+                 * If no urgent pointer to send, then we pull the urgent pointer
+                 * to the left edge of the send window so that it doesn't drift
+                 * into the send window on sequence number wraparound.
+                 */
+                (*tp).snd_up = (*tp).snd_una;
+            }
+
+            /*
+             * Put TCP length in extended header, and then checksum extended
+             * header and data.
+             */
+            if len.wrapping_add(optlen as i64) != 0 {
+                let tl: i64 = TCPHDR_SIZE.wrapping_add(optlen as i64).wrapping_add(len);
+                addr_of_mut!((*ti).ti_i.ih_len).write_unaligned(htons(tl as u16));
+            }
+            // th_sum is uint16_t, the int result is truncated by the assignment
+            (*ti).ti_t.th_sum = cksum(m, (hdrlen as i64).wrapping_add(len) as c_int) as u16;
+
+            /*
+             * In transmit state, time the transmission and arrange for the
+             * retransmit.  In persist state, just set snd_max.
+             */
+            if (*tp).t_force == 0 || (*tp).t_timer[TCPT_PERSIST] == 0 {
+                let startseq: u32 = (*tp).snd_nxt;
+
+                /*
+                 * Advance snd_nxt over sequence space of this segment.
+                 */
+                if (flags & (TH_SYN | TH_FIN)) != 0 {
+                    if (flags & TH_SYN) != 0 {
+                        (*tp).snd_nxt = (*tp).snd_nxt.wrapping_add(1);
+                    }
+                    if (flags & TH_FIN) != 0 {
+                        (*tp).snd_nxt = (*tp).snd_nxt.wrapping_add(1);
+                        (*tp).t_flags |= TF_SENTFIN;
+                    }
+                }
+                (*tp).snd_nxt = (*tp).snd_nxt.wrapping_add(len as u32);
+                if ((*tp).snd_nxt.wrapping_sub((*tp).snd_max) as c_int) > 0 {
+                    (*tp).snd_max = (*tp).snd_nxt;
+                    /*
+                     * Time this transmission if not a retransmission and not
+                     * currently timing anything.
+                     */
+                    if (*tp).t_rtt == 0 {
+                        (*tp).t_rtt = 1;
+                        (*tp).t_rtseq = startseq;
+                    }
+                }
+
+                /*
+                 * Set retransmit timer if not currently set, and not doing an
+                 * ack or a keep-alive probe.
+                 */
+                if (*tp).t_timer[TCPT_REXMT] == 0 && (*tp).snd_nxt != (*tp).snd_una {
+                    (*tp).t_timer[TCPT_REXMT] = (*tp).t_rxtcur;
+                    if (*tp).t_timer[TCPT_PERSIST] != 0 {
+                        (*tp).t_timer[TCPT_PERSIST] = 0;
+                        (*tp).t_rxtshift = 0;
+                    }
+                }
+            } else if ((*tp).snd_nxt as i64)
+                .wrapping_add(len)
+                .wrapping_sub((*tp).snd_max as i64) as c_int
+                > 0
+            {
+                (*tp).snd_max = ((*tp).snd_nxt as i64).wrapping_add(len) as u32;
+            }
+
+            /*
+             * Fill in IP length and desired time to live and send to IP level.
+             */
+            (*m).m_hdr.mh_len = (hdrlen as i64).wrapping_add(len) as c_int;
+
+            {
+                let ipp = ti as *mut ip;
+                addr_of_mut!((*ipp).ip_len).write_unaligned((*m).m_hdr.mh_len as u16);
+                addr_of_mut!((*ipp).ip_ttl).write_unaligned(IPDEFTTL);
+                addr_of_mut!((*ipp).ip_tos).write_unaligned((*so).so_iptos);
+            }
+
+            let error: c_int = ip_output(so, m);
+            if error != 0 {
+                return error;
+            }
+
+            /*
+             * Data sent (as far as we can tell).  If this advertises a larger
+             * window than any other segment, then remember the size of the
+             * advertised window.  Any pending ACK has now been sent.
+             */
+            {
+                let a: i64 = ((*tp).rcv_nxt as i64).wrapping_add(win);
+                if win > 0 && (a.wrapping_sub((*tp).rcv_adv as i64) as c_int) > 0 {
+                    (*tp).rcv_adv = a as u32;
+                }
+            }
+            (*tp).last_ack_sent = (*tp).rcv_nxt;
+            (*tp).t_flags &= !(TF_ACKNOW | TF_DELACK);
+            if sendalot != 0 {
+                continue 'again;
+            }
+
+            return 0;
+        }
+    }
+}
+}
+
 // ── `register struct socket *so = tp->t_socket; register long len, win; int off, flags, error; regis…` · slirp/tcp_output.c:58-76 · chunk 2739 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2940,6 +3963,160 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn tcp_output__part2783() -> c_int {
     0
+}
+}
+
+// ── `tcp_setpersist` · slirp/tcp_output.c:479-492 · chunk 2784 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_setpersist(struct tcpcb *tp)
+//     {
+//         int t = ((tp->t_srtt >> 2) + tp->t_rttvar) >> 1;
+//     
+//     
+//     
+//     
+//      { (tp->t_timer[1]) = (t * tcp_backoff[tp->t_rxtshift]); if ((tp->t_timer[1]) < (( 5*2))) (tp->t_timer[1]) = (( 5*2)); else if ((tp->t_timer[1]) > (( 60*2))) (tp->t_timer[1]) = (( 60*2)); }
+//     
+//                                       ;
+//      if (tp->t_rxtshift < 12)
+//       tp->t_rxtshift++;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2784 {
+// Rust rewrite of slirp's tcp_setpersist(struct tcpcb *tp)
+
+use core::ffi::{c_char, c_int, c_short, c_ushort};
+
+#[repr(C)]
+pub struct socket {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct mbuf {
+    _opaque: [u8; 0],
+}
+
+#[repr(C, packed)]
+pub struct mbuf_ptr {
+    pub mptr: *mut mbuf,
+}
+
+#[repr(C)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+#[repr(C, packed)]
+pub struct ipovly {
+    pub ih_mbuf: mbuf_ptr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+#[repr(C)]
+pub struct tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    // u_int th_x2:4, th_off:4;
+    pub th_x2_off: u8,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+#[repr(C)]
+pub struct tcpiphdr {
+    pub ti_i: ipovly,
+    pub ti_t: tcphdr,
+}
+
+#[repr(C)]
+pub struct tcpcb {
+    pub seg_next: *mut tcpiphdr,
+    pub seg_prev: *mut tcpiphdr,
+    pub t_state: c_short,
+    pub t_timer: [c_short; 4],
+    pub t_rxtshift: c_short,
+    pub t_rxtcur: c_short,
+    pub t_dupacks: c_short,
+    pub t_maxseg: c_ushort,
+    pub t_force: c_char,
+    pub t_flags: c_ushort,
+    pub t_template: tcpiphdr,
+    pub t_socket: *mut socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: c_short,
+    pub t_rtt: c_short,
+    pub t_rtseq: u32,
+    pub t_srtt: c_short,
+    pub t_rttvar: c_short,
+    pub t_rttmin: c_ushort,
+    pub max_sndwnd: u32,
+    pub t_oobflags: c_char,
+    pub t_iobc: c_char,
+    pub t_softerror: c_short,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+extern "C" {
+    static tcp_backoff: c_int;
+}
+
+const TCPT_PERSIST: usize = 1;
+const TCPTV_PERSMIN: c_int = 5 * 2;
+const TCPTV_PERSMAX: c_int = 60 * 2;
+const TCP_MAXRXTSHIFT: c_short = 12;
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_setpersist(tp: *mut tcpcb) {
+    let srtt = (*tp).t_srtt as c_int;
+    let rttvar = (*tp).t_rttvar as c_int;
+    let t: c_int = ((srtt >> 2).wrapping_add(rttvar)) >> 1;
+
+    let shift = (*tp).t_rxtshift as c_int;
+    let backoff = *core::ptr::addr_of!(tcp_backoff).offset(shift as isize);
+
+    // TCPT_RANGESET(tp->t_timer[TCPT_PERSIST], t * tcp_backoff[...], MIN, MAX)
+    let mut val: c_short = t.wrapping_mul(backoff) as c_short;
+    if (val as c_int) < TCPTV_PERSMIN {
+        val = TCPTV_PERSMIN as c_short;
+    } else if (val as c_int) > TCPTV_PERSMAX {
+        val = TCPTV_PERSMAX as c_short;
+    }
+    (*tp).t_timer[TCPT_PERSIST] = val;
+
+    if (*tp).t_rxtshift < TCP_MAXRXTSHIFT {
+        (*tp).t_rxtshift = (*tp).t_rxtshift.wrapping_add(1);
+    }
 }
 }
 

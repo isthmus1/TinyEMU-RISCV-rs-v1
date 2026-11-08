@@ -1269,84 +1269,13 @@ static const u32 rcon[] = {
 
 
 int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
-   AES_KEY *key) {
-
- u32 *rk;
-    int i = 0;
- u32 temp;
-
- int AES_set_encrypt_key__part67(const unsigned char *userKey, void *key);
-int ret = AES_set_encrypt_key__part67(userKey, key);
-if (ret != 0) return ret;
- int AES_set_encrypt_key__part68(int bits);
-return AES_set_encrypt_key__part68(bits);
-
- u32 *AES_set_encrypt_key__part69(u32 *rk, u32 *key_rd_key);
-rk = AES_set_encrypt_key__part69(rk, key->rd_key);
-
- void AES_set_encrypt_key__part70(int bits, AES_KEY *key);
-AES_set_encrypt_key__part70(bits, key);
-
- int AES_set_encrypt_key__part71(u32 *rk, const unsigned char *userKey);
-AES_set_encrypt_key__part71(rk, userKey);
- int AES_set_encrypt_key__part72(u32 *rk, int *i, u32 *temp);
- if (bits == 128) {
-  AES_set_encrypt_key__part72(rk, &i, &temp);
-  return 0;
- }
-
- void AES_set_encrypt_key__part73(u32 *rk, const unsigned char *user_key);
-AES_set_encrypt_key__part73(rk, userKey);
- int AES_set_encrypt_key__part74(u32 *rk, int *i, u32 *Te4, u32 *rcon);
-
-if (bits == 192) {
-  while (1) {
-    int result = AES_set_encrypt_key__part74(rk, &i, Te4, rcon);
-    if (result == 0) {
-      return 0;
-    }
-    rk += 6;
-  }
-}
- extern void AES_set_encrypt_key__part75(const unsigned char *userKey, unsigned int *rk);
-AES_set_encrypt_key__part75(userKey, rk);
- int AES_set_encrypt_key__part76(u32 *rk, int *i, const u32 *Te4, const u32 *rcon);
-return AES_set_encrypt_key__part76(rk, &i, Te4, rcon);
- int AES_set_encrypt_key__part77(void);
-return AES_set_encrypt_key__part77();
-}
+   AES_KEY *key);
 
 
 
 
 int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
-    AES_KEY *key) {
-
-        int AES_set_decrypt_key__part79(const unsigned char *userKey, const int bits, AES_KEY *key);
-u32 *rk;
- int i, j, status;
- u32 temp;
-
-
-status = AES_set_decrypt_key__part79(userKey, bits, key);
- int AES_set_decrypt_key__part80(int status);
-return AES_set_decrypt_key__part80(status);
-
- u32 *AES_set_decrypt_key__part81(const AES_KEY *key);
-rk = AES_set_decrypt_key__part81(key);
-
-
- extern void AES_set_decrypt_key__part82(u32 *rk, int rounds);
-AES_set_decrypt_key__part82(rk, key->rounds);
-
- // Prototype for the Rust-exported function
-int AES_set_decrypt_key__part83(AES_KEY *key, const u32 *te4, const u32 *td0, const u32 *td1, const u32 *td2, const u32 *td3);
-
-// Replace the TARGET for loop with a call to the Rust function
-return AES_set_decrypt_key__part83(key, Te4, Td0, Td1, Td2, Td3);
- int AES_set_decrypt_key__part84(const unsigned char *userKey, const int bits, AES_KEY *key);
-return AES_set_decrypt_key__part84(userKey, bits, key);
-}
+    AES_KEY *key);
 
 
 
@@ -1354,156 +1283,17 @@ return AES_set_decrypt_key__part84(userKey, bits, key);
 
 
 void AES_encrypt(const unsigned char *in, unsigned char *out,
-   const AES_KEY *key) {
-
- void AES_encrypt__part86(const unsigned char *in, const AES_KEY *key,
-    const u32 **rk_out, u32 *s0, u32 *s1, u32 *s2, u32 *s3,
-    u32 *t0, u32 *t1, u32 *t2, u32 *t3, int *r_out);
- const u32 *rk;
- u32 s0, s1, s2, s3, t0, t1, t2, t3;
-
- int r;
-
- AES_encrypt__part86(in, key, &rk, &s0, &s1, &s2, &s3, &t0, &t1, &t2, &t3, &r);
-
-    void AES_encrypt__part87(
-    u32 *s0, u32 *s1, u32 *s2, u32 *s3,
-    int *r,
-    const u32 *rk,
-    const u32 *te0, const u32 *te1, const u32 *te2, const u32 *te3,
-    u32 *t0, u32 *t1, u32 *t2, u32 *t3
-);
-AES_encrypt__part87(&s0, &s1, &s2, &s3, &r, rk, Te0, Te1, Te2, Te3, &t0, &t1, &t2, &t3);
-
-
-
-
-
- extern u32 AES_encrypt__part88(u32 t0, u32 t1, u32 t2, u32 t3, const u32 *rk);
-s0 = AES_encrypt__part88(t0, t1, t2, t3, rk);
- void AES_encrypt__part89(unsigned char *out, u32 s0);
-AES_encrypt__part89(out, s0);void AES_encrypt__part90(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk1, u8 *out);
-AES_encrypt__part90(t0, t1, t2, t3, rk[1], out + 4);
- void AES_encrypt__part91(unsigned int s1, unsigned char *out);
-AES_encrypt__part91(s1, out + 4);u32 AES_encrypt__part92(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk2);
-s2 = AES_encrypt__part92(t0, t1, t2, t3, rk[2]);
- void AES_encrypt__part93(u32 s2, unsigned char *out);
-AES_encrypt__part93(s2, out);u32 AES_encrypt__part94(u32 t0, u32 t1, u32 t2, u32 t3, u32 rk3);
-s3 = AES_encrypt__part94(t0, t1, t2, t3, rk[3]);
- void AES_encrypt__part95(u32 s3, unsigned char *out);
-AES_encrypt__part95(s3, out + 12);void AES_encrypt__part96(void);
-AES_encrypt__part96();
-}
+   const AES_KEY *key);
 
 
 
 
 
 void AES_decrypt(const unsigned char *in, unsigned char *out,
-   const AES_KEY *key) {
-
-  const u32 *rk;
- u32 s0, s1, s2, s3, t0, t1, t2, t3;
-
- int r;
-
- extern void AES_decrypt__part98(const unsigned char *inp, const AES_KEY *key,
-                                 const u32 **rk_out, u32 *s0_out, u32 *s1_out,
-                                 u32 *s2_out, u32 *s3_out, int *r_out);
-
- 
-((void) (0))
-                        ;
- AES_decrypt__part98(in, key, &rk, &s0, &s1, &s2, &s3, &r);
-
-        void AES_decrypt__part99(u32 s0, u32 s1, u32 s2, u32 s3,
-        const u32 **rkp, int *rp,
-        u32 *t0p, u32 *t1p, u32 *t2p, u32 *t3p);
-    AES_decrypt__part99(s0, s1, s2, s3, &rk, &r, &t0, &t1, &t2, &t3);
-
-
-
-
-
-    void AES_decrypt__part100(unsigned int t0, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int rk0, unsigned char *out);
-
-AES_decrypt__part100(t0, t1, t2, t3, rk[0], out);
- void AES_decrypt__part101(unsigned char *out, unsigned int s0);
-AES_decrypt__part101(out, s0);;
-    {
-        u32 AES_decrypt__part102(u32 t0, u32 t1, u32 t2, u32 t3, const u32 *rk);
-        s1 = AES_decrypt__part102(t0, t1, t2, t3, rk);
-    }
-
- void AES_decrypt__part103(u32 s1, unsigned char *out);
-AES_decrypt__part103(s1, out + 4);void AES_decrypt__part104(unsigned int t0, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int rk2, unsigned char *out);
-AES_decrypt__part104(t0, t1, t2, t3, rk[2], out + 8);
- void AES_decrypt__part105(u8 *out, u32 s2);
-AES_decrypt__part105(out + 8, s2);void AES_decrypt__part106_Rust(void);
-void AES_decrypt__part106_Rust(void);
- void AES_decrypt__part107(unsigned int s3, unsigned char *out);
-AES_decrypt__part107(s3, out + 12);extern void AES_decrypt__part108();
-AES_decrypt__part108();
-}
+   const AES_KEY *key);
 
 
 
 void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
        const unsigned long length, const AES_KEY *key,
-       unsigned char *ivec, const int enc)
-{
-
- typedef struct { unsigned long n; unsigned long len; unsigned char tmp[16]; } AES_cbc_encrypt__part110_result;
-AES_cbc_encrypt__part110_result AES_cbc_encrypt__part110(unsigned long length);
-AES_cbc_encrypt__part110_result r = AES_cbc_encrypt__part110(length);
-unsigned long n = r.n;
-unsigned long len = r.len;
-unsigned char tmp[16] = {r.tmp[0], r.tmp[1], r.tmp[2], r.tmp[3], r.tmp[4], r.tmp[5], r.tmp[6], r.tmp[7], r.tmp[8], r.tmp[9], r.tmp[10], r.tmp[11], r.tmp[12], r.tmp[13], r.tmp[14], r.tmp[15]};
-
- // Prototype of the Rust function, replacing the TARGET declaration
-void AES_cbc_encrypt__part111(const unsigned char *in, unsigned char *out,
-                              unsigned long *len, unsigned long *n,
-                              unsigned char *tmp, unsigned char *ivec,
-                              int enc, const void *key);
-
-// Call to the Rust function, replacing the TARGET block
-// This replaces the entire if/else block starting at line 1672
-if (enc) {
-  while (len >= 16) {
-   for(n=0; n < 16; ++n)
-    tmp[n] = in[n] ^ ivec[n];
-   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 1, key);
-   memcpy(ivec, out, 16);
-   len -= 16;
-   in += 16;
-   out += 16;
-  }
-  if (len) {
-   for(n=0; n < len; ++n)
-    tmp[n] = in[n] ^ ivec[n];
-   for(n=len; n < 16; ++n)
-    tmp[n] = ivec[n];
-   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 1, key);
-   memcpy(out, tmp, 16);
-   memcpy(ivec, tmp, 16);
-  }
-} else {
-  while (len >= 16) {
-   memcpy(tmp, in, 16);
-   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 0, key);
-   for(n=0; n < 16; ++n)
-    out[n] ^= ivec[n];
-   memcpy(ivec, tmp, 16);
-   len -= 16;
-   in += 16;
-   out += 16;
-  }
-  if (len) {
-   memcpy(tmp, in, 16);
-   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 0, key);
-   for(n=0; n < len; ++n)
-    out[n] = tmp[n] ^ ivec[n];
-   memcpy(ivec, tmp, 16);
-  }
-}
-}
+       unsigned char *ivec, const int enc);

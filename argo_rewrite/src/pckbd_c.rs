@@ -1,5 +1,32 @@
 //! From `pckbd.c`.
 
+// ── `qemu_system_reset_request` · pckbd.c:100-105 · chunk 1579 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void qemu_system_reset_request(void)
+//     {
+//         printf("system_reset_request\n");
+//         exit(1);
+//     
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1579 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn printf(format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+}
+
+#[no_mangle]
+pub extern "C" fn qemu_system_reset_request() {
+    unsafe {
+        printf(b"system_reset_request\n\0".as_ptr() as *const c_char);
+        exit(1);
+    }
+}
+}
+
 // ── `printf("system_reset_request\n"); exit(1);` · pckbd.c:102-103 · chunk 1580 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -26,6 +53,38 @@ pub extern "C" fn qemu_system_reset_request__part1580() {
 }
 }
 
+// ── `ioport_set_a20` · pckbd.c:107-109 · chunk 1581 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void ioport_set_a20(int val)
+//     {
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1581 {
+// Rewrite of pckbd.c's ioport_set_a20: the original body is empty.
+use core::ffi::c_int;
+
+#[no_mangle]
+pub extern "C" fn ioport_set_a20(_val: c_int) {}
+}
+
+// ── `ioport_get_a20` · pckbd.c:111-114 · chunk 1582 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int ioport_get_a20(void)
+//     {
+//         return 1;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1582 {
+use core::ffi::c_int;
+
+#[no_mangle]
+pub extern "C" fn ioport_get_a20() -> c_int {
+    1
+}
+}
+
 // ── `return 1;` · pckbd.c:113-113 · chunk 1583 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -36,6 +95,99 @@ pub mod chunk1583 {
 #[no_mangle]
 pub extern "C" fn ioport_get_a20__part1583() -> core::ffi::c_int {
     1
+}
+}
+
+// ── `kbd_update_irq` · pckbd.c:119-141 · chunk 1584 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_update_irq(KBDState *s)
+//     {
+//         int irq_kbd_level, irq_mouse_level;
+//     
+//         irq_kbd_level = 0;
+//         irq_mouse_level = 0;
+//         s->status &= ~(0x01 | 0x20);
+//         if (s->pending) {
+//             s->status |= 0x01;
+//     
+//             if (s->pending == 2) {
+//                 s->status |= 0x20;
+//                 if (s->mode & 0x02)
+//                     irq_mouse_level = 1;
+//             } else {
+//                 if ((s->mode & 0x01) &&
+//                     !(s->mode & 0x10))
+//                     irq_kbd_level = 1;
+//             }
+//         }
+//         set_irq(s->irq_kbd, irq_kbd_level);
+//         set_irq(s->irq_mouse, irq_mouse_level);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1584 {
+// Port of static void kbd_update_irq(KBDState *s) from pckbd.c
+#![allow(non_snake_case, non_camel_case_types)]
+
+use core::ffi::{c_int, c_void};
+
+pub type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut c_void,
+    pub mouse: *mut c_void,
+    pub irq_kbd: *mut IRQSignal,
+    pub irq_mouse: *mut IRQSignal,
+}
+
+// Mirror of the C static inline set_irq().
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if irq.is_null() {
+        return;
+    }
+    let signal = &*irq;
+    if let Some(f) = signal.set_irq {
+        f(signal.opaque, signal.irq_num, level);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    if s.is_null() {
+        return;
+    }
+
+    let st = &mut *s;
+    st.status &= !(0x01u8 | 0x20u8);
+    if st.pending != 0 {
+        st.status |= 0x01u8;
+        if st.pending == 2 {
+            st.status |= 0x20u8;
+            if (st.mode & 0x02u8) != 0 {
+                irq_mouse_level = 1;
+            }
+        } else if (st.mode & 0x01u8) != 0 && (st.mode & 0x10u8) == 0 {
+            irq_kbd_level = 1;
+        }
+    }
+    set_irq(st.irq_kbd, irq_kbd_level);
+    set_irq(st.irq_mouse, irq_mouse_level);
 }
 }
 
@@ -197,6 +349,112 @@ pub extern "C" fn kbd_update_irq__part1587(
 }
 }
 
+// ── `kbd_update_kbd_irq` · pckbd.c:143-152 · chunk 1588 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_update_kbd_irq(void *opaque, int level)
+//     {
+//         KBDState *s = (KBDState *)opaque;
+//     
+//         if (level)
+//             s->pending |= 1;
+//         else
+//             s->pending &= ~1;
+//         kbd_update_irq(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1588 {
+// Rust port of the static C function kbd_update_kbd_irq() from pckbd.c.
+// The helpers it needs (kbd_update_irq, set_irq) are static / static inline in
+// C, so they have no linker symbols and their logic is reproduced here.
+
+use core::ffi::{c_int, c_void};
+
+type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+// Opaque to us; only ever held behind a pointer.
+#[repr(C)]
+pub struct PS2KbdState {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PS2MouseState {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut PS2KbdState,
+    pub mouse: *mut PS2MouseState,
+    pub irq_kbd: *mut IRQSignal,
+    pub irq_mouse: *mut IRQSignal,
+}
+
+const KBD_STAT_OBF: u8 = 0x01;
+const KBD_STAT_MOUSE_OBF: u8 = 0x20;
+const KBD_PENDING_AUX: u8 = 2;
+const KBD_MODE_KBD_INT: u8 = 0x01;
+const KBD_MODE_MOUSE_INT: u8 = 0x02;
+const KBD_MODE_DISABLE_KBD: u8 = 0x10;
+const KBD_PENDING_KBD: u8 = 1;
+
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    let set = (*irq).set_irq;
+    if let Some(f) = set {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+// Port of the static C helper kbd_update_irq(KBDState *s).
+unsafe fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    (*s).status &= !(KBD_STAT_OBF | KBD_STAT_MOUSE_OBF);
+    if (*s).pending != 0 {
+        (*s).status |= KBD_STAT_OBF;
+        // kbd data takes priority over aux data.
+        if (*s).pending == KBD_PENDING_AUX {
+            (*s).status |= KBD_STAT_MOUSE_OBF;
+            if ((*s).mode & KBD_MODE_MOUSE_INT) != 0 {
+                irq_mouse_level = 1;
+            }
+        } else {
+            if ((*s).mode & KBD_MODE_KBD_INT) != 0 && ((*s).mode & KBD_MODE_DISABLE_KBD) == 0 {
+                irq_kbd_level = 1;
+            }
+        }
+    }
+    set_irq((*s).irq_kbd, irq_kbd_level);
+    set_irq((*s).irq_mouse, irq_mouse_level);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_update_kbd_irq(opaque: *mut c_void, level: c_int) {
+    let s = opaque as *mut KBDState;
+
+    if level != 0 {
+        (*s).pending |= KBD_PENDING_KBD;
+    } else {
+        (*s).pending &= !KBD_PENDING_KBD;
+    }
+    kbd_update_irq(s);
+}
+}
+
 // ── `if (level) … else` · pckbd.c:147-150 · chunk 1589 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -297,6 +555,96 @@ pub unsafe extern "C" fn kbd_update_kbd_irq__part1590(s: *mut KBDState) {
     }
     set_irq((*s).irq_kbd, irq_kbd_level);
     set_irq((*s).irq_mouse, irq_mouse_level);
+}
+}
+
+// ── `kbd_update_aux_irq` · pckbd.c:154-163 · chunk 1591 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_update_aux_irq(void *opaque, int level)
+//     {
+//         KBDState *s = (KBDState *)opaque;
+//     
+//         if (level)
+//             s->pending |= 2;
+//         else
+//             s->pending &= ~2;
+//         kbd_update_irq(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1591 {
+// Rust rewrite of the static C function kbd_update_aux_irq (pckbd.c).
+// It also carries a private port of the static helper kbd_update_irq,
+// which the C side keeps as a file-local (non-linkable) symbol.
+
+use core::ffi::{c_int, c_void};
+
+// typedef void SetIRQFunc(void *opaque, int irq_num, int level);
+type SetIRQFunc = unsafe extern "C" fn(*mut c_void, c_int, c_int);
+
+#[repr(C)]
+struct IRQSignal {
+    set_irq: Option<SetIRQFunc>,
+    opaque: *mut c_void,
+    irq_num: c_int,
+}
+
+#[repr(C)]
+struct KBDState {
+    write_cmd: u8,
+    status: u8,
+    mode: u8,
+    pending: u8,
+    kbd: *mut c_void,
+    mouse: *mut c_void,
+    irq_kbd: *mut IRQSignal,
+    irq_mouse: *mut IRQSignal,
+}
+
+// static inline void set_irq(IRQSignal *irq, int level)
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if irq.is_null() {
+        return;
+    }
+    let signal = &*irq;
+    if let Some(f) = signal.set_irq {
+        f(signal.opaque, signal.irq_num, level);
+    }
+}
+
+// Port of the C file-static helper kbd_update_irq().
+unsafe fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    (*s).status &= !(0x01u8 | 0x20u8);
+    if (*s).pending != 0 {
+        (*s).status |= 0x01;
+
+        if (*s).pending == 2 {
+            (*s).status |= 0x20;
+            if ((*s).mode as c_int) & 0x02 != 0 {
+                irq_mouse_level = 1;
+            }
+        } else if (((*s).mode as c_int) & 0x01) != 0 && (((*s).mode as c_int) & 0x10) == 0 {
+            irq_kbd_level = 1;
+        }
+    }
+    set_irq((*s).irq_kbd, irq_kbd_level);
+    set_irq((*s).irq_mouse, irq_mouse_level);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_update_aux_irq(opaque: *mut c_void, level: c_int) {
+    let s = opaque as *mut KBDState;
+
+    if level != 0 {
+        (*s).pending |= 2;
+    } else {
+        (*s).pending &= !2u8;
+    }
+    kbd_update_irq(s);
 }
 }
 
@@ -439,6 +787,49 @@ pub unsafe extern "C" fn kbd_update_aux_irq__part1593(s: *mut KBDState) {
 }
 }
 
+// ── `kbd_read_status` · pckbd.c:165-174 · chunk 1594 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t kbd_read_status(void *opaque, uint32_t addr, int size_log2)
+//     {
+//         KBDState *s = opaque;
+//         int val;
+//         val = s->status;
+//     
+//     
+//     
+//         return val;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1594 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut c_void,
+    pub mouse: *mut c_void,
+    pub irq_kbd: *mut c_void,
+    pub irq_mouse: *mut c_void,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_read_status(
+    opaque: *mut c_void,
+    addr: u32,
+    size_log2: c_int,
+) -> u32 {
+    let _ = addr;
+    let _ = size_log2;
+    let s = opaque as *mut KBDState;
+    let val: c_int = (*s).status as c_int;
+    val as u32
+}
+}
+
 // ── `KBDState *s = opaque; int val; val = s->status; return val;` · pckbd.c:167-173 · chunk 1595 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -469,6 +860,66 @@ pub struct KBDState {
 pub extern "C" fn kbd_read_status__part1595(opaque: *mut c_void) -> u32 {
     let val: i32 = unsafe { (*(opaque as *const KBDState)).status as i32 };
     val as u32
+}
+}
+
+// ── `kbd_queue` · pckbd.c:176-182 · chunk 1596 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_queue(KBDState *s, int b, int aux)
+//     {
+//         if (aux)
+//             ps2_queue(s->mouse, b);
+//         else
+//             ps2_queue(s->kbd, b);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1596 {
+// Rewrite of the static C function kbd_queue() from pckbd.c.
+use core::ffi::{c_int, c_void};
+
+/// Opaque PS/2 device states (only passed through as pointers).
+#[repr(C)]
+pub struct PS2KbdState {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PS2MouseState {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+/// Mirror of `struct KBDState` from pckbd.c (exact field order and types).
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut PS2KbdState,
+    pub mouse: *mut PS2MouseState,
+    pub irq_kbd: *mut IRQSignal,
+    pub irq_mouse: *mut IRQSignal,
+}
+
+extern "C" {
+    fn ps2_queue(opaque: *mut c_void, b: c_int);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_queue(s: *mut KBDState, b: c_int, aux: c_int) {
+    if aux != 0 {
+        ps2_queue((*s).mouse as *mut c_void, b);
+    } else {
+        ps2_queue((*s).kbd as *mut c_void, b);
+    }
 }
 }
 
@@ -507,6 +958,260 @@ pub extern "C" fn kbd_queue__part1597(s: *mut c_void, b: c_int, aux: c_int) {
             ps2_queue((*st).mouse, b);
         } else {
             ps2_queue((*st).kbd, b);
+        }
+    }
+}
+}
+
+// ── `kbd_write_command` · pckbd.c:184-255 · chunk 1598 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_write_command(void *opaque, uint32_t addr, uint32_t val,
+//                                   int size_log2)
+//     {
+//         KBDState *s = opaque;
+//     
+//     
+//     
+//     
+//         switch(val) {
+//         case 0x20:
+//             kbd_queue(s, s->mode, 1);
+//             break;
+//         case 0x60:
+//         case 0xD2:
+//         case 0xD3:
+//         case 0xD4:
+//         case 0xD1:
+//             s->write_cmd = val;
+//             break;
+//         case 0xA7:
+//             s->mode |= 0x20;
+//             break;
+//         case 0xA8:
+//             s->mode &= ~0x20;
+//             break;
+//         case 0xA9:
+//             kbd_queue(s, 0x00, 0);
+//             break;
+//         case 0xAA:
+//             s->status |= 0x04;
+//             kbd_queue(s, 0x55, 0);
+//             break;
+//         case 0xAB:
+//             kbd_queue(s, 0x00, 0);
+//             break;
+//         case 0xAD:
+//             s->mode |= 0x10;
+//             kbd_update_irq(s);
+//             break;
+//         case 0xAE:
+//             s->mode &= ~0x10;
+//             kbd_update_irq(s);
+//             break;
+//         case 0xC0:
+//             kbd_queue(s, 0x00, 0);
+//             break;
+//         case 0xD0:
+//     
+//             val = 0x01 | (ioport_get_a20() << 1);
+//             if (s->status & 0x01)
+//                 val |= 0x10;
+//             if (s->status & 0x20)
+//                 val |= 0x20;
+//             kbd_queue(s, val, 0);
+//             break;
+//         case 0xDF:
+//             ioport_set_a20(1);
+//             break;
+//         case 0xDD:
+//             ioport_set_a20(0);
+//             break;
+//         case 0xFE:
+//             qemu_system_reset_request();
+//             break;
+//         case 0xff:
+//     
+//             break;
+//         default:
+//             fprintf(
+//                    stderr
+//                          , "qemu: unsupported keyboard cmd=0x%02x\n", val);
+//             break;
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1598 {
+// Rust rewrite of the static C function kbd_write_command (pckbd.c).
+#![allow(non_upper_case_globals, dead_code, unused_variables)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque stand-ins for C types we only pass around as pointers.
+#[repr(C)]
+pub struct PS2KbdState {
+    _priv: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PS2MouseState {
+    _priv: [u8; 0],
+}
+
+type SetIRQFunc = Option<extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>;
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: SetIRQFunc,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut PS2KbdState,
+    pub mouse: *mut PS2MouseState,
+    pub irq_kbd: *mut IRQSignal,
+    pub irq_mouse: *mut IRQSignal,
+}
+
+extern "C" {
+    fn ps2_queue(opaque: *mut c_void, b: c_int);
+    fn printf(format: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    static stderr: *mut c_void;
+}
+
+// static inline void set_irq(IRQSignal *irq, int level)
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if let Some(f) = (*irq).set_irq {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+// static void qemu_system_reset_request(void)
+unsafe fn qemu_system_reset_request() {
+    printf(b"system_reset_request\n\0".as_ptr() as *const c_char);
+    exit(1);
+}
+
+// static void ioport_set_a20(int val)  -- empty in this build
+unsafe fn ioport_set_a20(_val: c_int) {}
+
+// static int ioport_get_a20(void)
+unsafe fn ioport_get_a20() -> c_int {
+    1
+}
+
+// static void kbd_update_irq(KBDState *s)
+unsafe fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    (*s).status &= !(0x01u8 | 0x20u8);
+    if (*s).pending != 0 {
+        (*s).status |= 0x01;
+
+        if (*s).pending == 2 {
+            (*s).status |= 0x20;
+            if ((*s).mode & 0x02) != 0 {
+                irq_mouse_level = 1;
+            }
+        } else if ((*s).mode & 0x01) != 0 && ((*s).mode & 0x10) == 0 {
+            irq_kbd_level = 1;
+        }
+    }
+    set_irq((*s).irq_kbd, irq_kbd_level);
+    set_irq((*s).irq_mouse, irq_mouse_level);
+}
+
+// static void kbd_queue(KBDState *s, int b, int aux)
+unsafe fn kbd_queue(s: *mut KBDState, b: c_int, aux: c_int) {
+    if aux != 0 {
+        ps2_queue((*s).mouse as *mut c_void, b);
+    } else {
+        ps2_queue((*s).kbd as *mut c_void, b);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_write_command(
+    opaque: *mut c_void,
+    addr: u32,
+    val: u32,
+    size_log2: c_int,
+) {
+    let s = opaque as *mut KBDState;
+    let mut val = val;
+
+    match val {
+        0x20 => {
+            kbd_queue(s, (*s).mode as c_int, 1);
+        }
+        0x60 | 0xD2 | 0xD3 | 0xD4 | 0xD1 => {
+            (*s).write_cmd = val as u8;
+        }
+        0xA7 => {
+            (*s).mode |= 0x20;
+        }
+        0xA8 => {
+            (*s).mode &= !0x20u8;
+        }
+        0xA9 => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xAA => {
+            (*s).status |= 0x04;
+            kbd_queue(s, 0x55, 0);
+        }
+        0xAB => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xAD => {
+            (*s).mode |= 0x10;
+            kbd_update_irq(s);
+        }
+        0xAE => {
+            (*s).mode &= !0x10u8;
+            kbd_update_irq(s);
+        }
+        0xC0 => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xD0 => {
+            val = (0x01i32 | (ioport_get_a20() << 1)) as u32;
+            if ((*s).status & 0x01) != 0 {
+                val |= 0x10;
+            }
+            if ((*s).status & 0x20) != 0 {
+                val |= 0x20;
+            }
+            kbd_queue(s, val as c_int, 0);
+        }
+        0xDF => {
+            ioport_set_a20(1);
+        }
+        0xDD => {
+            ioport_set_a20(0);
+        }
+        0xFE => {
+            qemu_system_reset_request();
+        }
+        0xff => {
+            // ignore that - I don't know what is its use
+        }
+        _ => {
+            fprintf(
+                stderr,
+                b"qemu: unsupported keyboard cmd=0x%02x\n\0".as_ptr() as *const c_char,
+                val,
+            );
         }
     }
 }
@@ -746,6 +1451,55 @@ pub unsafe extern "C" fn kbd_write_command__part1599(s: *mut KBDState, val_in: u
 }
 }
 
+// ── `kbd_read_data` · pckbd.c:257-269 · chunk 1600 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t kbd_read_data(void *opaque, uint32_t addr, int size_log2)
+//     {
+//         KBDState *s = opaque;
+//         uint32_t val;
+//         if (s->pending == 2)
+//             val = ps2_read_data(s->mouse);
+//         else
+//             val = ps2_read_data(s->kbd);
+//     
+//     
+//     
+//         return val;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1600 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+struct KBDState {
+    write_cmd: u8,
+    status: u8,
+    mode: u8,
+    pending: u8,
+    kbd: *mut c_void,
+    mouse: *mut c_void,
+    irq_kbd: *mut c_void,
+    irq_mouse: *mut c_void,
+}
+
+extern "C" {
+    fn ps2_read_data(dev: *mut c_void) -> u32;
+}
+
+#[no_mangle]
+pub extern "C" fn kbd_read_data(opaque: *mut c_void, _addr: u32, _size_log2: c_int) -> u32 {
+    let s = opaque as *mut KBDState;
+    unsafe {
+        if (*s).pending == 2 {
+            ps2_read_data((*s).mouse)
+        } else {
+            ps2_read_data((*s).kbd)
+        }
+    }
+}
+}
+
 // ── `if (s->pending == 2) … else` · pckbd.c:261-264 · chunk 1601 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -795,6 +1549,195 @@ pub mod chunk1602 {
 #[no_mangle]
 pub extern "C" fn kbd_read_data__part1602(val: u32) -> u32 {
     val
+}
+}
+
+// ── `kbd_write_data` · pckbd.c:271-308 · chunk 1603 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_write_data(void *opaque, uint32_t addr, uint32_t val, int size_log2)
+//     {
+//         KBDState *s = opaque;
+//     
+//     
+//     
+//     
+//     
+//         switch(s->write_cmd) {
+//         case 0:
+//             ps2_write_keyboard(s->kbd, val);
+//             break;
+//         case 0x60:
+//             s->mode = val;
+//             ps2_keyboard_set_translation(s->kbd, (s->mode & 0x40) != 0);
+//     
+//             kbd_update_irq(s);
+//             break;
+//         case 0xD2:
+//             kbd_queue(s, val, 0);
+//             break;
+//         case 0xD3:
+//             kbd_queue(s, val, 1);
+//             break;
+//         case 0xD1:
+//             ioport_set_a20((val >> 1) & 1);
+//             if (!(val & 1)) {
+//                 qemu_system_reset_request();
+//             }
+//             break;
+//         case 0xD4:
+//             ps2_write_mouse(s->mouse, val);
+//             break;
+//         default:
+//             break;
+//         }
+//         s->write_cmd = 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1603 {
+// Rust port of pckbd.c: kbd_write_data (i8042 data-port write handler).
+//
+// The C helpers "kbd_update_irq", "kbd_queue", "ioport_set_a20" and
+// "qemu_system_reset_request" are `static` in pckbd.c (no linker symbols), so
+// their logic is mirrored here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque PS/2 device states; only ever handled behind pointers.
+#[repr(C)]
+pub struct PS2KbdState {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PS2MouseState {
+    _private: [u8; 0],
+}
+
+// typedef void SetIRQFunc(void *opaque, int irq_num, int level);
+type SetIRQFunc = unsafe extern "C" fn(*mut c_void, c_int, c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    set_irq: Option<SetIRQFunc>,
+    opaque: *mut c_void,
+    irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct KBDState {
+    write_cmd: u8,
+    status: u8,
+    mode: u8,
+
+    pending: u8,
+    kbd: *mut PS2KbdState,
+    mouse: *mut PS2MouseState,
+
+    irq_kbd: *mut IRQSignal,
+    irq_mouse: *mut IRQSignal,
+}
+
+extern "C" {
+    fn ps2_write_keyboard(opaque: *mut c_void, val: c_int);
+    fn ps2_write_mouse(opaque: *mut c_void, val: c_int);
+    fn ps2_queue(opaque: *mut c_void, b: c_int);
+    fn ps2_keyboard_set_translation(opaque: *mut c_void, mode: c_int);
+    fn printf(fmt: *const c_char, ...) -> c_int;
+    fn exit(code: c_int) -> !;
+}
+
+// static inline void set_irq(IRQSignal *irq, int level)
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if let Some(f) = (*irq).set_irq {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+// static void kbd_update_irq(KBDState *s)
+unsafe fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    (*s).status &= !(0x01u8 | 0x20u8);
+    if (*s).pending != 0 {
+        (*s).status |= 0x01;
+        if (*s).pending == 2 {
+            (*s).status |= 0x20;
+            if ((*s).mode & 0x02) != 0 {
+                irq_mouse_level = 1;
+            }
+        } else {
+            if ((*s).mode & 0x01) != 0 && ((*s).mode & 0x10) == 0 {
+                irq_kbd_level = 1;
+            }
+        }
+    }
+    set_irq((*s).irq_kbd, irq_kbd_level);
+    set_irq((*s).irq_mouse, irq_mouse_level);
+}
+
+// static void kbd_queue(KBDState *s, int b, int aux)
+unsafe fn kbd_queue(s: *mut KBDState, b: c_int, aux: c_int) {
+    if aux != 0 {
+        ps2_queue((*s).mouse as *mut c_void, b);
+    } else {
+        ps2_queue((*s).kbd as *mut c_void, b);
+    }
+}
+
+// static void ioport_set_a20(int val)  (empty in this build)
+unsafe fn ioport_set_a20(_val: c_int) {}
+
+// static void qemu_system_reset_request(void)
+unsafe fn qemu_system_reset_request() {
+    printf(b"system_reset_request\n\0".as_ptr() as *const c_char);
+    exit(1);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_write_data(
+    opaque: *mut c_void,
+    addr: u32,
+    val: u32,
+    size_log2: c_int,
+) {
+    let s = opaque as *mut KBDState;
+
+    let _ = addr;
+    let _ = size_log2;
+
+    match (*s).write_cmd as c_int {
+        0 => {
+            ps2_write_keyboard((*s).kbd as *mut c_void, val as c_int);
+        }
+        0x60 => {
+            (*s).mode = val as u8;
+            ps2_keyboard_set_translation(
+                (*s).kbd as *mut c_void,
+                (((*s).mode & 0x40) != 0) as c_int,
+            );
+            kbd_update_irq(s);
+        }
+        0xD2 => {
+            kbd_queue(s, val as c_int, 0);
+        }
+        0xD3 => {
+            kbd_queue(s, val as c_int, 1);
+        }
+        0xD1 => {
+            ioport_set_a20(((val >> 1) & 1) as c_int);
+            if (val & 1) == 0 {
+                qemu_system_reset_request();
+            }
+        }
+        0xD4 => {
+            ps2_write_mouse((*s).mouse as *mut c_void, val as c_int);
+        }
+        _ => {}
+    }
+    (*s).write_cmd = 0;
 }
 }
 
@@ -985,6 +1928,43 @@ pub extern "C" fn kbd_write_data__part1605(s: *mut KBDState) {
 }
 }
 
+// ── `kbd_reset` · pckbd.c:310-316 · chunk 1606 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void kbd_reset(void *opaque)
+//     {
+//         KBDState *s = opaque;
+//     
+//         s->mode = 0x01 | 0x02;
+//         s->status = 0x08 | 0x10;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1606 {
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut c_void,
+    pub mouse: *mut c_void,
+    pub irq_kbd: *mut c_void,
+    pub irq_mouse: *mut c_void,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn kbd_reset(opaque: *mut c_void) {
+    let s = opaque as *mut KBDState;
+    if s.is_null() {
+        return;
+    }
+    (*s).mode = 0x01 | 0x02;
+    (*s).status = 0x08 | 0x10;
+}
+}
+
 // ── `KBDState *s = opaque; s->mode = 0x01 | 0x02; s->status = 0x08 | 0x10;` · pckbd.c:312-315 · chunk 1607 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1027,6 +2007,372 @@ pub unsafe extern "C" fn kbd_reset__part1607(opaque: *mut core::ffi::c_void) {
     let s = opaque as *mut KBDState;
     (*s).mode = (0x01u8) | (0x02u8);
     (*s).status = (0x08u8) | (0x10u8);
+}
+}
+
+// ── `i8042_init` · pckbd.c:318-342 · chunk 1608 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     KBDState *i8042_init(PS2KbdState **pkbd,
+//                          PS2MouseState **pmouse,
+//                          PhysMemoryMap *port_map,
+//                          IRQSignal *kbd_irq, IRQSignal *mouse_irq, uint32_t io_base)
+//     {
+//         KBDState *s;
+//     
+//         s = mallocz(sizeof(*s));
+//     
+//         s->irq_kbd = kbd_irq;
+//         s->irq_mouse = mouse_irq;
+//     
+//         kbd_reset(s);
+//         cpu_register_device(port_map, io_base, 1, s, kbd_read_data, kbd_write_data,
+//                             (1 << 0));
+//         cpu_register_device(port_map, io_base + 4, 1, s, kbd_read_status, kbd_write_command,
+//                             (1 << 0));
+//     
+//         s->kbd = ps2_kbd_init(kbd_update_kbd_irq, s);
+//         s->mouse = ps2_mouse_init(kbd_update_aux_irq, s);
+//     
+//         *pkbd = s->kbd;
+//         *pmouse = s->mouse;
+//         return s;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1608 {
+// Rust rewrite of i8042_init (pckbd.c)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque / partial type mirrors
+pub enum PS2KbdState {}
+pub enum PS2MouseState {}
+pub enum PhysMemoryMap {}
+pub enum PS2State {}
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: DeviceReadFunc,
+    pub write_func: DeviceWriteFunc,
+    pub devio_flags: c_int,
+}
+
+pub type DeviceReadFunc = Option<unsafe extern "C" fn(*mut c_void, u32, c_int) -> u32>;
+pub type DeviceWriteFunc = Option<unsafe extern "C" fn(*mut c_void, u32, u32, c_int)>;
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct KBDState {
+    pub write_cmd: u8,
+    pub status: u8,
+    pub mode: u8,
+    pub pending: u8,
+    pub kbd: *mut PS2KbdState,
+    pub mouse: *mut PS2MouseState,
+    pub irq_kbd: *mut IRQSignal,
+    pub irq_mouse: *mut IRQSignal,
+}
+
+// ---- C functions used by the ported (private) static helpers ----
+
+extern "C" {
+    fn exit(status: c_int) -> !;
+    static mut stderr: *mut c_void;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+
+    fn ps2_queue(opaque: *mut c_void, b: c_int);
+    fn ps2_read_data(opaque: *mut c_void) -> u32;
+    fn ps2_write_mouse(opaque: *mut c_void, val: c_int);
+    fn ps2_write_keyboard(opaque: *mut c_void, val: c_int);
+    fn ps2_keyboard_set_translation(opaque: *mut c_void, mode: c_int);
+}
+
+// ---- C functions used by the target itself ----
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn cpu_register_device(
+        s: *mut PhysMemoryMap,
+        addr: u64,
+        size: u64,
+        opaque: *mut c_void,
+        read_func: DeviceReadFunc,
+        write_func: DeviceWriteFunc,
+        devio_flags: c_int,
+    ) -> *mut PhysMemoryRange;
+    fn ps2_kbd_init(
+        update_irq: Option<unsafe extern "C" fn(*mut c_void, c_int)>,
+        update_arg: *mut c_void,
+    ) -> *mut PS2KbdState;
+    fn ps2_mouse_init(
+        update_irq: Option<unsafe extern "C" fn(*mut c_void, c_int)>,
+        update_arg: *mut c_void,
+    ) -> *mut PS2MouseState;
+}
+
+// ---- static C functions of pckbd.c, ported as private Rust fns ----
+
+unsafe fn qemu_system_reset_request() {
+    fprintf(stderr, b"system_reset_request\n\0".as_ptr() as *const c_char);
+    exit(1);
+}
+
+unsafe fn ioport_set_a20(_val: c_int) {}
+
+unsafe fn ioport_get_a20() -> c_int {
+    1
+}
+
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if let Some(f) = (*irq).set_irq {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+unsafe fn kbd_update_irq(s: *mut KBDState) {
+    let mut irq_kbd_level: c_int = 0;
+    let mut irq_mouse_level: c_int = 0;
+
+    (*s).status &= !(0x01u8 | 0x20u8);
+    if (*s).pending != 0 {
+        (*s).status |= 0x01;
+
+        if (*s).pending == 2 {
+            (*s).status |= 0x20;
+            if ((*s).mode & 0x02u8) != 0 {
+                irq_mouse_level = 1;
+            }
+        } else if ((*s).mode & 0x01u8) != 0 && ((*s).mode & 0x10u8) == 0 {
+            irq_kbd_level = 1;
+        }
+    }
+    set_irq((*s).irq_kbd, irq_kbd_level);
+    set_irq((*s).irq_mouse, irq_mouse_level);
+}
+
+unsafe extern "C" fn kbd_update_kbd_irq(opaque: *mut c_void, level: c_int) {
+    let s = opaque as *mut KBDState;
+
+    if level != 0 {
+        (*s).pending |= 1;
+    } else {
+        (*s).pending &= !1;
+    }
+    kbd_update_irq(s);
+}
+
+unsafe extern "C" fn kbd_update_aux_irq(opaque: *mut c_void, level: c_int) {
+    let s = opaque as *mut KBDState;
+
+    if level != 0 {
+        (*s).pending |= 2;
+    } else {
+        (*s).pending &= !2;
+    }
+    kbd_update_irq(s);
+}
+
+unsafe extern "C" fn kbd_read_status(_opaque: *mut c_void, _addr: u32, _size_log2: c_int) -> u32 {
+    let s = _opaque as *mut KBDState;
+    (*s).status as u32
+}
+
+unsafe fn kbd_queue(s: *mut KBDState, b: c_int, aux: c_int) {
+    if aux != 0 {
+        ps2_queue((*s).mouse as *mut c_void, b);
+    } else {
+        ps2_queue((*s).kbd as *mut c_void, b);
+    }
+}
+
+unsafe extern "C" fn kbd_write_command(
+    opaque: *mut c_void,
+    _addr: u32,
+    val: u32,
+    _size_log2: c_int,
+) {
+    let s = opaque as *mut KBDState;
+    let mut val = val;
+
+    match val {
+        0x20 => {
+            kbd_queue(s, (*s).mode as c_int, 1);
+        }
+        0x60 | 0xD2 | 0xD3 | 0xD4 | 0xD1 => {
+            (*s).write_cmd = val as u8;
+        }
+        0xA7 => {
+            (*s).mode |= 0x20;
+        }
+        0xA8 => {
+            (*s).mode &= !0x20;
+        }
+        0xA9 => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xAA => {
+            (*s).status |= 0x04;
+            kbd_queue(s, 0x55, 0);
+        }
+        0xAB => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xAD => {
+            (*s).mode |= 0x10;
+            kbd_update_irq(s);
+        }
+        0xAE => {
+            (*s).mode &= !0x10;
+            kbd_update_irq(s);
+        }
+        0xC0 => {
+            kbd_queue(s, 0x00, 0);
+        }
+        0xD0 => {
+            val = 0x01u32 | ((ioport_get_a20() as u32) << 1);
+            if ((*s).status & 0x01) != 0 {
+                val |= 0x10;
+            }
+            if ((*s).status & 0x20) != 0 {
+                val |= 0x20;
+            }
+            kbd_queue(s, val as c_int, 0);
+        }
+        0xDF => {
+            ioport_set_a20(1);
+        }
+        0xDD => {
+            ioport_set_a20(0);
+        }
+        0xFE => {
+            qemu_system_reset_request();
+        }
+        0xff => {}
+        _ => {
+            fprintf(
+                stderr,
+                b"qemu: unsupported keyboard cmd=0x%02x\n\0".as_ptr() as *const c_char,
+                val,
+            );
+        }
+    }
+}
+
+unsafe extern "C" fn kbd_read_data(_opaque: *mut c_void, _addr: u32, _size_log2: c_int) -> u32 {
+    let s = _opaque as *mut KBDState;
+    if (*s).pending == 2 {
+        ps2_read_data((*s).mouse as *mut c_void)
+    } else {
+        ps2_read_data((*s).kbd as *mut c_void)
+    }
+}
+
+unsafe extern "C" fn kbd_write_data(
+    opaque: *mut c_void,
+    _addr: u32,
+    val: u32,
+    _size_log2: c_int,
+) {
+    let s = opaque as *mut KBDState;
+
+    match (*s).write_cmd {
+        0 => {
+            ps2_write_keyboard((*s).kbd as *mut c_void, val as c_int);
+        }
+        0x60 => {
+            (*s).mode = val as u8;
+            ps2_keyboard_set_translation((*s).kbd as *mut c_void, ((*s).mode & 0x40) as c_int);
+
+            kbd_update_irq(s);
+        }
+        0xD2 => {
+            kbd_queue(s, val as c_int, 0);
+        }
+        0xD3 => {
+            kbd_queue(s, val as c_int, 1);
+        }
+        0xD1 => {
+            ioport_set_a20(((val >> 1) & 1) as c_int);
+            if (val & 1) == 0 {
+                qemu_system_reset_request();
+            }
+        }
+        0xD4 => {
+            ps2_write_mouse((*s).mouse as *mut c_void, val as c_int);
+        }
+        _ => {}
+    }
+    (*s).write_cmd = 0;
+}
+
+unsafe fn kbd_reset(opaque: *mut c_void) {
+    let s = opaque as *mut KBDState;
+
+    (*s).mode = 0x01 | 0x02;
+    (*s).status = 0x08 | 0x10;
+}
+
+// ---- the TARGET ----
+
+#[no_mangle]
+pub unsafe extern "C" fn i8042_init(
+    pkbd: *mut *mut PS2KbdState,
+    pmouse: *mut *mut PS2MouseState,
+    port_map: *mut PhysMemoryMap,
+    kbd_irq: *mut IRQSignal,
+    mouse_irq: *mut IRQSignal,
+    io_base: u32,
+) -> *mut KBDState {
+    let s: *mut KBDState = mallocz(core::mem::size_of::<KBDState>()) as *mut KBDState;
+
+    (*s).irq_kbd = kbd_irq;
+    (*s).irq_mouse = mouse_irq;
+
+    kbd_reset(s as *mut c_void);
+    cpu_register_device(
+        port_map,
+        io_base as u64,
+        1,
+        s as *mut c_void,
+        Some(kbd_read_data),
+        Some(kbd_write_data),
+        1 << 0,
+    );
+    cpu_register_device(
+        port_map,
+        (io_base.wrapping_add(4)) as u64,
+        1,
+        s as *mut c_void,
+        Some(kbd_read_status),
+        Some(kbd_write_command),
+        1 << 0,
+    );
+
+    (*s).kbd = ps2_kbd_init(Some(kbd_update_kbd_irq), s as *mut c_void);
+    (*s).mouse = ps2_mouse_init(Some(kbd_update_aux_irq), s as *mut c_void);
+
+    *pkbd = (*s).kbd;
+    *pmouse = (*s).mouse;
+    s
 }
 }
 

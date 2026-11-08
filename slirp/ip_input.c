@@ -8487,320 +8487,36 @@ static void ip_deq(register struct ipasfrag *p);
 
 
 void
-ip_init(Slirp *slirp)
-{
-    void ip_init__part2347(void *slirp, struct qlink *ip_link);
-    ip_init__part2347((void *)slirp, &slirp->ipq.ip_link);
-
-}
+ip_init(Slirp *slirp);
 
 
 
 
 
 void
-ip_input(struct mbuf *m)
-{
- struct Slirp *ip_input__part2349(struct mbuf *m);
- Slirp *slirp = ip_input__part2349(m);
- register struct ip *ip;
- int hlen;
-
- ;
- ;
- ;
-
- int ip_input__part2350(struct mbuf *m);
- if (ip_input__part2350(m)) {
-  return;
- }
-
-
- struct ip *ip_input__part2351(struct mbuf *m);
-ip = ip_input__part2351(m);
-
- int ip_input__part2352(struct ip *ip);
- if (ip_input__part2352(ip)) {
-  goto bad;
- }
-
-
-  int ip_input__part2353(const struct ip *ip);
- hlen = ip_input__part2353(ip);
-
- extern int ip_input__part2354(struct mbuf *m, int hlen);
- if (ip_input__part2354(m, hlen)) {
-   goto bad;
- }
-
-
-
-
-
-
- int ip_input__part2355(struct mbuf *m, int hlen);
- if(ip_input__part2355(m, hlen)) {
-   goto bad;
- }
-
-
-
-
-
- void ip_input__part2356(struct ip *ip);
-ip_input__part2356(ip);
-
-  int ip_input__part2357(uint16_t ip_len, int hlen);
- if (ip_input__part2357(ip->ip_len, hlen)) {
-  goto bad;
- }
-
- void ip_input__part2358(struct ip *ip);
- { ip_input__part2358(ip); }
-
-
-
-
-
-
-
-
- int ip_input__part2359(struct mbuf *m, struct ip *ip);
- if (ip_input__part2359(m, ip)) {
-  goto bad;
- }
-
-    int ip_input__part2360(struct ip *ip, int restricted, uint32_t vnetwork_mask, uint32_t vnetwork_addr, struct ex_list *exec_list);
-    {
-        int ip_restricted_res = ip_input__part2360(ip, slirp->restricted,
-                                                   slirp->vnetwork_mask.s_addr,
-                                                   slirp->vnetwork_addr.s_addr,
-                                                   slirp->exec_list);
-        if (ip_restricted_res)
-            goto bad;
-    }
-
-
-
- void ip_input__part2361(struct mbuf *m, struct ip *ip);
-
- if (m->m_hdr.mh_len > ip->ip_len)
-    ip_input__part2361(m, ip);
-
-
-
- {
-  int ip_input__part2362(struct mbuf *m, struct ip *ip);
-  if (ip_input__part2362(m, ip)) {
-    goto bad;
-  }
-}
-
- int ip_input__part2363(struct ip *ip, int hlen, struct qlink *head,
-                       struct ipq **fp_out);
-{
-  int ip_input__part2363_act;
-  struct ipq *fp = ((void *)0);
-
-  ip_input__part2363_act = ip_input__part2363(ip, hlen, &slirp->ipq.ip_link,
-                                              &fp);
-  if (ip_input__part2363_act == 1) {
-    ip = ip_reass(slirp, ip, fp);
-    if (ip == ((void *)0))
-      return;
-    m = dtom(slirp, ip);
-  } else if (ip_input__part2363_act == 2) {
-    if (fp)
-      ip_freef(slirp, fp);
-  }
-}
-
-
-
-
-
-  void ip_input__part2364(uint8_t ip_p, struct mbuf *m, int hlen);
- ip_input__part2364(ip->ip_p, m, hlen);
-
- void ip_input__part2365(void);
-ip_input__part2365();
-return;
-
-bad: { void ip_input__part2366(struct mbuf *m); ip_input__part2366(m); }
-
- void ip_input__part2367(void);
-	ip_input__part2367();
-	return;
-
-}
+ip_input(struct mbuf *m);
 static struct ip *
-ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp)
-{
-  struct mbuf *m;
- register struct ipasfrag *q;
- int i, next;
- struct mbuf *ip_reass__part2369(Slirp *slirp, struct ip *ip);
- m = ip_reass__part2369(slirp, ip);
-
-
-
-
-         {
-  int ip_reass__part2370(void *, struct ip *, struct qlink *, struct ipq *,
-                         struct ipq **, struct ipasfrag **);
-  struct ipq *ip_reass_new_fp;
-  struct ipasfrag *ip_reass_new_q;
-  int ip_reass_rc;
-
-  ip_reass_rc = ip_reass__part2370(slirp, ip, &slirp->ipq.ip_link, fp,
-                                   &ip_reass_new_fp, &ip_reass_new_q);
-  if (ip_reass_rc == 2)
-   goto dropfrag;
-  if (ip_reass_rc == 1) {
-   fp = ip_reass_new_fp;
-   q = ip_reass_new_q;
-   goto insert;
-  }
- }
-
-
-
-
-
-  struct ipasfrag *ip_reass__part2371(struct ipq *fp, struct ip *ip);
- q = ip_reass__part2371(fp, ip);
-
-
-
-
-
-
-  {
-  extern int ip_reass__part2372(void *slirp, struct ip *ip, struct ipq *fp,
-                                struct ipasfrag *q, int *i);
-  if (ip_reass__part2372(slirp, ip, fp, q, &i))
-   goto dropfrag;
- }
-
-
-
-
-
-
-  {
-  struct ipasfrag *ip_reass__part2373(Slirp *slirp, struct ip *ip,
-                                     struct ipq *fp, struct ipasfrag *q);
-  q = ip_reass__part2373(slirp, ip, fp, q);
- }
-
-
-void ip_reass__part2374(void *ip, void *prev);
-insert:
- ip_reass__part2374(ip, q->ipf_link.prev);
-
- int ip_reass__part2375(void);
-next = ip_reass__part2375();
-
-  {
-  struct ipasfrag *ip_reass__part2376(struct ipq *fp, int *nextp);
-  q = ip_reass__part2376(fp, &next);
-  if (q == ((void *)0))
-   return ((struct ip *)0);
- }
-
- {
- int ip_reass__part2377(struct ipasfrag *q);
- if (ip_reass__part2377(q))
-                return 
-                      ((void *)0)
-                          ;
-}
-
-
-
-
-
-    {
- void ip_reass__part2378(Slirp *slirp, struct ipq *fp, struct ipasfrag **q_out, struct mbuf **m_out);
- struct ipasfrag *ip_reass_q_tmp;
- struct mbuf *ip_reass_m_tmp;
- ip_reass__part2378(slirp, fp, &ip_reass_q_tmp, &ip_reass_m_tmp);
- q = ip_reass_q_tmp;
- m = ip_reass_m_tmp;
-}
-
-  struct ipasfrag *ip_reass__part2379(Slirp *slirp, struct ipasfrag *q,
-                                     struct ipq *fp, struct mbuf *m);
- q = ip_reass__part2379(slirp, q, fp, m);
-
-
-
-
-
-
-
-
-  void *ip_reass__part2380(struct ipq *fp);
- q = ip_reass__part2380(fp);
-
- struct ipasfrag *ip_reass__part2381(struct ipasfrag *q, struct mbuf *m);
-
- q = ip_reass__part2381(q, m);
-
-    struct ip *ip_reass__part2382(Slirp *slirp, struct ipasfrag *q, int next,
-                              struct ipq *fp, struct mbuf *m);
- ip = ip_reass__part2382(slirp, q, next, fp, m);
- return ip;
-
-
-void ip_reass__part2383(struct mbuf *m);
-dropfrag:
- ip_reass__part2383(m);
-
-        void *ip_reass__part2384(void);
-        return ip_reass__part2384();
-
-}
+ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp);
 
 
 
 
 
 static void
-ip_freef(Slirp *slirp, struct ipq *fp)
-{
- register struct ipasfrag *q, *p;
-
-  void ip_freef__part2386(Slirp *slirp, struct ipq *fp);
- ip_freef__part2386(slirp, fp);
-
- void ip_freef__part2387(Slirp *slirp, struct ipq *fp);
-  ip_freef__part2387(slirp, fp);
-}
+ip_freef(Slirp *slirp, struct ipq *fp);
 
 
 
 
 
 static void
-ip_enq(register struct ipasfrag *p, register struct ipasfrag *prev)
-{
- void ip_enq__part2389(struct ipasfrag *p, struct ipasfrag *prev);
- ;
- ;
- ip_enq__part2389(p, prev);
-
-}
+ip_enq(register struct ipasfrag *p, register struct ipasfrag *prev);
 
 
 
 
 static void
-ip_deq(register struct ipasfrag *p)
-{
- void ip_deq__part2391(void *p);
- ip_deq__part2391(p);
-}
+ip_deq(register struct ipasfrag *p);
 
 
 
@@ -8808,31 +8524,6 @@ ip_deq(register struct ipasfrag *p)
 
 
 void
-ip_slowtimo(Slirp *slirp)
-{
-    struct qlink *ip_slowtimo__part2393(struct qlink *head);
-    struct qlink *l;
-
- ;
-
-    l = ip_slowtimo__part2393(&slirp->ipq.ip_link);
-
-
-        int ip_slowtimo__part2394(void *l);
-    if (ip_slowtimo__part2394(l))
-    return;
-
-
-        {
-        void ip_slowtimo__part2395(Slirp * slirp, struct qlink * l, struct qlink * head);
-        ip_slowtimo__part2395(slirp, l, &slirp->ipq.ip_link);
-    }
-
-}
+ip_slowtimo(Slirp *slirp);
 void
-ip_stripoptions(register struct mbuf *m, struct mbuf *mopt)
-{
- void ip_stripoptions__part2397(register struct mbuf *m, struct mbuf *mopt);
-ip_stripoptions__part2397(m, mopt);
-
-}
+ip_stripoptions(register struct mbuf *m, struct mbuf *mopt);

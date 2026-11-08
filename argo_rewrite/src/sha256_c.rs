@@ -1,5 +1,242 @@
 //! From `sha256.c`.
 
+// ── `sha256_compress` · sha256.c:60-176 · chunk 2151 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void sha256_compress(SHA256_CTX *s, unsigned char *buf)
+//     {
+//         uint32_t S[8], W[64], t0, t1;
+//     
+//     
+//     
+//         int i;
+//     
+//     
+//         for (i = 0; i < 8; i++) {
+//             S[i] = s->state[i];
+//         }
+//     
+//     
+//         for (i = 0; i < 16; i++) {
+//             W[i] = get_be32(buf + (4*i));
+//         }
+//     
+//     
+//         for (i = 16; i < 64; i++) {
+//             W[i] = (( ((((uint32_t)((W[i - 2]))&0xFFFFFFFFUL)>>(uint32_t)(((17))&31)) | ((uint32_t)((W[i - 2]))<<(uint32_t)(32-(((17))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((W[i - 2]))&0xFFFFFFFFUL)>>(uint32_t)(((19))&31)) | ((uint32_t)((W[i - 2]))<<(uint32_t)(32-(((19))&31)))) & 0xFFFFFFFFUL) ^ (((W[i - 2])&0xFFFFFFFFUL)>>(10))) + W[i - 7] + (( ((((uint32_t)((W[i - 15]))&0xFFFFFFFFUL)>>(uint32_t)(((7))&31)) | ((uint32_t)((W[i - 15]))<<(uint32_t)(32-(((7))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((W[i - 15]))&0xFFFFFFFFUL)>>(uint32_t)(((18))&31)) | ((uint32_t)((W[i - 15]))<<(uint32_t)(32-(((18))&31)))) & 0xFFFFFFFFUL) ^ (((W[i - 15])&0xFFFFFFFFUL)>>(3))) + W[i - 16];
+//         }
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0x428a2f98 + W[0]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0x71374491 + W[1]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0xb5c0fbcf + W[2]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0xe9b5dba5 + W[3]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x3956c25b + W[4]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0x59f111f1 + W[5]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x923f82a4 + W[6]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0xab1c5ed5 + W[7]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0xd807aa98 + W[8]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0x12835b01 + W[9]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0x243185be + W[10]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0x550c7dc3 + W[11]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x72be5d74 + W[12]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0x80deb1fe + W[13]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x9bdc06a7 + W[14]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0xc19bf174 + W[15]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0xe49b69c1 + W[16]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0xefbe4786 + W[17]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0x0fc19dc6 + W[18]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0x240ca1cc + W[19]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x2de92c6f + W[20]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0x4a7484aa + W[21]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x5cb0a9dc + W[22]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0x76f988da + W[23]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0x983e5152 + W[24]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0xa831c66d + W[25]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0xb00327c8 + W[26]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0xbf597fc7 + W[27]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0xc6e00bf3 + W[28]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0xd5a79147 + W[29]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x06ca6351 + W[30]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0x14292967 + W[31]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0x27b70a85 + W[32]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0x2e1b2138 + W[33]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0x4d2c6dfc + W[34]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0x53380d13 + W[35]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x650a7354 + W[36]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0x766a0abb + W[37]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x81c2c92e + W[38]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0x92722c85 + W[39]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0xa2bfe8a1 + W[40]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0xa81a664b + W[41]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0xc24b8b70 + W[42]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0xc76c51a3 + W[43]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0xd192e819 + W[44]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0xd6990624 + W[45]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0xf40e3585 + W[46]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0x106aa070 + W[47]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0x19a4c116 + W[48]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0x1e376c08 + W[49]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0x2748774c + W[50]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0x34b0bcb5 + W[51]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x391c0cb3 + W[52]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0x4ed8aa4a + W[53]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0x5b9cca4f + W[54]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0x682e6ff3 + W[55]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//         t0 = S[7] + (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[6] ^ (S[4] & (S[5] ^ S[6]))) + 0x748f82ee + W[56]; t1 = (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[0] | S[1]) & S[2]) | (S[0] & S[1])); S[3] += t0; S[7] = t0 + t1;;
+//         t0 = S[6] + (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[5] ^ (S[3] & (S[4] ^ S[5]))) + 0x78a5636f + W[57]; t1 = (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[7] | S[0]) & S[1]) | (S[7] & S[0])); S[2] += t0; S[6] = t0 + t1;;
+//         t0 = S[5] + (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[4] ^ (S[2] & (S[3] ^ S[4]))) + 0x84c87814 + W[58]; t1 = (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[6] | S[7]) & S[0]) | (S[6] & S[7])); S[1] += t0; S[5] = t0 + t1;;
+//         t0 = S[4] + (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[3] ^ (S[1] & (S[2] ^ S[3]))) + 0x8cc70208 + W[59]; t1 = (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[5] | S[6]) & S[7]) | (S[5] & S[6])); S[0] += t0; S[4] = t0 + t1;;
+//         t0 = S[3] + (( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[0]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[0]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[2] ^ (S[0] & (S[1] ^ S[2]))) + 0x90befffa + W[60]; t1 = (( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[4]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[4]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[4] | S[5]) & S[6]) | (S[4] & S[5])); S[7] += t0; S[3] = t0 + t1;;
+//         t0 = S[2] + (( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[7]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[7]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[1] ^ (S[7] & (S[0] ^ S[1]))) + 0xa4506ceb + W[61]; t1 = (( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[3]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[3]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[3] | S[4]) & S[5]) | (S[3] & S[4])); S[6] += t0; S[2] = t0 + t1;;
+//         t0 = S[1] + (( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[6]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[6]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[0] ^ (S[6] & (S[7] ^ S[0]))) + 0xbef9a3f7 + W[62]; t1 = (( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[2]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[2]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[2] | S[3]) & S[4]) | (S[2] & S[3])); S[5] += t0; S[1] = t0 + t1;;
+//         t0 = S[0] + (( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((6))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((6))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((11))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((11))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[5]))&0xFFFFFFFFUL)>>(uint32_t)(((25))&31)) | ((uint32_t)((S[5]))<<(uint32_t)(32-(((25))&31)))) & 0xFFFFFFFFUL)) + (S[7] ^ (S[5] & (S[6] ^ S[7]))) + 0xc67178f2 + W[63]; t1 = (( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((2))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((2))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((13))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((13))&31)))) & 0xFFFFFFFFUL) ^ ( ((((uint32_t)((S[1]))&0xFFFFFFFFUL)>>(uint32_t)(((22))&31)) | ((uint32_t)((S[1]))<<(uint32_t)(32-(((22))&31)))) & 0xFFFFFFFFUL)) + (((S[1] | S[2]) & S[3]) | (S[1] & S[2])); S[4] += t0; S[0] = t0 + t1;;
+//     
+//     
+//     
+//     
+//     
+//     
+//         for (i = 0; i < 8; i++) {
+//             s->state[i] = s->state[i] + S[i];
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2151 {
+// Rust port of sha256.c: static void sha256_compress(SHA256_CTX *s, unsigned char *buf)
+
+use core::ffi::c_uchar;
+
+#[repr(C)]
+pub struct SHA256_CTX {
+    pub length: u64,
+    pub state: [u32; 8],
+    pub curlen: u32,
+    pub buf: [u8; 64],
+}
+
+const K: [u32; 64] = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+// Port of the static inline get_be32(const uint8_t *d)
+#[inline]
+unsafe fn get_be32(d: *const u8) -> u32 {
+    ((*d as u32) << 24)
+        | ((*d.add(1) as u32) << 16)
+        | ((*d.add(2) as u32) << 8)
+        | (*d.add(3) as u32)
+}
+
+#[inline]
+fn ch(x: u32, y: u32, z: u32) -> u32 {
+    z ^ (x & (y ^ z))
+}
+
+#[inline]
+fn maj(x: u32, y: u32, z: u32) -> u32 {
+    ((x | y) & z) | (x & y)
+}
+
+#[inline]
+fn sigma0(x: u32) -> u32 {
+    x.rotate_right(2) ^ x.rotate_right(13) ^ x.rotate_right(22)
+}
+
+#[inline]
+fn sigma1(x: u32) -> u32 {
+    x.rotate_right(6) ^ x.rotate_right(11) ^ x.rotate_right(25)
+}
+
+#[inline]
+fn gamma0(x: u32) -> u32 {
+    x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
+}
+
+#[inline]
+fn gamma1(x: u32) -> u32 {
+    x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10)
+}
+
+#[no_mangle]
+pub extern "C" fn sha256_compress(s: *mut SHA256_CTX, buf: *mut c_uchar) {
+    let mut st = [0u32; 8];
+    let mut w = [0u32; 64];
+    let mut t0: u32;
+    let mut t1: u32;
+
+    unsafe {
+        let state = core::ptr::addr_of_mut!((*s).state) as *mut u32;
+        let buf = buf as *const u8;
+
+        // copy state into st
+        let mut i: usize = 0;
+        while i < 8 {
+            st[i] = *state.add(i);
+            i += 1;
+        }
+
+        // copy the 512-bit block into W[0..15] (big endian)
+        i = 0;
+        while i < 16 {
+            w[i] = get_be32(buf.add(4 * i));
+            i += 1;
+        }
+
+        // fill W[16..63]
+        i = 16;
+        while i < 64 {
+            let a = w[i - 2];
+            let b = w[i - 15];
+            w[i] = gamma1(a)
+                .wrapping_add(w[i - 7])
+                .wrapping_add(gamma0(b))
+                .wrapping_add(w[i - 16]);
+            i += 1;
+        }
+
+        // compress
+        i = 0;
+        while i < 64 {
+            t0 = st[7]
+                .wrapping_add(sigma1(st[4]))
+                .wrapping_add(ch(st[4], st[5], st[6]))
+                .wrapping_add(K[i])
+                .wrapping_add(w[i]);
+            t1 = sigma0(st[0]).wrapping_add(maj(st[0], st[1], st[2]));
+            st[3] = st[3].wrapping_add(t0);
+            st[7] = t0.wrapping_add(t1);
+
+            // rotate the working state by one word
+            let t = st[7];
+            st[7] = st[6];
+            st[6] = st[5];
+            st[5] = st[4];
+            st[4] = st[3];
+            st[3] = st[2];
+            st[2] = st[1];
+            st[1] = st[0];
+            st[0] = t;
+
+            i += 1;
+        }
+
+        // feedback
+        i = 0;
+        while i < 8 {
+            let cur = *state.add(i);
+            *state.add(i) = cur.wrapping_add(st[i]);
+            i += 1;
+        }
+    }
+}
+}
+
 // ── `for (i = 0; i < 8; i++)` · sha256.c:69-71 · chunk 2152 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -300,6 +537,60 @@ pub unsafe extern "C" fn sha256_compress__part2156(s: *mut SHA256_CTX, w: *const
 }
 }
 
+// ── `SHA256_Init` · sha256.c:193-205 · chunk 2157 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void SHA256_Init(SHA256_CTX *s)
+//     {
+//         s->curlen = 0;
+//         s->length = 0;
+//         s->state[0] = 0x6A09E667UL;
+//         s->state[1] = 0xBB67AE85UL;
+//         s->state[2] = 0x3C6EF372UL;
+//         s->state[3] = 0xA54FF53AUL;
+//         s->state[4] = 0x510E527FUL;
+//         s->state[5] = 0x9B05688CUL;
+//         s->state[6] = 0x1F83D9ABUL;
+//         s->state[7] = 0x5BE0CD19UL;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2157 {
+// Rewrite of libtomcrypt-style SHA256_Init.
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_int, c_ulong};
+use core::primitive::{u32, u64, u8};
+
+#[repr(C)]
+pub struct SHA256_CTX {
+    pub length: u64,
+    pub state: [u32; 8],
+    pub curlen: u32,
+    pub buf: [u8; 64],
+}
+
+// Keep the C types visible/referenced so nothing is elided incorrectly.
+const _: usize = core::mem::size_of::<c_ulong>() - core::mem::size_of::<c_ulong>();
+
+#[no_mangle]
+pub unsafe extern "C" fn SHA256_Init(s: *mut SHA256_CTX) {
+    if s.is_null() {
+        return;
+    }
+    let ctx = &mut *s;
+    ctx.curlen = 0;
+    ctx.length = 0;
+    ctx.state[0] = 0x6A09E667u32;
+    ctx.state[1] = 0xBB67AE85u32;
+    ctx.state[2] = 0x3C6EF372u32;
+    ctx.state[3] = 0xA54FF53Au32;
+    ctx.state[4] = 0x510E527Fu32;
+    ctx.state[5] = 0x9B05688Cu32;
+    ctx.state[6] = 0x1F83D9ABu32;
+    ctx.state[7] = 0x5BE0CD19u32;
+}
+}
+
 // ── `s->curlen = 0; s->length = 0; s->state[0] = 0x6A09E667UL; s->state[1] = 0xBB67AE85UL; s->state[…` · sha256.c:195-204 · chunk 2158 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -346,6 +637,247 @@ pub unsafe extern "C" fn SHA256_Init__part2158(s: *mut SHA256_CTX) {
     ctx.state[5] = 0x9B05688Cu32;
     ctx.state[6] = 0x1F83D9ABu32;
     ctx.state[7] = 0x5BE0CD19u32;
+}
+}
+
+// ── `SHA256_Update` · sha256.c:207-235 · chunk 2159 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void SHA256_Update(SHA256_CTX *s, const uint8_t *in, unsigned long inlen)
+//     {
+//         unsigned long n;
+//     
+//         if (s->curlen > sizeof(s->buf)) {
+//             abort();
+//         }
+//         if ((s->length + inlen) < s->length) {
+//             abort();
+//         }
+//         while (inlen > 0) {
+//             if (s->curlen == 0 && inlen >= 64) {
+//                 sha256_compress(s, (unsigned char *)in);
+//                 s->length += 64 * 8;
+//                 in += 64;
+//                 inlen -= 64;
+//             } else {
+//                 n = min_int(inlen, 64 - s->curlen);
+//                 memcpy(s->buf + s->curlen, in, (size_t)n);
+//                 s->curlen += n;
+//                 in += n;
+//                 inlen -= n;
+//                 if (s->curlen == 64) {
+//                     sha256_compress(s, s->buf);
+//                     s->length += 8*64;
+//                     s->curlen = 0;
+//                 }
+//            }
+//         } }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2159 {
+// Rust port of SHA256_Update from sha256.c (LibTomCrypt).
+
+use core::ffi::{c_int, c_ulong};
+
+#[repr(C)]
+pub struct SHA256_CTX {
+    pub length: u64,
+    pub state: [u32; 8],
+    pub curlen: u32,
+    pub buf: [u8; 64],
+}
+
+extern "C" {
+    // static C function sha256_compress(SHA256_CTX *s, unsigned char *buf)
+    // is not externally visible, so bind it by its mangled-free local name only
+    // if it exists. It does not, therefore it is re-implemented below.
+}
+
+// The C `sha256_compress` is declared `static` in sha256.c and has no linker
+// symbol, so its logic is ported here as a private Rust function. The frozen
+// generated code in the translation unit uses the fully unrolled RND form; the
+// equivalent loop form from the original source computes exactly the same
+// values (all arithmetic is wrapping 32-bit).
+
+#[inline(always)]
+fn rotr32(x: u32, n: u32) -> u32 {
+    x.rotate_right(n & 31)
+}
+
+#[inline(always)]
+fn sigma0(x: u32) -> u32 {
+    rotr32(x, 2) ^ rotr32(x, 13) ^ rotr32(x, 22)
+}
+
+#[inline(always)]
+fn sigma1(x: u32) -> u32 {
+    rotr32(x, 6) ^ rotr32(x, 11) ^ rotr32(x, 25)
+}
+
+#[inline(always)]
+fn gamma0(x: u32) -> u32 {
+    rotr32(x, 7) ^ rotr32(x, 18) ^ (x >> 3)
+}
+
+#[inline(always)]
+fn gamma1(x: u32) -> u32 {
+    rotr32(x, 17) ^ rotr32(x, 19) ^ (x >> 10)
+}
+
+#[inline(always)]
+fn ch(x: u32, y: u32, z: u32) -> u32 {
+    z ^ (x & (y ^ z))
+}
+
+#[inline(always)]
+fn maj(x: u32, y: u32, z: u32) -> u32 {
+    ((x | y) & z) | (x & y)
+}
+
+static K: [u32; 64] = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+#[inline(always)]
+unsafe fn get_be32(d: *const u8) -> u32 {
+    ((*d as u32) << 24)
+        | ((*d.add(1) as u32) << 16)
+        | ((*d.add(2) as u32) << 8)
+        | (*d.add(3) as u32)
+}
+
+unsafe fn sha256_compress(s: *mut SHA256_CTX, buf: *const u8) {
+    let mut st = [0u32; 8];
+    let mut w = [0u32; 64];
+
+    let mut i = 0;
+    while i < 8 {
+        st[i] = (*s).state[i];
+        i += 1;
+    }
+
+    i = 0;
+    while i < 16 {
+        w[i] = get_be32(buf.add(4 * i));
+        i += 1;
+    }
+
+    i = 16;
+    while i < 64 {
+        w[i] = gamma1(w[i - 2])
+            .wrapping_add(w[i - 7])
+            .wrapping_add(gamma0(w[i - 15]))
+            .wrapping_add(w[i - 16]);
+        i += 1;
+    }
+
+    i = 0;
+    while i < 64 {
+        let t0 = st[7]
+            .wrapping_add(sigma1(st[4]))
+            .wrapping_add(ch(st[4], st[5], st[6]))
+            .wrapping_add(K[i])
+            .wrapping_add(w[i]);
+        let t1 = sigma0(st[0]).wrapping_add(maj(st[0], st[1], st[2]));
+        st[3] = st[3].wrapping_add(t0);
+        st[7] = t0.wrapping_add(t1);
+        let t = st[7];
+        st[7] = st[6];
+        st[6] = st[5];
+        st[5] = st[4];
+        st[4] = st[3];
+        st[3] = st[2];
+        st[2] = st[1];
+        st[1] = st[0];
+        st[0] = t;
+        i += 1;
+    }
+
+    i = 0;
+    while i < 8 {
+        (*s).state[i] = (*s).state[i].wrapping_add(st[i]);
+        i += 1;
+    }
+}
+
+// static inline int min_int(int a, int b) — ported inline.
+#[inline(always)]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+extern "C" {
+    fn abort() -> !;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn SHA256_Update(s: *mut SHA256_CTX, in_: *const u8, inlen: c_ulong) {
+    let mut inlen: c_ulong = inlen;
+    let mut inptr: *const u8 = in_;
+    let mut n: c_ulong;
+
+    // if (s->curlen > sizeof(s->buf)) abort();
+    if ((*s).curlen as usize) > 64 {
+        abort();
+    }
+    // if ((s->length + inlen) < s->length) abort();
+    if (*s).length.wrapping_add(inlen as u64) < (*s).length {
+        abort();
+    }
+
+    while inlen > 0 {
+        if (*s).curlen == 0 && inlen >= 64 {
+            sha256_compress(s, inptr);
+            (*s).length = (*s).length.wrapping_add(64u64.wrapping_mul(8));
+            inptr = inptr.add(64);
+            inlen -= 64;
+        } else {
+            // n = min_int(inlen, 64 - s->curlen);
+            // inlen is unsigned long, the second argument is int; mimic the
+            // usual arithmetic conversions applied after min_int returns.
+            let b: c_int = 64 - (*s).curlen as c_int;
+            let n_signed: c_int = if inlen > i64::MAX as c_ulong {
+                b
+            } else {
+                min_int(inlen as c_int as c_int, b)
+            };
+            n = if inlen > i64::MAX as c_ulong {
+                n_signed as c_ulong
+            } else {
+                // min_int takes (int, int); when inlen fits in an int the
+                // conversion below is exact, otherwise the result is always b.
+                if (inlen as u64) <= i32::MAX as u64 {
+                    n_signed as c_ulong
+                } else {
+                    b as c_ulong
+                }
+            };
+
+            core::ptr::copy_nonoverlapping(
+                inptr,
+                (*s).buf.as_mut_ptr().add((*s).curlen as usize),
+                n as usize,
+            );
+            (*s).curlen = (*s).curlen.wrapping_add(n as u32);
+            inptr = inptr.add(n as usize);
+            inlen -= n;
+            if (*s).curlen == 64 {
+                sha256_compress(s, (*s).buf.as_ptr());
+                (*s).length = (*s).length.wrapping_add((8u64).wrapping_mul(64));
+                (*s).curlen = 0;
+            }
+        }
+    }
 }
 }
 
@@ -619,6 +1151,259 @@ pub unsafe extern "C" fn SHA256_Update__part2162(
     *inlen = rem;
     *n_out = n;
 }
+}
+
+// ── `SHA256_Final` · sha256.c:243-286 · chunk 2163 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void SHA256_Final(uint8_t *out, SHA256_CTX *s)
+//     {
+//         int i;
+//     
+//         if (s->curlen >= sizeof(s->buf)) {
+//             abort();
+//         }
+//     
+//     
+//     
+//         s->length += s->curlen * 8;
+//     
+//     
+//         s->buf[s->curlen++] = (unsigned char)0x80;
+//     
+//     
+//     
+//     
+//     
+//         if (s->curlen > 56) {
+//             while (s->curlen < 64) {
+//                 s->buf[s->curlen++] = (unsigned char)0;
+//             }
+//             sha256_compress(s, s->buf);
+//             s->curlen = 0;
+//         }
+//     
+//     
+//         while (s->curlen < 56) {
+//             s->buf[s->curlen++] = (unsigned char)0;
+//         }
+//     
+//     
+//         put_be64(s->buf+56, s->length);
+//         sha256_compress(s, s->buf);
+//     
+//     
+//         for (i = 0; i < 8; i++) {
+//             put_be32(out+(4*i), s->state[i]);
+//         }
+//     
+//     
+//     
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2163 {
+// Reimplementation of SHA256_Final (and the file-static sha256_compress it calls)
+// from sha256.c. The C struct SHA256_CTX and its helpers are mirrored here.
+
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct SHA256_CTX {
+    pub length: u64,
+    pub state: [u32; 8],
+    pub curlen: u32,
+    pub buf: [u8; 64],
+}
+
+extern "C" {
+    fn abort() -> !;
+}
+
+#[inline]
+fn get_be32(d: *const u8) -> u32 {
+    unsafe {
+        ((*d as u32) << 24)
+            | ((*d.add(1) as u32) << 16)
+            | ((*d.add(2) as u32) << 8)
+            | (*d.add(3) as u32)
+    }
+}
+
+#[inline]
+fn put_be32(d: *mut u8, v: u32) {
+    unsafe {
+        *d = (v >> 24) as u8;
+        *d.add(1) = (v >> 16) as u8;
+        *d.add(2) = (v >> 8) as u8;
+        *d.add(3) = v as u8;
+    }
+}
+
+#[inline]
+fn put_be64(d: *mut u8, v: u64) {
+    put_be32(d, (v >> 32) as u32);
+    put_be32(unsafe { d.add(4) }, v as u32);
+}
+
+const K: [u32; 64] = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+#[inline]
+fn ch(x: u32, y: u32, z: u32) -> u32 {
+    z ^ (x & (y ^ z))
+}
+
+#[inline]
+fn maj(x: u32, y: u32, z: u32) -> u32 {
+    ((x | y) & z) | (x & y)
+}
+
+#[inline]
+fn sigma0(x: u32) -> u32 {
+    x.rotate_right(2) ^ x.rotate_right(13) ^ x.rotate_right(22)
+}
+
+#[inline]
+fn sigma1(x: u32) -> u32 {
+    x.rotate_right(6) ^ x.rotate_right(11) ^ x.rotate_right(25)
+}
+
+#[inline]
+fn gamma0(x: u32) -> u32 {
+    x.rotate_right(7) ^ x.rotate_right(18) ^ (x >> 3)
+}
+
+#[inline]
+fn gamma1(x: u32) -> u32 {
+    x.rotate_right(17) ^ x.rotate_right(19) ^ (x >> 10)
+}
+
+// Port of the file-static void sha256_compress(SHA256_CTX *s, unsigned char *buf)
+fn sha256_compress(s: *mut SHA256_CTX, buf: *const u8) {
+    let mut w = [0u32; 64];
+    let mut i = 0usize;
+    while i < 16 {
+        w[i] = get_be32(unsafe { buf.add(4 * i) });
+        i += 1;
+    }
+    i = 16;
+    while i < 64 {
+        w[i] = gamma1(w[i - 2])
+            .wrapping_add(w[i - 7])
+            .wrapping_add(gamma0(w[i - 15]))
+            .wrapping_add(w[i - 16]);
+        i += 1;
+    }
+
+    let mut state = [0u32; 8];
+    i = 0;
+    while i < 8 {
+        state[i] = unsafe { (*s).state[i] };
+        i += 1;
+    }
+
+    i = 0;
+    while i < 64 {
+        let a = state[0];
+        let b = state[1];
+        let c = state[2];
+        let d = state[3];
+        let e = state[4];
+        let f = state[5];
+        let g = state[6];
+        let h = state[7];
+
+        let t0 = h
+            .wrapping_add(sigma1(e))
+            .wrapping_add(ch(e, f, g))
+            .wrapping_add(K[i])
+            .wrapping_add(w[i]);
+        let t1 = sigma0(a).wrapping_add(maj(a, b, c));
+
+        state[3] = d.wrapping_add(t0);
+        state[7] = t0.wrapping_add(t1);
+
+        // rotate: t = S[7]; S[7]=S[6]; ... S[1]=S[0]; S[0]=t;
+        state[7] = state[6];
+        state[6] = state[5];
+        state[5] = state[4];
+        state[4] = state[3];
+        state[3] = state[2];
+        state[2] = state[1];
+        state[1] = state[0];
+        state[0] = h.wrapping_add(t1).wrapping_add(t0).wrapping_sub(t0).wrapping_add(t0);
+
+        i += 1;
+    }
+
+    i = 0;
+    while i < 8 {
+        unsafe {
+            (*s).state[i] = (*s).state[i].wrapping_add(state[i]);
+        }
+        i += 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn SHA256_Final(out: *mut u8, s: *mut SHA256_CTX) {
+    unsafe {
+        if (*s).curlen >= 64 {
+            abort();
+        }
+
+        // increase the length of the message
+        let curlen = (*s).curlen;
+        (*s).length = (*s)
+            .length
+            .wrapping_add(curlen.wrapping_mul(8) as u64);
+
+        // append the '1' bit
+        let mut cur = (*s).curlen;
+        *(*s).buf.as_mut_ptr().add(cur as usize) = 0x80u8;
+        cur += 1;
+
+        // if the length is currently above 56 bytes we append zeros then compress
+        if cur > 56 {
+            while cur < 64 {
+                *(*s).buf.as_mut_ptr().add(cur as usize) = 0u8;
+                cur += 1;
+            }
+            sha256_compress(s, (*s).buf.as_ptr());
+            cur = 0;
+        }
+
+        // pad upto 56 bytes of zeroes
+        while cur < 56 {
+            *(*s).buf.as_mut_ptr().add(cur as usize) = 0u8;
+            cur += 1;
+        }
+        (*s).curlen = cur;
+
+        // store length
+        put_be64((*s).buf.as_mut_ptr().add(56), (*s).length);
+        sha256_compress(s, (*s).buf.as_ptr());
+
+        // copy output
+        let mut i = 0i32;
+        while i < 8 {
+            put_be32(out.add(4 * i as usize), (*s).state[i as usize]);
+            i += 1;
+        }
+    }
+}
+
+// silence unused warnings for the mirrored c_void import
+#[allow(dead_code)]
+type UnusedCVoid = c_void;
 }
 
 // ── `if (s->curlen >= sizeof(s->buf)` · sha256.c:247-249 · chunk 2164 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
@@ -1154,6 +1939,51 @@ pub extern "C" fn SHA256_Final__part2169(out: *mut u8, s: *mut SHA256_CTX) {
             put_be32(out.offset((4 * i) as isize), v);
         }
         i += 1;
+    }
+}
+}
+
+// ── `SHA256` · sha256.c:288-295 · chunk 2170 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void SHA256(const uint8_t *buf, int buf_len, uint8_t *out)
+//     {
+//         SHA256_CTX ctx;
+//     
+//         SHA256_Init(&ctx);
+//         SHA256_Update(&ctx, buf, buf_len);
+//         SHA256_Final(out, &ctx);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2170 {
+use core::ffi::{c_int, c_ulong};
+
+#[repr(C)]
+struct SHA256_CTX {
+    length: u64,
+    state: [u32; 8],
+    curlen: u32,
+    buf: [u8; 64],
+}
+
+extern "C" {
+    fn SHA256_Init(s: *mut SHA256_CTX);
+    fn SHA256_Update(s: *mut SHA256_CTX, in_: *const u8, inlen: c_ulong);
+    fn SHA256_Final(out: *mut u8, s: *mut SHA256_CTX);
+}
+
+#[no_mangle]
+pub extern "C" fn SHA256(buf: *const u8, buf_len: c_int, out: *mut u8) {
+    let mut ctx = SHA256_CTX {
+        length: 0,
+        state: [0u32; 8],
+        curlen: 0,
+        buf: [0u8; 64],
+    };
+    unsafe {
+        SHA256_Init(&mut ctx);
+        SHA256_Update(&mut ctx, buf, buf_len as c_ulong);
+        SHA256_Final(out, &mut ctx);
     }
 }
 }

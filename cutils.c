@@ -2893,90 +2893,20 @@ void dbuf_putc(DynBuf *s, uint8_t c);
 void dbuf_putstr(DynBuf *s, const char *str);
 void dbuf_free(DynBuf *s);
 
-void *mallocz(size_t size)
-{
-    void *mallocz__part414(size_t size);
-void *ptr = mallocz__part414(size);
-    void *mallocz__part415(void *ptr);
-if (!mallocz__part415(ptr))
-    return ((void *)0);
-    void *mallocz__part416(void *ptr, size_t size);
-return mallocz__part416(ptr, size);
-}
+void *mallocz(size_t size);
 
-void pstrcpy(char *buf, int buf_size, const char *str)
-{
-    int c;
-    char *q = buf;
+void pstrcpy(char *buf, int buf_size, const char *str);
 
-    int pstrcpy__part418(char *buf, int buf_size, const char *str);
-if (pstrcpy__part418(buf, buf_size, str)) return;
+char *pstrcat(char *buf, int buf_size, const char *s);
 
-    int pstrcpy__part419(char *buf, int buf_size, const char *str);
-int ret = pstrcpy__part419(buf, buf_size, str);
-    void pstrcpy__part420(char *q);
-pstrcpy__part420(q);
-}
+int strstart(const char *str, const char *val, const char **ptr);
 
-char *pstrcat(char *buf, int buf_size, const char *s)
-{
-    int pstrcat__part422(const char *buf);
-int len;
-    len = pstrcat__part422(buf);
-    char *pstrcat__part423(char *buf, int buf_size, const char *s, int len);
-pstrcat__part423(buf, buf_size, s, len);
-    char *pstrcat__part424(char *buf);
-return pstrcat__part424(buf);
-}
+void dbuf_init(DynBuf *s);
 
-int strstart(const char *str, const char *val, const char **ptr)
-{
-    void strstart__part426(const char *str, const char *val, const char **out_p, const char **out_q);
-const char *p, *q;
-strstart__part426(str, val, &p, &q);
-    int strstart__part427(const char *str, const char *val);
-if (strstart__part427(p, q) == 0)
-    return 0;
-    int strstart__part428(const char **ptr, const char *p);
-return strstart__part428(ptr, p);
-    int strstart__part429(void);
-return strstart__part429();
-}
+void dbuf_write(DynBuf *s, size_t offset, const uint8_t *data, size_t len);
 
-void dbuf_init(DynBuf *s)
-{
-    void dbuf_init__part431(DynBuf *s, size_t n);
-dbuf_init__part431(s, sizeof(*s));
-}
+void dbuf_putc(DynBuf *s, uint8_t c);
 
-void dbuf_write(DynBuf *s, size_t offset, const uint8_t *data, size_t len)
-{
-        size_t dbuf_write__part433(size_t offset, size_t len);
-    size_t end, new_size;
-    end = dbuf_write__part433(offset, len);
-    new_size = end;
-    void dbuf_write__part434(DynBuf *s, size_t *new_size);
-dbuf_write__part434(s, &new_size);
-    void dbuf_write__part435(DynBuf *s, size_t offset, const uint8_t *data, size_t len);
-dbuf_write__part435(s, offset, data, len);
-    void dbuf_write__part436(unsigned long end, unsigned long *s_size);
-dbuf_write__part436(end, &s->size);
-}
+void dbuf_putstr(DynBuf *s, const char *str);
 
-void dbuf_putc(DynBuf *s, uint8_t c)
-{
-    void dbuf_putc__part438(DynBuf *s, size_t offset, const uint8_t *data, size_t len);
-dbuf_putc__part438(s, s->size, &c, 1);
-}
-
-void dbuf_putstr(DynBuf *s, const char *str)
-{
-    void dbuf_putstr__part440(DynBuf *s, const char *str);
-dbuf_putstr__part440(s, str);
-}
-
-void dbuf_free(DynBuf *s)
-{
-    void dbuf_free__part442(DynBuf *s);
-dbuf_free__part442(s);
-}
+void dbuf_free(DynBuf *s);

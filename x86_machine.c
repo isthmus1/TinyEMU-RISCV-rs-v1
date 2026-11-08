@@ -8049,148 +8049,27 @@ static void cmos_write(void *opaque, uint32_t offset,
                        uint32_t data, int size_log2);
 static uint32_t cmos_read(void *opaque, uint32_t offset, int size_log2);
 
-static int to_bcd(CMOSState *s, unsigned int a)
-{
-    int to_bcd__part3979(CMOSState *s, unsigned int a);
-return to_bcd__part3979(s, a);
+static int to_bcd(CMOSState *s, unsigned int a);
 
-}
-
-static void cmos_update_time(CMOSState *s, BOOL set_century)
-{
-    struct timeval tv;
-    struct tm tm;
-    time_t ti;
-    int val;
-
-    void cmos_update_time__part3981(struct timeval *tv, time_t *ti);
-    cmos_update_time__part3981(&tv, &ti);
-
-        void cmos_update_time__part3982(int use_local_time, time_t *ti, struct tm *tm);
-    cmos_update_time__part3982(s->use_local_time, &ti, &tm);
-
-
-    void cmos_update_time__part3983(CMOSState *s, int tm_sec, int tm_min);
-    cmos_update_time__part3983(s, tm.tm_sec, tm.tm_min);
-
-    void cmos_update_time__part3984(CMOSState *s, int tm_hour);
-    cmos_update_time__part3984(s, tm.tm_hour);
-
-    void cmos_update_time__part3985(CMOSState *s, int tm_wday, int tm_mday, int tm_mon, int tm_year);
-    cmos_update_time__part3985(s, tm.tm_wday, tm.tm_mday, tm.tm_mon, tm.tm_year);
-
-    int cmos_update_time__part3986(CMOSState *s, int tm_year);
-if (set_century) {
-        val = cmos_update_time__part3986(s, tm.tm_year);
-        (void)val;
-    }
-
-
-    void cmos_update_time__part3987(CMOSState *s, long tv_usec);
-    cmos_update_time__part3987(s, tv.tv_usec);
-
-}
+static void cmos_update_time(CMOSState *s, BOOL set_century);
 
 CMOSState *cmos_init(PhysMemoryMap *port_map, int addr,
-                     IRQSignal *irq, BOOL use_local_time)
-{
-    CMOSState *s;
-
-    s = mallocz(sizeof(*s));
-    s->use_local_time = use_local_time;
-
-    s->cmos_index = 0;
-
-    s->cmos_data[10] = 0x26;
-    s->cmos_data[11] = 0x02;
-    s->cmos_data[12] = 0x00;
-    s->cmos_data[13] = 0x80;
-
-    cmos_update_time(s, TRUE);
-
-    s->irq = irq;
-
-    cpu_register_device(port_map, addr, 2, s, cmos_read, cmos_write,
-                        (1 << 0));
-    return s;
-}
+                     IRQSignal *irq, BOOL use_local_time);
 
 
 
-static uint32_t cmos_get_timer(CMOSState *s)
-{
-        uint32_t cmos_get_timer__part3991(void);
+static uint32_t cmos_get_timer(CMOSState *s);
 
-    return cmos_get_timer__part3991();
-
-}
-
-static void cmos_update_timer(CMOSState *s)
-{
-    int cmos_update_timer__part3993(CMOSState *s);
-
-    int period_code;
-
-    period_code = cmos_update_timer__part3993(s);
-    void cmos_update_timer__part3994(CMOSState *s, int period_code);
-    cmos_update_timer__part3994(s, period_code);
-
-}
+static void cmos_update_timer(CMOSState *s);
 
 
 
-static void cmos_update_irq(CMOSState *s)
-{
-    uint32_t d;
-        void cmos_update_irq__part3996(CMOSState *s);
-    cmos_update_irq__part3996(s);
-
-}
+static void cmos_update_irq(CMOSState *s);
 
 static void cmos_write(void *opaque, uint32_t offset,
-                       uint32_t data, int size_log2)
-{
-    CMOSState *s = opaque;
+                       uint32_t data, int size_log2);
 
-    void cmos_write__part3998(void *opaque, uint32_t offset, uint32_t data, int size_log2);
-    cmos_write__part3998((void *)s, offset, data, size_log2);
-
-}
-
-static uint32_t cmos_read(void *opaque, uint32_t offset, int size_log2)
-{
-    CMOSState *s = opaque;
-    int ret;
-
-    if (offset == 0) {
-        return 0xff;
-    } else {
-        switch(s->cmos_index) {
-        case 0:
-        case 2:
-        case 4:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-            cmos_update_time(s, FALSE);
-            ret = s->cmos_data[s->cmos_index];
-            break;
-        case 12:
-            ret = s->cmos_data[s->cmos_index];
-            s->cmos_data[12] = 0x00;
-            set_irq(s->irq, 0);
-            break;
-        default:
-            ret = s->cmos_data[s->cmos_index];
-        }
-
-
-
-        return ret;
-    }
-}
+static uint32_t cmos_read(void *opaque, uint32_t offset, int size_log2);
 
 
 
@@ -8228,230 +8107,30 @@ static uint32_t pic_elcr_read(void *opaque, uint32_t offset, int size_log2);
 
 PICState *pic_init(PhysMemoryMap *port_map, int port, int elcr_port,
                    int elcr_mask,
-                   PICUpdateIRQFunc *update_irq, void *opaque)
-{
-    PICState *s;
+                   PICUpdateIRQFunc *update_irq, void *opaque);
 
-    s = mallocz(sizeof(*s));
-    s->elcr_mask = elcr_mask;
-    s->update_irq = update_irq;
-    s->opaque = opaque;
-    cpu_register_device(port_map, port, 2, s,
-                        pic_read, pic_write, (1 << 0));
-    cpu_register_device(port_map, elcr_port, 1, s,
-                        pic_elcr_read, pic_elcr_write, (1 << 0));
-    pic_reset(s);
-    return s;
-}
-
-static void pic_reset(PICState *s)
-{
-
-    void pic_reset__part4007(PICState *s);
-    pic_reset__part4007(s);
-
-}
+static void pic_reset(PICState *s);
 
 
-static void pic_set_irq1(PICState *s, int irq, int level)
-{
-    int pic_set_irq1__part4009(int irq);
-    int mask = pic_set_irq1__part4009(irq);
+static void pic_set_irq1(PICState *s, int irq, int level);
 
-    void pic_set_irq1__part4010(PICState *s, int mask, int level);
-    pic_set_irq1__part4010(s, mask, level);
-}
-
-static int pic_get_priority(PICState *s, int mask)
-{
-    int priority;
-    int pic_get_priority__part4012(int mask);
-    if (pic_get_priority__part4012(mask))
-        return -1;
-
-        int pic_get_priority__part4013(void);
-    priority = pic_get_priority__part4013();
-
-    int pic_get_priority__part4014(PICState *s, int mask, int priority);
-    priority = pic_get_priority__part4014(s, mask, priority);
-
-    {
-    int pic_get_priority__part4015(int priority);
-    return pic_get_priority__part4015(priority);
-}
-
-}
+static int pic_get_priority(PICState *s, int mask);
 
 
-static int pic_get_irq(PICState *s)
-{
-    int mask, cur_priority, priority;
-
-    void pic_get_irq__part4017(PICState *s, int *pmask, int *ppriority);
-    pic_get_irq__part4017(s, &mask, &priority);
-
-    extern int pic_get_irq__part4018(int priority);
-    if (pic_get_irq__part4018(priority))
-        return -1;
+static int pic_get_irq(PICState *s);
 
 
-    int pic_get_irq__part4019(PICState *s);
-cur_priority = pic_get_irq__part4019(s);
-
-    int pic_get_irq__part4020(int priority, int cur_priority);
-    return pic_get_irq__part4020(priority, cur_priority);
-
-}
-
-
-static void pic_intack(PICState *s, int irq)
-{
-    void pic_intack__part4022(PICState *s, int irq);
-    pic_intack__part4022(s, irq);
-
-
-    void pic_intack__part4023(PICState *s, int irq);
-    pic_intack__part4023(s, irq);
-
-}
+static void pic_intack(PICState *s, int irq);
 
 static void pic_write(void *opaque, uint32_t offset,
-                      uint32_t val, int size_log2)
-{
-        PICState *s = opaque;
-    int priority, addr;
+                      uint32_t val, int size_log2);
 
-    void pic_write__part4025(void *opaque, uint32_t offset, PICState **s_out, int *addr_out);
-    pic_write__part4025(opaque, offset, &s, &addr);
-
-
-
-
-    if (addr == 0) {
-        if (val & 0x10) {
-
-            pic_reset(s);
-            s->init_state = 1;
-            s->init4 = val & 1;
-            if (val & 0x02)
-                abort();
-            if (val & 0x08)
-                abort();
-        } else if (val & 0x08) {
-            if (val & 0x02)
-                s->read_reg_select = val & 1;
-            if (val & 0x40)
-                s->special_mask = (val >> 5) & 1;
-        } else {
-            switch(val) {
-            case 0x00:
-            case 0x80:
-                s->rotate_on_autoeoi = val >> 7;
-                break;
-            case 0x20:
-            case 0xa0:
-                priority = pic_get_priority(s, s->isr);
-                if (priority >= 0) {
-                    s->isr &= ~(1 << ((priority + s->priority_add) & 7));
-                }
-                if (val == 0xa0)
-                    s->priority_add = (s->priority_add + 1) & 7;
-                break;
-            case 0x60:
-            case 0x61:
-            case 0x62:
-            case 0x63:
-            case 0x64:
-            case 0x65:
-            case 0x66:
-            case 0x67:
-                priority = val & 7;
-                s->isr &= ~(1 << priority);
-                break;
-            case 0xc0:
-            case 0xc1:
-            case 0xc2:
-            case 0xc3:
-            case 0xc4:
-            case 0xc5:
-            case 0xc6:
-            case 0xc7:
-                s->priority_add = (val + 1) & 7;
-                break;
-            case 0xe0:
-            case 0xe1:
-            case 0xe2:
-            case 0xe3:
-            case 0xe4:
-            case 0xe5:
-            case 0xe6:
-            case 0xe7:
-                priority = val & 7;
-                s->isr &= ~(1 << priority);
-                s->priority_add = (priority + 1) & 7;
-                break;
-            }
-        }
-    } else {
-        switch(s->init_state) {
-        case 0:
-
-            s->imr = val;
-            s->update_irq(s->opaque);
-            break;
-        case 1:
-            s->irq_base = val & 0xf8;
-            s->init_state = 2;
-            break;
-        case 2:
-            if (s->init4) {
-                s->init_state = 3;
-            } else {
-                s->init_state = 0;
-            }
-            break;
-        case 3:
-            s->auto_eoi = (val >> 1) & 1;
-            s->init_state = 0;
-            break;
-        }
-    }
-}
-
-static uint32_t pic_read(void *opaque, uint32_t offset, int size_log2)
-{
-    int pic_read__part4028(void *opaque, uint32_t offset, PICState **s_out);
-    PICState *s;
-    int addr, ret;
-
-    addr = pic_read__part4028(opaque, offset, &s);
-
-    uint32_t pic_read__part4029(PICState *s, int addr);
-    ret = (int)pic_read__part4029(s, addr);
-
-
-
-    {
-    uint32_t pic_read__part4030(int ret);
-    return pic_read__part4030(ret);
-}
-
-}
+static uint32_t pic_read(void *opaque, uint32_t offset, int size_log2);
 
 static void pic_elcr_write(void *opaque, uint32_t offset,
-                           uint32_t val, int size_log2)
-{
-    void pic_elcr_write__part4032(PICState *s, uint32_t val);
-    pic_elcr_write__part4032(opaque, val);
+                           uint32_t val, int size_log2);
 
-}
-
-static uint32_t pic_elcr_read(void *opaque, uint32_t offset, int size_log2)
-{
-    uint32_t pic_elcr_read__part4034(void *opaque, uint32_t offset, int size_log2);
-    return pic_elcr_read__part4034(opaque, offset, size_log2);
-
-}
+static uint32_t pic_elcr_read(void *opaque, uint32_t offset, int size_log2);
 
 typedef struct {
     PICState *pics[2];
@@ -8470,95 +8149,18 @@ static void pic2_set_irq(void *opaque, int irq, int level);
 PIC2State *pic2_init(PhysMemoryMap *port_map, uint32_t addr0, uint32_t addr1,
                      uint32_t elcr_addr0, uint32_t elcr_addr1,
                      void (*cpu_set_irq)(void *opaque, int level),
-                     void *opaque, IRQSignal *irqs)
-{
-        PIC2State *s;
-    int i;
-    PIC2State *pic2_init__part4038(void);
+                     void *opaque, IRQSignal *irqs);
 
-    s = pic2_init__part4038();
-
-
-    for(i = 0; i < 16; i++) {
-        irq_init(&irqs[i], pic2_set_irq, s, i);
-    }
-    s->cpu_set_irq = cpu_set_irq;
-    s->opaque = opaque;
-    s->pics[0] = pic_init(port_map, addr0, elcr_addr0, 0xf8, pic2_update_irq, s);
-    s->pics[1] = pic_init(port_map, addr1, elcr_addr1, 0xde, pic2_update_irq, s);
-    s->irq_requested = 0;
-    return s;
-}
-
-void pic2_set_elcr(PIC2State *s, const uint8_t *elcr)
-{
-    int i;
-    void pic2_set_elcr__part4042(PIC2State *s, const uint8_t *elcr);
-    pic2_set_elcr__part4042(s, elcr);
-
-}
+void pic2_set_elcr(PIC2State *s, const uint8_t *elcr);
 
 
 
-static void pic2_update_irq(void *opaque)
-{
-    PIC2State *s = opaque;
-    int irq2, irq;
+static void pic2_update_irq(void *opaque);
+
+static void pic2_set_irq(void *opaque, int irq, int level);
 
 
-    irq2 = pic_get_irq(s->pics[1]);
-        if (irq2 >= 0) {
-        void pic2_update_irq__part4045(PIC2State *s, int irq2);
-        pic2_update_irq__part4045(s, irq2);
-    }
-
-    int pic2_update_irq__part4046(PICState *pics0);
-    irq = pic2_update_irq__part4046(s->pics[0]);
-
-
-
-
-    typedef struct {
-    PICState *pics[2];
-    int irq_requested;
-    void (*cpu_set_irq)(void *opaque, int level);
-    void *opaque;
-    IRQSignal *irqs;
-} PIC2State_rs;
-
-void pic2_update_irq__part4047(PIC2State_rs *s, int irq);
-
-    pic2_update_irq__part4047((PIC2State_rs *)s, irq);
-
-}
-
-static void pic2_set_irq(void *opaque, int irq, int level)
-{
-    void pic2_set_irq__part4049(void *opaque, int irq, int level);
-pic2_set_irq__part4049(opaque, irq, level);
-
-}
-
-
-static int pic2_get_hard_intno(PIC2State *s)
-{
-    int irq, irq2, intno;
-
-    int pic2_get_hard_intno__part4051(PICState *pic0, int *irq_out);
-    irq = pic2_get_hard_intno__part4051(s->pics[0], &irq);
-
-    {
-        void pic2_get_hard_intno__part4052(PIC2State *s, int *irq, int *irq2, int *intno);
-        pic2_get_hard_intno__part4052(s, &irq, &irq2, &intno);
-    }
-    pic2_update_irq(s);
-
-
-
-
-
-    return intno;
-}
+static int pic2_get_hard_intno(PIC2State *s);
 typedef int64_t PITGetTicksFunc(void *opaque);
 
 typedef struct PITState PITState;
@@ -8593,237 +8195,31 @@ static uint32_t speaker_read(void *opaque, uint32_t offset, int size_log2);
 
 PITState *pit_init(PhysMemoryMap *port_map, int addr0, int addr1,
                    IRQSignal *irq,
-                   PITGetTicksFunc *get_ticks, void *opaque)
-{
-    PITState *s;
-    PITChannel *pc;
-    int i;
-
-    PITState *pit_init__part4060(IRQSignal *irq, PITGetTicksFunc *get_ticks, void *opaque);
-    s = pit_init__part4060(irq, get_ticks, opaque);
+                   PITGetTicksFunc *get_ticks, void *opaque);
 
 
-    for(i = 0; i < 3; i++) {
-        pc = &s->pit_channels[i];
-        pc->pit_state = s;
-        pc->mode = 3;
-        pc->gate = (i != 2) >> 0;
-        pit_load_count(pc, 0);
-    }
-    s->speaker_data_on = 0;
+static int64_t pit_get_time(PITChannel *pc);
 
-    cpu_register_device(port_map, addr0, 4, s, pit_read, pit_write,
-                        (1 << 0));
-
-    cpu_register_device(port_map, addr1, 1, s, speaker_read, speaker_write,
-                        (1 << 0));
-    return s;
-}
+static uint32_t pit_get_count(PITChannel *pc);
 
 
-static int64_t pit_get_time(PITChannel *pc)
-{
-    int64_t pit_get_time__part4064(PITChannel *pc);
-    return pit_get_time__part4064(pc);
+static int pit_get_out(PITChannel *pc);
 
-}
-
-static uint32_t pit_get_count(PITChannel *pc)
-{
-    uint32_t counter;
-    uint64_t d;
-
-    d = pit_get_time(pc) - pc->count_load_time;
-    uint32_t pit_get_count__part4067(uint8_t mode, uint32_t count, uint64_t d);
-    counter = pit_get_count__part4067(pc->mode, pc->count, d);
-
-    uint32_t pit_get_count__part4068(uint32_t counter);
-return pit_get_count__part4068(counter);
-
-}
-
-
-static int pit_get_out(PITChannel *pc)
-{
-    int out;
-    int64_t d;
-
-    int64_t pit_get_out__part4070(PITChannel *pc);
-    d = pit_get_out__part4070(pc);
-
-    int pit_get_out__part4071(PITChannel *pc, int64_t d);
-out = pit_get_out__part4071(pc, d);
-
-        int pit_get_out__part4072(int out);
-    return pit_get_out__part4072(out);
-
-}
-
-static void pit_load_count(PITChannel *s, int val)
-{
-    int pit_load_count__part4074(int val);
-    val = pit_load_count__part4074(val);
-
-    void pit_load_count__part4075(PITChannel *s, int val);
-    pit_load_count__part4075(s, val);
-
-}
+static void pit_load_count(PITChannel *s, int val);
 
 static void pit_write(void *opaque, uint32_t offset,
-                      uint32_t val, int size_log2)
-{
-    PITState *pit = opaque;
-    int channel, access, addr;
-    PITChannel *s;
-    int pit_write__part4077(void *opaque, uint32_t offset);
+                      uint32_t val, int size_log2);
 
-    addr = pit_write__part4077(opaque, offset);
-
-
-
-    if (addr == 3) {
-        channel = val >> 6;
-        if (channel == 3)
-            return;
-        s = &pit->pit_channels[channel];
-        access = (val >> 4) & 3;
-        switch(access) {
-        case 0:
-            s->latched_count = pit_get_count(s);
-            s->rw_state = 4;
-            break;
-        default:
-            s->mode = (val >> 1) & 7;
-            s->bcd = val & 1;
-            s->rw_state = access - 1 + 0;
-            break;
-        }
-    } else {
-        s = &pit->pit_channels[addr];
-        switch(s->rw_state) {
-        case 0:
-            pit_load_count(s, val);
-            break;
-        case 1:
-            pit_load_count(s, val << 8);
-            break;
-        case 2:
-        case 3:
-            if (s->rw_state & 1) {
-                pit_load_count(s, (s->latched_count & 0xff) | (val << 8));
-            } else {
-                s->latched_count = val;
-            }
-            s->rw_state ^= 1;
-            break;
-        }
-    }
-}
-
-static uint32_t pit_read(void *opaque, uint32_t offset, int size_log2)
-{
-    PITState *pit = opaque;
-    PITChannel *s;
-    int ret, count, addr;
-
-    int pit_read__part4080(void *opaque, uint32_t offset);
-    addr = pit_read__part4080(opaque, offset);
-
-    int pit_read__part4081(int addr);
-    if (pit_read__part4081(addr))
-        return 0xff;
-
-
-    PITChannel *pit_read__part4082(void *pit, int addr);
-    s = pit_read__part4082(pit, addr);
-    switch(s->rw_state) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-        count = pit_get_count(s);
-        if (s->rw_state & 1)
-            ret = (count >> 8) & 0xff;
-        else
-            ret = count & 0xff;
-        if (s->rw_state & 2)
-            s->rw_state ^= 1;
-        break;
-    default:
-    case 4:
-    case 5:
-        if (s->rw_state & 1)
-            ret = s->latched_count >> 8;
-        else
-            ret = s->latched_count & 0xff;
-        s->rw_state ^= 1;
-        break;
-    }
-
-
-
-        extern uint32_t pit_read__part4084(int ret);
-    return pit_read__part4084(ret);
-
-}
+static uint32_t pit_read(void *opaque, uint32_t offset, int size_log2);
 
 static void speaker_write(void *opaque, uint32_t offset,
-                          uint32_t val, int size_log2)
-{
-    void speaker_write__part4086(void *opaque, uint32_t offset, uint32_t val, int size_log2);
-    speaker_write__part4086(opaque, offset, val, size_log2);
+                          uint32_t val, int size_log2);
 
-}
-
-static uint32_t speaker_read(void *opaque, uint32_t offset, int size_log2)
-{
-    uint32_t speaker_read__part4088(void *opaque, uint32_t offset, int size_log2);
-
-    return speaker_read__part4088(opaque, offset, size_log2);
-}
+static uint32_t speaker_read(void *opaque, uint32_t offset, int size_log2);
 
 
 
-static int pit_update_irq(PITState *pit)
-{
-    PITChannel *s;
-    int64_t d, delay;
-
-    void pit_update_irq__part4090(PITState *pit, PITChannel **s, int64_t *d, int64_t *delay);
-    pit_update_irq__part4090(pit, &s, &d, &delay);
-
-    switch(s->mode) {
-    default:
-    case 0:
-    case 1:
-    case 4:
-    case 5:
-        if (s->last_irq_time == 0) {
-            delay = s->count - d;
-            if (delay <= 0) {
-                set_irq(pit->irq, 1);
-                set_irq(pit->irq, 0);
-                s->last_irq_time = d;
-            }
-        }
-        break;
-    case 2:
-    case 3:
-        delay = s->last_irq_time + s->count - d;
-        if (delay <= 0) {
-            set_irq(pit->irq, 1);
-            set_irq(pit->irq, 0);
-            s->last_irq_time += s->count;
-        }
-        break;
-    }
-
-        {
-        int pit_update_irq__part4092(int64_t delay);
-        return pit_update_irq__part4092(delay);
-    }
-
-}
+static int pit_update_irq(PITState *pit);
 typedef struct {
     uint8_t divider;
     uint8_t rbr;
@@ -8846,155 +8242,15 @@ static uint32_t serial_read(void *opaque, uint32_t offset, int size_log2);
 
 SerialState *serial_init(PhysMemoryMap *port_map, int addr,
                          IRQSignal *irq,
-                         void (*write_func)(void *opaque, const uint8_t *buf, int buf_len), void *opaque)
-{
-    SerialState *s;
-    s = mallocz(sizeof(*s));
+                         void (*write_func)(void *opaque, const uint8_t *buf, int buf_len), void *opaque);
 
-
-    s->divider = 0;
-    s->rbr = 0;
-    s->ier = 0;
-    s->iir = 0x01;
-    s->lcr = 0;
-    s->mcr = 0;
-    s->lsr = 0x40 | 0x20;
-    s->msr = 0;
-    s->scr = 0;
-    s->fcr = 0;
-
-    s->irq = irq;
-    s->write_func = write_func;
-    s->opaque = opaque;
-
-    cpu_register_device(port_map, addr, 8, s, serial_read, serial_write,
-                        (1 << 0));
-    return s;
-}
-
-static void serial_update_irq(SerialState *s)
-{
-    void serial_update_irq__part4098(SerialState *s);
-    serial_update_irq__part4098(s);
-    void serial_update_irq__part4099(SerialState *s);
-    serial_update_irq__part4099(s);
-
-}
+static void serial_update_irq(SerialState *s);
 static void serial_write(void *opaque, uint32_t offset,
-                         uint32_t val, int size_log2)
-{
-    int serial_write__part4101(uint32_t offset);
-    SerialState *s = opaque;
-    int addr;
+                         uint32_t val, int size_log2);
 
-    addr = serial_write__part4101(offset);
+static uint32_t serial_read(void *opaque, uint32_t offset, int size_log2);
 
-    switch(addr) {
-    default:
-    case 0:
-        if (s->lcr & 0x80) {
-            s->divider = (s->divider & 0xff00) | val;
-        } else {
-            {
-                uint8_t ch;
-                s->lsr &= ~0x20;
-                serial_update_irq(s);
-
-
-                ch = val;
-                s->write_func(s->opaque, &ch, 1);
-                s->lsr |= 0x20;
-                s->lsr |= 0x40;
-                serial_update_irq(s);
-            }
-        }
-        break;
-    case 1:
-        if (s->lcr & 0x80) {
-            s->divider = (s->divider & 0x00ff) | (val << 8);
-        } else {
-            s->ier = val;
-            serial_update_irq(s);
-        }
-        break;
-    case 2:
-        break;
-    case 3:
-        s->lcr = val;
-        break;
-    case 4:
-        s->mcr = val;
-        break;
-    case 5:
-        break;
-    case 6:
-        s->msr = val;
-        break;
-    case 7:
-        s->scr = val;
-        break;
-    }
-}
-
-static uint32_t serial_read(void *opaque, uint32_t offset, int size_log2)
-{
-    int serial_read__part4104(uint32_t offset);
-    SerialState *s = opaque;
-    int ret, addr;
-
-    addr = serial_read__part4104(offset);
-    switch(addr) {
-    default:
-    case 0:
-        if (s->lcr & 0x80) {
-            ret = s->divider & 0xff;
-        } else {
-            ret = s->rbr;
-            s->lsr &= ~(0x01 | 0x10);
-            serial_update_irq(s);
-
-
-
-
-        }
-        break;
-    case 1:
-        if (s->lcr & 0x80) {
-            ret = (s->divider >> 8) & 0xff;
-        } else {
-            ret = s->ier;
-        }
-        break;
-    case 2:
-        ret = s->iir;
-        if (s->fcr & 0x01)
-            ret |= 0xC0;
-        break;
-    case 3:
-        ret = s->lcr;
-        break;
-    case 4:
-        ret = s->mcr;
-        break;
-    case 5:
-        ret = s->lsr;
-        break;
-    case 6:
-        ret = s->msr;
-        break;
-    case 7:
-        ret = s->scr;
-        break;
-    }
-    uint32_t serial_read__part4106(int ret);
-    return serial_read__part4106(ret);
-}
-
-void serial_send_break(SerialState *s)
-{
-    void serial_send_break__part4108(SerialState *s);
-    serial_send_break__part4108(s);
-}
+void serial_send_break(SerialState *s);
 typedef struct PCMachine {
     VirtMachine common;
     uint64_t ram_size;
@@ -9031,983 +8287,99 @@ static void copy_kernel(PCMachine *s, const uint8_t *buf, int buf_len,
                         const char *cmd_line);
 
 static void port80_write(void *opaque, uint32_t offset,
-                         uint32_t val64, int size_log2)
-{
-}
+                         uint32_t val64, int size_log2);
 
-static uint32_t port80_read(void *opaque, uint32_t offset, int size_log2)
-{
-        uint32_t port80_read__part4113(void);
-    return port80_read__part4113();
-}
+static uint32_t port80_read(void *opaque, uint32_t offset, int size_log2);
 
 static void port92_write(void *opaque, uint32_t offset,
-                         uint32_t val, int size_log2)
-{
-}
+                         uint32_t val, int size_log2);
 
-static uint32_t port92_read(void *opaque, uint32_t offset, int size_log2)
-{
-    uint32_t port92_read__part4116(void);
-    return port92_read__part4116();
-}
-static uint32_t vmport_read(void *opaque, uint32_t addr, int size_log2)
-{
-    PCMachine *s = opaque;
-    uint32_t regs[6];
-
-
-    if (s->kvm_enabled) {
-        struct kvm_regs r;
-
-        ioctl(s->vcpu_fd, 
-                         (((2U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x81)) << 0) | ((((sizeof(struct kvm_regs)))) << ((0 +8)+8)))
-                                     , &r);
-        regs[0] = r.rax;
-        regs[1] = r.rbx;
-        regs[2] = r.rcx;
-        regs[3] = r.rdx;
-        regs[4] = r.rsi;
-        regs[5] = r.rdi;
-
-        if (regs[0] == 0x564D5868) {
-
-            vmmouse_handler(s->vm_mouse, regs);
-
-
-
-            r.rax = regs[0];
-            r.rbx = regs[1];
-            r.rcx = regs[2];
-            r.rdx = regs[3];
-            r.rsi = regs[4];
-            r.rdi = regs[5];
-            ioctl(s->vcpu_fd, 
-                             (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x82)) << 0) | ((((sizeof(struct kvm_regs)))) << ((0 +8)+8)))
-                                         , &r);
-        }
-    } else
-
-    {
-        regs[0] = x86_cpu_get_reg(s->cpu_state, 0);
-        regs[1] = x86_cpu_get_reg(s->cpu_state, 3);
-        regs[2] = x86_cpu_get_reg(s->cpu_state, 1);
-        regs[3] = x86_cpu_get_reg(s->cpu_state, 2);
-        regs[4] = x86_cpu_get_reg(s->cpu_state, 6);
-        regs[5] = x86_cpu_get_reg(s->cpu_state, 7);
-
-        if (regs[0] == 0x564D5868) {
-            vmmouse_handler(s->vm_mouse, regs);
-
-            x86_cpu_set_reg(s->cpu_state, 0, regs[0]);
-            x86_cpu_set_reg(s->cpu_state, 3, regs[1]);
-            x86_cpu_set_reg(s->cpu_state, 1, regs[2]);
-            x86_cpu_set_reg(s->cpu_state, 2, regs[3]);
-            x86_cpu_set_reg(s->cpu_state, 6, regs[4]);
-            x86_cpu_set_reg(s->cpu_state, 7, regs[5]);
-        }
-    }
-    uint32_t vmport_read__part4119(const uint32_t *regs);
-    return vmport_read__part4119(regs);
-
-}
+static uint32_t port92_read(void *opaque, uint32_t offset, int size_log2);
+static uint32_t vmport_read(void *opaque, uint32_t addr, int size_log2);
 
 static void vmport_write(void *opaque, uint32_t addr, uint32_t val,
-                         int size_log2)
-{
-}
+                         int size_log2);
 
-static void pic_set_irq_cb(void *opaque, int level)
-{
-    PCMachine *s = opaque;
-    x86_cpu_set_irq(s->cpu_state, level);
-}
+static void pic_set_irq_cb(void *opaque, int level);
 
-static void serial_write_cb(void *opaque, const uint8_t *buf, int buf_len)
-{
-    PCMachine *s = opaque;
-    if (s->common.console) {
-        s->common.console->write_data(s->common.console->opaque, buf, buf_len);
-    }
-}
+static void serial_write_cb(void *opaque, const uint8_t *buf, int buf_len);
 
-static int get_hard_intno_cb(void *opaque)
-{
-    PCMachine *s = opaque;
-    return pic2_get_hard_intno(s->pic_state);
-}
+static int get_hard_intno_cb(void *opaque);
 
-static int64_t pit_get_ticks_cb(void *opaque)
-{
-    struct timespec ts;
-
-    clock_gettime(
-                 1
-                                , &ts);
-    return (uint64_t)ts.tv_sec * 1193182 +
-        ((uint64_t)ts.tv_nsec * 1193182 / 1000000000);
-}
+static int64_t pit_get_ticks_cb(void *opaque);
 
 
 
 static uint8_t *get_ram_ptr(PCMachine *s, uint64_t paddr)
 {
     PhysMemoryRange *pr;
-    pr = get_phys_mem_range(s->mem_map, paddr);
-    if (!pr || !pr->is_ram)
+    PhysMemoryRange *get_ram_ptr__part4130(PCMachine *s, uint64_t paddr);
+    pr = get_ram_ptr__part4130(s, paddr);
+    int get_ram_ptr__part4131(const PhysMemoryRange *pr);
+    if (get_ram_ptr__part4131(pr))
         return 
               ((void *)0)
                   ;
-    return pr->phys_mem + (uintptr_t)(paddr - pr->addr);
+
+        uint8_t *get_ram_ptr__part4132(PhysMemoryRange *pr, uint64_t paddr);
+    return get_ram_ptr__part4132(pr, paddr);
+
 }
-static void st_port(void *opaque, uint32_t port, uint32_t val, int size_log2)
-{
-    PCMachine *s = opaque;
-    PhysMemoryRange *pr;
+static void st_port(void *opaque, uint32_t port, uint32_t val, int size_log2);
+
+static uint32_t ld_port(void *opaque, uint32_t port1, int size_log2);
+
+static void pc_machine_set_defaults(VirtMachineParams *p);
+
+
+
+static void sigalrm_handler(int sig);
 
 
 
 
-    pr = get_phys_mem_range(s->port_map, port);
-    if (!pr) {
-        return;
-    }
-    port -= pr->addr;
-    if ((pr->devio_flags >> size_log2) & 1) {
-        pr->write_func(pr->opaque, port, (uint32_t)val, size_log2);
-    } else if (size_log2 == 1 && (pr->devio_flags & (1 << 0))) {
-        pr->write_func(pr->opaque, port, val & 0xff, 0);
-        pr->write_func(pr->opaque, port + 1, (val >> 8) & 0xff, 0);
-    }
-}
-
-static uint32_t ld_port(void *opaque, uint32_t port1, int size_log2)
-{
-    PCMachine *s = opaque;
-    PhysMemoryRange *pr;
-    uint32_t val, port;
-
-    port = port1;
-    pr = get_phys_mem_range(s->port_map, port);
-    if (!pr) {
-        val = -1;
-    } else {
-        port -= pr->addr;
-        if ((pr->devio_flags >> size_log2) & 1) {
-            val = pr->read_func(pr->opaque, port, size_log2);
-        } else if (size_log2 == 1 && (pr->devio_flags & (1 << 0))) {
-            val = pr->read_func(pr->opaque, port, 0) & 0xff;
-            val |= (pr->read_func(pr->opaque, port + 1, 0) & 0xff) << 8;
-        } else {
-            val = -1;
-        }
-    }
+static void kvm_set_cpuid(PCMachine *s);
 
 
-
-
-    return val;
-}
-
-static void pc_machine_set_defaults(VirtMachineParams *p)
-{
-    p->accel_enable = TRUE;
-}
-
-
-
-static void sigalrm_handler(int sig)
-{
-}
-
-
-
-
-static void kvm_set_cpuid(PCMachine *s)
-{
-    struct kvm_cpuid2 *kvm_cpuid;
-    int n_ent_max, i;
-    struct kvm_cpuid_entry2 *ent;
-
-    n_ent_max = 128;
-    kvm_cpuid = mallocz(sizeof(struct kvm_cpuid2) + n_ent_max * sizeof(kvm_cpuid->entries[0]));
-
-    kvm_cpuid->nent = n_ent_max;
-    if (ioctl(s->kvm_fd, 
-                        (((2U|1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x05)) << 0) | ((((sizeof(struct kvm_cpuid2)))) << ((0 +8)+8)))
-                                               , kvm_cpuid) < 0) {
-        perror("KVM_GET_SUPPORTED_CPUID");
-        exit(1);
-    }
-
-    for(i = 0; i < kvm_cpuid->nent; i++) {
-        ent = &kvm_cpuid->entries[i];
-
-        if (ent->function == 1 || ent->function == 0x80000001) {
-            ent->edx &= ~((1 << 9) | (1 << 22));
-        }
-    }
-
-    if (ioctl(s->vcpu_fd, 
-                         (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x90)) << 0) | ((((sizeof(struct kvm_cpuid2)))) << ((0 +8)+8)))
-                                       , kvm_cpuid) < 0) {
-        perror("KVM_SET_CPUID2");
-        exit(1);
-    }
-    free(kvm_cpuid);
-}
-
-
-static void kvm_map_ram(PhysMemoryMap *mem_map, PhysMemoryRange *pr)
-{
-    PCMachine *s = mem_map->opaque;
-    struct kvm_userspace_memory_region region;
-    int flags;
-
-    region.slot = pr - mem_map->phys_mem_range;
-    flags = 0;
-    if (pr->devram_flags & (1 << 0))
-        flags |= 
-                (1UL << 1)
-                                ;
-    if (pr->devram_flags & (1 << 1))
-        flags |= 
-                (1UL << 0)
-                                       ;
-    region.flags = flags;
-    region.guest_phys_addr = pr->addr;
-    region.memory_size = pr->size;
-
-
-
-
-    region.userspace_addr = (uintptr_t)pr->phys_mem;
-    if (ioctl(s->vm_fd, 
-                       (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x46)) << 0) | ((((sizeof(struct kvm_userspace_memory_region)))) << ((0 +8)+8)))
-                                                 , &region) < 0) {
-        perror("KVM_SET_USER_MEMORY_REGION");
-        exit(1);
-    }
-}
+static void kvm_map_ram(PhysMemoryMap *mem_map, PhysMemoryRange *pr);
 
 
 static PhysMemoryRange *kvm_register_ram(PhysMemoryMap *mem_map, uint64_t addr,
-                                         uint64_t size, int devram_flags)
-{
-    PhysMemoryRange *pr;
-    uint8_t *phys_mem;
-
-    pr = register_ram_entry(mem_map, addr, size, devram_flags);
-
-    phys_mem = mmap(
-                   ((void *)0)
-                       , size, 
-                               0x1 
-                                         | 
-                                           0x2
-                                                     ,
-                    
-                   0x01 
-                              | 
-                                0x20
-                                             , -1, 0);
-    if (!phys_mem)
-        return 
-              ((void *)0)
-                  ;
-    pr->phys_mem = phys_mem;
-    if (devram_flags & (1 << 1)) {
-        int n_pages = size >> 12;
-        pr->dirty_bits_size = ((n_pages + 63) / 64) * 8;
-        pr->dirty_bits = mallocz(pr->dirty_bits_size);
-    }
-
-    if (pr->size != 0) {
-        kvm_map_ram(mem_map, pr);
-    }
-    return pr;
-}
+                                         uint64_t size, int devram_flags);
 
 static void kvm_set_ram_addr(PhysMemoryMap *mem_map,
-                             PhysMemoryRange *pr, uint64_t addr, BOOL enabled)
-{
-    if (enabled) {
-        if (pr->size == 0 || addr != pr->addr) {
-
-            pr->size = pr->org_size;
-            pr->addr = addr;
-            kvm_map_ram(mem_map, pr);
-        }
-    } else {
-        if (pr->size != 0) {
-            pr->addr = 0;
-            pr->size = 0;
-
-            kvm_map_ram(mem_map, pr);
-        }
-    }
-}
+                             PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
 
 static const uint32_t *kvm_get_dirty_bits(PhysMemoryMap *mem_map,
-                                          PhysMemoryRange *pr)
-{
-    PCMachine *s = mem_map->opaque;
-    struct kvm_dirty_log dlog;
+                                          PhysMemoryRange *pr);
 
-    if (pr->size == 0) {
+static void kvm_free_ram(PhysMemoryMap *mem_map, PhysMemoryRange *pr);
 
-        memset(pr->dirty_bits, 0, pr->dirty_bits_size);
-    } else {
-        dlog.slot = pr - mem_map->phys_mem_range;
-        dlog.dirty_bitmap = pr->dirty_bits;
-        if (ioctl(s->vm_fd, 
-                           (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x42)) << 0) | ((((sizeof(struct kvm_dirty_log)))) << ((0 +8)+8)))
-                                            , &dlog) < 0) {
-            perror("KVM_GET_DIRTY_LOG");
-            exit(1);
-        }
-    }
-    return pr->dirty_bits;
-}
+static void kvm_pic_set_irq(void *opaque, int irq_num, int level);
 
-static void kvm_free_ram(PhysMemoryMap *mem_map, PhysMemoryRange *pr)
-{
+static void kvm_init(PCMachine *s);
 
-    munmap(pr->phys_mem, pr->org_size);
-    free(pr->dirty_bits);
-}
+static void kvm_exit_io(PCMachine *s, struct kvm_run *run);
 
-static void kvm_pic_set_irq(void *opaque, int irq_num, int level)
-{
-    PCMachine *s = opaque;
-    struct kvm_irq_level irq_level;
-    irq_level.irq = irq_num;
-    irq_level.level = level;
-    if (ioctl(s->vm_fd, 
-                       (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x61)) << 0) | ((((sizeof(struct kvm_irq_level)))) << ((0 +8)+8)))
-                                   , &irq_level) < 0) {
-        perror("KVM_IRQ_LINE");
-        exit(1);
-    }
-}
+static void kvm_exit_mmio(PCMachine *s, struct kvm_run *run);
 
-static void kvm_init(PCMachine *s)
-{
-    int ret, i;
-    struct sigaction act;
-    struct kvm_pit_config pit_config;
-    uint64_t base_addr;
-
-    s->kvm_enabled = FALSE;
-    s->kvm_fd = open("/dev/kvm", 
-                                02
-                                      );
-    if (s->kvm_fd < 0) {
-        fprintf(
-               stderr
-                     , "KVM not available\n");
-        return;
-    }
-    ret = ioctl(s->kvm_fd, 
-                          (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x00)) << 0) | ((0) << ((0 +8)+8)))
-                                             , 0);
-    if (ret < 0) {
-        perror("KVM_GET_API_VERSION");
-        exit(1);
-    }
-    if (ret != 12) {
-        fprintf(
-               stderr
-                     , "Unsupported KVM version\n");
-        close(s->kvm_fd);
-        s->kvm_fd = -1;
-        return;
-    }
-    s->vm_fd = ioctl(s->kvm_fd, 
-                               (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x01)) << 0) | ((0) << ((0 +8)+8)))
-                                            , 0);
-    if (s->vm_fd < 0) {
-        perror("KVM_CREATE_VM");
-        exit(1);
-    }
-
-
-    base_addr = 0xfffbc000;
-    if (ioctl(s->vm_fd, 
-                       (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x48)) << 0) | ((((sizeof(__u64)))) << ((0 +8)+8)))
-                                                , &base_addr) < 0) {
-        perror("KVM_SET_IDENTITY_MAP_ADDR");
-        exit(1);
-    }
-
-    if (ioctl(s->vm_fd, 
-                       (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x47)) << 0) | ((0) << ((0 +8)+8)))
-                                       , (long)(base_addr + 0x1000)) < 0) {
-        perror("KVM_SET_TSS_ADDR");
-        exit(1);
-    }
-
-    if (ioctl(s->vm_fd, 
-                       (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x60)) << 0) | ((0) << ((0 +8)+8)))
-                                         , 0) < 0) {
-        perror("KVM_CREATE_IRQCHIP");
-        exit(1);
-    }
-
-    memset(&pit_config, 0, sizeof(pit_config));
-    pit_config.flags = 
-                      1
-                                           ;
-    if (ioctl(s->vm_fd, 
-                       (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x77)) << 0) | ((((sizeof(struct kvm_pit_config)))) << ((0 +8)+8)))
-                                      , &pit_config)) {
-        perror("KVM_CREATE_PIT2");
-        exit(1);
-    }
-
-    s->vcpu_fd = ioctl(s->vm_fd, 
-                                (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x41)) << 0) | ((0) << ((0 +8)+8)))
-                                               , 0);
-    if (s->vcpu_fd < 0) {
-        perror("KVM_CREATE_VCPU");
-        exit(1);
-    }
-
-    kvm_set_cpuid(s);
-
-
-    s->kvm_run_size = ioctl(s->kvm_fd, 
-                                      (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x04)) << 0) | ((0) << ((0 +8)+8)))
-                                                            , 
-                                                              ((void *)0)
-                                                                  );
-    if (s->kvm_run_size < 0) {
-        perror("KVM_GET_VCPU_MMAP_SIZE");
-        exit(1);
-    }
-
-    s->kvm_run = mmap(
-                     ((void *)0)
-                         , s->kvm_run_size, 
-                                            0x1 
-                                                      | 
-                                                        0x2
-                                                                  ,
-                      
-                     0x01
-                               , s->vcpu_fd, 0);
-    if (!s->kvm_run) {
-        perror("mmap kvm_run");
-        exit(1);
-    }
-
-    for(i = 0; i < 16; i++) {
-        irq_init(&s->pic_irq[i], kvm_pic_set_irq, s, i);
-    }
-
-    act.
-       __sigaction_handler.sa_handler 
-                  = sigalrm_handler;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
-    sigaction(
-             14
-                    , &act, 
-                            ((void *)0)
-                                );
-
-    s->kvm_enabled = TRUE;
-
-    s->mem_map->register_ram = kvm_register_ram;
-    s->mem_map->free_ram = kvm_free_ram;
-    s->mem_map->get_dirty_bits = kvm_get_dirty_bits;
-    s->mem_map->set_ram_addr = kvm_set_ram_addr;
-    s->mem_map->opaque = s;
-}
-
-static void kvm_exit_io(PCMachine *s, struct kvm_run *run)
-{
-    uint8_t *ptr;
-    int i;
-
-    ptr = (uint8_t *)run + run->io.data_offset;
-
-
-    for(i = 0; i < run->io.count; i++) {
-        if (run->io.direction == 
-                                1
-                                               ) {
-            switch(run->io.size) {
-            case 1:
-                st_port(s, run->io.port, *(uint8_t *)ptr, 0);
-                break;
-            case 2:
-                st_port(s, run->io.port, *(uint16_t *)ptr, 1);
-                break;
-            case 4:
-                st_port(s, run->io.port, *(uint32_t *)ptr, 2);
-                break;
-            default:
-                abort();
-            }
-        } else {
-            switch(run->io.size) {
-            case 1:
-                *(uint8_t *)ptr = ld_port(s, run->io.port, 0);
-                break;
-            case 2:
-                *(uint16_t *)ptr = ld_port(s, run->io.port, 1);
-                break;
-            case 4:
-                *(uint32_t *)ptr = ld_port(s, run->io.port, 2);
-                break;
-            default:
-                abort();
-            }
-        }
-        ptr += run->io.size;
-    }
-}
-
-static void kvm_exit_mmio(PCMachine *s, struct kvm_run *run)
-{
-    uint8_t *data = run->mmio.data;
-    PhysMemoryRange *pr;
-    uint64_t addr;
-
-    pr = get_phys_mem_range(s->mem_map, run->mmio.phys_addr);
-    if (run->mmio.is_write) {
-        if (!pr || pr->is_ram)
-            return;
-        addr = run->mmio.phys_addr - pr->addr;
-        switch(run->mmio.len) {
-        case 1:
-            if (pr->devio_flags & (1 << 0)) {
-                pr->write_func(pr->opaque, addr, *(uint8_t *)data, 0);
-            }
-            break;
-        case 2:
-            if (pr->devio_flags & (1 << 1)) {
-                pr->write_func(pr->opaque, addr, *(uint16_t *)data, 1);
-            }
-            break;
-        case 4:
-            if (pr->devio_flags & (1 << 2)) {
-                pr->write_func(pr->opaque, addr, *(uint32_t *)data, 2);
-            }
-            break;
-        case 8:
-            if (pr->devio_flags & (1 << 2)) {
-                pr->write_func(pr->opaque, addr, *(uint32_t *)data, 2);
-                pr->write_func(pr->opaque, addr + 4, *(uint32_t *)(data + 4), 2);
-            }
-            break;
-        default:
-            abort();
-        }
-    } else {
-        if (!pr || pr->is_ram)
-            goto no_dev;
-        addr = run->mmio.phys_addr - pr->addr;
-        switch(run->mmio.len) {
-        case 1:
-            if (!(pr->devio_flags & (1 << 0)))
-                goto no_dev;
-            *(uint8_t *)data = pr->read_func(pr->opaque, addr, 0);
-            break;
-        case 2:
-            if (!(pr->devio_flags & (1 << 1)))
-                goto no_dev;
-            *(uint16_t *)data = pr->read_func(pr->opaque, addr, 1);
-            break;
-        case 4:
-            if (!(pr->devio_flags & (1 << 2)))
-                goto no_dev;
-            *(uint32_t *)data = pr->read_func(pr->opaque, addr, 2);
-            break;
-        case 8:
-            if (pr->devio_flags & (1 << 2)) {
-                *(uint32_t *)data =
-                    pr->read_func(pr->opaque, addr, 2);
-                *(uint32_t *)(data + 4) =
-                    pr->read_func(pr->opaque, addr + 4, 2);
-            } else {
-            no_dev:
-                memset(run->mmio.data, 0, run->mmio.len);
-            }
-            break;
-        default:
-            abort();
-        }
-
-    }
-}
-
-static void kvm_exec(PCMachine *s)
-{
-    struct kvm_run *run = s->kvm_run;
-    struct itimerval ival;
-    int ret;
-
-
-
-    ival.it_interval.tv_sec = 0;
-    ival.it_interval.tv_usec = 0;
-    ival.it_value.tv_sec = 0;
-    ival.it_value.tv_usec = 10 * 1000;
-    setitimer(
-             ITIMER_REAL
-                        , &ival, 
-                                 ((void *)0)
-                                     );
-
-    ret = ioctl(s->vcpu_fd, 
-                           (((0U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x80)) << 0) | ((0) << ((0 +8)+8)))
-                                  , 0);
-    if (ret < 0) {
-        if (
-           (*__errno_location ()) 
-                 == 
-                    4 
-                          || 
-                             (*__errno_location ()) 
-                                   == 
-                                      11
-                                            ) {
-
-            return;
-        }
-        perror("KVM_RUN");
-        exit(1);
-    }
-
-    switch(run->exit_reason) {
-    case 
-        5
-                    :
-        break;
-    case 
-        2
-                   :
-        kvm_exit_io(s, run);
-        break;
-    case 
-        6
-                     :
-        kvm_exit_mmio(s, run);
-        break;
-    case 
-        9
-                           :
-        fprintf(
-               stderr
-                     , "KVM_EXIT_FAIL_ENTRY: reason=0x%" 
-                                                         "l" "x" 
-                                                                "\n",
-                (uint64_t)run->fail_entry.hardware_entry_failure_reason);
-        exit(1);
-    case 
-        17
-                               :
-        fprintf(
-               stderr
-                     , "KVM_EXIT_INTERNAL_ERROR: suberror=0x%x\n",
-                (uint32_t)run->internal.suberror);
-        exit(1);
-    default:
-        fprintf(
-               stderr
-                     , "KVM: unsupported exit_reason=%d\n", run->exit_reason);
-        exit(1);
-    }
-}
-static uint64_t cpu_get_tsc(void *opaque)
-{
-    struct timespec ts;
-
-    clock_gettime(
-                 1
-                                , &ts);
-    return (uint64_t)ts.tv_sec * 100000000 +
-        (ts.tv_nsec / (1000000000 / 100000000));
-}
+static void kvm_exec(PCMachine *s);
+static uint64_t cpu_get_tsc(void *opaque);
 
 
 static void pc_flush_tlb_write_range(void *opaque, uint8_t *ram_addr,
-                                     size_t ram_size)
-{
-    PCMachine *s = opaque;
-    x86_cpu_flush_tlb_write_range_ram(s->cpu_state, ram_addr, ram_size);
-}
+                                     size_t ram_size);
 
-static VirtMachine *pc_machine_init(const VirtMachineParams *p)
-{
-    PCMachine *s;
-    int i, piix3_devfn;
-    PCIBus *pci_bus;
-    VIRTIOBusDef vbus_s, *vbus = &vbus_s;
+static VirtMachine *pc_machine_init(const VirtMachineParams *p);
 
-    if (strcmp(p->machine_name, "pc") != 0) {
-        vm_error("unsupported machine: %s\n", p->machine_name);
-        return 
-              ((void *)0)
-                  ;
-    }
+static void pc_machine_end(VirtMachine *s1);
 
-    
-   ((void) sizeof (__assert_single_arg (
-   p->ram_size >= (1 << 20)
-   )), __extension__ ({ if (
-   p->ram_size >= (1 << 20)
-   ) ; else __assert_fail (
-   "p->ram_size >= (1 << 20)"
-   , "x86_machine.c", 1972, __extension__ __PRETTY_FUNCTION__); }))
-                                   ;
+static void pc_vm_send_key_event(VirtMachine *s1, BOOL is_down, uint16_t key_code);
 
-    s = mallocz(sizeof(*s));
-    s->common.vmc = p->vmc;
-    s->ram_size = p->ram_size;
-
-    s->port_map = phys_mem_map_init();
-    s->mem_map = phys_mem_map_init();
-
-
-    if (p->accel_enable) {
-        kvm_init(s);
-    }
-
-
-
-    if (!s->kvm_enabled)
-
-    {
-        s->cpu_state = x86_cpu_init(s->mem_map);
-        x86_cpu_set_get_tsc(s->cpu_state, cpu_get_tsc, s);
-        x86_cpu_set_port_io(s->cpu_state, ld_port, st_port, s);
-
-
-        s->mem_map->opaque = s;
-        s->mem_map->flush_tlb_write_range = pc_flush_tlb_write_range;
-    }
-
-
-    cpu_register_ram(s->mem_map, 0xc0000, p->ram_size - 0xc0000, 0);
-    cpu_register_ram(s->mem_map, 0, 0xa0000, 0);
-
-
-    cpu_register_device(s->port_map, 0x80, 2, s, port80_read, port80_write,
-                        (1 << 0));
-    cpu_register_device(s->port_map, 0x92, 2, s, port92_read, port92_write,
-                        (1 << 0));
-
-
-    if (p->files[VM_FILE_BIOS].len > 0) {
-        int bios_size, bios_size1;
-        uint8_t *bios_buf, *ptr;
-        uint32_t bios_addr;
-
-        bios_size = p->files[VM_FILE_BIOS].len;
-        bios_buf = p->files[VM_FILE_BIOS].buf;
-        
-       ((void) sizeof (__assert_single_arg (
-       (bios_size % 65536) == 0 && bios_size != 0
-       )), __extension__ ({ if (
-       (bios_size % 65536) == 0 && bios_size != 0
-       ) ; else __assert_fail (
-       "(bios_size % 65536) == 0 && bios_size != 0"
-       , "x86_machine.c", 2018, __extension__ __PRETTY_FUNCTION__); }))
-                                                         ;
-        bios_addr = -bios_size;
-
-        cpu_register_ram(s->mem_map, bios_addr, bios_size, (1 << 0));
-        ptr = get_ram_ptr(s, bios_addr);
-        memcpy(ptr, bios_buf, bios_size);
-
-        bios_size1 = min_int(bios_size, 128 * 1024);
-        ptr = get_ram_ptr(s, 0x100000 - bios_size1);
-        memcpy(ptr, bios_buf + bios_size - bios_size1, bios_size1);
-
-
-
-
-
-    }
-
-
-    if (!s->kvm_enabled)
-
-    {
-        s->pic_state = pic2_init(s->port_map, 0x20, 0xa0,
-                                 0x4d0, 0x4d1,
-                                 pic_set_irq_cb, s,
-                                 s->pic_irq);
-        x86_cpu_set_get_hard_intno(s->cpu_state, get_hard_intno_cb, s);
-        s->pit_state = pit_init(s->port_map, 0x40, 0x61, &s->pic_irq[0],
-                                pit_get_ticks_cb, s);
-    }
-
-    s->cmos_state = cmos_init(s->port_map, 0x70, &s->pic_irq[8],
-                              p->rtc_local_time);
-
-
-    {
-        int size;
-
-        size = min_int((s->ram_size - (1 << 20)) >> 10, 65535);
-        put_le16(s->cmos_state->cmos_data + 0x30, size);
-        if (s->ram_size >= (16 << 20)) {
-            size = min_int((s->ram_size - (16 << 20)) >> 16, 65535);
-            put_le16(s->cmos_state->cmos_data + 0x34, size);
-        }
-        s->cmos_state->cmos_data[0x14] = 0x06;
-    }
-
-    s->i440fx_state = i440fx_init(&pci_bus, &piix3_devfn, s->mem_map,
-                                  s->port_map, s->pic_irq);
-
-    s->common.console = p->console;
-
-    if (0) {
-    s->serial_state = serial_init(s->port_map, 0x3f8, &s->pic_irq[4],
-                                  serial_write_cb, s);
-    }
-
-    memset(vbus, 0, sizeof(*vbus));
-    vbus->pci_bus = pci_bus;
-
-    if (p->console) {
-
-        s->common.console_dev = virtio_console_init(vbus, p->console);
-    }
-
-
-    for(i = 0; i < p->drive_count;) {
-        const VMDriveEntry *de = &p->tab_drive[i];
-
-        if (!de->device || !strcmp(de->device, "virtio")) {
-            virtio_block_init(vbus, p->tab_drive[i].block_dev);
-            i++;
-        } else if (!strcmp(de->device, "ide")) {
-            BlockDevice *tab_bs[2];
-
-            tab_bs[0] = p->tab_drive[i++].block_dev;
-            tab_bs[1] = 
-                       ((void *)0)
-                           ;
-            if (i < p->drive_count)
-                tab_bs[1] = p->tab_drive[i++].block_dev;
-            ide_init(s->port_map, 0x1f0, 0x3f6, &s->pic_irq[14], tab_bs);
-            piix3_ide_init(pci_bus, piix3_devfn + 1);
-        }
-    }
-
-
-    for(i = 0; i < p->fs_count; i++) {
-        virtio_9p_init(vbus, p->tab_fs[i].fs_dev,
-                       p->tab_fs[i].tag);
-    }
-
-    if (p->display_device) {
-        FBDevice *fb_dev;
-
-        fb_dev = mallocz(sizeof(*fb_dev));
-        s->common.fb_dev = fb_dev;
-        if (!strcmp(p->display_device, "vga")) {
-            int bios_size;
-            uint8_t *bios_buf;
-            bios_size = p->files[VM_FILE_VGA_BIOS].len;
-            bios_buf = p->files[VM_FILE_VGA_BIOS].buf;
-            pci_vga_init(pci_bus, fb_dev, p->width, p->height,
-                         bios_buf, bios_size);
-        } else if (!strcmp(p->display_device, "simplefb")) {
-            simplefb_init(s->mem_map,
-                          0xf0400000,
-                          fb_dev, p->width, p->height);
-        } else {
-            vm_error("unsupported display device: %s\n", p->display_device);
-            exit(1);
-        }
-    }
-
-    if (p->input_device) {
-        if (!strcmp(p->input_device, "virtio")) {
-            s->keyboard_dev = virtio_input_init(vbus, VIRTIO_INPUT_TYPE_KEYBOARD);
-
-            s->mouse_dev = virtio_input_init(vbus, VIRTIO_INPUT_TYPE_TABLET);
-        } else if (!strcmp(p->input_device, "ps2")) {
-            s->kbd_state = i8042_init(&s->ps2_kbd, &s->ps2_mouse,
-                                      s->port_map,
-                                      &s->pic_irq[1], &s->pic_irq[12], 0x60);
-
-            cpu_register_device(s->port_map, 0x5658, 1, s,
-                                vmport_read, vmport_write,
-                    (1 << 2));
-            s->vm_mouse = vmmouse_init(s->ps2_mouse);
-        } else {
-            vm_error("unsupported input device: %s\n", p->input_device);
-            exit(1);
-        }
-    }
-
-
-    for(i = 0; i < p->eth_count; i++) {
-        virtio_net_init(vbus, p->tab_eth[i].net);
-        s->common.net = p->tab_eth[i].net;
-    }
-
-    if (p->files[VM_FILE_KERNEL].buf) {
-        copy_kernel(s, p->files[VM_FILE_KERNEL].buf,
-                    p->files[VM_FILE_KERNEL].len,
-                    p->cmdline ? p->cmdline : "");
-    }
-
-    return (VirtMachine *)s;
-}
-
-static void pc_machine_end(VirtMachine *s1)
-{
-    PCMachine *s = (PCMachine *)s1;
-
-    if (s->cpu_state) {
-        x86_cpu_end(s->cpu_state);
-    }
-    phys_mem_map_end(s->mem_map);
-    phys_mem_map_end(s->port_map);
-    free(s);
-}
-
-static void pc_vm_send_key_event(VirtMachine *s1, BOOL is_down, uint16_t key_code)
-{
-    PCMachine *s = (PCMachine *)s1;
-    if (s->keyboard_dev) {
-        virtio_input_send_key_event(s->keyboard_dev, is_down, key_code);
-    } else if (s->ps2_kbd) {
-        ps2_put_keycode(s->ps2_kbd, is_down, key_code);
-    }
-}
-
-static BOOL pc_vm_mouse_is_absolute(VirtMachine *s1)
-{
-    PCMachine *s = (PCMachine *)s1;
-    if (s->mouse_dev) {
-        return TRUE;
-    } else if (s->vm_mouse) {
-        return vmmouse_is_absolute(s->vm_mouse);
-    } else {
-        return FALSE;
-    }
-}
+static BOOL pc_vm_mouse_is_absolute(VirtMachine *s1);
 
 static void pc_vm_send_mouse_event(VirtMachine *s1, int dx, int dy, int dz,
-                                   unsigned int buttons)
-{
-    PCMachine *s = (PCMachine *)s1;
-    if (s->mouse_dev) {
-        virtio_input_send_mouse_event(s->mouse_dev, dx, dy, dz, buttons);
-    } else if (s->vm_mouse) {
-        vmmouse_send_mouse_event(s->vm_mouse, dx, dy, dz, buttons);
-    }
-}
+                                   unsigned int buttons);
 
 struct screen_info {
 } __attribute__((packed));
@@ -10128,234 +8500,12 @@ struct __attribute__ ((packed)) linux_params {
 
 
 static void copy_kernel(PCMachine *s, const uint8_t *buf, int buf_len,
-                        const char *cmd_line)
-{
-    uint8_t *ram_ptr;
-    int setup_sects, header_len, copy_len, setup_hdr_start, setup_hdr_end;
-    uint32_t load_address;
-    struct linux_params *params;
-    FBDevice *fb_dev;
-
-    if (buf_len < 1024) {
-    too_small:
-        fprintf(
-               stderr
-                     , "Kernel too small\n");
-        exit(1);
-    }
-    if (buf[0x1fe] != 0x55 || buf[0x1ff] != 0xaa) {
-        fprintf(
-               stderr
-                     , "Invalid kernel magic\n");
-        exit(1);
-    }
-    setup_sects = buf[0x1f1];
-    if (setup_sects == 0)
-        setup_sects = 4;
-    header_len = (setup_sects + 1) * 512;
-    if (buf_len < header_len)
-        goto too_small;
-    if (memcmp(buf + 0x202, "HdrS", 4) != 0) {
-        fprintf(
-               stderr
-                     , "Kernel too old\n");
-        exit(1);
-    }
-    load_address = 0x100000;
-
-    ram_ptr = get_ram_ptr(s, load_address);
-    copy_len = buf_len - header_len;
-    if (copy_len > (s->ram_size - load_address)) {
-        fprintf(
-               stderr
-                     , "Not enough RAM\n");
-        exit(1);
-    }
-    memcpy(ram_ptr, buf + header_len, copy_len);
-
-    params = (void *)get_ram_ptr(s, 0x00090000);
-
-    memset(params, 0, sizeof(struct linux_params));
+                        const char *cmd_line);
 
 
-    setup_hdr_start = 0x1f1;
-    setup_hdr_end = 0x202 + buf[0x201];
-    memcpy((uint8_t *)params + setup_hdr_start, buf + setup_hdr_start,
-           setup_hdr_end - setup_hdr_start);
+static int pc_machine_get_sleep_duration(VirtMachine *s1, int delay);
 
-    strcpy((char *)params->commandline, cmd_line);
-
-    params->mount_root_rdonly = 0;
-    params->cmd_line_ptr = 0x00090000 +
-        ((size_t) &((struct linux_params *)0)->commandline);
-    params->alt_mem_k = (s->ram_size / 1024) - 1024;
-    params->loader_type = 0x01;
-
-
-
-
-
-
-    params->orig_video_lines = 0;
-    params->orig_video_cols = 0;
-
-    fb_dev = s->common.fb_dev;
-    if (fb_dev) {
-
-        params->orig_video_isVGA = 0x23;
-
-        params->lfb_depth = 32;
-        params->red_size = 8;
-        params->red_pos = 16;
-        params->green_size = 8;
-        params->green_pos = 8;
-        params->blue_size = 8;
-        params->blue_pos = 0;
-        params->rsvd_size = 8;
-        params->rsvd_pos = 24;
-
-        params->lfb_width = fb_dev->width;
-        params->lfb_height = fb_dev->height;
-        params->lfb_linelength = fb_dev->stride;
-        params->lfb_size = fb_dev->fb_size;
-        params->lfb_base = 0xf0400000;
-    }
-
-    params->gdt_table[2] = 0x00cf9b000000ffffLL;
-    params->gdt_table[3] = 0x00cf93000000ffffLL;
-
-
-    if (s->kvm_enabled) {
-        struct kvm_sregs sregs;
-        struct kvm_segment seg;
-        struct kvm_regs regs;
-
-
-
-        if (ioctl(s->vcpu_fd, 
-                             (((2U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x83)) << 0) | ((((sizeof(struct kvm_sregs)))) << ((0 +8)+8)))
-                                          , &sregs) < 0) {
-            perror("KVM_GET_SREGS");
-            exit(1);
-        }
-
-        sregs.cr0 |= (1 << 0);
-        sregs.gdt.base = 0x00090000 +
-            ((size_t) &((struct linux_params *)0)->gdt_table);
-        sregs.gdt.limit = sizeof(params->gdt_table) - 1;
-
-        memset(&seg, 0, sizeof(seg));
-        seg.limit = 0xffffffff;
-        seg.present = 1;
-        seg.db = 1;
-        seg.s = 1;
-        seg.g = 1;
-
-        seg.type = 0xb;
-        seg.selector = 2 << 3;
-        sregs.cs = seg;
-
-        seg.type = 0x3;
-        seg.selector = 3 << 3;
-        sregs.ds = seg;
-        sregs.es = seg;
-        sregs.ss = seg;
-        sregs.fs = seg;
-        sregs.gs = seg;
-
-        if (ioctl(s->vcpu_fd, 
-                             (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x84)) << 0) | ((((sizeof(struct kvm_sregs)))) << ((0 +8)+8)))
-                                          , &sregs) < 0) {
-            perror("KVM_SET_SREGS");
-            exit(1);
-        }
-
-        memset(&regs, 0, sizeof(regs));
-        regs.rip = load_address;
-        regs.rsi = 0x00090000;
-        regs.rflags = 0x2;
-        if (ioctl(s->vcpu_fd, 
-                             (((1U) << (((0 +8)+8)+14)) | (((0xAE)) << (0 +8)) | (((0x82)) << 0) | ((((sizeof(struct kvm_regs)))) << ((0 +8)+8)))
-                                         , &regs) < 0) {
-            perror("KVM_SET_REGS");
-            exit(1);
-        }
-    } else
-
-    {
-        int i;
-        X86CPUSeg sd;
-        uint32_t val;
-        val = x86_cpu_get_reg(s->cpu_state, 9);
-        x86_cpu_set_reg(s->cpu_state, 9, val | (1 << 0));
-
-        sd.base = 0x00090000 +
-            ((size_t) &((struct linux_params *)0)->gdt_table);
-        sd.limit = sizeof(params->gdt_table) - 1;
-        x86_cpu_set_seg(s->cpu_state, 8, &sd);
-        sd.sel = 2 << 3;
-        sd.base = 0;
-        sd.limit = 0xffffffff;
-        sd.flags = 0xc09b;
-        x86_cpu_set_seg(s->cpu_state, 1, &sd);
-        sd.sel = 3 << 3;
-        sd.flags = 0xc093;
-        for(i = 0; i < 6; i++) {
-            if (i != 1) {
-                x86_cpu_set_seg(s->cpu_state, i, &sd);
-            }
-        }
-
-        x86_cpu_set_reg(s->cpu_state, 8, load_address);
-        x86_cpu_set_reg(s->cpu_state, 6, 0x00090000);
-    }
-
-
-    {
-        uint8_t elcr[2];
-        static const uint8_t pci_irqs[4] = { 9, 10, 11, 12 };
-
-        i440fx_map_interrupts(s->i440fx_state, elcr, pci_irqs);
-
-        if (s->pic_state) {
-            pic2_set_elcr(s->pic_state, elcr);
-        }
-    }
-}
-
-
-static int pc_machine_get_sleep_duration(VirtMachine *s1, int delay)
-{
-    PCMachine *s = (PCMachine *)s1;
-
-
-    if (s->kvm_enabled) {
-
-        cmos_update_irq(s->cmos_state);
-        delay = 0;
-    } else
-
-    {
-        cmos_update_irq(s->cmos_state);
-        delay = min_int(delay, pit_update_irq(s->pit_state));
-        if (!x86_cpu_get_power_down(s->cpu_state))
-            delay = 0;
-    }
-    return delay;
-}
-
-static void pc_machine_interp(VirtMachine *s1, int max_exec_cycles)
-{
-    PCMachine *s = (PCMachine *)s1;
-
-    if (s->kvm_enabled) {
-        kvm_exec(s);
-    } else
-
-    {
-        x86_cpu_interp(s->cpu_state, max_exec_cycles);
-    }
-}
+static void pc_machine_interp(VirtMachine *s1, int max_exec_cycles);
 
 const VirtMachineClass pc_machine_class = {
     "pc",

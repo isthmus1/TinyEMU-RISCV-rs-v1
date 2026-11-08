@@ -66,6 +66,51 @@ pub extern "C" fn compose_path__part1086(d: *mut c_char) -> *mut c_char {
 }
 }
 
+// ── `compose_url` · fs_utils.c:65-72 · chunk 1087 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     char *compose_url(const char *base_url, const char *name)
+//     {
+//         if (
+//            _Generic (0 ? (
+//            name
+//            ) : (void *) 1, const void *: (const char *) (strchr (
+//            name
+//            , 
+//            ':'
+//            )), default: strchr (
+//            name
+//            , 
+//            ':'
+//            ))
+//                             ) {
+//             return strdup(name);
+//         } else {
+//             return compose_path(base_url, name);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1087 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn strchr(s: *const c_char, c: c_int) -> *const c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+}
+
+#[no_mangle]
+pub extern "C" fn compose_url(base_url: *const c_char, name: *const c_char) -> *mut c_char {
+    unsafe {
+        if !strchr(name, ':' as c_int).is_null() {
+            strdup(name)
+        } else {
+            compose_path(base_url, name)
+        }
+    }
+}
+}
+
 // ── `if ( _Generic (0 ? ( name ) : (void *) 1, const void *: (const char *) (strchr ( name , ':' )),…` · fs_utils.c:67-71 · chunk 1088 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -111,6 +156,36 @@ pub extern "C" fn compose_url__part1088(
             compose_path(base_url, name)
         }
     }
+}
+}
+
+// ── `skip_line` · fs_utils.c:74-83 · chunk 1089 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void skip_line(const char **pp)
+//     {
+//         const char *p;
+//         p = *pp;
+//         while (*p != '\n' && *p != '\0')
+//             p++;
+//         if (*p == '\n')
+//             p++;
+//         *pp = p;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1089 {
+use core::ffi::c_char;
+
+#[no_mangle]
+pub unsafe extern "C" fn skip_line(pp: *mut *const c_char) {
+    let mut p: *const c_char = *pp;
+    while (*p as u8) != b'\n' && (*p as u8) != 0 {
+        p = p.add(1);
+    }
+    if (*p as u8) == b'\n' {
+        p = p.add(1);
+    }
+    *pp = p;
 }
 }
 
@@ -187,6 +262,145 @@ pub unsafe extern "C" fn skip_line__part1093(pp: *mut *const c_char, p: *const c
     if !pp.is_null() {
         *pp = p;
     }
+}
+}
+
+// ── `quoted_str` · fs_utils.c:85-120 · chunk 1094 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     char *quoted_str(const char *str)
+//     {
+//         const char *s;
+//         char *q;
+//         int c;
+//         char *buf;
+//     
+//         if (str[0] == '\0')
+//             goto use_quote;
+//         s = str;
+//         while (*s != '\0') {
+//             if (*s <= ' ' || *s > '~')
+//                 goto use_quote;
+//             s++;
+//         }
+//         return strdup(str);
+//      use_quote:
+//         buf = malloc(strlen(str) * 4 + 2 + 1);
+//         q = buf;
+//         s = str;
+//         *q++ = '"';
+//         while (*s != '\0') {
+//             c = *(uint8_t *)s;
+//             if (c < ' ' || c == 127) {
+//                 q += sprintf(q, "\\x%02x", c);
+//             } else if (c == '\\' || c == '\"') {
+//                 q += sprintf(q, "\\%c", c);
+//             } else {
+//                 *q++ = c;
+//             }
+//             s++;
+//         }
+//         *q++ = '"';
+//         *q = '\0';
+//         return buf;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1094 {
+// Rewrite of `char *quoted_str(const char *str)` from fs_utils.c
+use core::ffi::{c_char, c_void};
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn strlen(s: *const c_char) -> usize;
+    fn strdup(s: *const c_char) -> *mut c_char;
+}
+
+#[inline]
+unsafe fn put(b: u8) -> u8 {
+    b
+}
+
+#[inline]
+fn hexdig(v: u8) -> u8 {
+    // "%02x" digit
+    if v < 10 {
+        b'0' + v
+    } else {
+        b'a' + (v - 10)
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn quoted_str(str_: *const c_char) -> *mut c_char {
+    if str_.is_null() {
+        return core::ptr::null_mut();
+    }
+
+    let mut need_quote = false;
+
+    if *str_ == 0 {
+        // empty string -> always quoted
+        need_quote = true;
+    } else {
+        let mut s = str_ as *const u8;
+        while *s != 0 {
+            let c = *s;
+            // C compares a (signed) char against ' ' and '~':
+            //   *s <= ' '  is (c as i8) <= 32   -> c <= 0x20 || c >= 0x80
+            //   *s >  '~'  is (c as i8) > 126   -> c == 0x7f
+            if c <= 0x20 || c >= 0x7f {
+                need_quote = true;
+                break;
+            }
+            s = s.add(1);
+        }
+        if !need_quote {
+            return strdup(str_);
+        }
+    }
+    let _ = need_quote;
+
+    let buf = malloc(strlen(str_) * 4 + 2 + 1) as *mut c_char;
+    if buf.is_null() {
+        return buf;
+    }
+
+    let mut q = buf as *mut u8;
+    let mut s = str_ as *const u8;
+
+    *q = b'"';
+    q = q.add(1);
+
+    while *s != 0 {
+        let c = *s;
+        if c < b' ' || c == 127 {
+            // sprintf(q, "\\x%02x", c) -> 4 bytes, never any NUL written
+            *q = b'\\';
+            q = q.add(1);
+            *q = b'x';
+            q = q.add(1);
+            *q = hexdig(c >> 4);
+            q = q.add(1);
+            *q = hexdig(c & 0xf);
+            q = q.add(1);
+        } else if c == b'\\' || c == b'"' {
+            // sprintf(q, "\\%c", c) -> 2 bytes
+            *q = b'\\';
+            q = q.add(1);
+            *q = put(c);
+            q = q.add(1);
+        } else {
+            *q = c;
+            q = q.add(1);
+        }
+        s = s.add(1);
+    }
+
+    *q = b'"';
+    q = q.add(1);
+    *q = 0;
+
+    buf
 }
 }
 
@@ -419,6 +633,175 @@ pub extern "C" fn quoted_str__part1102(q: *mut c_char, buf: *mut c_char) -> *mut
 
 // Silence unused-import lint in case c_int is not needed on some targets.
 const _: Option<c_int> = None;
+}
+
+// ── `parse_fname` · fs_utils.c:122-188 · chunk 1103 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_fname(char *buf, int buf_size, const char **pp)
+//     {
+//         const char *p;
+//         char *q;
+//         int c, h;
+//     
+//         p = *pp;
+//         while (isspace_nolf(*p))
+//             p++;
+//         if (*p == '\0')
+//             return -1;
+//         q = buf;
+//         if (*p == '"') {
+//             p++;
+//             for(;;) {
+//                 c = *p++;
+//                 if (c == '\0' || c == '\n') {
+//                     return -1;
+//                 } else if (c == '\"') {
+//                     break;
+//                 } else if (c == '\\') {
+//                     c = *p++;
+//                     switch(c) {
+//                     case '\'':
+//                     case '\"':
+//                     case '\\':
+//                         goto add_char;
+//                     case 'n':
+//                         c = '\n';
+//                         goto add_char;
+//                     case 'r':
+//                         c = '\r';
+//                         goto add_char;
+//                     case 't':
+//                         c = '\t';
+//                         goto add_char;
+//                     case 'x':
+//                         h = from_hex(*p++);
+//                         if (h < 0)
+//                             return -1;
+//                         c = h << 4;
+//                         h = from_hex(*p++);
+//                         if (h < 0)
+//                             return -1;
+//                         c |= h;
+//                         goto add_char;
+//                     default:
+//                         return -1;
+//                     }
+//                 } else {
+//                 add_char:
+//                     if (q >= buf + buf_size - 1)
+//                         return -1;
+//                     *q++ = c;
+//                 }
+//             }
+//         } else {
+//             while (!isspace_nolf(*p) && *p != '\0' && *p != '\n') {
+//                 if (q >= buf + buf_size - 1)
+//                     return -1;
+//                 *q++ = *p++;
+//             }
+//         }
+//         *q = '\0';
+//         *pp = p;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1103 {
+// Port of parse_fname (fs_utils.c). The helpers isspace_nolf and from_hex are
+// `static inline` in the C file, so their logic is inlined here as private fns.
+
+use core::ffi::{c_char, c_int};
+
+#[inline]
+fn isspace_nolf(c: c_int) -> bool {
+    c == i32::from(b' ') || c == i32::from(b'\t')
+}
+
+#[inline]
+fn from_hex(c: c_int) -> c_int {
+    if c >= i32::from(b'0') && c <= i32::from(b'9') {
+        c - i32::from(b'0')
+    } else if c >= i32::from(b'A') && c <= i32::from(b'F') {
+        c - i32::from(b'A') + 10
+    } else if c >= i32::from(b'a') && c <= i32::from(b'f') {
+        c - i32::from(b'a') + 10
+    } else {
+        -1
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int {
+    unsafe {
+        let mut p: *const c_char = *pp;
+        while isspace_nolf(*p as c_int) {
+            p = p.add(1);
+        }
+        if *p == 0 {
+            return -1;
+        }
+        let mut q: *mut c_char = buf;
+        let limit: *const c_char = buf.offset(buf_size as isize - 1);
+
+        if *p == b'"' as c_char {
+            p = p.add(1);
+            loop {
+                let mut c: c_int = *p as c_int;
+                p = p.add(1);
+                if c == 0 || c == i32::from(b'\n') {
+                    return -1;
+                } else if c == i32::from(b'"') {
+                    break;
+                } else if c == i32::from(b'\\') {
+                    c = *p as c_int;
+                    p = p.add(1);
+                    if c == i32::from(b'\'') || c == i32::from(b'"') || c == i32::from(b'\\') {
+                        // goto add_char
+                    } else if c == i32::from(b'n') {
+                        c = i32::from(b'\n');
+                    } else if c == i32::from(b'r') {
+                        c = i32::from(b'\r');
+                    } else if c == i32::from(b't') {
+                        c = i32::from(b'\t');
+                    } else if c == i32::from(b'x') {
+                        let mut h: c_int = from_hex(*p as c_int);
+                        p = p.add(1);
+                        if h < 0 {
+                            return -1;
+                        }
+                        c = h << 4;
+                        h = from_hex(*p as c_int);
+                        p = p.add(1);
+                        if h < 0 {
+                            return -1;
+                        }
+                        c |= h;
+                    } else {
+                        return -1;
+                    }
+                }
+                // add_char:
+                if (q as *const c_char) >= limit {
+                    return -1;
+                }
+                *q = c as c_char;
+                q = q.add(1);
+            }
+        } else {
+            while !isspace_nolf(*p as c_int) && *p != 0 && *p != b'\n' as c_char {
+                if (q as *const c_char) >= limit {
+                    return -1;
+                }
+                *q = *p;
+                q = q.add(1);
+                p = p.add(1);
+            }
+        }
+        *q = 0;
+        *pp = p;
+        0
+    }
+}
 }
 
 // ── `const char *p; char *q; int c, h; p = *pp;` · fs_utils.c:124-128 · chunk 1104 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
@@ -692,6 +1075,62 @@ pub extern "C" fn parse_fname__part1109(
 }
 }
 
+// ── `parse_uint32_base` · fs_utils.c:190-201 · chunk 1110 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_uint32_base(uint32_t *pval, const char **pp, int base)
+//     {
+//         const char *p, *p1;
+//         p = *pp;
+//         while (isspace_nolf(*p))
+//             p++;
+//         *pval = strtoul(p, (char **)&p1, base);
+//         if (p1 == p)
+//             return -1;
+//         *pp = p1;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1110 {
+// Port of fs_utils.c: parse_uint32_base
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int, c_ulong};
+use core::ptr;
+
+extern "C" {
+    // glibc redirects strtoul to the C23 variant in this program.
+    #[link_name = "__isoc23_strtoul"]
+    fn strtoul(nptr: *const c_char, endptr: *mut *mut c_char, base: c_int) -> c_ulong;
+}
+
+// static inline BOOL isspace_nolf(int c) { return (c == ' ' || c == '\t'); }
+#[inline]
+fn isspace_nolf(c: c_int) -> bool {
+    c == b' ' as c_int || c == b'\t' as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_uint32_base(
+    pval: *mut u32,
+    pp: *mut *const c_char,
+    base: c_int,
+) -> c_int {
+    let mut p: *const c_char = *pp;
+    while isspace_nolf(*p as c_int) {
+        p = p.add(1);
+    }
+    let mut p1: *mut c_char = ptr::null_mut();
+    let v = strtoul(p, &mut p1 as *mut *mut c_char, base);
+    *pval = v as u32;
+    if p1 as *const c_char == p {
+        return -1;
+    }
+    *pp = p1 as *const c_char;
+    0
+}
+}
+
 // ── `const char *p, *p1; p = *pp;` · fs_utils.c:192-193 · chunk 1111 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -793,6 +1232,60 @@ pub extern "C" fn parse_uint32_base__part1115(pp: *mut *const c_char, p1: *const
         *pp = p1;
     }
     0
+}
+}
+
+// ── `parse_uint64_base` · fs_utils.c:203-214 · chunk 1116 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_uint64_base(uint64_t *pval, const char **pp, int base)
+//     {
+//         const char *p, *p1;
+//         p = *pp;
+//         while (isspace_nolf(*p))
+//             p++;
+//         *pval = strtoull(p, (char **)&p1, base);
+//         if (p1 == p)
+//             return -1;
+//         *pp = p1;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1116 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    // glibc's C23 strtoull (the C translation unit refers to it via asm("__isoc23_strtoull")).
+    #[link_name = "__isoc23_strtoull"]
+    fn strtoull(nptr: *const c_char, endptr: *mut *mut c_char, base: c_int) -> u64;
+}
+
+// Port of the static inline helper isspace_nolf() from fs_utils.c.
+#[inline]
+fn isspace_nolf(c: c_int) -> bool {
+    c == b' ' as c_int || c == b'\t' as c_int
+}
+
+#[no_mangle]
+pub extern "C" fn parse_uint64_base(
+    pval: *mut u64,
+    pp: *mut *const c_char,
+    base: c_int,
+) -> c_int {
+    unsafe {
+        let mut p: *const c_char = *pp;
+        while isspace_nolf(*p as c_int) {
+            p = p.add(1);
+        }
+        let mut p1: *mut c_char = core::ptr::null_mut();
+        let v = strtoull(p, &mut p1 as *mut *mut c_char, base);
+        *pval = v;
+        if p1 as *const c_char == p {
+            return -1;
+        }
+        *pp = p1 as *const c_char;
+        0
+    }
 }
 }
 
@@ -912,6 +1405,27 @@ pub extern "C" fn parse_uint64_base__part1121(pp: *mut *const c_char, p1: *const
 }
 }
 
+// ── `parse_uint64` · fs_utils.c:216-219 · chunk 1122 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_uint64(uint64_t *pval, const char **pp)
+//     {
+//         return parse_uint64_base(pval, pp, 0);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1122 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_uint64_base(pval: *mut u64, pp: *mut *const c_char, base: c_int) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int {
+    unsafe { parse_uint64_base(pval, pp, 0) }
+}
+}
+
 // ── `return parse_uint64_base(pval, pp, 0);` · fs_utils.c:218-218 · chunk 1123 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -930,6 +1444,27 @@ pub extern "C" fn parse_uint64__part1123(pval: *mut u64, pp: *mut *const c_char)
 }
 }
 
+// ── `parse_uint32` · fs_utils.c:221-224 · chunk 1124 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_uint32(uint32_t *pval, const char **pp)
+//     {
+//         return parse_uint32_base(pval, pp, 0);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1124 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_uint32_base(pval: *mut u32, pp: *mut *const c_char, base: c_int) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int {
+    unsafe { parse_uint32_base(pval, pp, 0) }
+}
+}
+
 // ── `return parse_uint32_base(pval, pp, 0);` · fs_utils.c:223-223 · chunk 1125 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -945,6 +1480,75 @@ extern "C" {
 #[no_mangle]
 pub extern "C" fn parse_uint32__part1125(pval: *mut u32, pp: *mut *const c_char) -> c_int {
     unsafe { parse_uint32_base(pval, pp, 0) }
+}
+}
+
+// ── `parse_time` · fs_utils.c:226-248 · chunk 1126 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_time(uint32_t *psec, uint32_t *pnsec, const char **pp)
+//     {
+//         const char *p;
+//         uint32_t v, m;
+//         p = *pp;
+//         if (parse_uint32(psec, &p) < 0)
+//             return -1;
+//         v = 0;
+//         if (*p == '.') {
+//             p++;
+//     
+//             m = 1000000000;
+//             v = 0;
+//             while (*p >= '0' && *p <= '9') {
+//                 m /= 10;
+//                 v += (*p - '0') * m;
+//                 p++;
+//             }
+//         }
+//         *pnsec = v;
+//         *pp = p;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1126 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    // Provided by the C program (parse_uint32 -> parse_uint32_base).
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn parse_time(
+    psec: *mut u32,
+    pnsec: *mut u32,
+    pp: *mut *const c_char,
+) -> c_int {
+    let mut p: *const c_char = *pp;
+
+    if parse_uint32(psec, &mut p) < 0 {
+        return -1;
+    }
+
+    let mut v: u32 = 0;
+    if *p == b'.' as c_char {
+        p = p.add(1);
+
+        let mut m: u32 = 1_000_000_000;
+        v = 0;
+        while *p >= b'0' as c_char && *p <= b'9' as c_char {
+            m /= 10;
+            // (*p - '0') is an int in C, then converted to unsigned for the
+            // multiplication with the uint32_t m; keep wrapping semantics.
+            let d: c_int = *p as c_int - b'0' as c_int;
+            v = v.wrapping_add((d as u32).wrapping_mul(m));
+            p = p.add(1);
+        }
+    }
+
+    *pnsec = v;
+    *pp = p;
+    0
 }
 }
 
@@ -1087,6 +1691,27 @@ pub extern "C" fn parse_time__part1131(
 }
 }
 
+// ── `parse_file_id` · fs_utils.c:250-253 · chunk 1132 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_file_id(FSFileID *pval, const char **pp)
+//     {
+//         return parse_uint64_base(pval, pp, 16);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1132 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_uint64_base(pval: *mut u64, pp: *mut *const c_char, base: c_int) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int {
+    unsafe { parse_uint64_base(pval, pp, 16) }
+}
+}
+
 // ── `return parse_uint64_base(pval, pp, 16);` · fs_utils.c:252-252 · chunk 1133 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1102,6 +1727,48 @@ extern "C" {
 #[no_mangle]
 pub extern "C" fn parse_file_id__part1133(pval: *mut u64, pp: *mut *const c_char) -> c_int {
     unsafe { parse_uint64_base(pval, pp, 16) }
+}
+}
+
+// ── `file_id_to_filename` · fs_utils.c:255-259 · chunk 1134 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     char *file_id_to_filename(char *buf, FSFileID file_id)
+//     {
+//         sprintf(buf, "%016" 
+//                            "l" "x"
+//                                  , file_id);
+//         return buf;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1134 {
+// Port of: char *file_id_to_filename(char *buf, FSFileID file_id)
+// FSFileID is typedef uint64_t.
+// Equivalent to sprintf(buf, "%016lx", file_id).
+
+use core::ffi::c_char;
+
+#[no_mangle]
+pub extern "C" fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char {
+    if !buf.is_null() {
+        const HEX: [u8; 16] = *b"0123456789abcdef";
+        let mut v = file_id;
+        // Write 16 hex digits, most significant first, at buf[0..16].
+        let mut i: usize = 16;
+        unsafe {
+            while i > 0 {
+                i -= 1;
+                let digit = (v & 0xf) as usize;
+                // HEX index is always in range (digit <= 15).
+                let c = *HEX.get_unchecked(digit);
+                core::ptr::write(buf.add(i) as *mut u8, c);
+                v >>= 4;
+            }
+            // NUL terminate
+            core::ptr::write(buf.add(16) as *mut u8, 0u8);
+        }
+    }
+    buf
 }
 }
 
@@ -1144,6 +1811,43 @@ pub extern "C" fn file_id_to_filename__part1135(buf: *mut c_char, file_id: u64) 
 }
 }
 
+// ── `encode_hex` · fs_utils.c:261-266 · chunk 1136 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void encode_hex(char *str, const uint8_t *buf, int len)
+//     {
+//         int i;
+//         for(i = 0; i < len; i++)
+//             sprintf(str + 2 * i, "%02x", buf[i]);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1136 {
+// Port of void encode_hex(char *str, const uint8_t *buf, int len)
+// Mirrors the original: for each byte, sprintf(str + 2 * i, "%02x", buf[i]),
+// i.e. two lowercase hex digits plus the NUL terminator written at 2 * i + 2.
+
+use core::ffi::{c_char, c_int};
+
+static HEX: [u8; 16] = *b"0123456789abcdef";
+
+#[no_mangle]
+pub extern "C" fn encode_hex(str: *mut c_char, buf: *const u8, len: c_int) {
+    let mut i: c_int = 0;
+    unsafe {
+        while i < len {
+            let b = *buf.offset(i as isize);
+            let hi = *HEX.get_unchecked((b >> 4) as usize);
+            let lo = *HEX.get_unchecked((b & 0x0f) as usize);
+            let p = str.offset(i.wrapping_mul(2) as isize);
+            *p = hi as c_char;
+            *p.offset(1) = lo as c_char;
+            *p.offset(2) = 0;
+            i += 1;
+        }
+    }
+}
+}
+
 // ── `for (i = 0; i < len; i++)` · fs_utils.c:264-265 · chunk 1137 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1170,6 +1874,60 @@ pub extern "C" fn encode_hex__part1137(out: *mut c_char, buf: *const u8, len: c_
         }
         i += 1;
     }
+}
+}
+
+// ── `decode_hex` · fs_utils.c:268-282 · chunk 1138 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int decode_hex(uint8_t *buf, const char *str, int len)
+//     {
+//         int h0, h1, i;
+//     
+//         for(i = 0; i < len; i++) {
+//             h0 = from_hex(str[2 * i]);
+//             if (h0 < 0)
+//                 return -1;
+//             h1 = from_hex(str[2 * i + 1]);
+//             if (h1 < 0)
+//                 return -1;
+//             buf[i] = (h0 << 4) | h1;
+//         }
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1138 {
+use core::ffi::{c_char, c_int};
+
+#[inline]
+fn from_hex(c: c_int) -> c_int {
+    if c >= b'0' as c_int && c <= b'9' as c_int {
+        c - b'0' as c_int
+    } else if c >= b'A' as c_int && c <= b'F' as c_int {
+        c - b'A' as c_int + 10
+    } else if c >= b'a' as c_int && c <= b'f' as c_int {
+        c - b'a' as c_int + 10
+    } else {
+        -1
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn decode_hex(buf: *mut u8, str_: *const c_char, len: c_int) -> c_int {
+    let mut i: c_int = 0;
+    while i < len {
+        let h0 = from_hex(*str_.offset((2 * i) as isize) as c_int);
+        if h0 < 0 {
+            return -1;
+        }
+        let h1 = from_hex(*str_.offset((2 * i + 1) as isize) as c_int);
+        if h1 < 0 {
+            return -1;
+        }
+        *buf.offset(i as isize) = ((h0 << 4) | h1) as u8;
+        i += 1;
+    }
+    0
 }
 }
 
@@ -1234,6 +1992,50 @@ pub mod chunk1140 {
 #[no_mangle]
 pub extern "C" fn decode_hex__part1140() -> core::ffi::c_int {
     0
+}
+}
+
+// ── `skip_header` · fs_utils.c:285-291 · chunk 1141 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     const char *skip_header(const char *p)
+//     {
+//         p = 
+//            _Generic (0 ? (
+//            p
+//            ) : (void *) 1, const void *: (const char *) (strstr (
+//            p
+//            , 
+//            "\n\n"
+//            )), default: strstr (
+//            p
+//            , 
+//            "\n\n"
+//            ))
+//                             ;
+//         if (!p)
+//             return 
+//                   ((void *)0)
+//                       ;
+//         return p + 2;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1141 {
+use core::ffi::c_char;
+
+extern "C" {
+    fn strstr(haystack: *const c_char, needle: *const c_char) -> *mut c_char;
+}
+
+static NEEDLE: [c_char; 3] = [b'\n' as c_char, b'\n' as c_char, 0];
+
+#[no_mangle]
+pub unsafe extern "C" fn skip_header(p: *const c_char) -> *const c_char {
+    let found = strstr(p, NEEDLE.as_ptr());
+    if found.is_null() {
+        return core::ptr::null();
+    }
+    (found as *const c_char).add(2)
 }
 }
 
@@ -1305,6 +2107,185 @@ use core::ffi::c_char;
 pub extern "C" fn skip_header__part1144(p: *const c_char) -> *const c_char {
     // p is guaranteed non-NULL here (checked by the caller); C's p + 2.
     unsafe { p.add(2) }
+}
+}
+
+// ── `parse_tag` · fs_utils.c:294-335 · chunk 1145 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_tag(char *buf, int buf_size, const char *str, const char *tag)
+//     {
+//         char tagname[128], *q;
+//         const char *p, *p1;
+//         int len;
+//     
+//         p = str;
+//         for(;;) {
+//             if (*p == '\0' || *p == '\n')
+//                 break;
+//             q = tagname;
+//             while (*p != ':' && *p != '\n' && *p != '\0') {
+//                 if ((q - tagname) < sizeof(tagname) - 1)
+//                     *q++ = *p;
+//                 p++;
+//             }
+//             *q = '\0';
+//             if (*p != ':')
+//                 return -1;
+//             p++;
+//             while (isspace_nolf(*p))
+//                 p++;
+//             p1 = p;
+//             p = 
+//                _Generic (0 ? (
+//                p
+//                ) : (void *) 1, const void *: (const char *) (strchr (
+//                p
+//                , 
+//                '\n'
+//                )), default: strchr (
+//                p
+//                , 
+//                '\n'
+//                ))
+//                               ;
+//             if (!p)
+//                 len = strlen(p1);
+//             else
+//                 len = p - p1;
+//             if (!strcmp(tagname, tag)) {
+//                 if (len > buf_size - 1)
+//                     len = buf_size - 1;
+//                 memcpy(buf, p1, len);
+//                 buf[len] = '\0';
+//                 return 0;
+//             }
+//             if (!p)
+//                 break;
+//             else
+//                 p++;
+//         }
+//         return -1;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1145 {
+// Rust rewrite of parse_tag from fs_utils.c
+use core::ffi::{c_char, c_int};
+
+#[inline]
+fn isspace_nolf(c: c_int) -> bool {
+    c == b' ' as c_int || c == b'\t' as c_int
+}
+
+#[inline]
+unsafe fn load(p: *const c_char) -> c_int {
+    *p as c_int
+}
+
+// equivalent of strchr(p, '\n'), returning the pointer or null
+unsafe fn strchr_nl(mut p: *const c_char) -> *const c_char {
+    loop {
+        let c = *p as u8;
+        if c == b'\n' {
+            return p;
+        }
+        if c == 0 {
+            return core::ptr::null();
+        }
+        p = p.offset(1);
+    }
+}
+
+unsafe fn strlen_rs(p: *const c_char) -> usize {
+    let mut n: usize = 0;
+    while *p.offset(n as isize) as u8 != 0 {
+        n += 1;
+    }
+    n
+}
+
+// strcmp(tagname, tag) == 0 ?
+unsafe fn str_eq(a: *const c_char, b: *const c_char) -> bool {
+    let mut i: isize = 0;
+    loop {
+        let ca = *a.offset(i) as u8;
+        let cb = *b.offset(i) as u8;
+        if ca != cb {
+            return false;
+        }
+        if ca == 0 {
+            return true;
+        }
+        i += 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn parse_tag(
+    buf: *mut c_char,
+    buf_size: c_int,
+    str_: *const c_char,
+    tag: *const c_char,
+) -> c_int {
+    let mut tagname = [0u8; 128];
+    let mut p: *const c_char = str_;
+
+    loop {
+        unsafe {
+            let c0 = load(p);
+            if c0 == 0 || c0 == b'\n' as c_int {
+                break;
+            }
+            let mut qi: usize = 0;
+            loop {
+                let c = load(p);
+                if c == b':' as c_int || c == b'\n' as c_int || c == 0 {
+                    break;
+                }
+                if qi < 127 {
+                    tagname[qi] = c as u8;
+                    qi += 1;
+                }
+                p = p.offset(1);
+            }
+            tagname[qi] = 0;
+            if load(p) != b':' as c_int {
+                return -1;
+            }
+            p = p.offset(1);
+            while isspace_nolf(load(p)) {
+                p = p.offset(1);
+            }
+            let p1 = p;
+            let nl = strchr_nl(p);
+            let mut len: c_int = if nl.is_null() {
+                strlen_rs(p1) as c_int
+            } else {
+                nl.offset_from(p1) as c_int
+            };
+            if str_eq(tagname.as_ptr() as *const c_char, tag) {
+                let limit = buf_size.wrapping_sub(1);
+                if len > limit {
+                    len = limit;
+                }
+                if len > 0 {
+                    core::ptr::copy_nonoverlapping(
+                        p1 as *const u8,
+                        buf as *mut u8,
+                        len as usize,
+                    );
+                }
+                *buf.offset(len as isize) = 0;
+                return 0;
+            }
+            if nl.is_null() {
+                break;
+            } else {
+                p = nl.offset(1);
+            }
+        }
+    }
+    -1
 }
 }
 
@@ -1529,6 +2510,46 @@ pub extern "C" fn parse_tag__part1148() -> c_int {
 }
 }
 
+// ── `parse_tag_uint64` · fs_utils.c:337-345 · chunk 1149 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_tag_uint64(uint64_t *pval, const char *str, const char *tag)
+//     {
+//         char buf[64];
+//         const char *p;
+//         if (parse_tag(buf, sizeof(buf), str, tag))
+//             return -1;
+//         p = buf;
+//         return parse_uint64(pval, &p);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1149 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_tag(buf: *mut c_char, buf_size: c_int, str: *const c_char, tag: *const c_char) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_tag_uint64(
+    pval: *mut u64,
+    str: *const c_char,
+    tag: *const c_char,
+) -> c_int {
+    let mut buf = [0 as c_char; 64];
+    let mut p: *const c_char;
+
+    unsafe {
+        if parse_tag(buf.as_mut_ptr(), 64 as c_int, str, tag) != 0 {
+            return -1;
+        }
+        p = buf.as_ptr();
+        parse_uint64(pval, &mut p as *mut *const c_char)
+    }
+}
+}
+
 // ── `if (parse_tag(buf, sizeof(buf), str, tag))` · fs_utils.c:341-342 · chunk 1150 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1585,6 +2606,41 @@ pub extern "C" fn parse_tag_uint64__part1151(pval: *mut u64, buf: *const c_char)
 }
 }
 
+// ── `parse_tag_file_id` · fs_utils.c:347-355 · chunk 1152 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_tag_file_id(FSFileID *pval, const char *str, const char *tag)
+//     {
+//         char buf[64];
+//         const char *p;
+//         if (parse_tag(buf, sizeof(buf), str, tag))
+//             return -1;
+//         p = buf;
+//         return parse_uint64_base(pval, &p, 16);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1152 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_tag(buf: *mut c_char, buf_size: c_int, str: *const c_char, tag: *const c_char) -> c_int;
+    fn parse_uint64_base(pval: *mut u64, pp: *mut *const c_char, base: c_int) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_tag_file_id(pval: *mut u64, str: *const c_char, tag: *const c_char) -> c_int {
+    let mut buf = [0 as c_char; 64];
+    let mut p: *const c_char;
+    unsafe {
+        if parse_tag(buf.as_mut_ptr(), 64, str, tag) != 0 {
+            return -1;
+        }
+        p = buf.as_ptr();
+        parse_uint64_base(pval, &mut p as *mut *const c_char, 16)
+    }
+}
+}
+
 // ── `if (parse_tag(buf, sizeof(buf), str, tag))` · fs_utils.c:351-352 · chunk 1153 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1633,6 +2689,36 @@ pub extern "C" fn parse_tag_file_id__part1154(pval: *mut u64, buf: *const c_char
 }
 }
 
+// ── `parse_tag_version` · fs_utils.c:357-363 · chunk 1155 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int parse_tag_version(const char *str)
+//     {
+//         uint64_t version;
+//         if (parse_tag_uint64(&version, str, "Version"))
+//             return -1;
+//         return version;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1155 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn parse_tag_uint64(pval: *mut u64, str: *const c_char, tag: *const c_char) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn parse_tag_version(str: *const c_char) -> c_int {
+    let mut version: u64 = 0;
+    unsafe {
+        if parse_tag_uint64(&mut version, str, b"Version\0".as_ptr() as *const c_char) != 0 {
+            return -1;
+        }
+    }
+    version as c_int
+}
+}
+
 // ── `if (parse_tag_uint64(&version, str, "Version"))` · fs_utils.c:360-361 · chunk 1156 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1666,6 +2752,50 @@ pub mod chunk1157 {
 #[no_mangle]
 pub extern "C" fn parse_tag_version__part1157(version: u64) -> i32 {
     version as i32
+}
+}
+
+// ── `is_url` · fs_utils.c:365-370 · chunk 1158 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     BOOL is_url(const char *path)
+//     {
+//         return (strstart(path, "http:", 
+//                                        ((void *)0)
+//                                            ) ||
+//                 strstart(path, "https:", 
+//                                         ((void *)0)
+//                                             ) ||
+//                 strstart(path, "file:", 
+//                                        ((void *)0)
+//                                            ));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1158 {
+use core::ffi::{c_char, c_int};
+
+extern "C" {
+    fn strstart(str_: *const c_char, val: *const c_char, ptr: *mut *const c_char) -> c_int;
+}
+
+static HTTP: &[u8] = b"http:\0";
+static HTTPS: &[u8] = b"https:\0";
+static FILE_: &[u8] = b"file:\0";
+
+#[no_mangle]
+pub extern "C" fn is_url(path: *const c_char) -> c_int {
+    unsafe {
+        if strstart(path, HTTP.as_ptr() as *const c_char, core::ptr::null_mut()) != 0 {
+            return 1;
+        }
+        if strstart(path, HTTPS.as_ptr() as *const c_char, core::ptr::null_mut()) != 0 {
+            return 1;
+        }
+        if strstart(path, FILE_.as_ptr() as *const c_char, core::ptr::null_mut()) != 0 {
+            return 1;
+        }
+        0
+    }
 }
 }
 

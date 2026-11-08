@@ -1,5 +1,381 @@
 //! From `slirp/ip_output.c`.
 
+// ── `ip_output` · slirp/ip_output.c:53-172 · chunk 2399 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int
+//     ip_output(struct socket *so, struct mbuf *m0)
+//     {
+//      Slirp *slirp = m0->slirp;
+//      register struct ip *ip;
+//      register struct mbuf *m = m0;
+//      register int hlen = sizeof(struct ip );
+//      int len, off, error = 0;
+//     
+//      ;
+//      ;
+//      ;
+//     
+//      ip = ((struct ip *)(m)->m_hdr.mh_data);
+//     
+//     
+//     
+//      ip->ip_v = 4;
+//      ip->ip_off &= 0x4000;
+//      ip->ip_id = htons(slirp->ip_id++);
+//      ip->ip_hl = hlen >> 2;
+//     
+//     
+//     
+//     
+//      if ((uint16_t)ip->ip_len <= 1500) {
+//       ip->ip_len = htons((uint16_t)ip->ip_len);
+//       ip->ip_off = htons((uint16_t)ip->ip_off);
+//       ip->ip_sum = 0;
+//       ip->ip_sum = cksum(m, hlen);
+//     
+//       if_output(so, m);
+//       goto done;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      if (ip->ip_off & 0x4000) {
+//       error = -1;
+//       goto bad;
+//      }
+//     
+//      len = (1500 - hlen) &~ 7;
+//      if (len < 8) {
+//       error = -1;
+//       goto bad;
+//      }
+//     
+//         {
+//      int mhlen, firstlen = len;
+//      struct mbuf **mnext = &m->m_hdr.mh_nextpkt;
+//     
+//     
+//     
+//     
+//     
+//      m0 = m;
+//      mhlen = sizeof (struct ip);
+//      for (off = hlen + len; off < (uint16_t)ip->ip_len; off += len) {
+//        register struct ip *mhip;
+//        m = m_get(slirp);
+//               if (m == 
+//                       ((void *)0)
+//                           ) {
+//          error = -1;
+//          goto sendorfree;
+//        }
+//        m->m_hdr.mh_data += (2 + 14 + 40);
+//        mhip = ((struct ip *)(m)->m_hdr.mh_data);
+//        *mhip = *ip;
+//     
+//        m->m_hdr.mh_len = mhlen;
+//        mhip->ip_off = ((off - hlen) >> 3) + (ip->ip_off & ~0x2000);
+//        if (ip->ip_off & 0x2000)
+//          mhip->ip_off |= 0x2000;
+//        if (off + len >= (uint16_t)ip->ip_len)
+//          len = (uint16_t)ip->ip_len - off;
+//        else
+//          mhip->ip_off |= 0x2000;
+//        mhip->ip_len = htons((uint16_t)(len + mhlen));
+//     
+//        if (m_copy(m, m0, off, len) < 0) {
+//          error = -1;
+//          goto sendorfree;
+//        }
+//     
+//        mhip->ip_off = htons((uint16_t)mhip->ip_off);
+//        mhip->ip_sum = 0;
+//        mhip->ip_sum = cksum(m, mhlen);
+//        *mnext = m;
+//        mnext = &m->m_hdr.mh_nextpkt;
+//      }
+//     
+//     
+//     
+//     
+//      m = m0;
+//      m_adj(m, hlen + firstlen - (uint16_t)ip->ip_len);
+//      ip->ip_len = htons((uint16_t)m->m_hdr.mh_len);
+//      ip->ip_off = htons((uint16_t)(ip->ip_off | 0x2000));
+//      ip->ip_sum = 0;
+//      ip->ip_sum = cksum(m, hlen);
+//     sendorfree:
+//      for (m = m0; m; m = m0) {
+//       m0 = m->m_hdr.mh_nextpkt;
+//                     m->m_hdr.mh_nextpkt = 
+//                                   ((void *)0)
+//                                       ;
+//       if (error == 0)
+//        if_output(so, m);
+//       else
+//        m_free(m);
+//      }
+//         }
+//     
+//     done:
+//      return (error);
+//     
+//     bad:
+//      m_free(m0);
+//      goto done;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2399 {
+#![allow(non_snake_case, non_camel_case_types, dead_code, unused_variables)]
+
+// Port of slirp/ip_output.c: ip_output()
+
+use core::ffi::{c_char, c_int, c_long};
+
+const IF_MTU: c_int = 1500;
+const IF_MAXLINKHDR: usize = 2 + 14 + 40; // IF_MAXLINKHDR (56)
+const IP_HLEN: c_int = 20; // sizeof(struct ip)
+
+const IP_DF: u16 = 0x4000;
+const IP_MF: u16 = 0x2000;
+
+// Byte offsets inside the 20 byte packed ip header.
+const OFF_VER_IHL: usize = 0;
+const OFF_LEN: usize = 2;
+const OFF_ID: usize = 4;
+const OFF_OFF: usize = 6;
+const OFF_SUM: usize = 10;
+
+#[repr(C)]
+pub struct Socket {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct ExList {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TimeVal {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut MBuf,
+    pub mh_prev: *mut MBuf,
+    pub mh_nextpkt: *mut MBuf,
+    pub mh_prevpkt: *mut MBuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub struct MBuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    // union M_dat { char m_dat_[1]; char *m_ext_; }
+    pub m_dat: [c_char; 8],
+}
+
+// Only the prefix of struct Slirp up to (and including) ip_id is mirrored;
+// that keeps the offset of ip_id identical to the C layout.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: TimeVal,
+    pub exec_list: *mut ExList,
+    pub m_freelist: MBuf,
+    pub m_usedlist: MBuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: MBuf,
+    pub if_batchq: MBuf,
+    pub next_m: *mut MBuf,
+    // struct ipq (packed): 16 + 16 + 1 + 1 + 2 + 4 + 4
+    pub ipq: [u8; 44],
+    pub ip_id: u16,
+}
+
+extern "C" {
+    fn htons(__hostshort: u16) -> u16;
+    fn cksum(m: *mut MBuf, len: c_int) -> c_int;
+    fn if_output(so: *mut Socket, m: *mut MBuf);
+    fn m_get(slirp: *mut Slirp) -> *mut MBuf;
+    fn m_copy(dst: *mut MBuf, src: *mut MBuf, off: c_int, len: c_int) -> c_int;
+    fn m_adj(m: *mut MBuf, len: c_int);
+    fn m_free(m: *mut MBuf);
+}
+
+#[inline(always)]
+unsafe fn rd16(p: *const u8, off: usize) -> u16 {
+    core::ptr::read_unaligned(p.add(off) as *const u16)
+}
+
+#[inline(always)]
+unsafe fn wr16(p: *mut u8, off: usize, v: u16) {
+    core::ptr::write_unaligned(p.add(off) as *mut u16, v)
+}
+
+#[no_mangle]
+pub extern "C" fn ip_output(so: *mut Socket, m0: *mut MBuf) -> c_int {
+    unsafe {
+        let slirp: *mut Slirp = (*m0).slirp;
+        let mut m0: *mut MBuf = m0;
+        let mut m: *mut MBuf = m0;
+        let hlen: c_int = IP_HLEN;
+        let mut error: c_int = 0;
+
+        let ip: *mut u8 = (*m).m_hdr.mh_data as *mut u8;
+
+        /*
+         * Fill in IP header.
+         */
+        // ip->ip_v = IPVERSION;  (high nibble of byte 0)
+        let b = core::ptr::read(ip.add(OFF_VER_IHL));
+        core::ptr::write(ip.add(OFF_VER_IHL), (b & 0x0f) | 0x40);
+        // ip->ip_off &= IP_DF;
+        wr16(ip, OFF_OFF, rd16(ip, OFF_OFF) & IP_DF);
+        // ip->ip_id = htons(slirp->ip_id++);
+        let id: u16 = (*slirp).ip_id;
+        (*slirp).ip_id = id.wrapping_add(1);
+        wr16(ip, OFF_ID, htons(id));
+        // ip->ip_hl = hlen >> 2;  (low nibble of byte 0)
+        let b = core::ptr::read(ip.add(OFF_VER_IHL));
+        core::ptr::write(ip.add(OFF_VER_IHL), (b & 0xf0) | (((hlen >> 2) as u8) & 0x0f));
+
+        /*
+         * If small enough for interface, can just send directly.
+         */
+        if rd16(ip, OFF_LEN) <= IF_MTU as u16 {
+            wr16(ip, OFF_LEN, htons(rd16(ip, OFF_LEN)));
+            wr16(ip, OFF_OFF, htons(rd16(ip, OFF_OFF)));
+            wr16(ip, OFF_SUM, 0);
+            wr16(ip, OFF_SUM, cksum(m, hlen) as u16);
+
+            if_output(so, m);
+            return error;
+        }
+
+        /*
+         * Too large for interface; fragment if possible.
+         * Must be able to put at least 8 bytes per fragment.
+         */
+        if (rd16(ip, OFF_OFF) & IP_DF) != 0 {
+            error = -1;
+            m_free(m0);
+            return error;
+        }
+
+        let mut len: c_int = (IF_MTU - hlen) & !7; /* ip databytes per packet */
+        if len < 8 {
+            error = -1;
+            m_free(m0);
+            return error;
+        }
+
+        'frag: {
+            let firstlen: c_int = len;
+            let mut mnext: *mut *mut MBuf = core::ptr::addr_of_mut!((*m).m_hdr.mh_nextpkt);
+
+            /*
+             * Loop through length of segment after first fragment,
+             * make new header and copy data of each part and link onto chain.
+             */
+            m0 = m;
+            let mhlen: c_int = IP_HLEN;
+            let mut off: c_int = hlen.wrapping_add(len);
+            while off < rd16(ip, OFF_LEN) as c_int {
+                let nm: *mut MBuf = m_get(slirp);
+                m = nm;
+                if m.is_null() {
+                    error = -1;
+                    break 'frag;
+                }
+                (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.add(IF_MAXLINKHDR);
+                let mhip: *mut u8 = (*m).m_hdr.mh_data as *mut u8;
+                core::ptr::copy_nonoverlapping(ip as *const u8, mhip, IP_HLEN as usize);
+
+                (*m).m_hdr.mh_len = mhlen;
+                let mut moff: u16 = (((off - hlen) >> 3)
+                    + (rd16(ip, OFF_OFF) as c_int & !(IP_MF as c_int)))
+                    as u16;
+                if (rd16(ip, OFF_OFF) & IP_MF) != 0 {
+                    moff |= IP_MF;
+                }
+                if off + len >= rd16(ip, OFF_LEN) as c_int {
+                    len = rd16(ip, OFF_LEN) as c_int - off;
+                } else {
+                    moff |= IP_MF;
+                }
+                wr16(mhip, OFF_LEN, htons((len + mhlen) as u16));
+
+                if m_copy(m, m0, off, len) < 0 {
+                    error = -1;
+                    break 'frag;
+                }
+
+                wr16(mhip, OFF_OFF, htons(moff));
+                wr16(mhip, OFF_SUM, 0);
+                wr16(mhip, OFF_SUM, cksum(m, mhlen) as u16);
+                *mnext = m;
+                mnext = core::ptr::addr_of_mut!((*m).m_hdr.mh_nextpkt);
+
+                off = off.wrapping_add(len);
+            }
+            /*
+             * Update first fragment by trimming what's been copied out
+             * and updating header, then send each fragment (in order).
+             */
+            m = m0;
+            m_adj(m, hlen + firstlen - rd16(ip, OFF_LEN) as c_int);
+            wr16(ip, OFF_LEN, htons((*m).m_hdr.mh_len as u16));
+            wr16(ip, OFF_OFF, htons(rd16(ip, OFF_OFF) | IP_MF));
+            wr16(ip, OFF_SUM, 0);
+            wr16(ip, OFF_SUM, cksum(m, hlen) as u16);
+        }
+
+        // sendorfree:
+        let mut cur: *mut MBuf = m0;
+        while !cur.is_null() {
+            let nxt: *mut MBuf = (*cur).m_hdr.mh_nextpkt;
+            (*cur).m_hdr.mh_nextpkt = core::ptr::null_mut();
+            if error == 0 {
+                if_output(so, cur);
+            } else {
+                m_free(cur);
+            }
+            cur = nxt;
+        }
+
+        error
+    }
+}
+}
+
 // ── `Slirp *slirp = m0->slirp; register struct ip *ip; register struct mbuf *m = m0; register int hl…` · slirp/ip_output.c:56-73 · chunk 2400 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:

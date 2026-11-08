@@ -1,5 +1,185 @@
 //! From `iomem.c`.
 
+// ── `phys_mem_map_init` · iomem.c:41-50 · chunk 1248 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryMap *phys_mem_map_init(void)
+//     {
+//         PhysMemoryMap *s;
+//         s = mallocz(sizeof(*s));
+//         s->register_ram = default_register_ram;
+//         s->free_ram = default_free_ram;
+//         s->get_dirty_bits = default_get_dirty_bits;
+//         s->set_ram_addr = default_set_addr;
+//         return s;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1248 {
+// Port of iomem.c: phys_mem_map_init() plus the file-static helpers whose
+// addresses it stores in the map (they have no linker symbols, so their logic
+// is reproduced here as private Rust functions).
+
+use core::ffi::{c_char, c_int, c_void};
+
+type BOOL = c_int;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<unsafe extern "C" fn(*mut c_void, u32, c_int) -> u32>,
+    pub write_func: Option<unsafe extern "C" fn(*mut c_void, u32, u32, c_int)>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, u64, u64, c_int) -> *mut PhysMemoryRange>,
+    pub free_ram: Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange)>,
+    pub get_dirty_bits:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange) -> *const u32>,
+    pub set_ram_addr:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange, u64, BOOL)>,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<unsafe extern "C" fn(*mut c_void, *mut u8, usize)>,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn register_ram_entry(
+        s: *mut PhysMemoryMap,
+        addr: u64,
+        size: u64,
+        devram_flags: c_int,
+    ) -> *mut PhysMemoryRange;
+    fn free(ptr: *mut c_void);
+    fn exit(code: c_int) -> !;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    static stderr: *mut c_void;
+}
+
+// static PhysMemoryRange *default_register_ram(PhysMemoryMap *s, uint64_t addr,
+//                                              uint64_t size, int devram_flags)
+unsafe extern "C" fn default_register_ram(
+    s: *mut PhysMemoryMap,
+    addr: u64,
+    size: u64,
+    devram_flags: c_int,
+) -> *mut PhysMemoryRange {
+    let pr = register_ram_entry(s, addr, size, devram_flags);
+
+    (*pr).phys_mem = mallocz(size as usize) as *mut u8;
+    if (*pr).phys_mem.is_null() {
+        fprintf(
+            stderr,
+            b"Could not allocate VM memory\n\0".as_ptr() as *const c_char,
+        );
+        exit(1);
+    }
+
+    if devram_flags & (1 << 1) != 0 {
+        let nb_pages: usize = (size >> 12) as usize;
+        (*pr).dirty_bits_size =
+            (((nb_pages + 31) / 32) * core::mem::size_of::<u32>()) as c_int;
+        (*pr).dirty_bits_index = 0;
+        (*pr).dirty_bits_tab[0] = mallocz((*pr).dirty_bits_size as usize) as *mut u32;
+        (*pr).dirty_bits_tab[1] = mallocz((*pr).dirty_bits_size as usize) as *mut u32;
+        (*pr).dirty_bits = (*pr).dirty_bits_tab[0];
+    }
+    pr
+}
+
+// static const uint32_t *default_get_dirty_bits(PhysMemoryMap *map,
+//                                               PhysMemoryRange *pr)
+unsafe extern "C" fn default_get_dirty_bits(
+    map: *mut PhysMemoryMap,
+    pr: *mut PhysMemoryRange,
+) -> *const u32 {
+    let dirty_bits = (*pr).dirty_bits;
+
+    let mut has_dirty_bits: BOOL = 0;
+    let n = (*pr).dirty_bits_size as usize / core::mem::size_of::<u32>();
+    let mut i: usize = 0;
+    while i < n {
+        if *dirty_bits.add(i) != 0 {
+            has_dirty_bits = 1;
+            break;
+        }
+        i += 1;
+    }
+    if has_dirty_bits != 0 && (*pr).size != 0 {
+        if let Some(f) = (*map).flush_tlb_write_range {
+            f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+        }
+    }
+
+    (*pr).dirty_bits_index ^= 1;
+    (*pr).dirty_bits =
+        (*pr).dirty_bits_tab[((*pr).dirty_bits_index & 1) as usize];
+    if !(*pr).dirty_bits.is_null() && (*pr).dirty_bits_size > 0 {
+        core::ptr::write_bytes((*pr).dirty_bits, 0u8, (*pr).dirty_bits_size as usize);
+    }
+    dirty_bits as *const u32
+}
+
+// static void default_free_ram(PhysMemoryMap *s, PhysMemoryRange *pr)
+unsafe extern "C" fn default_free_ram(_s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) {
+    free((*pr).phys_mem as *mut c_void);
+}
+
+// static void default_set_addr(PhysMemoryMap *map, PhysMemoryRange *pr,
+//                              uint64_t addr, BOOL enabled)
+unsafe extern "C" fn default_set_addr(
+    map: *mut PhysMemoryMap,
+    pr: *mut PhysMemoryRange,
+    addr: u64,
+    enabled: BOOL,
+) {
+    if enabled != 0 {
+        if (*pr).size == 0 || (*pr).addr != addr {
+            if (*pr).is_ram != 0 {
+                if let Some(f) = (*map).flush_tlb_write_range {
+                    f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+                }
+            }
+            (*pr).addr = addr;
+            (*pr).size = (*pr).org_size;
+        }
+    } else if (*pr).size != 0 {
+        if (*pr).is_ram != 0 {
+            if let Some(f) = (*map).flush_tlb_write_range {
+                f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+            }
+        }
+        (*pr).addr = 0;
+        (*pr).size = 0;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn phys_mem_map_init() -> *mut PhysMemoryMap {
+    let s = mallocz(core::mem::size_of::<PhysMemoryMap>()) as *mut PhysMemoryMap;
+    (*s).register_ram = Some(default_register_ram);
+    (*s).free_ram = Some(default_free_ram);
+    (*s).get_dirty_bits = Some(default_get_dirty_bits);
+    (*s).set_ram_addr = Some(default_set_addr);
+    s
+}
+}
+
 // ── `PhysMemoryMap *s; s = mallocz(sizeof(*s)); s->register_ram = default_register_ram; s->free_ram…` · iomem.c:43-49 · chunk 1249 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -73,6 +253,93 @@ pub unsafe extern "C" fn phys_mem_map_init__part1249(
     (*s).get_dirty_bits = get_dirty_bits;
     (*s).set_ram_addr = set_ram_addr;
     s
+}
+}
+
+// ── `phys_mem_map_end` · iomem.c:52-64 · chunk 1250 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void phys_mem_map_end(PhysMemoryMap *s)
+//     {
+//         int i;
+//         PhysMemoryRange *pr;
+//     
+//         for(i = 0; i < s->n_phys_mem_range; i++) {
+//             pr = &s->phys_mem_range[i];
+//             if (pr->is_ram) {
+//                 s->free_ram(s, pr);
+//             }
+//         }
+//         free(s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1250 {
+// Rust rewrite of phys_mem_map_end (iomem.c)
+use core::ffi::{c_int, c_void};
+
+pub type BOOL = c_int;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<unsafe extern "C" fn(*mut c_void, u32, c_int) -> u32>,
+    pub write_func: Option<unsafe extern "C" fn(*mut c_void, u32, u32, c_int)>,
+    pub devio_flags: c_int,
+}
+
+pub type RegisterRamFunc =
+    Option<unsafe extern "C" fn(*mut PhysMemoryMap, u64, u64, c_int) -> *mut PhysMemoryRange>;
+pub type FreeRamFunc = Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange)>;
+pub type GetDirtyBitsFunc =
+    Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange) -> *const u32>;
+pub type SetRamAddrFunc =
+    Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange, u64, BOOL)>;
+pub type FlushTlbWriteRangeFunc =
+    Option<unsafe extern "C" fn(*mut c_void, *mut u8, usize)>;
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: RegisterRamFunc,
+    pub free_ram: FreeRamFunc,
+    pub get_dirty_bits: GetDirtyBitsFunc,
+    pub set_ram_addr: SetRamAddrFunc,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: FlushTlbWriteRangeFunc,
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn phys_mem_map_end(s: *mut PhysMemoryMap) {
+    let mut i: c_int = 0;
+    let n = (*s).n_phys_mem_range;
+    while i < n {
+        let pr: *mut PhysMemoryRange =
+            core::ptr::addr_of_mut!((*s).phys_mem_range).cast::<PhysMemoryRange>().add(i as usize);
+        if (*pr).is_ram != 0 {
+            let f = (*s).free_ram;
+            if let Some(f) = f {
+                f(s, pr);
+            }
+        }
+        i += 1;
+    }
+    free(s as *mut c_void);
 }
 }
 
@@ -168,6 +435,82 @@ pub extern "C" fn phys_mem_map_end__part1252(s: *mut c_void) {
 }
 }
 
+// ── `get_phys_mem_range` · iomem.c:68-78 · chunk 1253 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryRange *get_phys_mem_range(PhysMemoryMap *s, uint64_t paddr)
+//     {
+//         PhysMemoryRange *pr;
+//         int i;
+//         for(i = 0; i < s->n_phys_mem_range; i++) {
+//             pr = &s->phys_mem_range[i];
+//             if (paddr >= pr->addr && paddr < pr->addr + pr->size)
+//                 return pr;
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1253 {
+// Rewrite of get_phys_mem_range from iomem.c
+use core::ffi::{c_int, c_void};
+
+type BOOL = c_int;
+
+type DeviceWriteFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int);
+type DeviceReadFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange>,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32>,
+    pub set_ram_addr: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange, addr: u64, enabled: BOOL)>,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize)>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_phys_mem_range(
+    s: *mut PhysMemoryMap,
+    paddr: u64,
+) -> *mut PhysMemoryRange {
+    let mut i: c_int = 0;
+    while i < (*s).n_phys_mem_range {
+        let pr: *mut PhysMemoryRange = &mut (*s).phys_mem_range[i as usize];
+        let addr = (*pr).addr;
+        let size = (*pr).size;
+        if paddr >= addr && paddr < addr.wrapping_add(size) {
+            return pr;
+        }
+        i += 1;
+    }
+    core::ptr::null_mut()
+}
+}
+
 // ── `for (i = 0; i < s->n_phys_mem_range; i++)` · iomem.c:72-76 · chunk 1254 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -260,6 +603,148 @@ pub struct PhysMemoryRange {
 #[no_mangle]
 pub extern "C" fn get_phys_mem_range__part1255() -> *mut PhysMemoryRange {
     core::ptr::null_mut()
+}
+}
+
+// ── `register_ram_entry` · iomem.c:80-100 · chunk 1256 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryRange *register_ram_entry(PhysMemoryMap *s, uint64_t addr,
+//                                         uint64_t size, int devram_flags)
+//     {
+//         PhysMemoryRange *pr;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        s->n_phys_mem_range < 32
+//        )), __extension__ ({ if (
+//        s->n_phys_mem_range < 32
+//        ) ; else __assert_fail (
+//        "s->n_phys_mem_range < PHYS_MEM_RANGE_MAX"
+//        , "iomem.c", 85, __extension__ __PRETTY_FUNCTION__); }))
+//                                                        ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        (size & ((1 << 12) - 1)) == 0 && size != 0
+//        )), __extension__ ({ if (
+//        (size & ((1 << 12) - 1)) == 0 && size != 0
+//        ) ; else __assert_fail (
+//        "(size & (DEVRAM_PAGE_SIZE - 1)) == 0 && size != 0"
+//        , "iomem.c", 86, __extension__ __PRETTY_FUNCTION__); }))
+//                                                                 ;
+//         pr = &s->phys_mem_range[s->n_phys_mem_range++];
+//         pr->map = s;
+//         pr->is_ram = TRUE;
+//         pr->devram_flags = devram_flags & ~(1 << 2);
+//         pr->addr = addr;
+//         pr->org_size = size;
+//         if (devram_flags & (1 << 2))
+//             pr->size = 0;
+//         else
+//             pr->size = pr->org_size;
+//         pr->phys_mem = 
+//                       ((void *)0)
+//                           ;
+//         pr->dirty_bits = 
+//                         ((void *)0)
+//                             ;
+//         return pr;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1256 {
+// Rust rewrite of register_ram_entry (iomem.c)
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: *mut c_void,
+    pub write_func: *mut c_void,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    // remaining fields are not accessed by this function
+}
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+const DEVRAM_FLAG_DISABLED: c_int = 1 << 2;
+const PHYS_MEM_RANGE_MAX: c_int = 32;
+const DEVRAM_PAGE_SIZE_MASK: u64 = (1u64 << 12) - 1;
+
+#[inline]
+unsafe fn fail(assertion: *const c_char, line: c_uint) -> ! {
+    __assert_fail(
+        assertion,
+        b"iomem.c\0".as_ptr() as *const c_char,
+        line,
+        b"register_ram_entry\0".as_ptr() as *const c_char,
+    )
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn register_ram_entry(
+    s: *mut PhysMemoryMap,
+    addr: u64,
+    size: u64,
+    devram_flags: c_int,
+) -> *mut PhysMemoryRange {
+    let n = (*s).n_phys_mem_range;
+    if !(n < PHYS_MEM_RANGE_MAX) {
+        fail(
+            b"s->n_phys_mem_range < PHYS_MEM_RANGE_MAX\0".as_ptr() as *const c_char,
+            85,
+        );
+    }
+    if !((size & DEVRAM_PAGE_SIZE_MASK) == 0 && size != 0) {
+        fail(
+            b"(size & (DEVRAM_PAGE_SIZE - 1)) == 0 && size != 0\0".as_ptr() as *const c_char,
+            86,
+        );
+    }
+
+    // pr = &s->phys_mem_range[s->n_phys_mem_range++];
+    let pr: *mut PhysMemoryRange = (&mut (*s).phys_mem_range[0] as *mut PhysMemoryRange)
+        .add(n as usize);
+    (*s).n_phys_mem_range = n.wrapping_add(1);
+
+    (*pr).map = s;
+    (*pr).is_ram = 1;
+    (*pr).devram_flags = devram_flags & !DEVRAM_FLAG_DISABLED;
+    (*pr).addr = addr;
+    (*pr).org_size = size;
+    if (devram_flags & DEVRAM_FLAG_DISABLED) != 0 {
+        (*pr).size = 0;
+    } else {
+        (*pr).size = (*pr).org_size;
+    }
+    (*pr).phys_mem = core::ptr::null_mut();
+    (*pr).dirty_bits = core::ptr::null_mut();
+    pr
 }
 }
 
@@ -487,6 +972,118 @@ pub extern "C" fn register_ram_entry__part1259(
 }
 }
 
+// ── `default_register_ram` · iomem.c:102-127 · chunk 1260 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static PhysMemoryRange *default_register_ram(PhysMemoryMap *s, uint64_t addr,
+//                                                  uint64_t size, int devram_flags)
+//     {
+//         PhysMemoryRange *pr;
+//     
+//         pr = register_ram_entry(s, addr, size, devram_flags);
+//     
+//         pr->phys_mem = mallocz(size);
+//         if (!pr->phys_mem) {
+//             fprintf(
+//                    stderr
+//                          , "Could not allocate VM memory\n");
+//             exit(1);
+//         }
+//     
+//         if (devram_flags & (1 << 1)) {
+//             size_t nb_pages;
+//             int i;
+//             nb_pages = size >> 12;
+//             pr->dirty_bits_size = ((nb_pages + 31) / 32) * sizeof(uint32_t);
+//             pr->dirty_bits_index = 0;
+//             for(i = 0; i < 2; i++) {
+//                 pr->dirty_bits_tab[i] = mallocz(pr->dirty_bits_size);
+//             }
+//             pr->dirty_bits = pr->dirty_bits_tab[pr->dirty_bits_index];
+//         }
+//         return pr;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1260 {
+// Rust rewrite of iomem.c : default_register_ram
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque here: only ever passed through by pointer.
+#[repr(C)]
+pub struct PhysMemoryMap {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: *mut c_void,
+    pub write_func: *mut c_void,
+    pub devio_flags: c_int,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn register_ram_entry(
+        s: *mut PhysMemoryMap,
+        addr: u64,
+        size: u64,
+        devram_flags: c_int,
+    ) -> *mut PhysMemoryRange;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(code: c_int) -> !;
+    static stderr: *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn default_register_ram(
+    s: *mut PhysMemoryMap,
+    addr: u64,
+    size: u64,
+    devram_flags: c_int,
+) -> *mut PhysMemoryRange {
+    let pr = register_ram_entry(s, addr, size, devram_flags);
+
+    if pr.is_null() {
+        return pr;
+    }
+
+    (*pr).phys_mem = mallocz(size as usize) as *mut u8;
+    if (*pr).phys_mem.is_null() {
+        fprintf(
+            stderr,
+            b"Could not allocate VM memory\n".as_ptr() as *const c_char,
+        );
+        exit(1);
+    }
+
+    if devram_flags & (1 << 1) != 0 {
+        let nb_pages: usize = (size >> 12) as usize;
+        (*pr).dirty_bits_size =
+            (((nb_pages + 31) / 32) * core::mem::size_of::<u32>()) as c_int;
+        (*pr).dirty_bits_index = 0;
+        let mut i: usize = 0;
+        while i < 2 {
+            (*pr).dirty_bits_tab[i] = mallocz((*pr).dirty_bits_size as usize) as *mut u32;
+            i += 1;
+        }
+        (*pr).dirty_bits = (*pr).dirty_bits_tab[(*pr).dirty_bits_index as usize];
+    }
+    pr
+}
+}
+
 // ── `PhysMemoryRange *pr; pr = register_ram_entry(s, addr, size, devram_flags); pr->phys_mem = mallo…` · iomem.c:105-109 · chunk 1261 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -665,6 +1262,112 @@ use core::ffi::c_void;
 #[no_mangle]
 pub extern "C" fn default_register_ram__part1264(pr: *mut c_void) -> *mut c_void {
     pr
+}
+}
+
+// ── `default_get_dirty_bits` · iomem.c:130-156 · chunk 1265 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static const uint32_t *default_get_dirty_bits(PhysMemoryMap *map,
+//                                                   PhysMemoryRange *pr)
+//     {
+//         uint32_t *dirty_bits;
+//         BOOL has_dirty_bits;
+//         size_t n, i;
+//     
+//         dirty_bits = pr->dirty_bits;
+//     
+//         has_dirty_bits = FALSE;
+//         n = pr->dirty_bits_size / sizeof(uint32_t);
+//         for(i = 0; i < n; i++) {
+//             if (dirty_bits[i] != 0) {
+//                 has_dirty_bits = TRUE;
+//                 break;
+//             }
+//         }
+//         if (has_dirty_bits && pr->size != 0) {
+//     
+//             map->flush_tlb_write_range(map->opaque, pr->phys_mem, pr->org_size);
+//         }
+//     
+//         pr->dirty_bits_index ^= 1;
+//         pr->dirty_bits = pr->dirty_bits_tab[pr->dirty_bits_index];
+//         memset(pr->dirty_bits, 0, pr->dirty_bits_size);
+//         return dirty_bits;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1265 {
+// Rust rewrite of default_get_dirty_bits from iomem.c
+#![allow(non_snake_case)]
+
+use core::ffi::{c_int, c_void};
+
+type BOOL = c_int;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<unsafe extern "C" fn(*mut c_void, u32, c_int) -> u32>,
+    pub write_func: Option<unsafe extern "C" fn(*mut c_void, u32, u32, c_int)>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, u64, u64, c_int) -> *mut PhysMemoryRange>,
+    pub free_ram: Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange)>,
+    pub get_dirty_bits:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange) -> *const u32>,
+    pub set_ram_addr:
+        Option<unsafe extern "C" fn(*mut PhysMemoryMap, *mut PhysMemoryRange, u64, BOOL)>,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<unsafe extern "C" fn(*mut c_void, *mut u8, usize)>,
+}
+
+/* return a pointer to the bitmap of dirty bits and reset them */
+#[no_mangle]
+pub unsafe extern "C" fn default_get_dirty_bits(
+    map: *mut PhysMemoryMap,
+    pr: *mut PhysMemoryRange,
+) -> *const u32 {
+    let dirty_bits: *mut u32 = (*pr).dirty_bits;
+
+    let mut has_dirty_bits: BOOL = 0; /* FALSE */
+    let n: usize = (*pr).dirty_bits_size as usize / core::mem::size_of::<u32>();
+    let mut i: usize = 0;
+    while i < n {
+        if *dirty_bits.add(i) != 0 {
+            has_dirty_bits = 1; /* TRUE */
+            break;
+        }
+        i += 1;
+    }
+    if has_dirty_bits != 0 && (*pr).size != 0 {
+        /* invalidate the corresponding CPU write TLBs */
+        if let Some(f) = (*map).flush_tlb_write_range {
+            f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+        }
+    }
+
+    (*pr).dirty_bits_index ^= 1;
+    let sel: usize = ((*pr).dirty_bits_index & 1) as usize;
+    (*pr).dirty_bits = (*pr).dirty_bits_tab[sel];
+    core::ptr::write_bytes((*pr).dirty_bits, 0u8, (*pr).dirty_bits_size as usize);
+    dirty_bits
 }
 }
 
@@ -875,6 +1578,96 @@ pub unsafe extern "C" fn default_get_dirty_bits__part1269(
 }
 }
 
+// ── `phys_mem_reset_dirty_bit` · iomem.c:159-177 · chunk 1270 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void phys_mem_reset_dirty_bit(PhysMemoryRange *pr, size_t offset)
+//     {
+//         size_t page_index;
+//         uint32_t mask, *dirty_bits_ptr;
+//         PhysMemoryMap *map;
+//         if (pr->dirty_bits) {
+//             page_index = offset >> 12;
+//             mask = 1 << (page_index & 0x1f);
+//             dirty_bits_ptr = pr->dirty_bits + (page_index >> 5);
+//             if (*dirty_bits_ptr & mask) {
+//                 *dirty_bits_ptr &= ~mask;
+//     
+//                 map = pr->map;
+//                 map->flush_tlb_write_range(map->opaque,
+//                                            pr->phys_mem + (offset & ~((1 << 12) - 1)),
+//                                            (1 << 12));
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1270 {
+use core::ffi::{c_int, c_void};
+
+type BOOL = c_int;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: *mut c_void,
+    pub write_func: *mut c_void,
+    pub devio_flags: c_int,
+}
+
+type FlushTlbWriteRangeFn = unsafe extern "C" fn(*mut c_void, *mut u8, usize);
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: *mut c_void,
+    pub free_ram: *mut c_void,
+    pub get_dirty_bits: *mut c_void,
+    pub set_ram_addr: *mut c_void,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<FlushTlbWriteRangeFn>,
+}
+
+const DEVRAM_PAGE_SIZE: usize = 1 << 12;
+
+#[no_mangle]
+pub unsafe extern "C" fn phys_mem_reset_dirty_bit(pr: *mut PhysMemoryRange, offset: usize) {
+    if pr.is_null() {
+        return;
+    }
+    let pr: &mut PhysMemoryRange = &mut *pr;
+    if !pr.dirty_bits.is_null() {
+        let page_index: usize = offset >> 12;
+        let mask: u32 = 1u32 << (page_index & 0x1f);
+        let dirty_bits_ptr: *mut u32 = pr.dirty_bits.add(page_index >> 5);
+        if *dirty_bits_ptr & mask != 0 {
+            *dirty_bits_ptr &= !mask;
+            let map: *mut PhysMemoryMap = pr.map;
+            if !map.is_null() {
+                if let Some(f) = (*map).flush_tlb_write_range {
+                    f(
+                        (*map).opaque,
+                        pr.phys_mem.add(offset & !(DEVRAM_PAGE_SIZE - 1)),
+                        DEVRAM_PAGE_SIZE,
+                    );
+                }
+            }
+        }
+    }
+}
+}
+
 // ── `if (pr->dirty_bits)` · iomem.c:164-176 · chunk 1271 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -965,6 +1758,58 @@ pub extern "C" fn phys_mem_reset_dirty_bit__part1271(pr: *mut PhysMemoryRange, o
 }
 }
 
+// ── `default_free_ram` · iomem.c:179-182 · chunk 1272 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void default_free_ram(PhysMemoryMap *s, PhysMemoryRange *pr)
+//     {
+//         free(pr->phys_mem);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1272 {
+// Rust rewrite of default_free_ram (iomem.c), linked in place of the C definition.
+use core::ffi::{c_int, c_uint, c_void};
+
+// libc
+extern "C" {
+    fn free(ptr: *mut c_void);
+}
+
+// Opaque: only ever used through a raw pointer here.
+#[repr(C)]
+pub struct PhysMemoryMap {
+    _private: [u8; 0],
+}
+
+// Mirrors the C PhysMemoryRange layout exactly (field order, widths, alignment).
+// Function pointers are represented as raw pointers, which have identical
+// size/alignment to function pointers on the supported targets.
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut c_uint,
+    pub dirty_bits_tab: [*mut c_uint; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: *mut c_void,
+    pub write_func: *mut c_void,
+    pub devio_flags: c_int,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn default_free_ram(_s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) {
+    // free(pr->phys_mem);
+    free((*pr).phys_mem as *mut c_void);
+}
+}
+
 // ── `free(pr->phys_mem);` · iomem.c:181-181 · chunk 1273 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -983,6 +1828,157 @@ pub extern "C" fn default_free_ram__part1273(phys_mem: *mut u8) {
     unsafe {
         free(phys_mem as *mut c_void);
     }
+}
+}
+
+// ── `cpu_register_device` · iomem.c:184-206 · chunk 1274 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryRange *cpu_register_device(PhysMemoryMap *s, uint64_t addr,
+//                                          uint64_t size, void *opaque,
+//                                          DeviceReadFunc *read_func, DeviceWriteFunc *write_func,
+//                                          int devio_flags)
+//     {
+//         PhysMemoryRange *pr;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        s->n_phys_mem_range < 32
+//        )), __extension__ ({ if (
+//        s->n_phys_mem_range < 32
+//        ) ; else __assert_fail (
+//        "s->n_phys_mem_range < PHYS_MEM_RANGE_MAX"
+//        , "iomem.c", 190, __extension__ __PRETTY_FUNCTION__); }))
+//                                                        ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        size <= 0xffffffff
+//        )), __extension__ ({ if (
+//        size <= 0xffffffff
+//        ) ; else __assert_fail (
+//        "size <= 0xffffffff"
+//        , "iomem.c", 191, __extension__ __PRETTY_FUNCTION__); }))
+//                                  ;
+//         pr = &s->phys_mem_range[s->n_phys_mem_range++];
+//         pr->map = s;
+//         pr->addr = addr;
+//         pr->org_size = size;
+//         if (devio_flags & (1 << 4))
+//             pr->size = 0;
+//         else
+//             pr->size = pr->org_size;
+//         pr->is_ram = FALSE;
+//         pr->opaque = opaque;
+//         pr->read_func = read_func;
+//         pr->write_func = write_func;
+//         pr->devio_flags = devio_flags;
+//         return pr;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1274 {
+// Rust rewrite of iomem.c: cpu_register_device
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type DeviceReadFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32;
+pub type DeviceWriteFunc =
+    unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int);
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange,
+    >,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32,
+    >,
+    pub set_ram_addr: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange, addr: u64, enabled: c_int),
+    >,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range:
+        Option<unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize)>,
+}
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: u32,
+        function: *const c_char,
+    ) -> !;
+}
+
+/// DEVIO_DISABLED (1 << 4)
+const DEVIO_DISABLED: c_int = 1 << 4;
+
+#[no_mangle]
+pub unsafe extern "C" fn cpu_register_device(
+    s: *mut PhysMemoryMap,
+    addr: u64,
+    size: u64,
+    opaque: *mut c_void,
+    read_func: Option<DeviceReadFunc>,
+    write_func: Option<DeviceWriteFunc>,
+    devio_flags: c_int,
+) -> *mut PhysMemoryRange {
+    if !((*s).n_phys_mem_range < 32) {
+        __assert_fail(
+            b"s->n_phys_mem_range < PHYS_MEM_RANGE_MAX\0".as_ptr() as *const c_char,
+            b"iomem.c\0".as_ptr() as *const c_char,
+            190,
+            b"cpu_register_device\0".as_ptr() as *const c_char,
+        );
+    }
+    if !(size <= 0xffff_ffffu64) {
+        __assert_fail(
+            b"size <= 0xffffffff\0".as_ptr() as *const c_char,
+            b"iomem.c\0".as_ptr() as *const c_char,
+            191,
+            b"cpu_register_device\0".as_ptr() as *const c_char,
+        );
+    }
+
+    let index = (*s).n_phys_mem_range;
+    (*s).n_phys_mem_range = index.wrapping_add(1);
+    let pr: *mut PhysMemoryRange = (&mut (*s).phys_mem_range as *mut [PhysMemoryRange; 32] as *mut PhysMemoryRange)
+        .add(index as usize);
+
+    (*pr).map = s;
+    (*pr).addr = addr;
+    (*pr).org_size = size;
+    if (devio_flags & DEVIO_DISABLED) != 0 {
+        (*pr).size = 0;
+    } else {
+        (*pr).size = (*pr).org_size;
+    }
+    (*pr).is_ram = 0;
+    (*pr).opaque = opaque;
+    (*pr).read_func = read_func;
+    (*pr).write_func = write_func;
+    (*pr).devio_flags = devio_flags;
+    pr
 }
 }
 
@@ -1221,6 +2217,123 @@ pub unsafe extern "C" fn cpu_register_device__part1277(
 }
 }
 
+// ── `default_set_addr` · iomem.c:208-232 · chunk 1278 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void default_set_addr(PhysMemoryMap *map,
+//                                  PhysMemoryRange *pr, uint64_t addr, BOOL enabled)
+//     {
+//         if (enabled) {
+//             if (pr->size == 0 || pr->addr != addr) {
+//     
+//                 if (pr->is_ram) {
+//                     map->flush_tlb_write_range(map->opaque,
+//                                                pr->phys_mem, pr->org_size);
+//                 }
+//                 pr->addr = addr;
+//                 pr->size = pr->org_size;
+//             }
+//         } else {
+//             if (pr->size != 0) {
+//     
+//                 if (pr->is_ram) {
+//                     map->flush_tlb_write_range(map->opaque,
+//                                                pr->phys_mem, pr->org_size);
+//                 }
+//                 pr->addr = 0;
+//                 pr->size = 0;
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1278 {
+use core::ffi::{c_int, c_void};
+
+pub type BOOL = c_int;
+
+pub type DeviceWriteFunc =
+    unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int);
+pub type DeviceReadFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32;
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange,
+    >,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits:
+        Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32>,
+    pub set_ram_addr: Option<
+        unsafe extern "C" fn(
+            s: *mut PhysMemoryMap,
+            pr: *mut PhysMemoryRange,
+            addr: u64,
+            enabled: BOOL,
+        ),
+    >,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range:
+        Option<unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize)>,
+}
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn default_set_addr(
+    map: *mut PhysMemoryMap,
+    pr: *mut PhysMemoryRange,
+    addr: u64,
+    enabled: BOOL,
+) {
+    if map.is_null() || pr.is_null() {
+        return;
+    }
+    let map = &mut *map;
+    let pr = &mut *pr;
+
+    if enabled != 0 {
+        if pr.size == 0 || pr.addr != addr {
+            if pr.is_ram != 0 {
+                if let Some(f) = map.flush_tlb_write_range {
+                    f(map.opaque, pr.phys_mem, pr.org_size as usize);
+                }
+            }
+            pr.addr = addr;
+            pr.size = pr.org_size;
+        }
+    } else {
+        if pr.size != 0 {
+            if pr.is_ram != 0 {
+                if let Some(f) = map.flush_tlb_write_range {
+                    f(map.opaque, pr.phys_mem, pr.org_size as usize);
+                }
+            }
+            pr.addr = 0;
+            pr.size = 0;
+        }
+    }
+}
+}
+
 // ── `if (enabled) … else` · iomem.c:211-231 · chunk 1279 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1324,6 +2437,106 @@ pub unsafe extern "C" fn default_set_addr__part1279(
 }
 }
 
+// ── `phys_mem_set_addr` · iomem.c:234-242 · chunk 1280 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void phys_mem_set_addr(PhysMemoryRange *pr, uint64_t addr, BOOL enabled)
+//     {
+//         PhysMemoryMap *map = pr->map;
+//         if (!pr->is_ram) {
+//             default_set_addr(map, pr, addr, enabled);
+//         } else {
+//             return map->set_ram_addr(map, pr, addr, enabled);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1280 {
+// Rust port of phys_mem_set_addr() from iomem.c
+use core::ffi::{c_int, c_void};
+
+type Bool = c_int;
+
+type DeviceReadFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32;
+type DeviceWriteFunc = unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int);
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: Bool,
+
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+
+    pub opaque: *mut c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange,
+    >,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32,
+    >,
+    pub set_ram_addr: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange, addr: u64, enabled: Bool),
+    >,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize)>,
+}
+
+// Port of the static C function default_set_addr() (no linker symbol).
+unsafe fn default_set_addr(
+    map: *mut PhysMemoryMap,
+    pr: *mut PhysMemoryRange,
+    addr: u64,
+    enabled: Bool,
+) {
+    if enabled != 0 {
+        if (*pr).size == 0 || (*pr).addr != addr {
+            if (*pr).is_ram != 0 {
+                if let Some(f) = (*map).flush_tlb_write_range {
+                    f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+                }
+            }
+            (*pr).addr = addr;
+            (*pr).size = (*pr).org_size;
+        }
+    } else if (*pr).size != 0 {
+        if (*pr).is_ram != 0 {
+            if let Some(f) = (*map).flush_tlb_write_range {
+                f((*map).opaque, (*pr).phys_mem, (*pr).org_size as usize);
+            }
+        }
+        (*pr).addr = 0;
+        (*pr).size = 0;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn phys_mem_set_addr(pr: *mut PhysMemoryRange, addr: u64, enabled: Bool) {
+    let map: *mut PhysMemoryMap = (*pr).map;
+    if (*pr).is_ram == 0 {
+        default_set_addr(map, pr, addr, enabled);
+    } else if let Some(f) = (*map).set_ram_addr {
+        f(map, pr, addr, enabled);
+    }
+}
+}
+
 // ── `if (!pr->is_ram) … else` · iomem.c:237-241 · chunk 1281 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1421,6 +2634,90 @@ pub unsafe extern "C" fn phys_mem_set_addr__part1281(
         }
         1
     }
+}
+}
+
+// ── `phys_mem_get_ram_ptr` · iomem.c:245-255 · chunk 1282 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint8_t *phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw)
+//     {
+//         PhysMemoryRange *pr = get_phys_mem_range(map, paddr);
+//         uintptr_t offset;
+//         if (!pr || !pr->is_ram)
+//             return 
+//                   ((void *)0)
+//                       ;
+//         offset = paddr - pr->addr;
+//         if (is_rw)
+//             phys_mem_set_dirty_bit(pr, offset);
+//         return pr->phys_mem + (uintptr_t)offset;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1282 {
+// Port of phys_mem_get_ram_ptr() from iomem.c
+use core::ffi::{c_int, c_void};
+use core::ptr;
+
+pub type DeviceReadFunc = Option<unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32>;
+pub type DeviceWriteFunc = Option<unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int)>;
+
+// typedef struct PhysMemoryMap PhysMemoryMap;  (opaque here: only used via pointer)
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: DeviceReadFunc,
+    pub write_func: DeviceWriteFunc,
+    pub devio_flags: c_int,
+}
+
+extern "C" {
+    fn get_phys_mem_range(s: *mut PhysMemoryMap, paddr: u64) -> *mut PhysMemoryRange;
+}
+
+// static inline void phys_mem_set_dirty_bit(PhysMemoryRange *pr, size_t offset)
+#[inline]
+unsafe fn phys_mem_set_dirty_bit(pr: *mut PhysMemoryRange, offset: usize) {
+    if !(*pr).dirty_bits.is_null() {
+        let page_index: usize = offset >> 12;
+        let mask: u32 = 1u32 << (page_index & 0x1f);
+        let dirty_bits_ptr: *mut u32 = (*pr).dirty_bits.add(page_index >> 5);
+        *dirty_bits_ptr |= mask;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn phys_mem_get_ram_ptr(
+    map: *mut PhysMemoryMap,
+    paddr: u64,
+    is_rw: c_int,
+) -> *mut u8 {
+    let pr: *mut PhysMemoryRange = get_phys_mem_range(map, paddr);
+    if pr.is_null() || (*pr).is_ram == 0 {
+        return ptr::null_mut();
+    }
+    // uintptr_t offset = paddr - pr->addr;
+    let offset: usize = paddr.wrapping_sub((*pr).addr) as usize;
+    if is_rw != 0 {
+        phys_mem_set_dirty_bit(pr, offset);
+    }
+    (*pr).phys_mem.wrapping_add(offset)
 }
 }
 
@@ -1571,6 +2868,45 @@ pub mod chunk1286 {
 pub extern "C" fn phys_mem_get_ram_ptr__part1286(phys_mem: *mut u8, offset: usize) -> *mut u8 {
     // C: pr->phys_mem + (uintptr_t)offset  (wrapping pointer arithmetic)
     (phys_mem as usize).wrapping_add(offset) as *mut u8
+}
+}
+
+// ── `irq_init` · iomem.c:259-264 · chunk 1287 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void irq_init(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num)
+//     {
+//         irq->set_irq = set_irq;
+//         irq->opaque = opaque;
+//         irq->irq_num = irq_num;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1287 {
+// IRQ support: initialization of an IRQSignal.
+use core::ffi::{c_int, c_void};
+
+type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn irq_init(
+    irq: *mut IRQSignal,
+    set_irq: Option<SetIRQFunc>,
+    opaque: *mut c_void,
+    irq_num: c_int,
+) {
+    if irq.is_null() {
+        return;
+    }
+    (*irq).set_irq = set_irq;
+    (*irq).opaque = opaque;
+    (*irq).irq_num = irq_num;
 }
 }
 

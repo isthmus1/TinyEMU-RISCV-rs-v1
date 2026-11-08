@@ -8484,27 +8484,7 @@ static void sofcantsendmore(struct socket *so);
 
 struct socket *
 solookup(struct socket *head, struct in_addr laddr, u_int lport,
-         struct in_addr faddr, u_int fport)
-{
- struct socket *so;
-
-  {
-  struct socket *solookup__part2563(struct socket *, struct in_addr, u_int,
-                                    struct in_addr, u_int);
-  so = solookup__part2563(head, laddr, (u_int)lport, faddr, (u_int)fport);
- }
-
-
- int solookup__part2564(struct socket *so, struct socket *head);
- if (solookup__part2564(so, head))
-    return (struct socket *)
-                           ((void *)0)
-                               ;
-
- struct socket *solookup__part2565(struct socket *so);
-return solookup__part2565(so);
-
-}
+         struct in_addr faddr, u_int fport);
 
 
 
@@ -8512,83 +8492,15 @@ return solookup__part2565(so);
 
 
 struct socket *
-socreate(Slirp *slirp)
-{
-  struct socket *so;
-
-  void *socreate__part2567(size_t);
-  so = (struct socket *)socreate__part2567(sizeof(struct socket));
-
-  int socreate__part2568(struct socket *so, Slirp *slirp, size_t size);
-  socreate__part2568(so, slirp, sizeof(struct socket));
-  struct socket * socreate__part2569(struct socket *);
-return(socreate__part2569(so));
-
-}
+socreate(Slirp *slirp);
 
 
 
 
 void
-sofree(struct socket *so)
-{
-  Slirp *slirp = so->slirp;
+sofree(struct socket *so);
 
-    {
-    int sofree__taken;
-    extern int sofree__part2571(struct socket *so);
-    sofree__taken = sofree__part2571(so);
-    (void)sofree__taken;
-  }
-  void sofree__part2572(struct socket *so, Slirp *slirp);
-  sofree__part2572(so, slirp);
-
-  void sofree__part2573(struct socket *so);
-sofree__part2573(so);
-
-
-    void sofree__part2574(struct socket *so);
-  sofree__part2574(so);
-
-
-  void sofree__part2575(void *so);
-  sofree__part2575(so);
-
-}
-
-size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
-{
- void sopreprbuf__part2577(struct socket *so, struct sbuf **psb,
-                          int *plen, int *pmss);
-
- int n, lss, total;
- struct sbuf *sb;
- int len;
- int mss;
- sopreprbuf__part2577(so, &sb, &len, &mss);
-
-
-  int sopreprbuf__part2578(int len);
- if (sopreprbuf__part2578(len))
-  return 0;
-
-
- void sopreprbuf__part2579(struct iovec *iov, char *wptr);
-        sopreprbuf__part2579(iov, sb->sb_wptr);
-
-  {
-  int sopreprbuf__part2580(struct sbuf *sb, struct iovec *iov, int len, int mss);
-  n = sopreprbuf__part2580(sb, iov, len, mss);
- }
-
- void sopreprbuf__part2581(int *np, int n);
- sopreprbuf__part2581(np, n);
-
-
- size_t sopreprbuf__part2582(struct iovec *iov, int n);
- return sopreprbuf__part2582(iov, n);
-
-}
+size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np);
 
 
 
@@ -8596,357 +8508,44 @@ size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np)
 
 
 int
-soread(struct socket *so)
-{
-  int n, nn;
- struct sbuf *sb = &so->so_snd;
- struct iovec iov[2];
+soread(struct socket *so);
 
- ;
- ;
-
- int soread__part2584(struct socket *so, struct iovec *iov, int *np);
-
- nn = soread__part2584(so, iov, &n);
-
-
-  {
-  int soread__part2585(struct socket *so, int nn);
-  int sr_part_ret = soread__part2585(so, nn);
-  if (sr_part_ret != 1)
-   return sr_part_ret;
- }
-
- {
-            int soread__part2586(int fd, void *iov1_base, size_t iov1_len, int n, size_t iov0_len, int nn);
-            nn = soread__part2586(so->s, iov[1].iov_base, iov[1].iov_len, n, iov[0].iov_len, nn);
-        }
-
- void soread__part2587(struct sbuf *sb, int nn);
-soread__part2587(sb, nn);
-
- void soread__part2588(struct sbuf *sb);
-  soread__part2588(sb);
- int soread__part2589(int nn);
-return soread__part2589(nn);
-
-}
-
-int soreadbuf(struct socket *so, const char *buf, int size)
-{
-        void soreadbuf__part2591(struct socket *so, int size, int *np, int *nnp,
-                             int *copyp, struct sbuf **sbp, struct iovec *iov);
-    int n, nn, copy;
-    struct sbuf *sb;
-    struct iovec iov[2];
-
-    soreadbuf__part2591(so, size, &n, &nn, &copy, &sb, iov);
-
-
-
-
-
-
- int soreadbuf__part2592(struct socket *so, struct iovec *iov, int *np, int size);
- if (soreadbuf__part2592(so, iov, &n, size))
-        goto err;
-
-
-    int soreadbuf__part2593(void *iov0_base, size_t iov0_len, const char **bufp, int *copyp);
-
-    nn = soreadbuf__part2593(iov[0].iov_base, iov[0].iov_len, &buf, &copy);
-
-    int soreadbuf__part2594(int copy);
-    if (soreadbuf__part2594(copy))
-        goto done;
-
-
-    void soreadbuf__part2595(void *dest, const char *src, size_t n);
-soreadbuf__part2595(iov[1].iov_base, buf, copy);
-
-
-done:
-    {
-        extern void soreadbuf__part2596(struct sbuf *sb, int size);
-        soreadbuf__part2596(sb, size);
-    }
-
- void soreadbuf__part2597(struct sbuf *sb, int size);
-soreadbuf__part2597(sb, size);
- void soreadbuf__part2598(struct sbuf *sb);
-soreadbuf__part2598(sb);
-
-    int soreadbuf__part2599(int size);
-    return soreadbuf__part2599(size);
-err:
-    {
-        void soreadbuf__part2600(struct socket *so);
-        soreadbuf__part2600(so);
-    }
-
-    int soreadbuf__part2601(struct socket *so);
-    return soreadbuf__part2601(so);
-
-}
+int soreadbuf(struct socket *so, const char *buf, int size);
 void
-sorecvoob(struct socket *so)
-{
- void sorecvoob__part2603(struct socket *so);
-  sorecvoob__part2603(so);
-}
+sorecvoob(struct socket *so);
 
 
 
 
 
 int
-sosendoob(struct socket *so)
-{
- struct sbuf *sosendoob__part2605(struct socket *so);
- struct sbuf *sb = sosendoob__part2605(so);
- char buff[2048];
-
- int n, len;
-
- ;
- ;
- ;
-
-
-  void sosendoob__part2606(int *so_urgc);
- sosendoob__part2606(&so->so_urgc);
-
-
-  int sosendoob__part2607(struct socket *so, struct sbuf *sb, char *buff);
- n = sosendoob__part2607(so, sb, buff);
-
-
- void sosendoob__part2608(struct sbuf *sb, int n);
- sosendoob__part2608(sb, n);
- void sosendoob__part2609(struct sbuf *sb);
- sosendoob__part2609(sb);
-
-
- int sosendoob__part2610(int n);
- return sosendoob__part2610(n);
-}
+sosendoob(struct socket *so);
 
 
 
 
 
 int
-sowrite(struct socket *so)
-{
- void sowrite__part2612(struct socket *so, struct sbuf **sb_out, int *len_out);
- int n,nn;
- struct sbuf *sb;
- int len;
- struct iovec iov[2];
-
- sowrite__part2612(so, &sb, &len);
- ;
- ;
-
- int sowrite__part2613(struct socket *so, struct sbuf *sb);
-
- if (sowrite__part2613(so, sb))
-   return 0;
-
-
-
-
-
-
-
- void sowrite__part2614(struct sbuf *sb, struct iovec *iov);
-sowrite__part2614(sb, iov);
-
- void sowrite__part2615(struct sbuf *sb, struct iovec *iov, int *n, int len);
- sowrite__part2615(sb, iov, &n, len);
-
-
-
-
-
-
-
-
- ssize_t sowrite__part2616(void *so, const void *buf, size_t len);
-nn = (int)sowrite__part2616(so, iov[0].iov_base, iov[0].iov_len);
-
-
- int sowrite__part2617(int nn);
- if (sowrite__part2617(nn))
-  return 0;
-
-
- if (nn <= 0) {
- extern void sowrite__part2618(struct socket *so);
- sowrite__part2618(so);
- return -1;
- }
-
-
-
-  int sowrite__part2619(struct socket *so, int n, int nn, void *iov1_base, size_t iov1_len, size_t iov0_len);
- nn = sowrite__part2619(so, n, nn, iov[1].iov_base, iov[1].iov_len, iov[0].iov_len);
-
-        ;
-void sowrite__part2620(struct sbuf *sb, int nn);
-sowrite__part2620(sb, nn);
-
- void sowrite__part2621(struct sbuf *sb);
-sowrite__part2621(sb);
-
-
-
-
-
-  void sowrite__part2622(struct socket *so);
- sowrite__part2622(so);
-
- int sowrite__part2623(int nn);
- return sowrite__part2623(nn);
-}
+sowrite(struct socket *so);
 
 
 
 
 void
-sorecvfrom(struct socket *so)
-{
-  struct sockaddr_in addr;
- socklen_t addrlen;
- void sorecvfrom__part2625(struct sockaddr_in *addr, socklen_t *addrlen);
- sorecvfrom__part2625(&addr, &addrlen);
-
- ;
- ;
-
-
- {
-  extern int sorecvfrom__part2626(struct socket *so, struct sockaddr_in *addr, socklen_t *addrlen);
-  int sorecvfrom_part2626_ret = sorecvfrom__part2626(so, &addr, &addrlen);
-  if (sorecvfrom_part2626_ret) {
-    return;
-  }
-}
-
-}
+sorecvfrom(struct socket *so);
 
 
 
 
 int
-sosendto(struct socket *so, struct mbuf *m)
-{
-  Slirp *slirp;
- int ret;
- struct sockaddr_in addr;
-
- Slirp *sosendto__part2628(struct socket *so, struct sockaddr_in *addr);
- slirp = sosendto__part2628(so, &addr);
-
- void sosendto__part2629(uint32_t faddr, uint32_t vnetwork_mask,
-                        uint32_t vnetwork_addr, uint32_t vnameserver_addr,
-                        struct in_addr *sin_addr);
- sosendto__part2629(so->so_faddr.s_addr, slirp->vnetwork_mask.s_addr,
-                    slirp->vnetwork_addr.s_addr,
-                    slirp->vnameserver_addr.s_addr, &addr.sin_addr);
-
- int sosendto__part2630(struct socket *so, struct mbuf *m, struct sockaddr_in *addr);
- addr.sin_port = so->so_fport;
-
- ;
-
-
- ret = sosendto__part2630(so, m, &addr);
- {
-  int sosendto__part2631(int ret);
-  if (sosendto__part2631(ret))
-    return -1;
-}
-
-
-
-
-
-
- void sosendto__part2632(u_int *so_expire);
-sosendto__part2632(&so->so_expire);
-
- int sosendto__part2633(struct socket *so);
- return sosendto__part2633(so);
-}
+sosendto(struct socket *so, struct mbuf *m);
 
 
 
 
 struct socket *
 tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
-           u_int lport, int flags)
-{
- struct sockaddr_in addr;
- struct socket *so;
- int s, opt;
- socklen_t addrlen;
- struct socket *tcp_listen__part2635(Slirp *slirp, struct sockaddr_in *addr, int *s, int *opt, socklen_t *addrlen);
-
- so = tcp_listen__part2635(slirp, &addr, &s, &opt, &addrlen);
-
- int tcp_listen__part2636(struct socket *so);
- if (tcp_listen__part2636(so)) {
-   return 
-         ((void *)0)
-             ;
- }
-
-
-
-  int tcp_listen__part2637(struct socket *so);
- if (tcp_listen__part2637(so)) {
-  return 
-        ((void *)0)
-            ;
- }
-
- void tcp_listen__part2638(void *so, void *head);
- tcp_listen__part2638(so, &slirp->tcb);
-
-
-
-
- void tcp_listen__part2639(int flags, void *tp);
- tcp_listen__part2639(flags, so->so_tcpcb);
-
-
- void tcp_listen__part2640(struct socket *so, struct sockaddr_in *addr, int flags, u_int lport, uint32_t laddr, uint32_t haddr, u_int hport);
- tcp_listen__part2640(so, &addr, flags, lport, laddr, haddr, hport);
-
-
-  int tcp_listen__part2641(int *s_out, const struct sockaddr_in *addr, int opt, struct socket *so);
- if (tcp_listen__part2641(&s, &addr, opt, so)) {
-  return 
-        ((void *)0)
-            ;
- }
-
- {
-  extern void tcp_listen__part2642(int s, const int *opt, struct socket *so,
-                                   struct sockaddr_in *addr, socklen_t *addrlen);
-  tcp_listen__part2642(s, &opt, so, &addr, &addrlen);
- }
-
-  void tcp_listen__part2643(struct socket *so, struct sockaddr_in *addr, Slirp *slirp);
- tcp_listen__part2643(so, &addr, slirp);
-
-
- struct socket *tcp_listen__part2644(struct socket *so, int s);
- so->s = s;
- return tcp_listen__part2644(so, s);
-
-}
+           u_int lport, int flags);
 
 
 
@@ -8955,55 +8554,20 @@ tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 
 
 void
-soisfconnecting(struct socket *so)
-{
- void soisfconnecting__part2646(struct socket *so);
- soisfconnecting__part2646(so);
-
-}
+soisfconnecting(struct socket *so);
 
 void
-soisfconnected(struct socket *so)
-{
- void soisfconnected__part2648(struct socket *so);
- soisfconnected__part2648(so);
-}
+soisfconnected(struct socket *so);
 
 static void
-sofcantrcvmore(struct socket *so)
-{
- void sofcantrcvmore__part2650(int s, int so_state);
- sofcantrcvmore__part2650(so->s, so->so_state);
-
- void sofcantrcvmore__part2651(struct socket *so);
- sofcantrcvmore__part2651(so);
- void sofcantrcvmore__part2652(int *so_state);
-sofcantrcvmore__part2652(&so->so_state);
-
-}
+sofcantrcvmore(struct socket *so);
 
 static void
-sofcantsendmore(struct socket *so)
-{
- void sofcantsendmore__part2654(struct socket *so);
-sofcantsendmore__part2654(so);
-
-  void sofcantsendmore__part2655(struct socket *so);
- sofcantsendmore__part2655(so);
-
- void sofcantsendmore__part2656(struct socket *so);
- sofcantsendmore__part2656(so);
-
-}
+sofcantsendmore(struct socket *so);
 
 
 
 
 
 void
-sofwdrain(struct socket *so)
-{
- void sofwdrain__part2658(struct socket *so);
- sofwdrain__part2658(so);
-
-}
+sofwdrain(struct socket *so);

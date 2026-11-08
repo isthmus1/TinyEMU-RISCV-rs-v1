@@ -2841,189 +2841,42 @@ static const uint32_t *default_get_dirty_bits(PhysMemoryMap *map, PhysMemoryRang
 static void default_set_addr(PhysMemoryMap *map,
                              PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
 
-PhysMemoryMap *phys_mem_map_init(void)
-{
-        PhysMemoryMap *s;
-    PhysMemoryMap *phys_mem_map_init__part1249(
-        PhysMemoryRange *(*register_ram)(PhysMemoryMap *s, uint64_t addr,
-                                         uint64_t size, int devram_flags),
-        void (*free_ram)(PhysMemoryMap *s, PhysMemoryRange *pr),
-        const uint32_t *(*get_dirty_bits)(PhysMemoryMap *s, PhysMemoryRange *pr),
-        void (*set_ram_addr)(PhysMemoryMap *s, PhysMemoryRange *pr, uint64_t addr,
-                             BOOL enabled));
-    s = phys_mem_map_init__part1249(default_register_ram, default_free_ram,
-                                    default_get_dirty_bits, default_set_addr);
-    return s;
+PhysMemoryMap *phys_mem_map_init(void);
 
-}
-
-void phys_mem_map_end(PhysMemoryMap *s)
-{
-    int i;
-    PhysMemoryRange *pr;
-
-        void phys_mem_map_end__part1251(PhysMemoryMap *s);
-    phys_mem_map_end__part1251(s);
-
-        void phys_mem_map_end__part1252(void *s);
-    phys_mem_map_end__part1252(s);
-
-}
+void phys_mem_map_end(PhysMemoryMap *s);
 
 
 
-PhysMemoryRange *get_phys_mem_range(PhysMemoryMap *s, uint64_t paddr)
-{
-    PhysMemoryRange *pr;
-    int i;
-        PhysMemoryRange *get_phys_mem_range__part1254(PhysMemoryMap *s, uint64_t paddr);
-    pr = get_phys_mem_range__part1254(s, paddr);
-    if (pr != ((void *)0))
-        return pr;
-    PhysMemoryRange *get_phys_mem_range__part1255(void);
-return get_phys_mem_range__part1255();
-
-}
+PhysMemoryRange *get_phys_mem_range(PhysMemoryMap *s, uint64_t paddr);
 
 PhysMemoryRange *register_ram_entry(PhysMemoryMap *s, uint64_t addr,
-                                    uint64_t size, int devram_flags)
-{
-    PhysMemoryRange *pr;
-PhysMemoryRange *register_ram_entry__part1257(PhysMemoryMap *s, uint64_t addr,
-                                              uint64_t size, int devram_flags);
-pr = register_ram_entry__part1257(s, addr, size, devram_flags);
-
-    void register_ram_entry__part1258(PhysMemoryRange *pr, int devram_flags);
-    register_ram_entry__part1258(pr, devram_flags);
-    PhysMemoryRange *register_ram_entry__part1259(PhysMemoryRange *pr);
-    return register_ram_entry__part1259(pr);
-
-}
+                                    uint64_t size, int devram_flags);
 
 static PhysMemoryRange *default_register_ram(PhysMemoryMap *s, uint64_t addr,
-                                             uint64_t size, int devram_flags)
-{
-    PhysMemoryRange *pr;
-PhysMemoryRange *default_register_ram__part1261(PhysMemoryMap *s, uint64_t addr, uint64_t size, int devram_flags);
-
-    pr = default_register_ram__part1261(s, addr, size, devram_flags);
-
-    void default_register_ram__part1262(uint8_t *phys_mem);
-    default_register_ram__part1262(pr->phys_mem);
-
-    void default_register_ram__part1263(PhysMemoryRange *pr, uint64_t size,
-                                    int devram_flags);
-    default_register_ram__part1263(pr, size, devram_flags);
-
-        {
-        void *default_register_ram__part1264(void *pr);
-        return default_register_ram__part1264((void *)pr);
-    }
-
-}
+                                             uint64_t size, int devram_flags);
 
 
 static const uint32_t *default_get_dirty_bits(PhysMemoryMap *map,
-                                              PhysMemoryRange *pr)
-{
-    uint32_t *dirty_bits;
-    BOOL has_dirty_bits;
-    size_t n, i;
-
-    void default_get_dirty_bits__part1266(PhysMemoryRange *pr, uint32_t **dirty_bits_out, BOOL *has_dirty_bits_out, size_t *n_out);
-    default_get_dirty_bits__part1266(pr, &dirty_bits, &has_dirty_bits, &n);
-
-    int default_get_dirty_bits__part1267(const uint32_t *dirty_bits, size_t n);
-    has_dirty_bits = default_get_dirty_bits__part1267(dirty_bits, n);
-
-        void default_get_dirty_bits__part1268(PhysMemoryMap *map, PhysMemoryRange *pr, BOOL has_dirty_bits);
-    default_get_dirty_bits__part1268(map, pr, has_dirty_bits);
+                                              PhysMemoryRange *pr);
 
 
-        const uint32_t *default_get_dirty_bits__part1269(PhysMemoryRange *pr, uint32_t *dirty_bits);
-    return default_get_dirty_bits__part1269(pr, dirty_bits);
+void phys_mem_reset_dirty_bit(PhysMemoryRange *pr, size_t offset);
 
-}
-
-
-void phys_mem_reset_dirty_bit(PhysMemoryRange *pr, size_t offset)
-{
-    size_t page_index;
-    uint32_t mask, *dirty_bits_ptr;
-    PhysMemoryMap *map;
-    void phys_mem_reset_dirty_bit__part1271(PhysMemoryRange *pr, size_t offset);
-    phys_mem_reset_dirty_bit__part1271(pr, offset);
-
-}
-
-static void default_free_ram(PhysMemoryMap *s, PhysMemoryRange *pr)
-{
-    void default_free_ram__part1273(uint8_t *phys_mem);
-    default_free_ram__part1273(pr->phys_mem);
-
-}
+static void default_free_ram(PhysMemoryMap *s, PhysMemoryRange *pr);
 
 PhysMemoryRange *cpu_register_device(PhysMemoryMap *s, uint64_t addr,
                                      uint64_t size, void *opaque,
                                      DeviceReadFunc *read_func, DeviceWriteFunc *write_func,
-                                     int devio_flags)
-{
-        PhysMemoryRange *pr;
-    PhysMemoryRange *cpu_register_device__part1275(PhysMemoryMap *s, uint64_t addr, uint64_t size);
-    pr = cpu_register_device__part1275(s, addr, size);
-
-    void cpu_register_device__part1276(PhysMemoryRange *pr, int devio_flags);
-    cpu_register_device__part1276(pr, devio_flags);
-
-    PhysMemoryRange *cpu_register_device__part1277(PhysMemoryRange *pr, void *opaque,
-                                              DeviceReadFunc *read_func,
-                                              DeviceWriteFunc *write_func,
-                                              int devio_flags);
-    return cpu_register_device__part1277(pr, opaque, read_func, write_func, devio_flags);
-
-}
+                                     int devio_flags);
 
 static void default_set_addr(PhysMemoryMap *map,
-                             PhysMemoryRange *pr, uint64_t addr, BOOL enabled)
-{
-    void default_set_addr__part1279(PhysMemoryMap *map, PhysMemoryRange *pr,
-                                uint64_t addr, BOOL enabled);
-    default_set_addr__part1279(map, pr, addr, enabled);
+                             PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
 
-}
-
-void phys_mem_set_addr(PhysMemoryRange *pr, uint64_t addr, BOOL enabled)
-{
-    PhysMemoryMap *map = pr->map;
-    int phys_mem_set_addr__part1281(PhysMemoryMap *map, PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
-    if (phys_mem_set_addr__part1281(map, pr, addr, enabled))
-        return;
-
-}
+void phys_mem_set_addr(PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
 
 
-uint8_t *phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw)
-{
-    PhysMemoryRange *pr = get_phys_mem_range(map, paddr);
-    uintptr_t offset;
-        int phys_mem_get_ram_ptr__part1283(PhysMemoryRange *pr);
-    if (phys_mem_get_ram_ptr__part1283(pr))
-        return ((void *)0);
-    size_t phys_mem_get_ram_ptr__part1284(uint64_t paddr, const PhysMemoryRange *pr);
-offset = phys_mem_get_ram_ptr__part1284(paddr, pr);
-    void phys_mem_get_ram_ptr__part1285(PhysMemoryRange *pr, size_t offset);
-    if (is_rw)
-        phys_mem_get_ram_ptr__part1285(pr, offset);
-    uint8_t *phys_mem_get_ram_ptr__part1286(uint8_t *phys_mem, uintptr_t offset);
-    return phys_mem_get_ram_ptr__part1286(pr->phys_mem, offset);
-
-}
+uint8_t *phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw);
 
 
 
-void irq_init(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num)
-{
-    void irq_init__part1288(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num);
-    irq_init__part1288(irq, set_irq, opaque, irq_num);
-
-}
+void irq_init(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num);

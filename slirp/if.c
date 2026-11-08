@@ -8427,132 +8427,14 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 
 
 static void
-ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
-{
- void ifs_insque__part2286(struct mbuf *ifm, struct mbuf *ifmhead);
- ifs_insque__part2286(ifm, ifmhead);
-
-}
+ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead);
 
 static void
-ifs_remque(struct mbuf *ifm)
-{
- void ifs_remque__part2288(struct mbuf *ifm);
-ifs_remque__part2288(ifm);
-}
+ifs_remque(struct mbuf *ifm);
 
 void
-if_init(Slirp *slirp)
-{
-    void if_init__part2290(void *fastq_hdr, void *batchq_hdr, void **next_m);
-    if_init__part2290(&slirp->if_fastq.m_hdr, &slirp->if_batchq.m_hdr, (void **)&slirp->next_m);
-
-}
+if_init(Slirp *slirp);
 void
-if_output(struct socket *so, struct mbuf *ifm)
-{
- void if_output__part2292(struct mbuf *ifm, Slirp **slirp_out, int *on_fastq_out);
- Slirp *slirp;
- struct mbuf *ifq;
- int on_fastq;
- if_output__part2292(ifm, &slirp, &on_fastq);
-
-
-
-
-
-
- void if_output__part2293(struct mbuf *ifm);
- if_output__part2293(ifm);
-
-  {
-  int if_output__part2294(struct socket *so, struct mbuf *ifm,
-                          struct mbuf *batchq, struct mbuf **pifq);
-  if (if_output__part2294(so, ifm, &slirp->if_batchq, &ifq))
-   goto diddit;
- }
-
-
-
- int if_output__part2295(struct socket *so, struct mbuf *ifm, Slirp *slirp, struct mbuf **p_ifq, int *p_on_fastq);
- if (if_output__part2295(so, ifm, slirp, &ifq, &on_fastq))
-  goto diddit;
-
-
- void if_output__part2296(struct mbuf *ifm, struct socket *so, struct mbuf *ifq);
-if_output__part2296(ifm, so, ifq);
-
-
-diddit:
- {
-  extern void if_output__part2297(int *if_queued);
-  if_output__part2297(&slirp->if_queued);
- }
-
-
-  void if_output__part2298(struct socket *so, int on_fastq, struct mbuf *ifm,
-                          struct mbuf *if_batchq);
- if_output__part2298(so, on_fastq, ifm, &slirp->if_batchq);
-
-
-
-
-
-
- void if_output__part2299(struct mbuf *ifm);
-if_output__part2299(ifm);
-
-
-}
+if_output(struct socket *so, struct mbuf *ifm);
 void
-if_start(Slirp *slirp)
-{
-  struct mbuf *ifm, *ifqt;
- void if_start__part2301(struct mbuf **, struct mbuf **);
- if_start__part2301(&ifm, &ifqt);
-
-
-  int if_start__part2302(int if_queued);
- if (if_start__part2302(slirp->if_queued))
-    return;
-
-
- int if_start__part2303(void *opaque);
-again:
-
-        if (!if_start__part2303(slirp->opaque))
-            return;
-
-
-
-
-
-
-  struct mbuf *if_start__part2304(Slirp *slirp);
- ifm = if_start__part2304(slirp);
-
-
- void if_start__part2305(struct mbuf *ifm, struct mbuf **ifqt, int *if_queued);
- if_start__part2305(ifm, &ifqt, &slirp->if_queued);
-
-
-
-  {
-  void if_start__part2306(struct mbuf *ifm, struct mbuf *ifqt);
-  if_start__part2306(ifm, ifqt);
- }
-
-
-
-  void if_start__part2307(struct mbuf *ifm);
- if_start__part2307(ifm);
-
-
-                void if_start__part2308(Slirp *slirp, struct mbuf *ifm);
-        if_start__part2308(slirp, ifm);
-
-
-  int if_start__part2309(const int *if_queued);
- if (if_start__part2309(&slirp->if_queued))
-    goto again;
-}
+if_start(Slirp *slirp);

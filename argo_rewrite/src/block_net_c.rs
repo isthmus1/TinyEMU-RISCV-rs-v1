@@ -1,5 +1,137 @@
 //! From `block_net.c`.
 
+// ── `bf_find_block` · block_net.c:117-134 · chunk 291 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num)
+//     {
+//         CachedBlock *b;
+//         struct list_head *el;
+//     
+//         for(el = (&bf->cached_blocks)->next; el != (&bf->cached_blocks); el = el->next) {
+//             b = ((CachedBlock *)((uint8_t *)(el) - 
+//                __builtin_offsetof (
+//                CachedBlock
+//                , 
+//                link
+//                )
+//                ));
+//             if (b->block_num == block_num) {
+//     
+//                 if (bf->cached_blocks.next != el) {
+//                     list_del(&b->link);
+//                     list_add(&b->link, &bf->cached_blocks);
+//                 }
+//                 return b;
+//             }
+//         }
+//         return 
+//               ((void *)0)
+//                   ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk291 {
+// Rust rewrite of bf_find_block() from block_net.c
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: u32,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut c_void,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: *mut c_void,
+    pub start_opaque: *mut c_void,
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut c_void,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+    pub is_write: c_int,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: *mut c_void,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+    pub prefetch_group_len: c_int,
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    // __list_add(el, head, head->next)
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_find_block(
+    bf: *mut BlockDeviceHTTP,
+    block_num: u32,
+) -> *mut CachedBlock {
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*bf).cached_blocks);
+    let mut el: *mut ListHead = (*head).next;
+
+    while el != head {
+        // link is the first field of CachedBlock
+        let b = el as *mut CachedBlock;
+        if (*b).block_num == block_num {
+            // move to front
+            if (*head).next != el {
+                list_del(core::ptr::addr_of_mut!((*b).link));
+                list_add(core::ptr::addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+}
+
 // ── `for (el = (&bf->cached_blocks)->next; el != (&bf->cached_blocks; el = el->next)` · block_net.c:122-132 · chunk 292 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -145,6 +277,90 @@ pub extern "C" fn bf_find_block__part293() -> *mut core::ffi::c_void {
 }
 }
 
+// ── `bf_free_block` · block_net.c:136-142 · chunk 294 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)
+//     {
+//         bf->n_cached_blocks--;
+//         file_buffer_reset(&b->fbuf);
+//         list_del(&b->link);
+//         free(b);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk294 {
+// Rust rewrite of `static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)`
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+// Prefix of BlockDeviceHTTP, in order, up to the fields this function needs.
+// Pointer-typed members are represented with *mut c_void, which keeps the
+// same size/alignment as the original pointer types.
+#[repr(C)]
+#[allow(dead_code)]
+pub struct BlockDeviceHTTP {
+    bs: *mut c_void,
+    max_cache_size_kb: c_int,
+    url: [c_char; 1024],
+    prefetch_count: c_int,
+    start_cb: *mut c_void,
+    start_opaque: *mut c_void,
+    nb_sectors: i64,
+    block_size: c_int,
+    nb_blocks: c_int,
+    cached_blocks: ListHead,
+    n_cached_blocks: c_int,
+    n_cached_blocks_max: c_int,
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct CachedBlock {
+    link: ListHead,
+    bf: *mut BlockDeviceHTTP,
+    block_num: c_uint,
+    state: c_int,
+    fbuf: FileBuffer,
+}
+
+extern "C" {
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn free(p: *mut c_void);
+}
+
+// Port of the static inline list_del() from the translation unit.
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(&mut (*b).fbuf);
+    list_del(&mut (*b).link);
+    free(b as *mut c_void);
+}
+}
+
 // ── `bf->n_cached_blocks--; file_buffer_reset(&b->fbuf); list_del(&b->link); free(b);` · block_net.c:138-141 · chunk 295 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -226,6 +442,188 @@ pub unsafe extern "C" fn bf_free_block__part295(bf: *mut BlockDeviceHTTP, b: *mu
     file_buffer_reset(&mut (*b).fbuf);
     list_del(&mut (*b).link);
     free(b as *mut c_void);
+}
+}
+
+// ── `bf_add_block` · block_net.c:144-168 · chunk 296 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
+//     {
+//         CachedBlock *b;
+//         if (bf->n_cached_blocks >= bf->n_cached_blocks_max) {
+//             struct list_head *el, *el1;
+//     
+//             for(el = (&bf->cached_blocks)->prev, el1 = el->prev; el != (&bf->cached_blocks); el = el1, el1 = el->prev) {
+//                 b = ((CachedBlock *)((uint8_t *)(el) - 
+//                    __builtin_offsetof (
+//                    CachedBlock
+//                    , 
+//                    link
+//                    )
+//                    ));
+//                 if (b->state == CBLOCK_LOADED) {
+//                     bf_free_block(bf, b);
+//                     if (bf->n_cached_blocks < bf->n_cached_blocks_max)
+//                         break;
+//                 }
+//             }
+//         }
+//         b = mallocz(sizeof(CachedBlock));
+//         b->bf = bf;
+//         b->block_num = block_num;
+//         b->state = CBLOCK_LOADING;
+//         file_buffer_init(&b->fbuf);
+//         file_buffer_resize(&b->fbuf, bf->block_size * 512);
+//         list_add(&b->link, &bf->cached_blocks);
+//         bf->n_cached_blocks++;
+//         return b;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk296 {
+// Port of static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
+// from block_net.c. The static helper bf_free_block has no linker symbol, so its
+// logic is reproduced here as a private Rust fn.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+// Mirror of CachedBlockStateEnum: CBLOCK_LOADING = 0, CBLOCK_LOADED = 1.
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut c_void,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: *mut c_void,
+    pub start_opaque: *mut c_void,
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut c_void,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+    pub is_write: c_int,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: *mut c_void,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+    pub prefetch_group_len: c_int,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+}
+
+// struct list_head is the first member of CachedBlock, so offsetof(CachedBlock, link) == 0.
+#[inline]
+unsafe fn list_entry_cached_block(el: *mut ListHead) -> *mut CachedBlock {
+    (el as *mut u8) as *mut CachedBlock
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    // __list_add(el, head, head->next)
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// Inlined body of the static C helper bf_free_block().
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(&mut (*b).fbuf as *mut FileBuffer);
+    list_del(&mut (*b).link as *mut ListHead);
+    free(b as *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_add_block(
+    bf: *mut BlockDeviceHTTP,
+    block_num: c_uint,
+) -> *mut CachedBlock {
+    let mut b: *mut CachedBlock;
+
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let head: *mut ListHead = &mut (*bf).cached_blocks as *mut ListHead;
+        let mut el: *mut ListHead = (*head).prev;
+        let mut el1: *mut ListHead = (*el).prev;
+        // list_for_each_prev_safe(el, el1, &bf->cached_blocks)
+        while el != head {
+            b = list_entry_cached_block(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+
+    b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(&mut (*b).fbuf as *mut FileBuffer);
+    // bf->block_size * 512 in C int arithmetic, then converted to size_t.
+    let new_size = (*bf).block_size.wrapping_mul(512) as i64 as usize;
+    file_buffer_resize(&mut (*b).fbuf as *mut FileBuffer, new_size);
+    list_add(&mut (*b).link as *mut ListHead, &mut (*bf).cached_blocks as *mut ListHead);
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+    b
 }
 }
 
@@ -445,6 +843,74 @@ pub extern "C" fn bf_add_block__part298(
 }
 }
 
+// ── `bf_get_sector_count` · block_net.c:170-174 · chunk 299 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int64_t bf_get_sector_count(BlockDevice *bs)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//         return bf->nb_sectors;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk299 {
+// Port of static int64_t bf_get_sector_count(BlockDevice *bs)
+// from block_net.c.  The C function reads bs->opaque (a BlockDeviceHTTP *)
+// and returns its nb_sectors field, so the layouts of both structs matter.
+
+use core::ffi::{c_char, c_int, c_void};
+
+// ABI: typedef void BlockDeviceCompletionFunc(void *opaque, int ret);
+type CompletionFn = unsafe extern "C" fn(*mut c_void, c_int);
+
+// struct BlockDevice from block.h (all fields are pointers -> same layout
+// whether modelled as function pointers or plain pointers).
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>,
+    pub read_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            Option<CompletionFn>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub write_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            Option<CompletionFn>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub opaque: *mut c_void,
+}
+
+// Mirror of the leading fields of `typedef struct BlockDeviceHTTP` in
+// block_net.c, up to and including the `nb_sectors` member that is read.
+// Field order and types (hence offsets/alignment) match the C struct exactly.
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+    pub nb_sectors: i64,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_get_sector_count(bs: *mut BlockDevice) -> i64 {
+    let bf = (*bs).opaque as *const BlockDeviceHTTP;
+    (*bf).nb_sectors
+}
+}
+
 // ── `BlockDeviceHTTP *bf = bs->opaque; return bf->nb_sectors;` · block_net.c:172-173 · chunk 300 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -469,6 +935,431 @@ pub extern "C" fn bf_get_sector_count__part300(bs: *const BlockDevice) -> c_long
     let block_device = unsafe { &*bs };
     let bf = unsafe { &*block_device.opaque };
     bf.nb_sectors
+}
+}
+
+// ── `bf_start_load_block` · block_net.c:176-198 · chunk 301 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_start_load_block(BlockDevice *bs, int block_num)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//         char filename[1024];
+//         CachedBlock *b;
+//         b = bf_add_block(bf, block_num);
+//         bf->n_read_blocks++;
+//         snprintf(filename, sizeof(filename), "%sblk%09u.bin", bf->url, block_num);
+//     
+//         fs_wget(filename, 
+//                          ((void *)0)
+//                              , 
+//                                ((void *)0)
+//                                    , b, bf_read_onload, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk301 {
+// Rust rewrite of block_net.c: bf_start_load_block()
+//
+// The CachedBlock / BlockDeviceHTTP structures are only accessed through
+// pointers.  The static helpers reachable from the write callback
+// (bf_add_block, bf_read_onload, bf_update_block, bf_rw_async1,
+// bf_find_block, bf_free_block, list helpers) have no linker symbol in the C
+// program, so their logic is re-implemented here as private Rust functions.
+
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(clippy::missing_safety_doc)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+pub const CBLOCK_LOADING: c_int = 0;
+pub const CBLOCK_LOADED: c_int = 1;
+
+pub type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+pub type BlockDeviceCompletionFunc = unsafe extern "C" fn(opaque: *mut c_void, ret: c_int);
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: *mut c_void,
+    pub read_async: *mut c_void,
+    pub write_async: *mut c_void,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: *mut c_void,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: c_int, // BOOL
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: Option<BlockDeviceCompletionFunc>,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn snprintf(s: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut FILE, fmt: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    static stderr: *mut FILE;
+}
+
+#[inline]
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+#[inline]
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+#[inline]
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+/// list_entry(el, CachedBlock, link) -- 'link' is the first field (offset 0).
+#[inline]
+unsafe fn cached_block_from_link(el: *mut ListHead) -> *mut CachedBlock {
+    el as *mut CachedBlock
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks -= 1;
+    file_buffer_reset(core::ptr::addr_of_mut!((*b).fbuf));
+    list_del(core::ptr::addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = core::ptr::addr_of_mut!((*bf).cached_blocks);
+    let mut el = (*head).next;
+    while el != head {
+        let b = cached_block_from_link(el);
+        if (*b).block_num == block_num {
+            if (*head).next != el {
+                list_del(core::ptr::addr_of_mut!((*b).link));
+                list_add(core::ptr::addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let head = core::ptr::addr_of_mut!((*bf).cached_blocks);
+        let mut el = (*head).prev;
+        let mut el1 = (*el).prev;
+        while el != head {
+            let b = cached_block_from_link(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+    let b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(core::ptr::addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        core::ptr::addr_of_mut!((*b).fbuf),
+        ((*bf).block_size * 512) as usize,
+    );
+    list_add(
+        core::ptr::addr_of_mut!((*b).link),
+        core::ptr::addr_of_mut!((*bf).cached_blocks),
+    );
+    (*bf).n_cached_blocks += 1;
+    b
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    loop {
+        let mut n: c_int = (*bf).sector_count - (*bf).sector_index;
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int = ((*bf).sector_num / (*bf).sectors_per_cluster as u64) as c_int;
+        let c: *mut Cluster = *(*bf).clusters.add(cluster_num as usize);
+        if !c.is_null() {
+            let offset: c_int = ((*bf).sector_num % (*bf).sectors_per_cluster as u64) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster - offset);
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    core::ptr::addr_of_mut!((*c).fbuf),
+                    (offset * 512) as usize,
+                    (*bf).io_buf.add(((*bf).sector_index * 512) as usize),
+                    (n * 512) as usize,
+                );
+            } else {
+                file_buffer_read(
+                    core::ptr::addr_of_mut!((*c).fbuf),
+                    (offset * 512) as usize,
+                    (*bf).io_buf.add(((*bf).sector_index * 512) as usize),
+                    (n * 512) as usize,
+                );
+            }
+            (*bf).sector_index += n;
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+        } else {
+            let block_num: c_int = ((*bf).sector_num / (*bf).block_size as u64) as c_int;
+            let offset: c_int = ((*bf).sector_num % (*bf).block_size as u64) as c_int;
+            n = min_int(n, (*bf).block_size - offset);
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        let cluster_size: c_int = (*bf).sectors_per_cluster * 512;
+                        let c2 = mallocz(core::mem::size_of::<Cluster>()) as *mut Cluster;
+                        let buf = malloc(cluster_size as usize) as *mut u8;
+                        file_buffer_init(core::ptr::addr_of_mut!((*c2).fbuf));
+                        file_buffer_resize(
+                            core::ptr::addr_of_mut!((*c2).fbuf),
+                            cluster_size as usize,
+                        );
+                        *(*bf).clusters.add(cluster_num as usize) = c2;
+
+                        let cluster_offset: c_int =
+                            (cluster_num * (*bf).sectors_per_cluster) & ((*bf).block_size - 1);
+                        file_buffer_read(
+                            core::ptr::addr_of_mut!((*b).fbuf),
+                            (cluster_offset * 512) as usize,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        file_buffer_write(core::ptr::addr_of_mut!((*c2).fbuf), 0, buf, cluster_size as usize);
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters += 1;
+                        continue;
+                    } else {
+                        file_buffer_read(
+                            core::ptr::addr_of_mut!((*b).fbuf),
+                            (offset * 512) as usize,
+                            (*bf).io_buf.add(((*bf).sector_index * 512) as usize),
+                            (n * 512) as usize,
+                        );
+                    }
+                    (*bf).sector_index += n;
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            b"b->state == CBLOCK_LOADING\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            346,
+            b"bf_update_block\0".as_ptr() as *const c_char,
+        );
+    }
+    file_buffer_write(
+        core::ptr::addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        ((*bf).block_size * 512) as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, 0);
+    }
+}
+
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load block %u\n\0".as_ptr() as *const c_char,
+            (*b).block_num,
+        );
+        exit(1);
+    }
+
+    if size != ((*bf).block_size * 512) as usize {
+        __assert_fail(
+            b"size == bf->block_size * 512\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            366,
+            b"bf_read_onload\0".as_ptr() as *const c_char,
+        );
+    }
+    bf_update_block(b, data as *const u8);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b: *mut CachedBlock = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+    snprintf(
+        filename.as_mut_ptr(),
+        core::mem::size_of::<[c_char; 1024]>(),
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        core::ptr::addr_of!((*bf).url) as *const c_char,
+        block_num as c_uint,
+    );
+
+    fs_wget(
+        filename.as_ptr(),
+        core::ptr::null(),
+        core::ptr::null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        1,
+    );
 }
 }
 
@@ -672,6 +1563,538 @@ pub extern "C" fn bf_start_load_block__part302(
             cb,
             1,
         );
+    }
+}
+}
+
+// ── `bf_start_load_prefetch_group` · block_net.c:200-237 · chunk 303 · deepseek/deepseek-v4.1-flash-1017 · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_start_load_prefetch_group(BlockDevice *bs, int group_num,
+//                                              const int *tab_block_num,
+//                                              int n_block_num)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//         CachedBlock *b;
+//         PrefetchGroupRequest *req;
+//         char filename[1024];
+//         BOOL req_flag;
+//         int i;
+//     
+//         req_flag = FALSE;
+//         req = malloc(sizeof(*req));
+//         req->bf = bf;
+//         req->group_num = group_num;
+//         req->n_block_num = n_block_num;
+//         for(i = 0; i < n_block_num; i++) {
+//             b = bf_find_block(bf, tab_block_num[i]);
+//             if (!b) {
+//                 b = bf_add_block(bf, tab_block_num[i]);
+//                 req_flag = TRUE;
+//             } else {
+//     
+//     
+//                 b = 
+//                    ((void *)0)
+//                        ;
+//             }
+//             req->tab_block[i] = b;
+//         }
+//     
+//         if (req_flag) {
+//             snprintf(filename, sizeof(filename), "%sgrp%09u.bin", bf->url, group_num);
+//     
+//             fs_wget(filename, 
+//                              ((void *)0)
+//                                  , 
+//                                    ((void *)0)
+//                                        , req, bf_prefetch_group_onload, TRUE);
+//     
+//         } else {
+//             free(req);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk303 {
+// Rust rewrite of bf_start_load_prefetch_group() from block_net.c.
+// The static helpers it calls (bf_find_block, bf_add_block, bf_free_block,
+// bf_prefetch_group_onload, bf_update_block, bf_rw_async1,
+// bf_start_load_block, bf_read_onload) have no linker symbols, so their
+// logic is ported here as private Rust functions.
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+const FALSE: c_int = 0;
+const TRUE: c_int = 1;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: *mut c_void,
+    pub read_async: *mut c_void,
+    pub write_async: *mut c_void,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: *mut c_void,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: c_int,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: *mut c_void,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+const PREFETCH_GROUP_LEN_MAX: usize = 32;
+
+#[repr(C)]
+pub struct PrefetchGroupRequest {
+    pub bf: *mut BlockDeviceHTTP,
+    pub group_num: c_int,
+    pub n_block_num: c_int,
+    pub tab_block: [*mut CachedBlock; PREFETCH_GROUP_LEN_MAX],
+}
+
+type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+
+type BlockDeviceCompletionFunc = unsafe extern "C" fn(opaque: *mut c_void, ret: c_int);
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn mallocz(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn abort() -> !;
+    fn exit(status: c_int) -> !;
+    fn snprintf(s: *mut c_char, n: usize, format: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+
+    static mut stderr: *mut c_void;
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn c_assert(cond: bool) {
+    if !cond {
+        unsafe { abort() }
+    }
+}
+
+// ---- list helpers (static inline in C) ------------------------------------
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// ---- ported static helpers -------------------------------------------------
+
+unsafe fn bf_find_block_rs(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head: *mut ListHead = core::ptr::addr_of_mut!((*bf).cached_blocks);
+    let mut el: *mut ListHead = (*head).next;
+    while el != head {
+        let b = el as *mut CachedBlock; // link is the first member
+        if (*b).block_num == block_num {
+            // move to front
+            if (*head).next != el {
+                list_del(core::ptr::addr_of_mut!((*b).link));
+                list_add(core::ptr::addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+unsafe fn bf_free_block_rs(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks -= 1;
+    file_buffer_reset(core::ptr::addr_of_mut!((*b).fbuf));
+    list_del(core::ptr::addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block_rs(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        // start by looking at the least unused blocks
+        let head: *mut ListHead = core::ptr::addr_of_mut!((*bf).cached_blocks);
+        let mut el: *mut ListHead = (*head).prev;
+        let mut el1: *mut ListHead = (*el).prev;
+        while el != head {
+            let b = el as *mut CachedBlock;
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block_rs(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+    let b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(core::ptr::addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        core::ptr::addr_of_mut!((*b).fbuf),
+        ((*bf).block_size.wrapping_mul(512)) as usize,
+    );
+    list_add(
+        core::ptr::addr_of_mut!((*b).link),
+        core::ptr::addr_of_mut!((*bf).cached_blocks),
+    );
+    (*bf).n_cached_blocks += 1;
+    b
+}
+
+unsafe fn bf_update_block_rs(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    c_assert((*b).state == CBLOCK_LOADING);
+    file_buffer_write(
+        core::ptr::addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        ((*bf).block_size.wrapping_mul(512)) as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    // note: unsigned comparison, exactly as in C
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1_rs(bs, FALSE);
+    }
+}
+
+unsafe extern "C" fn bf_prefetch_group_onload_rs(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let req = opaque as *mut PrefetchGroupRequest;
+    let bf = (*req).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load group %u\n\0".as_ptr() as *const c_char,
+            (*req).group_num as c_uint,
+        );
+        exit(1);
+    }
+    let block_bytes: c_int = (*bf).block_size.wrapping_mul(512);
+    c_assert(size == (block_bytes.wrapping_mul((*req).n_block_num)) as usize);
+
+    let tab: *mut *mut CachedBlock =
+        core::ptr::addr_of_mut!((*req).tab_block) as *mut *mut CachedBlock;
+    let data_ptr = data as *const u8;
+    let mut i: c_int = 0;
+    while i < (*req).n_block_num {
+        let b = *tab.add(i as usize);
+        if !b.is_null() {
+            let off = block_bytes.wrapping_mul(i) as isize;
+            bf_update_block_rs(b, data_ptr.wrapping_offset(off));
+        }
+        i += 1;
+    }
+    free(req as *mut c_void);
+}
+
+unsafe fn bf_start_load_block_rs(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+
+    let b = bf_add_block_rs(bf, block_num as c_uint);
+    (*bf).n_read_blocks += 1;
+
+    snprintf(
+        filename.as_mut_ptr(),
+        core::mem::size_of::<[c_char; 1024]>(),
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        (*bf).url.as_ptr(),
+        block_num as c_uint,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        core::ptr::null(),
+        core::ptr::null(),
+        b as *mut c_void,
+        Some(bf_read_onload_rs),
+        TRUE,
+    );
+}
+
+unsafe extern "C" fn bf_read_onload_rs(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load block %u\n\0".as_ptr() as *const c_char,
+            (*b).block_num,
+        );
+        exit(1);
+    }
+    c_assert(size == ((*bf).block_size.wrapping_mul(512)) as usize);
+    bf_update_block_rs(b, data as *const u8);
+}
+
+unsafe fn bf_rw_async1_rs(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut offset: c_int;
+    let mut block_num: c_int;
+    let mut n: c_int;
+    let mut cluster_num: c_int;
+
+    loop {
+        n = (*bf).sector_count - (*bf).sector_index;
+        if n == 0 {
+            break;
+        }
+        cluster_num = ((*bf).sector_num / ((*bf).sectors_per_cluster as u64)) as c_int;
+        let c = *(*bf).clusters.wrapping_offset(cluster_num as isize);
+        if !c.is_null() {
+            offset = ((*bf).sector_num % ((*bf).sectors_per_cluster as u64)) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster - offset);
+            let buf_off = (*bf)
+                .io_buf
+                .wrapping_offset((*bf).sector_index.wrapping_mul(512) as isize);
+            let fb_off = offset.wrapping_mul(512) as usize;
+            let len = n.wrapping_mul(512) as usize;
+            if (*bf).is_write != 0 {
+                file_buffer_write(core::ptr::addr_of_mut!((*c).fbuf), fb_off, buf_off, len);
+            } else {
+                file_buffer_read(core::ptr::addr_of_mut!((*c).fbuf), fb_off, buf_off, len);
+            }
+            (*bf).sector_index += n;
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+        } else {
+            block_num = ((*bf).sector_num / ((*bf).block_size as u64)) as c_int;
+            offset = ((*bf).sector_num % ((*bf).block_size as u64)) as c_int;
+            n = min_int(n, (*bf).block_size - offset);
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block_rs(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    // wait until the block is loaded
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        let cluster_size: c_int;
+                        let cluster_offset: c_int;
+                        let buf: *mut u8;
+
+                        let cnew = mallocz(core::mem::size_of::<Cluster>()) as *mut Cluster;
+                        cluster_size = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        buf = malloc(cluster_size as usize) as *mut u8;
+                        file_buffer_init(core::ptr::addr_of_mut!((*cnew).fbuf));
+                        file_buffer_resize(
+                            core::ptr::addr_of_mut!((*cnew).fbuf),
+                            cluster_size as usize,
+                        );
+                        *(*bf).clusters.wrapping_offset(cluster_num as isize) = cnew;
+
+                        cluster_offset = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & ((*bf).block_size - 1);
+                        file_buffer_read(
+                            core::ptr::addr_of_mut!((*b).fbuf),
+                            cluster_offset.wrapping_mul(512) as usize,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        file_buffer_write(
+                            core::ptr::addr_of_mut!((*cnew).fbuf),
+                            0,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters += 1;
+                        continue;
+                    } else {
+                        let buf_off = (*bf)
+                            .io_buf
+                            .wrapping_offset((*bf).sector_index.wrapping_mul(512) as isize);
+                        file_buffer_read(
+                            core::ptr::addr_of_mut!((*b).fbuf),
+                            offset.wrapping_mul(512) as usize,
+                            buf_off,
+                            n.wrapping_mul(512) as usize,
+                        );
+                    }
+                    (*bf).sector_index += n;
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+                }
+            } else {
+                bf_start_load_block_rs(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        let cb: BlockDeviceCompletionFunc = core::mem::transmute((*bf).cb);
+        cb((*bf).opaque, 0);
+    }
+    0
+}
+
+// ---- target ----------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_start_load_prefetch_group(
+    bs: *mut BlockDevice,
+    group_num: c_int,
+    tab_block_num: *const c_int,
+    n_block_num: c_int,
+) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let mut req_flag: c_int = FALSE;
+
+    let req = malloc(core::mem::size_of::<PrefetchGroupRequest>()) as *mut PrefetchGroupRequest;
+    (*req).bf = bf;
+    (*req).group_num = group_num;
+    (*req).n_block_num = n_block_num;
+
+    let mut i: c_int = 0;
+    while i < n_block_num {
+        let mut b = bf_find_block_rs(bf, *tab_block_num.add(i as usize) as c_uint);
+        if b.is_null() {
+            b = bf_add_block_rs(bf, *tab_block_num.add(i as usize) as c_uint);
+            req_flag = TRUE;
+        } else {
+            // no need to read the block if it is already loading or loaded
+            b = core::ptr::null_mut();
+        }
+        let tab: *mut *mut CachedBlock =
+            core::ptr::addr_of_mut!((*req).tab_block) as *mut *mut CachedBlock;
+        tab.add(i as usize).write(b);
+        i += 1;
+    }
+
+    if req_flag != 0 {
+        snprintf(
+            filename.as_mut_ptr(),
+            core::mem::size_of::<[c_char; 1024]>(),
+            b"%sgrp%09u.bin\0".as_ptr() as *const c_char,
+            (*bf).url.as_ptr(),
+            group_num as c_uint,
+        );
+        fs_wget(
+            filename.as_ptr(),
+            core::ptr::null(),
+            core::ptr::null(),
+            req as *mut c_void,
+            Some(bf_prefetch_group_onload_rs),
+            TRUE,
+        );
+        // XXX: should add request in a list to free it for clean exit
+    } else {
+        free(req as *mut c_void);
     }
 }
 }
@@ -1067,6 +2490,551 @@ pub extern "C" fn bf_start_load_prefetch_group__part306(
 }
 }
 
+// ── `bf_prefetch_group_onload` · block_net.c:239-260 · chunk 307 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_prefetch_group_onload(void *opaque, int err, void *data,
+//                                          size_t size)
+//     {
+//         PrefetchGroupRequest *req = opaque;
+//         BlockDeviceHTTP *bf = req->bf;
+//         CachedBlock *b;
+//         int block_bytes, i;
+//     
+//         if (err < 0) {
+//             fprintf(
+//                    stderr
+//                          , "Could not load group %u\n", req->group_num);
+//             exit(1);
+//         }
+//         block_bytes = bf->block_size * 512;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        size == block_bytes * req->n_block_num
+//        )), __extension__ ({ if (
+//        size == block_bytes * req->n_block_num
+//        ) ; else __assert_fail (
+//        "size == block_bytes * req->n_block_num"
+//        , "block_net.c", 252, __extension__ __PRETTY_FUNCTION__); }))
+//                                                      ;
+//         for(i = 0; i < req->n_block_num; i++) {
+//             b = req->tab_block[i];
+//             if (b) {
+//                 bf_update_block(b, (const uint8_t *)data + block_bytes * i);
+//             }
+//         }
+//         free(req);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk307 {
+// Port of block_net.c: bf_prefetch_group_onload() and of the static helpers
+// it needs (bf_update_block, bf_rw_async1, bf_find_block, bf_add_block,
+// bf_free_block, bf_start_load_block, bf_read_onload). The helpers are
+// `static` in C, hence they have no linker symbol and are re-implemented
+// here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of_mut, null, null_mut};
+
+/* ------------------------------------------------------------------ */
+/* C types                                                            */
+/* ------------------------------------------------------------------ */
+
+#[repr(C)]
+struct ListHead {
+    prev: *mut ListHead,
+    next: *mut ListHead,
+}
+
+#[repr(C)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+struct Cluster {
+    fbuf: FileBuffer,
+}
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+#[repr(C)]
+struct CachedBlock {
+    link: ListHead,
+    bf: *mut BlockDeviceHTTP,
+    block_num: c_uint,
+    state: c_int, /* CachedBlockStateEnum */
+    fbuf: FileBuffer,
+}
+
+const PREFETCH_GROUP_LEN_MAX: usize = 32;
+
+#[repr(C)]
+struct PrefetchGroupRequest {
+    bf: *mut BlockDeviceHTTP,
+    group_num: c_int,
+    n_block_num: c_int,
+    tab_block: [*mut CachedBlock; PREFETCH_GROUP_LEN_MAX],
+}
+
+type BlockDeviceCompletionFunc = extern "C" fn(*mut c_void, c_int);
+
+#[repr(C)]
+struct BlockDevice {
+    get_sector_count: Option<extern "C" fn(*mut BlockDevice) -> i64>,
+    read_async: Option<
+        extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    write_async: Option<
+        extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    opaque: *mut c_void,
+}
+
+type StartCallback = extern "C" fn(*mut c_void);
+
+type WGetWriteCallback = extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+#[repr(C)]
+struct BlockDeviceHTTP {
+    bs: *mut BlockDevice,
+    max_cache_size_kb: c_int,
+    url: [c_char; 1024],
+    prefetch_count: c_int,
+    start_cb: Option<StartCallback>,
+    start_opaque: *mut c_void,
+
+    nb_sectors: i64,
+    block_size: c_int,
+    nb_blocks: c_int,
+    cached_blocks: ListHead,
+    n_cached_blocks: c_int,
+    n_cached_blocks_max: c_int,
+
+    sectors_per_cluster: c_int,
+    clusters: *mut *mut Cluster,
+    n_clusters: c_int,
+    n_allocated_clusters: c_int,
+
+    n_read_sectors: i64,
+    n_read_blocks: i64,
+    n_write_sectors: i64,
+
+    is_write: c_int, /* BOOL */
+    sector_num: u64,
+    cur_block_num: c_int,
+    sector_index: c_int,
+    sector_count: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+    io_buf: *mut u8,
+
+    prefetch_group_len: c_int,
+}
+
+/* ------------------------------------------------------------------ */
+/* C functions used                                                   */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn snprintf(s: *mut c_char, maxlen: usize, format: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    static mut stderr: *mut c_void;
+}
+
+/* ------------------------------------------------------------------ */
+/* helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+/* int -> size_t conversion, as done by the C compiler */
+#[inline]
+fn i32_as_usize(v: c_int) -> usize {
+    (v as i64) as u64 as usize
+}
+
+/* int -> ptrdiff_t conversion for pointer arithmetic */
+#[inline]
+fn i32_as_isize(v: c_int) -> isize {
+    (v as i64) as isize
+}
+
+/* uint64_t += int */
+#[inline]
+fn u64_add_i32(v: u64, n: c_int) -> u64 {
+    v.wrapping_add((n as i64) as u64)
+}
+
+/* list_head helpers (list.h) */
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    /* __list_add(el, head, head->next) */
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+/* list_entry(el, CachedBlock, link): `link` is the first member */
+unsafe fn list_entry(el: *mut ListHead) -> *mut CachedBlock {
+    el as *mut CachedBlock
+}
+
+/* ------------------------------------------------------------------ */
+/* static helpers from block_net.c                                    */
+/* ------------------------------------------------------------------ */
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    let mut el = (*head).next;
+    while el != head {
+        let b = list_entry(el);
+        if (*b).block_num == block_num {
+            /* move to front */
+            if (*head).next != el {
+                list_del(addr_of_mut!((*b).link));
+                list_add(addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(addr_of_mut!((*b).fbuf));
+    list_del(addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let head = addr_of_mut!((*bf).cached_blocks);
+        /* start by looking at the least unused blocks */
+        let mut el = (*head).prev;
+        let mut el1 = (*el).prev;
+        while el != head {
+            let b = list_entry(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el1).prev;
+        }
+    }
+    let b = mallocz(size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        addr_of_mut!((*b).fbuf),
+        i32_as_usize((*bf).block_size.wrapping_mul(512)),
+    );
+    list_add(addr_of_mut!((*b).link), addr_of_mut!((*bf).cached_blocks));
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+    b
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+    snprintf(
+        filename.as_mut_ptr(),
+        1024,
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        addr_of_mut!((*bf).url) as *mut c_char,
+        block_num,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        null(),
+        null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        /* TRUE */ 1,
+    );
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            b"b->state == CBLOCK_LOADING\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            346,
+            b"bf_update_block\0".as_ptr() as *const c_char,
+        );
+    }
+    file_buffer_write(
+        addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        i32_as_usize((*bf).block_size.wrapping_mul(512)),
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    /* continue I/O read/write if necessary */
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, /* FALSE */ 0);
+    }
+}
+
+extern "C" fn bf_read_onload(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    unsafe {
+        let b = opaque as *mut CachedBlock;
+        let bf = (*b).bf;
+
+        if err < 0 {
+            fprintf(
+                stderr,
+                b"Could not load block %u\n\0".as_ptr() as *const c_char,
+                (*b).block_num,
+            );
+            exit(1);
+        }
+
+        if size != i32_as_usize((*bf).block_size.wrapping_mul(512)) {
+            __assert_fail(
+                b"size == bf->block_size * 512\0".as_ptr() as *const c_char,
+                b"block_net.c\0".as_ptr() as *const c_char,
+                366,
+                b"bf_read_onload\0".as_ptr() as *const c_char,
+            );
+        }
+        bf_update_block(b, data as *const u8);
+    }
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    loop {
+        let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int =
+            ((*bf).sector_num / (((*bf).sectors_per_cluster as i64) as u64)) as c_int;
+        let clusters = (*bf).clusters;
+        let mut c = *clusters.offset(cluster_num as isize);
+        if !c.is_null() {
+            let offset: c_int =
+                ((*bf).sector_num % (((*bf).sectors_per_cluster as i64) as u64)) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    addr_of_mut!((*c).fbuf),
+                    i32_as_usize(offset.wrapping_mul(512)),
+                    (*bf)
+                        .io_buf
+                        .offset(i32_as_isize((*bf).sector_index.wrapping_mul(512))),
+                    i32_as_usize(n.wrapping_mul(512)),
+                );
+            } else {
+                file_buffer_read(
+                    addr_of_mut!((*c).fbuf),
+                    i32_as_usize(offset.wrapping_mul(512)),
+                    (*bf)
+                        .io_buf
+                        .offset(i32_as_isize((*bf).sector_index.wrapping_mul(512))),
+                    i32_as_usize(n.wrapping_mul(512)),
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = u64_add_i32((*bf).sector_num, n);
+        } else {
+            let block_num: c_int =
+                ((*bf).sector_num / (((*bf).block_size as i64) as u64)) as c_int;
+            let offset: c_int = ((*bf).sector_num % (((*bf).block_size as i64) as u64)) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    /* wait until the block is loaded */
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        /* allocate a new cluster */
+                        let cluster_size: c_int = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        c = mallocz(size_of::<Cluster>()) as *mut Cluster;
+                        let buf = malloc(i32_as_usize(cluster_size)) as *mut u8;
+                        file_buffer_init(addr_of_mut!((*c).fbuf));
+                        file_buffer_resize(addr_of_mut!((*c).fbuf), i32_as_usize(cluster_size));
+                        *clusters.offset(cluster_num as isize) = c;
+
+                        /* copy the cached block data to the cluster */
+                        let cluster_offset: c_int = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            i32_as_usize(cluster_offset.wrapping_mul(512)),
+                            buf,
+                            i32_as_usize(cluster_size),
+                        );
+                        file_buffer_write(
+                            addr_of_mut!((*c).fbuf),
+                            0,
+                            buf,
+                            i32_as_usize(cluster_size),
+                        );
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters =
+                            (*bf).n_allocated_clusters.wrapping_add(1);
+                        continue; /* write to the allocated cluster */
+                    } else {
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            i32_as_usize(offset.wrapping_mul(512)),
+                            (*bf)
+                                .io_buf
+                                .offset(i32_as_isize((*bf).sector_index.wrapping_mul(512))),
+                            i32_as_usize(n.wrapping_mul(512)),
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = u64_add_i32((*bf).sector_num, n);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        /* end of request */
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+/* ------------------------------------------------------------------ */
+/* the target function                                                */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_prefetch_group_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let req = opaque as *mut PrefetchGroupRequest;
+    let bf = (*req).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load group %u\n\0".as_ptr() as *const c_char,
+            (*req).group_num,
+        );
+        exit(1);
+    }
+    let block_bytes: c_int = (*bf).block_size.wrapping_mul(512);
+    /* size == block_bytes * req->n_block_num (int promoted to size_t) */
+    if size != ((block_bytes.wrapping_mul((*req).n_block_num) as i64) as u64 as usize) {
+        __assert_fail(
+            b"size == block_bytes * req->n_block_num\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            252,
+            b"bf_prefetch_group_onload\0".as_ptr() as *const c_char,
+        );
+    }
+
+    let tab = (*req).tab_block.as_mut_ptr();
+    let data_bytes = data as *const u8;
+    let mut i: c_int = 0;
+    while i < (*req).n_block_num {
+        let b = *tab.offset(i as isize);
+        if !b.is_null() {
+            bf_update_block(
+                b,
+                data_bytes.offset(i32_as_isize(block_bytes.wrapping_mul(i))),
+            );
+        }
+        i = i.wrapping_add(1);
+    }
+    free(req as *mut c_void);
+}
+}
+
 // ── `if (err < 0)` · block_net.c:247-250 · chunk 308 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1240,6 +3208,539 @@ pub extern "C" fn bf_prefetch_group_onload__part311(req: *mut c_void) {
     unsafe {
         free(req);
     }
+}
+}
+
+// ── `bf_rw_async1` · block_net.c:262-339 · chunk 312 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int bf_rw_async1(BlockDevice *bs, BOOL is_sync)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//         int offset, block_num, n, cluster_num;
+//         CachedBlock *b;
+//         Cluster *c;
+//     
+//         for(;;) {
+//             n = bf->sector_count - bf->sector_index;
+//             if (n == 0)
+//                 break;
+//             cluster_num = bf->sector_num / bf->sectors_per_cluster;
+//             c = bf->clusters[cluster_num];
+//             if (c) {
+//                 offset = bf->sector_num % bf->sectors_per_cluster;
+//                 n = min_int(n, bf->sectors_per_cluster - offset);
+//                 if (bf->is_write) {
+//                     file_buffer_write(&c->fbuf, offset * 512,
+//                                       bf->io_buf + bf->sector_index * 512, n * 512);
+//                 } else {
+//                     file_buffer_read(&c->fbuf, offset * 512,
+//                                      bf->io_buf + bf->sector_index * 512, n * 512);
+//                 }
+//                 bf->sector_index += n;
+//                 bf->sector_num += n;
+//             } else {
+//                 block_num = bf->sector_num / bf->block_size;
+//                 offset = bf->sector_num % bf->block_size;
+//                 n = min_int(n, bf->block_size - offset);
+//                 bf->cur_block_num = block_num;
+//     
+//                 b = bf_find_block(bf, block_num);
+//                 if (b) {
+//                     if (b->state == CBLOCK_LOADING) {
+//     
+//                         return 1;
+//                     } else {
+//                         if (bf->is_write) {
+//                             int cluster_size, cluster_offset;
+//                             uint8_t *buf;
+//     
+//                             c = mallocz(sizeof(Cluster));
+//                             cluster_size = bf->sectors_per_cluster * 512;
+//                             buf = malloc(cluster_size);
+//                             file_buffer_init(&c->fbuf);
+//                             file_buffer_resize(&c->fbuf, cluster_size);
+//                             bf->clusters[cluster_num] = c;
+//     
+//                             cluster_offset = (cluster_num * bf->sectors_per_cluster) &
+//                                 (bf->block_size - 1);
+//                             file_buffer_read(&b->fbuf, cluster_offset * 512,
+//                                              buf, cluster_size);
+//                             file_buffer_write(&c->fbuf, 0, buf, cluster_size);
+//                             free(buf);
+//                             bf->n_allocated_clusters++;
+//                             continue;
+//                         } else {
+//                             file_buffer_read(&b->fbuf, offset * 512,
+//                                              bf->io_buf + bf->sector_index * 512, n * 512);
+//                         }
+//                         bf->sector_index += n;
+//                         bf->sector_num += n;
+//                     }
+//                 } else {
+//                     bf_start_load_block(bs, block_num);
+//                     return 1;
+//                 }
+//                 bf->cur_block_num = -1;
+//             }
+//         }
+//     
+//         if (!is_sync) {
+//     
+//     
+//             bf->cb(bf->opaque, 0);
+//         }
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk312 {
+// Port of the static C function bf_rw_async1() from block_net.c.
+//
+// The C TARGET calls several static (file-local, no linker symbol) helper
+// functions: bf_find_block(), bf_start_load_block() (which itself needs
+// bf_add_block(), bf_free_block(), fs_wget() with the bf_read_onload()
+// callback, and bf_update_block()).  Their logic is reproduced here as
+// private Rust functions so that the exported bf_rw_async1 keeps the exact
+// same behaviour.
+
+use std::mem::size_of;
+use std::os::raw::{c_char, c_int, c_uint, c_void};
+use std::ptr;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+pub type BlockDeviceCompletionFunc = unsafe extern "C" fn(*mut c_void, c_int);
+pub type WGetWriteCallback = unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>,
+    pub read_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub write_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: c_int,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: Option<BlockDeviceCompletionFunc>,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+extern "C" {
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+
+    fn snprintf(s: *mut c_char, n: usize, fmt: *const c_char, ...) -> c_int;
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    static mut stderr: *mut c_void;
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// C int -> size_t conversion (sign extension on the 64 bit hosts of the
+// reference implementation).
+#[inline]
+fn i32_to_size(v: c_int) -> usize {
+    (v as i64) as usize
+}
+
+// C int -> pointer offset (ptrdiff_t) conversion.
+#[inline]
+fn i32_to_isize(v: c_int) -> isize {
+    v as i64 as isize
+}
+
+// C int -> uint64_t conversion (modulo 2^64).
+#[inline]
+fn i32_to_u64(v: c_int) -> u64 {
+    v as i64 as u64
+}
+
+// static inline int min_int(int a, int b)
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// ---- list.h helpers -------------------------------------------------------
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = ptr::null_mut();
+    (*el).next = ptr::null_mut();
+}
+
+unsafe fn list_add_impl(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// static inline void list_add(struct list_head *el, struct list_head *head)
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    list_add_impl(el, head, (*head).next);
+}
+
+// ---- static C helpers (ported) --------------------------------------------
+
+// static CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num)
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head: *mut ListHead = &mut (*bf).cached_blocks;
+    let mut el: *mut ListHead = (*head).next;
+
+    while el != head {
+        // container_of(el, CachedBlock, link): link is the first member.
+        let b = el as *mut CachedBlock;
+        if (*b).block_num == block_num {
+            // move to front
+            if (*head).next != el {
+                list_del(&mut (*b).link);
+                list_add(&mut (*b).link, head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    ptr::null_mut()
+}
+
+// static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(&mut (*b).fbuf);
+    list_del(&mut (*b).link);
+    free(b as *mut c_void);
+}
+
+// static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head: *mut ListHead = &mut (*bf).cached_blocks;
+
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let mut el: *mut ListHead = (*head).prev;
+        let mut el1: *mut ListHead = (*el).prev;
+
+        while el != head {
+            let b = el as *mut CachedBlock;
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+
+    let b = mallocz(size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(&mut (*b).fbuf);
+    file_buffer_resize(
+        &mut (*b).fbuf,
+        i32_to_size((*bf).block_size.wrapping_mul(512)),
+    );
+    list_add(&mut (*b).link, head);
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+    b
+}
+
+// static void bf_update_block(CachedBlock *b, const uint8_t *data)
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            b"b->state == CBLOCK_LOADING\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            346,
+            b"bf_update_block\0".as_ptr() as *const c_char,
+        );
+    }
+    file_buffer_write(
+        &mut (*b).fbuf,
+        0,
+        data,
+        i32_to_size((*bf).block_size.wrapping_mul(512)),
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    // continue I/O read/write if necessary
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, 0);
+    }
+}
+
+// static void bf_read_onload(void *opaque, int err, void *data, size_t size)
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load block %u\n\0".as_ptr() as *const c_char,
+            (*b).block_num,
+        );
+        exit(1);
+    }
+
+    if size != i32_to_size((*bf).block_size.wrapping_mul(512)) {
+        __assert_fail(
+            b"size == bf->block_size * 512\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            366,
+            b"bf_read_onload\0".as_ptr() as *const c_char,
+        );
+    }
+    bf_update_block(b, data as *const u8);
+}
+
+// static void bf_start_load_block(BlockDevice *bs, int block_num)
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+    snprintf(
+        filename.as_mut_ptr(),
+        1024,
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        (*bf).url.as_ptr(),
+        block_num as c_uint,
+    );
+
+    fs_wget(
+        filename.as_ptr(),
+        ptr::null(),
+        ptr::null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        1,
+    );
+}
+
+// ---- TARGET ---------------------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut offset: c_int;
+    let mut block_num: c_int;
+    let mut n: c_int;
+
+    loop {
+        n = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int =
+            ((*bf).sector_num / ((*bf).sectors_per_cluster as u64)) as c_int;
+        let c: *mut Cluster = *(*bf).clusters.offset(i32_to_isize(cluster_num));
+        if !c.is_null() {
+            offset = ((*bf).sector_num % ((*bf).sectors_per_cluster as u64)) as c_int;
+            n = min_int(
+                n,
+                (*bf).sectors_per_cluster.wrapping_sub(offset),
+            );
+            let io_ptr = (*bf)
+                .io_buf
+                .offset(i32_to_isize((*bf).sector_index.wrapping_mul(512)));
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    &mut (*c).fbuf,
+                    i32_to_size(offset.wrapping_mul(512)),
+                    io_ptr,
+                    i32_to_size(n.wrapping_mul(512)),
+                );
+            } else {
+                file_buffer_read(
+                    &mut (*c).fbuf,
+                    i32_to_size(offset.wrapping_mul(512)),
+                    io_ptr,
+                    i32_to_size(n.wrapping_mul(512)),
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(i32_to_u64(n));
+        } else {
+            block_num = ((*bf).sector_num / ((*bf).block_size as u64)) as c_int;
+            offset = ((*bf).sector_num % ((*bf).block_size as u64)) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    // wait until the block is loaded
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        // allocate a new cluster
+                        let new_c = mallocz(size_of::<Cluster>()) as *mut Cluster;
+                        let cluster_size = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        let buf = malloc(i32_to_size(cluster_size)) as *mut u8;
+                        file_buffer_init(&mut (*new_c).fbuf);
+                        file_buffer_resize(&mut (*new_c).fbuf, i32_to_size(cluster_size));
+                        *(*bf).clusters.offset(i32_to_isize(cluster_num)) = new_c;
+
+                        // copy the cached block data to the cluster
+                        let cluster_offset = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            &mut (*b).fbuf,
+                            i32_to_size(cluster_offset.wrapping_mul(512)),
+                            buf,
+                            i32_to_size(cluster_size),
+                        );
+                        file_buffer_write(&mut (*new_c).fbuf, 0, buf, i32_to_size(cluster_size));
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters =
+                            (*bf).n_allocated_clusters.wrapping_add(1);
+                        continue; // write to the allocated cluster
+                    } else {
+                        file_buffer_read(
+                            &mut (*b).fbuf,
+                            i32_to_size(offset.wrapping_mul(512)),
+                            (*bf)
+                                .io_buf
+                                .offset(i32_to_isize((*bf).sector_index.wrapping_mul(512))),
+                            i32_to_size(n.wrapping_mul(512)),
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(i32_to_u64(n));
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        // end of request
+        let cb = (*bf).cb;
+        if let Some(f) = cb {
+            f((*bf).opaque, 0);
+        }
+    }
+    0
 }
 }
 
@@ -1424,6 +3925,444 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn bf_rw_async1__part315() -> c_int {
     0
+}
+}
+
+// ── `bf_update_block` · block_net.c:341-354 · chunk 316 · deepseek/deepseek-v4.1-flash-1017 · 4 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_update_block(CachedBlock *b, const uint8_t *data)
+//     {
+//         BlockDeviceHTTP *bf = b->bf;
+//         BlockDevice *bs = bf->bs;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        b->state == CBLOCK_LOADING
+//        )), __extension__ ({ if (
+//        b->state == CBLOCK_LOADING
+//        ) ; else __assert_fail (
+//        "b->state == CBLOCK_LOADING"
+//        , "block_net.c", 346, __extension__ __PRETTY_FUNCTION__); }))
+//                                          ;
+//         file_buffer_write(&b->fbuf, 0, data, bf->block_size * 512);
+//         b->state = CBLOCK_LOADED;
+//     
+//     
+//         if (b->block_num == bf->cur_block_num) {
+//             bf_rw_async1(bs, FALSE);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk316 {
+// Port of block_net.c:
+//   static void bf_update_block(CachedBlock *b, const uint8_t *data)
+//
+// bf_update_block calls bf_rw_async1(), which is `static` in the C program and
+// therefore has no linker symbol.  Its logic (and that of the static helpers it
+// reaches: bf_find_block, bf_free_block, bf_add_block, bf_start_load_block,
+// bf_read_onload) is ported here as private Rust functions.
+#![allow(dead_code, non_snake_case, non_camel_case_types, unused_unsafe)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ptr::null_mut;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+pub type BlockDeviceCompletionFunc = unsafe extern "C" fn(opaque: *mut c_void, ret: c_int);
+
+pub type DeviceGetSectorCount = unsafe extern "C" fn(bs: *mut BlockDevice) -> i64;
+pub type DeviceReadAsync = unsafe extern "C" fn(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *mut u8,
+    n: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+) -> c_int;
+pub type DeviceWriteAsync = unsafe extern "C" fn(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *const u8,
+    n: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+) -> c_int;
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: Option<DeviceGetSectorCount>,
+    pub read_async: Option<DeviceReadAsync>,
+    pub write_async: Option<DeviceWriteAsync>,
+    pub opaque: *mut c_void,
+}
+
+pub type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: Option<unsafe extern "C" fn(opaque: *mut c_void)>,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: c_int, /* BOOL */
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: Option<BlockDeviceCompletionFunc>,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+/* CachedBlockStateEnum */
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+extern "C" {
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+
+    fn snprintf(s: *mut c_char, maxlen: usize, format: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    static mut stderr: *mut c_void;
+}
+
+static ASSERT_STATE: &[u8] = b"b->state == CBLOCK_LOADING\0";
+static ASSERT_SIZE: &[u8] = b"size == bf->block_size * 512\0";
+static ASSERT_FILE: &[u8] = b"block_net.c\0";
+static FN_UPDATE_BLOCK: &[u8] = b"bf_update_block\0";
+static FN_READ_ONLOAD: &[u8] = b"bf_read_onload\0";
+static BLK_FMT: &[u8] = b"%sblk%09u.bin\0";
+static ERR_FMT: &[u8] = b"Could not load block %u\n\0";
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    /* __list_add(el, head, head->next) */
+    let prev = head;
+    let next = (*head).next;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = &mut (*bf).cached_blocks as *mut ListHead;
+    let mut el = (*head).next;
+    while el != head {
+        /* list_entry(el, CachedBlock, link): link is the first field */
+        let b = el as *mut CachedBlock;
+        if (*b).block_num == block_num {
+            /* move to front */
+            if (*head).next != el {
+                list_del(&mut (*b).link);
+                list_add(&mut (*b).link, head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks -= 1;
+    file_buffer_reset(&mut (*b).fbuf);
+    list_del(&mut (*b).link);
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let head = &mut (*bf).cached_blocks as *mut ListHead;
+        /* list_for_each_prev_safe(el, el1, &bf->cached_blocks) */
+        let mut el = (*head).prev;
+        let mut el1 = (*el).prev;
+        while el != head {
+            let bt = el as *mut CachedBlock;
+            if (*bt).state == CBLOCK_LOADED {
+                bf_free_block(bf, bt);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+    let b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(&mut (*b).fbuf);
+    file_buffer_resize(&mut (*b).fbuf, (*bf).block_size.wrapping_mul(512) as usize);
+    list_add(&mut (*b).link, &mut (*bf).cached_blocks as *mut ListHead);
+    (*bf).n_cached_blocks += 1;
+    b
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks += 1;
+    snprintf(
+        filename.as_mut_ptr(),
+        1024,
+        BLK_FMT.as_ptr() as *const c_char,
+        (*bf).url.as_ptr(),
+        block_num as c_uint,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        core::ptr::null(),
+        core::ptr::null(),
+        b as *mut c_void,
+        Some(bf_read_onload as WGetWriteCallback),
+        1 as c_int,
+    );
+}
+
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(stderr, ERR_FMT.as_ptr() as *const c_char, (*b).block_num);
+        exit(1);
+    }
+
+    if size != (*bf).block_size.wrapping_mul(512) as usize {
+        __assert_fail(
+            ASSERT_SIZE.as_ptr() as *const c_char,
+            ASSERT_FILE.as_ptr() as *const c_char,
+            366,
+            FN_READ_ONLOAD.as_ptr() as *const c_char,
+        );
+    }
+    bf_update_block(b, data as *const u8);
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    loop {
+        let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int = ((*bf).sector_num / (*bf).sectors_per_cluster as u64) as c_int;
+        let c = *(*bf).clusters.offset(cluster_num as isize);
+        if !c.is_null() {
+            let offset: c_int = ((*bf).sector_num % (*bf).sectors_per_cluster as u64) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            let io = (*bf)
+                .io_buf
+                .offset((*bf).sector_index.wrapping_mul(512) as isize);
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    &mut (*c).fbuf,
+                    offset.wrapping_mul(512) as usize,
+                    io,
+                    n.wrapping_mul(512) as usize,
+                );
+            } else {
+                file_buffer_read(
+                    &mut (*c).fbuf,
+                    offset.wrapping_mul(512) as usize,
+                    io,
+                    n.wrapping_mul(512) as usize,
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+        } else {
+            let block_num: c_int = ((*bf).sector_num / (*bf).block_size as u64) as c_int;
+            let offset: c_int = ((*bf).sector_num % (*bf).block_size as u64) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    /* wait until the block is loaded */
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        let cluster_size: c_int;
+                        let cluster_offset: c_int;
+                        let buf: *mut u8;
+                        /* allocate a new cluster */
+                        let cnew = mallocz(core::mem::size_of::<Cluster>()) as *mut Cluster;
+                        cluster_size = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        buf = malloc(cluster_size as usize) as *mut u8;
+                        file_buffer_init(&mut (*cnew).fbuf);
+                        file_buffer_resize(&mut (*cnew).fbuf, cluster_size as usize);
+                        *(*bf).clusters.offset(cluster_num as isize) = cnew;
+                        /* copy the cached block data to the cluster */
+                        cluster_offset = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            &mut (*b).fbuf,
+                            cluster_offset.wrapping_mul(512) as usize,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        file_buffer_write(&mut (*cnew).fbuf, 0, buf, cluster_size as usize);
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters += 1;
+                        continue; /* write to the allocated cluster */
+                    } else {
+                        let io = (*bf)
+                            .io_buf
+                            .offset((*bf).sector_index.wrapping_mul(512) as isize);
+                        file_buffer_read(
+                            &mut (*b).fbuf,
+                            offset.wrapping_mul(512) as usize,
+                            io,
+                            n.wrapping_mul(512) as usize,
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        /* end of request */
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            ASSERT_STATE.as_ptr() as *const c_char,
+            ASSERT_FILE.as_ptr() as *const c_char,
+            346,
+            FN_UPDATE_BLOCK.as_ptr() as *const c_char,
+        );
+    }
+    file_buffer_write(
+        &mut (*b).fbuf,
+        0,
+        data,
+        (*bf).block_size.wrapping_mul(512) as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    /* continue I/O read/write if necessary */
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, 0);
+    }
 }
 }
 
@@ -1615,6 +4554,478 @@ pub extern "C" fn bf_update_block__part318(
 }
 }
 
+// ── `bf_read_onload` · block_net.c:356-368 · chunk 319 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_read_onload(void *opaque, int err, void *data, size_t size)
+//     {
+//         CachedBlock *b = opaque;
+//         BlockDeviceHTTP *bf = b->bf;
+//     
+//         if (err < 0) {
+//             fprintf(
+//                    stderr
+//                          , "Could not load block %u\n", b->block_num);
+//             exit(1);
+//         }
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        size == bf->block_size * 512
+//        )), __extension__ ({ if (
+//        size == bf->block_size * 512
+//        ) ; else __assert_fail (
+//        "size == bf->block_size * 512"
+//        , "block_net.c", 366, __extension__ __PRETTY_FUNCTION__); }))
+//                                            ;
+//         bf_update_block(b, data);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk319 {
+// Port of block_net.c: bf_read_onload() and the static helpers it (transitively)
+// needs: bf_update_block(), bf_rw_async1(), bf_find_block(), bf_add_block(),
+// bf_free_block(), bf_start_load_block().
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_variables)]
+
+use core::cmp::min;
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of, addr_of_mut, null, null_mut};
+
+/* ------------------------------------------------------------------ */
+/* types mirrored from the C headers (exact field order / types)       */
+/* ------------------------------------------------------------------ */
+
+type BOOL = c_int;
+
+const FALSE: BOOL = 0;
+const TRUE: BOOL = 1;
+
+const CBLOCK_LOADING: c_uint = 0;
+const CBLOCK_LOADED: c_uint = 1;
+
+#[repr(C)]
+struct list_head {
+    prev: *mut list_head,
+    next: *mut list_head,
+}
+
+#[repr(C)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+struct Cluster {
+    fbuf: FileBuffer,
+}
+
+#[repr(C)]
+struct CachedBlock {
+    link: list_head,
+    bf: *mut BlockDeviceHTTP,
+    block_num: c_uint,
+    state: c_uint,
+    fbuf: FileBuffer,
+}
+
+type BlockDeviceCompletionFunc = extern "C" fn(*mut c_void, c_int);
+
+#[repr(C)]
+struct BlockDevice {
+    get_sector_count: Option<extern "C" fn(*mut BlockDevice) -> i64>,
+    read_async: Option<
+        extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    write_async: Option<
+        extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            Option<BlockDeviceCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    opaque: *mut c_void,
+}
+
+#[repr(C)]
+struct BlockDeviceHTTP {
+    bs: *mut BlockDevice,
+    max_cache_size_kb: c_int,
+    url: [c_char; 1024],
+    prefetch_count: c_int,
+    start_cb: Option<extern "C" fn(*mut c_void)>,
+    start_opaque: *mut c_void,
+
+    nb_sectors: i64,
+    block_size: c_int,
+    nb_blocks: c_int,
+    cached_blocks: list_head,
+    n_cached_blocks: c_int,
+    n_cached_blocks_max: c_int,
+
+    sectors_per_cluster: c_int,
+    clusters: *mut *mut Cluster,
+    n_clusters: c_int,
+    n_allocated_clusters: c_int,
+
+    n_read_sectors: i64,
+    n_read_blocks: i64,
+    n_write_sectors: i64,
+
+    is_write: BOOL,
+    sector_num: u64,
+    cur_block_num: c_int,
+    sector_index: c_int,
+    sector_count: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+    io_buf: *mut u8,
+
+    prefetch_group_len: c_int,
+}
+
+type WGetWriteCallback = extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+extern "C" {
+    static mut stderr: *mut c_void;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn snprintf(buf: *mut c_char, size: usize, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn mallocz(size: usize) -> *mut c_void;
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: BOOL,
+    ) -> *mut c_void;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+}
+
+/* ------------------------------------------------------------------ */
+/* small helpers                                                       */
+/* ------------------------------------------------------------------ */
+
+/// C conversion of a (signed) int to size_t: modulo 2^64.
+#[inline]
+fn i2s(x: c_int) -> usize {
+    x as usize
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// list.h helpers (static inline in C)
+
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    // __list_add(el, head, head->next)
+    let prev = head;
+    let next = (*head).next;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+/// list_entry(el, CachedBlock, link) -- `link` is the first member, offset 0.
+#[inline]
+unsafe fn list_entry(el: *mut list_head) -> *mut CachedBlock {
+    el as *mut CachedBlock
+}
+
+/* ------------------------------------------------------------------ */
+/* static C functions, ported                                          */
+/* ------------------------------------------------------------------ */
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    let mut el: *mut list_head = (*head).next;
+
+    while el != head {
+        let b = list_entry(el);
+        if (*b).block_num == block_num {
+            /* move to front */
+            if (*head).next != el {
+                list_del(addr_of_mut!((*b).link));
+                list_add(addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks -= 1;
+    file_buffer_reset(addr_of_mut!((*b).fbuf));
+    list_del(addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    let mut b: *mut CachedBlock;
+
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        /* start by looking at the least used blocks */
+        let mut el: *mut list_head = (*head).prev;
+        let mut el1: *mut list_head = (*el).prev;
+        while el != head {
+            b = list_entry(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+    b = mallocz(size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        addr_of_mut!((*b).fbuf),
+        i2s((*bf).block_size.wrapping_mul(512)),
+    );
+    list_add(addr_of_mut!((*b).link), head);
+    (*bf).n_cached_blocks += 1;
+    b
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks += 1;
+    snprintf(
+        filename.as_mut_ptr(),
+        1024,
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        addr_of!((*bf).url) as *const c_char,
+        block_num,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        null(),
+        null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        TRUE,
+    );
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: BOOL) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut offset: c_int;
+    let mut block_num: c_int;
+    let mut n: c_int;
+    let mut cluster_num: c_int;
+    let mut b: *mut CachedBlock;
+    let mut c: *mut Cluster;
+
+    loop {
+        n = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        cluster_num = ((*bf).sector_num / (*bf).sectors_per_cluster as u64) as c_int;
+        c = *(*bf).clusters.offset(cluster_num as isize);
+        if !c.is_null() {
+            offset = ((*bf).sector_num % (*bf).sectors_per_cluster as u64) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            let io = (*bf).io_buf.offset((*bf).sector_index.wrapping_mul(512) as isize);
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    addr_of_mut!((*c).fbuf),
+                    i2s(offset.wrapping_mul(512)),
+                    io as *const u8,
+                    i2s(n.wrapping_mul(512)),
+                );
+            } else {
+                file_buffer_read(
+                    addr_of_mut!((*c).fbuf),
+                    i2s(offset.wrapping_mul(512)),
+                    io,
+                    i2s(n.wrapping_mul(512)),
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+        } else {
+            block_num = ((*bf).sector_num / (*bf).block_size as u64) as c_int;
+            offset = ((*bf).sector_num % (*bf).block_size as u64) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    /* wait until the block is loaded */
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        let cluster_size: c_int;
+                        let cluster_offset: c_int;
+                        let buf: *mut u8;
+                        /* allocate a new cluster */
+                        c = mallocz(size_of::<Cluster>()) as *mut Cluster;
+                        cluster_size = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        buf = malloc(i2s(cluster_size)) as *mut u8;
+                        file_buffer_init(addr_of_mut!((*c).fbuf));
+                        file_buffer_resize(addr_of_mut!((*c).fbuf), i2s(cluster_size));
+                        *(*bf).clusters.offset(cluster_num as isize) = c;
+                        /* copy the cached block data to the cluster */
+                        cluster_offset = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            i2s(cluster_offset.wrapping_mul(512)),
+                            buf,
+                            i2s(cluster_size),
+                        );
+                        file_buffer_write(
+                            addr_of_mut!((*c).fbuf),
+                            0,
+                            buf,
+                            i2s(cluster_size),
+                        );
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters += 1;
+                        continue; /* write to the allocated cluster */
+                    } else {
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            i2s(offset.wrapping_mul(512)),
+                            (*bf).io_buf
+                                .offset((*bf).sector_index.wrapping_mul(512) as isize),
+                            i2s(n.wrapping_mul(512)),
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        /* end of request */
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            b"b->state == CBLOCK_LOADING\0".as_ptr() as *const c_char,
+            b"block_net.c\0".as_ptr() as *const c_char,
+            346,
+            b"bf_update_block\0".as_ptr() as *const c_char,
+        );
+    }
+    file_buffer_write(
+        addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        i2s((*bf).block_size.wrapping_mul(512)),
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    /* continue I/O read/write if necessary */
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, FALSE);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* the target function                                                 */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub extern "C" fn bf_read_onload(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize) {
+    unsafe {
+        let b = opaque as *mut CachedBlock;
+        let bf = (*b).bf;
+
+        if err < 0 {
+            fprintf(
+                stderr,
+                b"Could not load block %u\n\0".as_ptr() as *const c_char,
+                (*b).block_num,
+            );
+            exit(1);
+        }
+
+        if size != i2s((*bf).block_size.wrapping_mul(512)) {
+            __assert_fail(
+                b"size == bf->block_size * 512\0".as_ptr() as *const c_char,
+                b"block_net.c\0".as_ptr() as *const c_char,
+                366,
+                b"bf_read_onload\0".as_ptr() as *const c_char,
+            );
+        }
+        bf_update_block(b, data as *const u8);
+    }
+}
+}
+
 // ── `if (err < 0)` · block_net.c:361-364 · chunk 320 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1751,6 +5162,504 @@ pub extern "C" fn bf_read_onload__part321(opaque: *mut core::ffi::c_void, size: 
 }
 }
 
+// ── `bf_read_async` · block_net.c:370-385 · chunk 322 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int bf_read_async(BlockDevice *bs,
+//                              uint64_t sector_num, uint8_t *buf, int n,
+//                              BlockDeviceCompletionFunc *cb, void *opaque)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//     
+//         bf->is_write = FALSE;
+//         bf->sector_num = sector_num;
+//         bf->io_buf = buf;
+//         bf->sector_count = n;
+//         bf->sector_index = 0;
+//         bf->cb = cb;
+//         bf->opaque = opaque;
+//         bf->n_read_sectors += n;
+//         return bf_rw_async1(bs, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk322 {
+// Rust rewrite of bf_read_async (block_net.c).
+// The C helper it calls (bf_rw_async1) has internal linkage, so the whole
+// static-only call chain is ported here as private Rust functions.
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_parens)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ptr::addr_of_mut;
+
+pub type BOOL = c_int;
+const FALSE: BOOL = 0;
+const TRUE: BOOL = 1;
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+#[repr(C)]
+pub struct _IO_FILE {
+    pub _private: [u8; 0],
+}
+pub type FILE = _IO_FILE;
+
+pub type WGetWriteCallback =
+    unsafe extern "C" fn(opaque: *mut c_void, err: c_int, data: *mut c_void, size: usize);
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+pub type BlockDeviceCompletionFunc = unsafe extern "C" fn(*mut c_void, c_int);
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>,
+    pub read_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            *mut BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub write_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            *mut BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: list_head,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: list_head,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: BOOL,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: Option<BlockDeviceCompletionFunc>,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+extern "C" {
+    static mut stderr: *mut FILE;
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    fn snprintf(s: *mut c_char, maxlen: usize, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn mallocz(size: usize) -> *mut c_void;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: BOOL,
+    ) -> *mut c_void;
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+unsafe fn argo_assert(
+    cond: bool,
+    assertion: &'static [u8],
+    file: &'static [u8],
+    line: c_uint,
+    func: &'static [u8],
+) {
+    if !cond {
+        __assert_fail(
+            assertion.as_ptr() as *const c_char,
+            file.as_ptr() as *const c_char,
+            line,
+            func.as_ptr() as *const c_char,
+        );
+    }
+}
+
+// static inline void __list_add(struct list_head *el,
+//                               struct list_head *prev, struct list_head *next)
+unsafe fn list_add_impl(el: *mut list_head, prev: *mut list_head, next: *mut list_head) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+// static inline void list_add(struct list_head *el, struct list_head *head)
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    list_add_impl(el, head, (*head).next);
+}
+
+// static inline void list_del(struct list_head *el)
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = core::ptr::null_mut();
+    (*el).next = core::ptr::null_mut();
+}
+
+// b->link is the first member of CachedBlock (offsetof(CachedBlock, link) == 0)
+#[inline]
+unsafe fn cached_block_of(el: *mut list_head) -> *mut CachedBlock {
+    el as *mut CachedBlock
+}
+
+// CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num)
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    let mut el: *mut list_head = (*head).next;
+    while el != head {
+        let b = cached_block_of(el);
+        if (*b).block_num == block_num {
+            if (*head).next != el {
+                list_del(addr_of_mut!((*b).link));
+                list_add(addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    core::ptr::null_mut()
+}
+
+// void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(addr_of_mut!((*b).fbuf));
+    list_del(addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+// CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        let mut el: *mut list_head = (*head).prev;
+        let mut el1: *mut list_head = (*el).prev;
+        while el != head {
+            let b = cached_block_of(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el1).prev;
+        }
+    }
+    let b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        addr_of_mut!((*b).fbuf),
+        (*bf).block_size.wrapping_mul(512) as isize as usize,
+    );
+    list_add(addr_of_mut!((*b).link), head);
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+    b
+}
+
+// void bf_update_block(CachedBlock *b, const uint8_t *data)
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    argo_assert(
+        (*b).state == CBLOCK_LOADING,
+        b"b->state == CBLOCK_LOADING\0",
+        b"block_net.c\0",
+        346,
+        b"bf_update_block\0",
+    );
+    file_buffer_write(
+        addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        (*bf).block_size.wrapping_mul(512) as isize as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, FALSE);
+    }
+}
+
+// void bf_read_onload(void *opaque, int err, void *data, size_t size)
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            unsafe { stderr },
+            b"Could not load block %u\n\0".as_ptr() as *const c_char,
+            (*b).block_num,
+        );
+        exit(1);
+    }
+
+    argo_assert(
+        size == (*bf).block_size.wrapping_mul(512) as isize as usize,
+        b"size == bf->block_size * 512\0",
+        b"block_net.c\0",
+        366,
+        b"bf_read_onload\0",
+    );
+    bf_update_block(b, data as *const u8);
+}
+
+// void bf_start_load_block(BlockDevice *bs, int block_num)
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+    snprintf(
+        filename.as_mut_ptr(),
+        core::mem::size_of_val(&filename),
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        (*bf).url.as_ptr(),
+        block_num as c_uint,
+    );
+
+    let _ = fs_wget(
+        filename.as_mut_ptr() as *const c_char,
+        core::ptr::null(),
+        core::ptr::null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        TRUE,
+    );
+}
+
+#[inline]
+unsafe fn call_completion(cb: Option<BlockDeviceCompletionFunc>, opaque: *mut c_void) {
+    // C calls bf->cb unconditionally (a NULL cb would trap there as well)
+    let f: BlockDeviceCompletionFunc = core::mem::transmute(cb);
+    f(opaque, 0);
+}
+
+// static int bf_rw_async1(BlockDevice *bs, BOOL is_sync)
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: BOOL) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    loop {
+        let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int =
+            ((*bf).sector_num / ((*bf).sectors_per_cluster as i64) as u64) as c_int;
+        let c: *mut Cluster = *(*bf).clusters.offset(cluster_num as isize);
+        if !c.is_null() {
+            let offset: c_int =
+                ((*bf).sector_num % ((*bf).sectors_per_cluster as i64) as u64) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            let dst = (*bf)
+                .io_buf
+                .offset((*bf).sector_index.wrapping_mul(512) as isize);
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    addr_of_mut!((*c).fbuf),
+                    offset.wrapping_mul(512) as isize as usize,
+                    dst as *const u8,
+                    n.wrapping_mul(512) as isize as usize,
+                );
+            } else {
+                file_buffer_read(
+                    addr_of_mut!((*c).fbuf),
+                    offset.wrapping_mul(512) as isize as usize,
+                    dst,
+                    n.wrapping_mul(512) as isize as usize,
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+        } else {
+            let block_num: c_int =
+                ((*bf).sector_num / ((*bf).block_size as i64) as u64) as c_int;
+            let offset: c_int =
+                ((*bf).sector_num % ((*bf).block_size as i64) as u64) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        let cluster_size: c_int =
+                            (*bf).sectors_per_cluster.wrapping_mul(512);
+
+                        let cc = mallocz(core::mem::size_of::<Cluster>()) as *mut Cluster;
+                        let bufp = malloc(cluster_size as isize as usize) as *mut u8;
+                        file_buffer_init(addr_of_mut!((*cc).fbuf));
+                        file_buffer_resize(
+                            addr_of_mut!((*cc).fbuf),
+                            cluster_size as isize as usize,
+                        );
+                        *(*bf).clusters.offset(cluster_num as isize) = cc;
+
+                        let cluster_offset: c_int = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & ((*bf).block_size.wrapping_sub(1));
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            cluster_offset.wrapping_mul(512) as isize as usize,
+                            bufp,
+                            cluster_size as isize as usize,
+                        );
+                        file_buffer_write(
+                            addr_of_mut!((*cc).fbuf),
+                            0,
+                            bufp as *const u8,
+                            cluster_size as isize as usize,
+                        );
+                        free(bufp as *mut c_void);
+                        (*bf).n_allocated_clusters =
+                            (*bf).n_allocated_clusters.wrapping_add(1);
+                        continue;
+                    } else {
+                        let dst = (*bf)
+                            .io_buf
+                            .offset((*bf).sector_index.wrapping_mul(512) as isize);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            offset.wrapping_mul(512) as isize as usize,
+                            dst,
+                            n.wrapping_mul(512) as isize as usize,
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        call_completion((*bf).cb, (*bf).opaque);
+    }
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_read_async(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *mut u8,
+    n: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    (*bf).is_write = FALSE;
+    (*bf).sector_num = sector_num;
+    (*bf).io_buf = buf;
+    (*bf).sector_count = n;
+    (*bf).sector_index = 0;
+    (*bf).cb = cb;
+    (*bf).opaque = opaque;
+    (*bf).n_read_sectors = (*bf).n_read_sectors.wrapping_add(n as i64);
+    bf_rw_async1(bs, TRUE)
+}
+}
+
 // ── `BlockDeviceHTTP *bf = bs->opaque; bf->is_write = FALSE; bf->sector_num = sector_num; bf->io_buf…` · block_net.c:374-384 · chunk 323 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1803,6 +5712,459 @@ pub extern "C" fn bf_read_async__part323(
     bf.opaque = opaque;
     bf.n_read_sectors += n as c_long;
     0
+}
+}
+
+// ── `bf_write_async` · block_net.c:387-402 · chunk 324 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int bf_write_async(BlockDevice *bs,
+//                               uint64_t sector_num, const uint8_t *buf, int n,
+//                               BlockDeviceCompletionFunc *cb, void *opaque)
+//     {
+//         BlockDeviceHTTP *bf = bs->opaque;
+//     
+//         bf->is_write = TRUE;
+//         bf->sector_num = sector_num;
+//         bf->io_buf = (uint8_t *)buf;
+//         bf->sector_count = n;
+//         bf->sector_index = 0;
+//         bf->cb = cb;
+//         bf->opaque = opaque;
+//         bf->n_write_sectors += n;
+//         return bf_rw_async1(bs, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk324 {
+// Rust rewrite of the static C function bf_write_async() from block_net.c.
+//
+// bf_write_async() delegates to bf_rw_async1().  bf_rw_async1() is a `static`
+// C function and therefore has no linker symbol, so its logic (and the logic of
+// the other static helpers it uses: bf_find_block, bf_free_block, bf_add_block,
+// bf_start_load_block, bf_update_block, bf_read_onload) is re-implemented here
+// as private Rust functions that operate on the very same C data structures.
+// Externally visible helpers (file_buffer_*, mallocz, fs_wget, ...) are called
+// through their real C symbols.
+
+#![allow(dead_code, non_snake_case, non_camel_case_types, non_upper_case_globals)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of_mut, null_mut};
+
+// ---------------------------------------------------------------- C typedefs
+
+// typedef int BOOL;
+type BOOL = c_int;
+const FALSE: BOOL = 0;
+const TRUE: BOOL = 1;
+
+// typedef enum { CBLOCK_LOADING, CBLOCK_LOADED } CachedBlockStateEnum;
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+// typedef void BlockDeviceCompletionFunc(void *opaque, int ret);
+type BlockDeviceCompletionFunc = unsafe extern "C" fn(*mut c_void, c_int);
+
+// typedef void WGetWriteCallback(void *opaque, int err, void *data, size_t size);
+type WGetWriteCallback = unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize);
+
+// -------------------------------------------------------------- C structs
+
+#[repr(C)]
+pub struct list_head {
+    pub prev: *mut list_head,
+    pub next: *mut list_head,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: list_head,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int, // CachedBlockStateEnum
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: *mut c_void,
+    pub read_async: *mut c_void,
+    pub write_async: *mut c_void,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: *mut c_void,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: list_head,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: BOOL,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: Option<BlockDeviceCompletionFunc>,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+#[repr(C)]
+pub struct XHRState {
+    pub _private: [u8; 0],
+}
+
+// ------------------------------------------------------------ C functions
+
+extern "C" {
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: Option<WGetWriteCallback>,
+        single_write: BOOL,
+    ) -> *mut XHRState;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+
+    fn snprintf(buf: *mut c_char, size: usize, format: *const c_char, ...) -> c_int;
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+
+    static mut stderr: *mut c_void;
+}
+
+// ---------------------------------------------------------------- helpers
+
+// static inline int min_int(int a, int b)
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// uint64_t / int  (the int operand is converted to uint64_t, as in C)
+#[inline]
+fn div_u64_i(a: u64, b: c_int) -> u64 {
+    let bb = b as i64 as u64;
+    if bb == 0 {
+        return 0; // division by zero is undefined in C
+    }
+    a / bb
+}
+
+// uint64_t % int  (the int operand is converted to uint64_t, as in C)
+#[inline]
+fn mod_u64_i(a: u64, b: c_int) -> u64 {
+    let bb = b as i64 as u64;
+    if bb == 0 {
+        return 0; // division by zero is undefined in C
+    }
+    a % bb
+}
+
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    // __list_add(el, head, head->next)
+    let next = (*head).next;
+    (*head).next = el;
+    (*el).prev = head;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut list_head) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head: *mut list_head = addr_of_mut!((*bf).cached_blocks);
+    let mut el = (*head).next;
+    while el != head {
+        // list_entry(el, CachedBlock, link): link is the first field
+        let b = el as *mut CachedBlock;
+        if (*b).block_num == block_num {
+            // move to front
+            if (*head).next != el {
+                list_del(addr_of_mut!((*b).link));
+                list_add(addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+    file_buffer_reset(addr_of_mut!((*b).fbuf));
+    list_del(addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head: *mut list_head = addr_of_mut!((*bf).cached_blocks);
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        // start by looking at the least unused blocks
+        let mut el = (*head).prev;
+        let mut el1 = (*el).prev;
+        while el != head {
+            let b = el as *mut CachedBlock;
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el).prev;
+        }
+    }
+    let b = mallocz(size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(addr_of_mut!((*b).fbuf));
+    let _ = file_buffer_resize(
+        addr_of_mut!((*b).fbuf),
+        (*bf).block_size.wrapping_mul(512) as usize,
+    );
+    list_add(addr_of_mut!((*b).link), head);
+    (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+    b
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+    snprintf(
+        filename.as_mut_ptr(),
+        size_of::<[c_char; 1024]>(),
+        b"%sblk%09u.bin\0".as_ptr() as *const c_char,
+        (*bf).url.as_ptr(),
+        block_num as c_uint,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        null_mut(),
+        null_mut(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        TRUE,
+    );
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    // assert(b->state == CBLOCK_LOADING);
+    file_buffer_write(
+        addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        (*bf).block_size.wrapping_mul(512) as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    // continue I/O read/write if necessary
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, FALSE);
+    }
+}
+
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            stderr,
+            b"Could not load block %u\n\0".as_ptr() as *const c_char,
+            (*b).block_num,
+        );
+        exit(1);
+    }
+
+    // assert(size == bf->block_size * 512);
+    let _ = size;
+    bf_update_block(b, data as *const u8);
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: BOOL) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    loop {
+        let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let cluster_num: c_int = div_u64_i((*bf).sector_num, (*bf).sectors_per_cluster) as c_int;
+        let clusters = (*bf).clusters;
+        let c: *mut Cluster = *clusters.wrapping_offset(cluster_num as isize);
+        if !c.is_null() {
+            let offset: c_int = mod_u64_i((*bf).sector_num, (*bf).sectors_per_cluster) as c_int;
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            let io_off = (*bf).sector_index.wrapping_mul(512) as isize;
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    addr_of_mut!((*c).fbuf),
+                    offset.wrapping_mul(512) as usize,
+                    (*bf).io_buf.wrapping_offset(io_off),
+                    n.wrapping_mul(512) as usize,
+                );
+            } else {
+                file_buffer_read(
+                    addr_of_mut!((*c).fbuf),
+                    offset.wrapping_mul(512) as usize,
+                    (*bf).io_buf.wrapping_offset(io_off),
+                    n.wrapping_mul(512) as usize,
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+        } else {
+            let block_num: c_int = div_u64_i((*bf).sector_num, (*bf).block_size) as c_int;
+            let offset: c_int = mod_u64_i((*bf).sector_num, (*bf).block_size) as c_int;
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    // wait until the block is loaded
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        // allocate a new cluster
+                        let cluster_size: c_int = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        let cnew = mallocz(size_of::<Cluster>()) as *mut Cluster;
+                        let buf = malloc(cluster_size as usize) as *mut u8;
+                        file_buffer_init(addr_of_mut!((*cnew).fbuf));
+                        let _ = file_buffer_resize(addr_of_mut!((*cnew).fbuf), cluster_size as usize);
+                        *clusters.wrapping_offset(cluster_num as isize) = cnew;
+                        // copy the cached block data to the cluster
+                        let cluster_offset: c_int = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            cluster_offset.wrapping_mul(512) as usize,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        file_buffer_write(addr_of_mut!((*cnew).fbuf), 0, buf, cluster_size as usize);
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters = (*bf).n_allocated_clusters.wrapping_add(1);
+                        continue; // write to the allocated cluster
+                    } else {
+                        let io_off = (*bf).sector_index.wrapping_mul(512) as isize;
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            offset.wrapping_mul(512) as usize,
+                            (*bf).io_buf.wrapping_offset(io_off),
+                            n.wrapping_mul(512) as usize,
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        // end of request
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+// ------------------------------------------------------------- the target
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_write_async(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *const u8,
+    n: c_int,
+    cb: Option<BlockDeviceCompletionFunc>,
+    opaque: *mut c_void,
+) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    (*bf).is_write = TRUE;
+    (*bf).sector_num = sector_num;
+    (*bf).io_buf = buf as *mut u8;
+    (*bf).sector_count = n;
+    (*bf).sector_index = 0;
+    (*bf).cb = cb;
+    (*bf).opaque = opaque;
+    (*bf).n_write_sectors = (*bf).n_write_sectors.wrapping_add(n as i64);
+    bf_rw_async1(bs, TRUE)
 }
 }
 
@@ -1867,6 +6229,998 @@ pub unsafe extern "C" fn bf_write_async__part325(
     // with #[repr(C)] and set the fields appropriately.
     
     0i64 as c_int
+}
+}
+
+// ── `block_device_init_http` · block_net.c:404-437 · chunk 326 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     BlockDevice *block_device_init_http(const char *url,
+//                                         int max_cache_size_kb,
+//                                         void (*start_cb)(void *opaque),
+//                                         void *start_opaque)
+//     {
+//         BlockDevice *bs;
+//         BlockDeviceHTTP *bf;
+//         char *p;
+//     
+//         bs = mallocz(sizeof(*bs));
+//         bf = mallocz(sizeof(*bf));
+//         strcpy(bf->url, url);
+//     
+//         p = 
+//            _Generic (0 ? (
+//            bf->url
+//            ) : (void *) 1, const void *: (const char *) (strrchr (
+//            bf->url
+//            , 
+//            '/'
+//            )), default: strrchr (
+//            bf->url
+//            , 
+//            '/'
+//            ))
+//                                 ;
+//         if (!p)
+//             p = bf->url;
+//         else
+//             p++;
+//         *p = '\0';
+//     
+//         init_list_head(&bf->cached_blocks);
+//         bf->max_cache_size_kb = max_cache_size_kb;
+//         bf->start_cb = start_cb;
+//         bf->start_opaque = start_opaque;
+//         bf->bs = bs;
+//     
+//         bs->opaque = bf;
+//         bs->get_sector_count = bf_get_sector_count;
+//         bs->read_async = bf_read_async;
+//         bs->write_async = bf_write_async;
+//     
+//         fs_wget(url, 
+//                     ((void *)0)
+//                         , 
+//                           ((void *)0)
+//                               , bs, bf_init_onload, TRUE);
+//         return bs;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk326 {
+// Rust port of block_device_init_http() from TinyEMU's block_net.c.
+// The static helpers of that file (bf_find_block, bf_add_block, bf_rw_async1,
+// bf_init_onload, ...) have no linker symbol, so their logic is ported here
+// as private Rust functions.
+
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_assignments)]
+#![allow(unused_mut)]
+#![allow(unused_parens)]
+#![allow(unused_unsafe)]
+
+use core::ffi::c_void;
+
+type c_char = i8;
+type c_int = i32;
+
+const TRUE: c_int = 1;
+const FALSE: c_int = 0;
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+const JSON_INT: c_int = 1;
+const JSON_ARRAY: c_int = 3;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+const SECTOR_SIZE: c_int = 512;
+
+/* ------------------------------------------------------------------ */
+/* data structures (mirror of the C ones)                              */
+/* ------------------------------------------------------------------ */
+
+type BlockDeviceCompletionFunc = Option<unsafe extern "C" fn(*mut c_void, c_int)>;
+type WGetWriteCallback = Option<unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize)>;
+
+#[repr(C)]
+struct BlockDevice {
+    get_sector_count: Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>,
+    read_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    write_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    opaque: *mut c_void,
+}
+
+#[repr(C)]
+struct list_head {
+    prev: *mut list_head,
+    next: *mut list_head,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct FileBuffer {
+    data: *mut u8,
+    allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union JSONValueU {
+    str_: *mut JSONString,
+    int32: c_int,
+    b: c_int,
+    obj: *mut JSONObject,
+    array: *mut JSONArray,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct JSONValue {
+    type_: c_int,
+    u: JSONValueU,
+}
+
+#[repr(C)]
+struct JSONString {
+    len: c_int,
+    data: [c_char; 0],
+}
+
+#[repr(C)]
+struct JSONProperty {
+    name: JSONValue,
+    value: JSONValue,
+}
+
+#[repr(C)]
+struct JSONObject {
+    len: c_int,
+    size: c_int,
+    props: *mut JSONProperty,
+}
+
+#[repr(C)]
+struct JSONArray {
+    len: c_int,
+    size: c_int,
+    tab: *mut JSONValue,
+}
+
+#[repr(C)]
+struct CachedBlock {
+    link: list_head, /* first member: list_entry == cast */
+    bf: *mut BlockDeviceHTTP,
+    block_num: u32,
+    state: c_int, /* CachedBlockStateEnum */
+    fbuf: FileBuffer,
+}
+
+#[repr(C)]
+struct PrefetchGroupRequest {
+    bf: *mut BlockDeviceHTTP,
+    group_num: c_int,
+    n_block_num: c_int,
+    tab_block: [*mut CachedBlock; 32],
+}
+
+#[repr(C)]
+struct Cluster {
+    fbuf: FileBuffer,
+}
+
+#[repr(C)]
+struct BlockDeviceHTTP {
+    bs: *mut BlockDevice,
+    max_cache_size_kb: c_int,
+    url: [c_char; 1024],
+    prefetch_count: c_int,
+    start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    start_opaque: *mut c_void,
+
+    nb_sectors: i64,
+    block_size: c_int,
+    nb_blocks: c_int,
+    cached_blocks: list_head,
+    n_cached_blocks: c_int,
+    n_cached_blocks_max: c_int,
+
+    sectors_per_cluster: c_int,
+    clusters: *mut *mut Cluster,
+    n_clusters: c_int,
+    n_allocated_clusters: c_int,
+
+    n_read_sectors: i64,
+    n_read_blocks: i64,
+    n_write_sectors: i64,
+
+    is_write: c_int,
+    sector_num: u64,
+    cur_block_num: c_int,
+    sector_index: c_int,
+    sector_count: c_int,
+    cb: BlockDeviceCompletionFunc,
+    opaque: *mut c_void,
+    io_buf: *mut u8,
+
+    prefetch_group_len: c_int,
+}
+
+/* ------------------------------------------------------------------ */
+/* external C functions / globals                                      */
+/* ------------------------------------------------------------------ */
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(p: *mut c_void);
+    fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
+    fn exit(status: c_int) -> !;
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    static stderr: *mut c_void;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: WGetWriteCallback,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_free(val: JSONValue);
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_array_get(val: JSONValue, idx: u32) -> JSONValue;
+    fn json_get_error(val: JSONValue) -> *const c_char;
+
+    fn vm_error(fmt: *const c_char, ...);
+    fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int;
+    fn vm_get_int_opt(obj: JSONValue, name: *const c_char, pval: *mut c_int, def_val: c_int)
+        -> c_int;
+}
+
+/* ------------------------------------------------------------------ */
+/* small helpers                                                       */
+/* ------------------------------------------------------------------ */
+
+#[inline]
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+unsafe fn init_list_head(head: *mut list_head) {
+    unsafe {
+        (*head).prev = head;
+        (*head).next = head;
+    }
+}
+
+/* list_add(el, head) == __list_add(el, head, head->next) */
+unsafe fn list_add(el: *mut list_head, head: *mut list_head) {
+    unsafe {
+        let next = (*head).next;
+        (*head).next = el;
+        (*el).prev = head;
+        (*el).next = next;
+        (*next).prev = el;
+    }
+}
+
+unsafe fn list_del(el: *mut list_head) {
+    unsafe {
+        let prev = (*el).prev;
+        let next = (*el).next;
+        (*prev).next = next;
+        (*next).prev = prev;
+        (*el).prev = core::ptr::null_mut();
+        (*el).next = core::ptr::null_mut();
+    }
+}
+
+/* strrchr(s, '/') */
+unsafe fn my_strrchr(s: *const c_char, c: u8) -> *mut c_char {
+    unsafe {
+        let mut last: *mut c_char = core::ptr::null_mut();
+        let mut p = s as *mut c_char;
+        loop {
+            let ch = *p as u8;
+            if ch == c {
+                last = p;
+            }
+            if ch == 0 {
+                break;
+            }
+            p = p.wrapping_offset(1);
+        }
+        last
+    }
+}
+
+/* snprintf(buf, cap, "<url><mid>%09u<ext>", url, num) */
+unsafe fn build_filename(
+    buf: *mut c_char,
+    cap: usize,
+    url: *const c_char,
+    mid: &[u8],
+    num: u32,
+    ext: &[u8],
+) {
+    unsafe {
+        let mut pos: usize = 0;
+
+        let mut p = url;
+        while *p != 0 && pos + 1 < cap {
+            *buf.wrapping_offset(pos as isize) = *p;
+            pos += 1;
+            p = p.wrapping_offset(1);
+        }
+
+        let mut k = 0usize;
+        while k < mid.len() && pos + 1 < cap {
+            *buf.wrapping_offset(pos as isize) = mid[k] as c_char;
+            pos += 1;
+            k += 1;
+        }
+
+        /* %09u */
+        let mut digits = [0u8; 10];
+        let mut nd: usize = 0;
+        let mut v = num;
+        if v == 0 {
+            digits[0] = b'0';
+            nd = 1;
+        } else {
+            while v > 0 && nd < 10 {
+                digits[nd] = b'0' + (v % 10) as u8;
+                nd += 1;
+                v /= 10;
+            }
+        }
+        let width: usize = if nd > 9 { nd } else { 9 };
+        let mut npad = width - nd;
+        while npad > 0 && pos + 1 < cap {
+            *buf.wrapping_offset(pos as isize) = b'0' as c_char;
+            pos += 1;
+            npad -= 1;
+        }
+        let mut i = nd;
+        while i > 0 && pos + 1 < cap {
+            i -= 1;
+            *buf.wrapping_offset(pos as isize) = digits[i] as c_char;
+            pos += 1;
+        }
+
+        let mut k2 = 0usize;
+        while k2 < ext.len() && pos + 1 < cap {
+            *buf.wrapping_offset(pos as isize) = ext[k2] as c_char;
+            pos += 1;
+            k2 += 1;
+        }
+
+        *buf.wrapping_offset(pos as isize) = 0;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* block cache helpers                                                 */
+/* ------------------------------------------------------------------ */
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: u32) -> *mut CachedBlock {
+    unsafe {
+        let head = core::ptr::addr_of_mut!((*bf).cached_blocks);
+        let mut el = (*head).next;
+        while el != head {
+            let b = el as *mut CachedBlock;
+            if (*b).block_num == block_num {
+                /* move to front */
+                if (*head).next != el {
+                    list_del(core::ptr::addr_of_mut!((*b).link));
+                    list_add(core::ptr::addr_of_mut!((*b).link), head);
+                }
+                return b;
+            }
+            el = (*el).next;
+        }
+        core::ptr::null_mut()
+    }
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    unsafe {
+        (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_sub(1);
+        file_buffer_reset(core::ptr::addr_of_mut!((*b).fbuf));
+        list_del(core::ptr::addr_of_mut!((*b).link));
+        free(b as *mut c_void);
+    }
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: u32) -> *mut CachedBlock {
+    unsafe {
+        if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+            let head = core::ptr::addr_of_mut!((*bf).cached_blocks);
+            let mut el = (*head).prev;
+            let mut el1 = (*el).prev;
+            while el != head {
+                let b = el as *mut CachedBlock;
+                if (*b).state == CBLOCK_LOADED {
+                    bf_free_block(bf, b);
+                    if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                        break;
+                    }
+                }
+                el = el1;
+                el1 = (*el).prev;
+            }
+        }
+        let b = mallocz(core::mem::size_of::<CachedBlock>()) as *mut CachedBlock;
+        (*b).bf = bf;
+        (*b).block_num = block_num;
+        (*b).state = CBLOCK_LOADING;
+        file_buffer_init(core::ptr::addr_of_mut!((*b).fbuf));
+        file_buffer_resize(
+            core::ptr::addr_of_mut!((*b).fbuf),
+            (*bf).block_size.wrapping_mul(SECTOR_SIZE) as isize as usize,
+        );
+        list_add(
+            core::ptr::addr_of_mut!((*b).link),
+            core::ptr::addr_of_mut!((*bf).cached_blocks),
+        );
+        (*bf).n_cached_blocks = (*bf).n_cached_blocks.wrapping_add(1);
+        b
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* I/O                                                                 */
+/* ------------------------------------------------------------------ */
+
+unsafe extern "C" fn bf_get_sector_count(bs: *mut BlockDevice) -> i64 {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+        (*bf).nb_sectors
+    }
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+        let mut filename = [0 as c_char; 1024];
+        let b = bf_add_block(bf, block_num as u32);
+        (*bf).n_read_blocks = (*bf).n_read_blocks.wrapping_add(1);
+        build_filename(
+            filename.as_mut_ptr(),
+            filename.len(),
+            core::ptr::addr_of!((*bf).url) as *const c_char,
+            b"blk",
+            block_num as u32,
+            b".bin",
+        );
+        fs_wget(
+            filename.as_mut_ptr(),
+            core::ptr::null(),
+            core::ptr::null(),
+            b as *mut c_void,
+            Some(bf_read_onload),
+            TRUE,
+        );
+    }
+}
+
+unsafe fn bf_start_load_prefetch_group(
+    bs: *mut BlockDevice,
+    group_num: c_int,
+    tab_block_num: *const c_int,
+    n_block_num: c_int,
+) {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+        let mut filename = [0 as c_char; 1024];
+        let mut req_flag: c_int = FALSE;
+
+        let req =
+            malloc(core::mem::size_of::<PrefetchGroupRequest>()) as *mut PrefetchGroupRequest;
+        (*req).bf = bf;
+        (*req).group_num = group_num;
+        (*req).n_block_num = n_block_num;
+        let mut i: c_int = 0;
+        while i < n_block_num {
+            let block_num = *tab_block_num.wrapping_offset(i as isize);
+            let mut b = bf_find_block(bf, block_num as u32);
+            if b.is_null() {
+                b = bf_add_block(bf, block_num as u32);
+                req_flag = TRUE;
+            } else {
+                /* already loading or loaded */
+                b = core::ptr::null_mut();
+            }
+            (*req).tab_block[i as usize] = b;
+            i += 1;
+        }
+
+        if req_flag != 0 {
+            build_filename(
+                filename.as_mut_ptr(),
+                filename.len(),
+                core::ptr::addr_of!((*bf).url) as *const c_char,
+                b"grp",
+                group_num as u32,
+                b".bin",
+            );
+            fs_wget(
+                filename.as_mut_ptr(),
+                core::ptr::null(),
+                core::ptr::null(),
+                req as *mut c_void,
+                Some(bf_prefetch_group_onload),
+                TRUE,
+            );
+        } else {
+            free(req as *mut c_void);
+        }
+    }
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+        loop {
+            let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+            if n == 0 {
+                break;
+            }
+            let spc: u64 = (*bf).sectors_per_cluster as i64 as u64;
+            let cluster_num: c_int = ((*bf).sector_num / spc) as c_int;
+            let c: *mut Cluster = *(*bf).clusters.wrapping_offset(cluster_num as isize);
+            if !c.is_null() {
+                let offset: c_int = ((*bf).sector_num % spc) as c_int;
+                n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+                let io_off = (*bf).sector_index.wrapping_mul(SECTOR_SIZE);
+                let src = (*bf).io_buf.wrapping_offset(io_off as isize);
+                let byte_off = offset.wrapping_mul(SECTOR_SIZE) as isize as usize;
+                let byte_len = n.wrapping_mul(SECTOR_SIZE) as isize as usize;
+                if (*bf).is_write != 0 {
+                    file_buffer_write(
+                        core::ptr::addr_of_mut!((*c).fbuf),
+                        byte_off,
+                        src as *const u8,
+                        byte_len,
+                    );
+                } else {
+                    file_buffer_read(core::ptr::addr_of_mut!((*c).fbuf), byte_off, src, byte_len);
+                }
+                (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+            } else {
+                let bs_size: u64 = (*bf).block_size as i64 as u64;
+                let block_num: c_int = ((*bf).sector_num / bs_size) as c_int;
+                let offset: c_int = ((*bf).sector_num % bs_size) as c_int;
+                n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+                (*bf).cur_block_num = block_num;
+
+                let b = bf_find_block(bf, block_num as u32);
+                if !b.is_null() {
+                    if (*b).state == CBLOCK_LOADING {
+                        /* wait until the block is loaded */
+                        return 1;
+                    } else {
+                        if (*bf).is_write != 0 {
+                            /* allocate a new cluster */
+                            let cluster_size: c_int =
+                                (*bf).sectors_per_cluster.wrapping_mul(SECTOR_SIZE);
+                            let cnew = mallocz(core::mem::size_of::<Cluster>()) as *mut Cluster;
+                            let buf = malloc(cluster_size as isize as usize) as *mut u8;
+                            file_buffer_init(core::ptr::addr_of_mut!((*cnew).fbuf));
+                            file_buffer_resize(
+                                core::ptr::addr_of_mut!((*cnew).fbuf),
+                                cluster_size as isize as usize,
+                            );
+                            *(*bf).clusters.wrapping_offset(cluster_num as isize) = cnew;
+                            /* copy the cached block data to the cluster */
+                            let cluster_offset: c_int = cluster_num
+                                .wrapping_mul((*bf).sectors_per_cluster)
+                                & (*bf).block_size.wrapping_sub(1);
+                            file_buffer_read(
+                                core::ptr::addr_of_mut!((*b).fbuf),
+                                cluster_offset.wrapping_mul(SECTOR_SIZE) as isize as usize,
+                                buf,
+                                cluster_size as isize as usize,
+                            );
+                            file_buffer_write(
+                                core::ptr::addr_of_mut!((*cnew).fbuf),
+                                0,
+                                buf,
+                                cluster_size as isize as usize,
+                            );
+                            free(buf as *mut c_void);
+                            (*bf).n_allocated_clusters =
+                                (*bf).n_allocated_clusters.wrapping_add(1);
+                            continue; /* write to the allocated cluster */
+                        } else {
+                            let io_off = (*bf).sector_index.wrapping_mul(SECTOR_SIZE);
+                            let dst = (*bf).io_buf.wrapping_offset(io_off as isize);
+                            file_buffer_read(
+                                core::ptr::addr_of_mut!((*b).fbuf),
+                                offset.wrapping_mul(SECTOR_SIZE) as isize as usize,
+                                dst,
+                                n.wrapping_mul(SECTOR_SIZE) as isize as usize,
+                            );
+                        }
+                        (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                        (*bf).sector_num = (*bf).sector_num.wrapping_add(n as i64 as u64);
+                    }
+                } else {
+                    bf_start_load_block(bs, block_num);
+                    return 1;
+                }
+                (*bf).cur_block_num = -1;
+            }
+        }
+
+        if is_sync == 0 {
+            /* end of request */
+            if let Some(cb) = (*bf).cb {
+                cb((*bf).opaque, 0);
+            }
+        }
+        0
+    }
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    unsafe {
+        let bf = (*b).bf;
+        let bs = (*bf).bs;
+
+        file_buffer_write(
+            core::ptr::addr_of_mut!((*b).fbuf),
+            0,
+            data,
+            (*bf).block_size.wrapping_mul(SECTOR_SIZE) as isize as usize,
+        );
+        (*b).state = CBLOCK_LOADED;
+
+        /* continue I/O read/write if necessary */
+        if (*b).block_num == (*bf).cur_block_num as u32 {
+            bf_rw_async1(bs, FALSE);
+        }
+    }
+}
+
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    unsafe {
+        let b = opaque as *mut CachedBlock;
+        let bf = (*b).bf;
+
+        if err < 0 {
+            fprintf(
+                stderr,
+                b"Could not load block %u\n\0".as_ptr() as *const c_char,
+                (*b).block_num,
+            );
+            exit(1);
+        }
+        bf_update_block(b, data as *const u8);
+    }
+}
+
+unsafe extern "C" fn bf_prefetch_group_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    unsafe {
+        let req = opaque as *mut PrefetchGroupRequest;
+        let bf = (*req).bf;
+
+        if err < 0 {
+            fprintf(
+                stderr,
+                b"Could not load group %u\n\0".as_ptr() as *const c_char,
+                (*req).group_num as u32,
+            );
+            exit(1);
+        }
+        let block_bytes: c_int = (*bf).block_size.wrapping_mul(SECTOR_SIZE);
+        let mut i: c_int = 0;
+        while i < (*req).n_block_num {
+            let b = (*req).tab_block[i as usize];
+            if !b.is_null() {
+                let off = (block_bytes as isize).wrapping_mul(i as isize);
+                bf_update_block(b, (data as *const u8).wrapping_offset(off));
+            }
+            i += 1;
+        }
+        free(req as *mut c_void);
+    }
+}
+
+unsafe extern "C" fn bf_read_async(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *mut u8,
+    n: c_int,
+    cb: BlockDeviceCompletionFunc,
+    opaque: *mut c_void,
+) -> c_int {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+        (*bf).is_write = FALSE;
+        (*bf).sector_num = sector_num;
+        (*bf).io_buf = buf;
+        (*bf).sector_count = n;
+        (*bf).sector_index = 0;
+        (*bf).cb = cb;
+        (*bf).opaque = opaque;
+        (*bf).n_read_sectors = (*bf).n_read_sectors.wrapping_add(n as i64);
+        bf_rw_async1(bs, TRUE)
+    }
+}
+
+unsafe extern "C" fn bf_write_async(
+    bs: *mut BlockDevice,
+    sector_num: u64,
+    buf: *const u8,
+    n: c_int,
+    cb: BlockDeviceCompletionFunc,
+    opaque: *mut c_void,
+) -> c_int {
+    unsafe {
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+        (*bf).is_write = TRUE;
+        (*bf).sector_num = sector_num;
+        (*bf).io_buf = buf as *mut u8;
+        (*bf).sector_count = n;
+        (*bf).sector_index = 0;
+        (*bf).cb = cb;
+        (*bf).opaque = opaque;
+        (*bf).n_write_sectors = (*bf).n_write_sectors.wrapping_add(n as i64);
+        bf_rw_async1(bs, TRUE)
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* config callback                                                     */
+/* ------------------------------------------------------------------ */
+
+unsafe fn config_error(cfg: JSONValue) -> ! {
+    unsafe {
+        json_free(cfg);
+        exit(1);
+    }
+}
+
+unsafe extern "C" fn bf_init_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    unsafe {
+        let bs = opaque as *mut BlockDevice;
+        let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+        let mut block_size_kb: c_int = 0;
+        let mut block_num: c_int;
+
+        if err < 0 {
+            fprintf(
+                stderr,
+                b"Could not load block device file (err=%d)\n\0".as_ptr() as *const c_char,
+                -err,
+            );
+            exit(1);
+        }
+
+        /* parse the disk image info */
+        let cfg = json_parse_value_len(data as *const c_char, size as c_int);
+        if cfg.type_ == JSON_EXCEPTION {
+            vm_error(
+                b"error: %s\n\0".as_ptr() as *const c_char,
+                json_get_error(cfg),
+            );
+            config_error(cfg);
+        }
+
+        if vm_get_int(
+            cfg,
+            b"block_size\0".as_ptr() as *const c_char,
+            &mut block_size_kb as *mut c_int,
+        ) < 0
+        {
+            config_error(cfg);
+        }
+        (*bf).block_size = block_size_kb.wrapping_mul(2);
+        if (*bf).block_size <= 0 || ((*bf).block_size & (*bf).block_size.wrapping_sub(1)) != 0 {
+            vm_error(b"invalid block_size\n\0".as_ptr() as *const c_char);
+            config_error(cfg);
+        }
+        if vm_get_int(
+            cfg,
+            b"n_block\0".as_ptr() as *const c_char,
+            core::ptr::addr_of_mut!((*bf).nb_blocks),
+        ) < 0
+        {
+            config_error(cfg);
+        }
+        if (*bf).nb_blocks <= 0 {
+            vm_error(b"invalid n_block\n\0".as_ptr() as *const c_char);
+            config_error(cfg);
+        }
+
+        (*bf).nb_sectors = ((*bf).block_size as i64 as u64)
+            .wrapping_mul((*bf).nb_blocks as i64 as u64) as i64;
+        (*bf).n_cached_blocks = 0;
+        (*bf).n_cached_blocks_max = max_int(1, (*bf).max_cache_size_kb / block_size_kb);
+        (*bf).cur_block_num = -1; /* no request in progress */
+
+        (*bf).sectors_per_cluster = 8; /* 4 KB */
+        let tmp: i64 = (*bf)
+            .nb_sectors
+            .wrapping_add((*bf).sectors_per_cluster as i64)
+            .wrapping_sub(1);
+        (*bf).n_clusters = (tmp / ((*bf).sectors_per_cluster as i64)) as c_int;
+        (*bf).clusters = mallocz(
+            core::mem::size_of::<*mut Cluster>()
+                .wrapping_mul((*bf).n_clusters as isize as usize),
+        ) as *mut *mut Cluster;
+
+        if vm_get_int_opt(
+            cfg,
+            b"prefetch_group_len\0".as_ptr() as *const c_char,
+            core::ptr::addr_of_mut!((*bf).prefetch_group_len),
+            1,
+        ) < 0
+        {
+            config_error(cfg);
+        }
+        if (*bf).prefetch_group_len > 32 {
+            vm_error(b"prefetch_group_len is too large\0".as_ptr() as *const c_char);
+            config_error(cfg);
+        }
+
+        let array = json_object_get(cfg, b"prefetch\0".as_ptr() as *const c_char);
+        if array.type_ != JSON_UNDEFINED {
+            let mut tab_block_num = [0 as c_int; 32];
+
+            if array.type_ != JSON_ARRAY {
+                vm_error(b"expecting an array\n\0".as_ptr() as *const c_char);
+                config_error(cfg);
+            }
+            let prefetch_len: c_int = (*array.u.array).len;
+            let mut idx: c_int = 0;
+            while idx < prefetch_len {
+                let l: c_int =
+                    min_int(prefetch_len.wrapping_sub(idx), (*bf).prefetch_group_len);
+                let mut i: c_int = 0;
+                while i < l {
+                    let el = json_array_get(array, idx.wrapping_add(i) as u32);
+                    if el.type_ != JSON_INT {
+                        vm_error(b"expecting an integer\n\0".as_ptr() as *const c_char);
+                        config_error(cfg);
+                    }
+                    *tab_block_num.as_mut_ptr().wrapping_offset(i as isize) = el.u.int32;
+                    i += 1;
+                }
+                if l == 1 {
+                    block_num = tab_block_num[0];
+                    if bf_find_block(bf, block_num as u32).is_null() {
+                        bf_start_load_block(bs, block_num);
+                    }
+                } else {
+                    bf_start_load_prefetch_group(
+                        bs,
+                        idx / (*bf).prefetch_group_len,
+                        tab_block_num.as_mut_ptr(),
+                        l,
+                    );
+                }
+                idx = idx.wrapping_add(l);
+            }
+        }
+        json_free(cfg);
+
+        if let Some(cb) = (*bf).start_cb {
+            cb((*bf).start_opaque);
+        }
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* exported entry point                                                */
+/* ------------------------------------------------------------------ */
+
+#[no_mangle]
+pub unsafe extern "C" fn block_device_init_http(
+    url: *const c_char,
+    max_cache_size_kb: c_int,
+    start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    start_opaque: *mut c_void,
+) -> *mut BlockDevice {
+    unsafe {
+        let bs = mallocz(core::mem::size_of::<BlockDevice>()) as *mut BlockDevice;
+        let bf = mallocz(core::mem::size_of::<BlockDeviceHTTP>()) as *mut BlockDeviceHTTP;
+        strcpy(core::ptr::addr_of_mut!((*bf).url) as *mut c_char, url);
+
+        /* get the path with the trailing '/' */
+        let mut p = my_strrchr(core::ptr::addr_of!((*bf).url) as *const c_char, b'/' as u8);
+        if p.is_null() {
+            p = core::ptr::addr_of_mut!((*bf).url) as *mut c_char;
+        } else {
+            p = p.wrapping_offset(1);
+        }
+        *p = 0;
+
+        init_list_head(core::ptr::addr_of_mut!((*bf).cached_blocks));
+        (*bf).max_cache_size_kb = max_cache_size_kb;
+        (*bf).start_cb = start_cb;
+        (*bf).start_opaque = start_opaque;
+        (*bf).bs = bs;
+
+        (*bs).opaque = bf as *mut c_void;
+        (*bs).get_sector_count = Some(bf_get_sector_count);
+        (*bs).read_async = Some(bf_read_async);
+        (*bs).write_async = Some(bf_write_async);
+
+        fs_wget(
+            url,
+            core::ptr::null(),
+            core::ptr::null(),
+            bs as *mut c_void,
+            Some(bf_init_onload),
+            TRUE,
+        );
+        bs
+    }
 }
 }
 
@@ -2061,6 +7415,848 @@ pub extern "C" fn block_device_init_http__part329(
     let ptr = cstr.as_ptr();
     forget(cstr);
     ptr as *mut c_void
+}
+}
+
+// ── `bf_init_onload` · block_net.c:439-531 · chunk 330 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void bf_init_onload(void *opaque, int err, void *data, size_t size)
+//     {
+//         BlockDevice *bs = opaque;
+//         BlockDeviceHTTP *bf = bs->opaque;
+//         int block_size_kb, block_num;
+//         JSONValue cfg, array;
+//     
+//         if (err < 0) {
+//             fprintf(
+//                    stderr
+//                          , "Could not load block device file (err=%d)\n", -err);
+//             exit(1);
+//         }
+//     
+//     
+//         cfg = json_parse_value_len(data, size);
+//         if (json_is_error(cfg)) {
+//             vm_error("error: %s\n", json_get_error(cfg));
+//         config_error:
+//             json_free(cfg);
+//             exit(1);
+//         }
+//     
+//         if (vm_get_int(cfg, "block_size", &block_size_kb) < 0)
+//             goto config_error;
+//         bf->block_size = block_size_kb * 2;
+//         if (bf->block_size <= 0 ||
+//             (bf->block_size & (bf->block_size - 1)) != 0) {
+//             vm_error("invalid block_size\n");
+//             goto config_error;
+//         }
+//         if (vm_get_int(cfg, "n_block", &bf->nb_blocks) < 0)
+//             goto config_error;
+//         if (bf->nb_blocks <= 0) {
+//             vm_error("invalid n_block\n");
+//             goto config_error;
+//         }
+//     
+//         bf->nb_sectors = bf->block_size * (uint64_t)bf->nb_blocks;
+//         bf->n_cached_blocks = 0;
+//         bf->n_cached_blocks_max = max_int(1, bf->max_cache_size_kb / block_size_kb);
+//         bf->cur_block_num = -1;
+//     
+//         bf->sectors_per_cluster = 8;
+//         bf->n_clusters = (bf->nb_sectors + bf->sectors_per_cluster - 1) / bf->sectors_per_cluster;
+//         bf->clusters = mallocz(sizeof(bf->clusters[0]) * bf->n_clusters);
+//     
+//         if (vm_get_int_opt(cfg, "prefetch_group_len",
+//                            &bf->prefetch_group_len, 1) < 0)
+//             goto config_error;
+//         if (bf->prefetch_group_len > 32) {
+//             vm_error("prefetch_group_len is too large");
+//             goto config_error;
+//         }
+//     
+//         array = json_object_get(cfg, "prefetch");
+//         if (!json_is_undefined(array)) {
+//             int idx, prefetch_len, l, i;
+//             JSONValue el;
+//             int tab_block_num[32];
+//     
+//             if (array.type != JSON_ARRAY) {
+//                 vm_error("expecting an array\n");
+//                 goto config_error;
+//             }
+//             prefetch_len = array.u.array->len;
+//             idx = 0;
+//             while (idx < prefetch_len) {
+//                 l = min_int(prefetch_len - idx, bf->prefetch_group_len);
+//                 for(i = 0; i < l; i++) {
+//                     el = json_array_get(array, idx + i);
+//                     if (el.type != JSON_INT) {
+//                         vm_error("expecting an integer\n");
+//                         goto config_error;
+//                     }
+//                     tab_block_num[i] = el.u.int32;
+//                 }
+//                 if (l == 1) {
+//                     block_num = tab_block_num[0];
+//                     if (!bf_find_block(bf, block_num)) {
+//                         bf_start_load_block(bs, block_num);
+//                     }
+//                 } else {
+//                     bf_start_load_prefetch_group(bs, idx / bf->prefetch_group_len,
+//                                                  tab_block_num, l);
+//                 }
+//                 idx += l;
+//             }
+//         }
+//         json_free(cfg);
+//     
+//         if (bf->start_cb) {
+//             bf->start_cb(bf->start_opaque);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk330 {
+// Rust port of block_net.c:bf_init_onload (TinyEMU).
+// The TARGET calls file-static helpers of the same translation unit
+// (bf_find_block, bf_start_load_block, bf_start_load_prefetch_group, which in
+// turn use bf_add_block/bf_free_block/bf_read_onload/bf_prefetch_group_onload/
+// bf_update_block/bf_rw_async1).  Those have no linker symbols, so their logic
+// is ported here as private Rust functions.
+
+#![allow(dead_code, unused_unsafe, unused_variables, unused_mut)]
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of, addr_of_mut, null, null_mut};
+
+const FALSE: c_int = 0;
+const TRUE: c_int = 1;
+
+const CBLOCK_LOADING: c_int = 0;
+const CBLOCK_LOADED: c_int = 1;
+
+const PREFETCH_GROUP_LEN_MAX: c_int = 32;
+
+const JSON_INT: c_int = 1;
+const JSON_ARRAY: c_int = 3;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+type WGetWriteCallback = Option<unsafe extern "C" fn(*mut c_void, c_int, *mut c_void, usize)>;
+type BlockDeviceCompletionFunc = Option<unsafe extern "C" fn(*mut c_void, c_int)>;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+pub struct BlockDevice {
+    pub get_sector_count: Option<unsafe extern "C" fn(*mut BlockDevice) -> i64>,
+    pub read_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *mut u8,
+            c_int,
+            BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub write_async: Option<
+        unsafe extern "C" fn(
+            *mut BlockDevice,
+            u64,
+            *const u8,
+            c_int,
+            BlockDeviceCompletionFunc,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub opaque: *mut c_void,
+}
+
+#[repr(C)]
+pub struct Cluster {
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct CachedBlock {
+    pub link: ListHead,
+    pub bf: *mut BlockDeviceHTTP,
+    pub block_num: c_uint,
+    pub state: c_int,
+    pub fbuf: FileBuffer,
+}
+
+#[repr(C)]
+pub struct PrefetchGroupRequest {
+    pub bf: *mut BlockDeviceHTTP,
+    pub group_num: c_int,
+    pub n_block_num: c_int,
+    pub tab_block: [*mut CachedBlock; PREFETCH_GROUP_LEN_MAX as usize],
+}
+
+#[repr(C)]
+pub struct BlockDeviceHTTP {
+    pub bs: *mut BlockDevice,
+    pub max_cache_size_kb: c_int,
+    pub url: [c_char; 1024],
+    pub prefetch_count: c_int,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+
+    pub nb_sectors: i64,
+    pub block_size: c_int,
+    pub nb_blocks: c_int,
+    pub cached_blocks: ListHead,
+    pub n_cached_blocks: c_int,
+    pub n_cached_blocks_max: c_int,
+
+    pub sectors_per_cluster: c_int,
+    pub clusters: *mut *mut Cluster,
+    pub n_clusters: c_int,
+    pub n_allocated_clusters: c_int,
+
+    pub n_read_sectors: i64,
+    pub n_read_blocks: i64,
+    pub n_write_sectors: i64,
+
+    pub is_write: c_int,
+    pub sector_num: u64,
+    pub cur_block_num: c_int,
+    pub sector_index: c_int,
+    pub sector_count: c_int,
+    pub cb: BlockDeviceCompletionFunc,
+    pub opaque: *mut c_void,
+    pub io_buf: *mut u8,
+
+    pub prefetch_group_len: c_int,
+}
+
+#[repr(C)]
+pub struct JSONString {
+    pub len: c_int,
+    // char data[0];
+}
+
+#[repr(C)]
+pub struct JSONArray {
+    pub len: c_int,
+    pub size: c_int,
+    pub tab: *mut JSONValue,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONUnion {
+    pub str_: *mut JSONString,
+    pub int32: c_int,
+    pub b: c_int,
+    pub obj: *mut c_void,
+    pub array: *mut JSONArray,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONUnion,
+}
+
+extern "C" {
+    static mut stderr: *mut c_void;
+
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn exit(status: c_int) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn snprintf(buf: *mut c_char, size: usize, fmt: *const c_char, ...) -> c_int;
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+
+    fn mallocz(size: usize) -> *mut c_void;
+
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_reset(bs: *mut FileBuffer);
+    fn file_buffer_resize(bs: *mut FileBuffer, new_size: usize) -> c_int;
+    fn file_buffer_write(bs: *mut FileBuffer, offset: usize, buf: *const u8, size: usize);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+
+    fn fs_wget(
+        url: *const c_char,
+        user: *const c_char,
+        password: *const c_char,
+        opaque: *mut c_void,
+        cb: WGetWriteCallback,
+        single_write: c_int,
+    ) -> *mut c_void;
+
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_free(val: JSONValue);
+    fn json_get_error(val: JSONValue) -> *const c_char;
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_array_get(val: JSONValue, idx: c_uint) -> JSONValue;
+
+    fn vm_error(fmt: *const c_char, ...);
+    fn vm_get_int(obj: JSONValue, name: *const c_char, pval: *mut c_int) -> c_int;
+    fn vm_get_int_opt(obj: JSONValue, name: *const c_char, pval: *mut c_int, def_val: c_int)
+        -> c_int;
+}
+
+#[inline]
+fn cstr(s: &'static [u8]) -> *const c_char {
+    s.as_ptr() as *const c_char
+}
+
+#[inline]
+unsafe fn get_stderr() -> *mut c_void {
+    let p = addr_of!(stderr);
+    core::ptr::read(p)
+}
+
+#[inline]
+fn max_int(a: c_int, b: c_int) -> c_int {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
+fn json_is_error(v: JSONValue) -> c_int {
+    (v.type_ == JSON_EXCEPTION) as c_int
+}
+
+#[inline]
+fn json_is_undefined(v: JSONValue) -> c_int {
+    (v.type_ == JSON_UNDEFINED) as c_int
+}
+
+unsafe fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    list_add_between(el, head, (*head).next);
+}
+
+unsafe fn list_add_between(el: *mut ListHead, prev: *mut ListHead, next: *mut ListHead) {
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+unsafe fn list_del(el: *mut ListHead) {
+    let prev = (*el).prev;
+    let next = (*el).next;
+    (*prev).next = next;
+    (*next).prev = prev;
+    (*el).prev = null_mut();
+    (*el).next = null_mut();
+}
+
+// list_entry(el, CachedBlock, link) -- link is the first member of CachedBlock
+#[inline]
+unsafe fn cached_block_of(el: *mut ListHead) -> *mut CachedBlock {
+    el as *mut CachedBlock
+}
+
+unsafe fn bf_find_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    let mut el = (*head).next;
+    while el != head {
+        let b = cached_block_of(el);
+        if (*b).block_num == block_num {
+            // move to front
+            if (*head).next != el {
+                list_del(addr_of_mut!((*b).link));
+                list_add(addr_of_mut!((*b).link), head);
+            }
+            return b;
+        }
+        el = (*el).next;
+    }
+    null_mut()
+}
+
+unsafe fn bf_free_block(bf: *mut BlockDeviceHTTP, b: *mut CachedBlock) {
+    (*bf).n_cached_blocks -= 1;
+    file_buffer_reset(addr_of_mut!((*b).fbuf));
+    list_del(addr_of_mut!((*b).link));
+    free(b as *mut c_void);
+}
+
+unsafe fn bf_add_block(bf: *mut BlockDeviceHTTP, block_num: c_uint) -> *mut CachedBlock {
+    let head = addr_of_mut!((*bf).cached_blocks);
+    if (*bf).n_cached_blocks >= (*bf).n_cached_blocks_max {
+        // start by looking at the least unused blocks
+        let mut el = (*head).prev;
+        let mut el1 = (*el).prev;
+        while el != head {
+            let b = cached_block_of(el);
+            if (*b).state == CBLOCK_LOADED {
+                bf_free_block(bf, b);
+                if (*bf).n_cached_blocks < (*bf).n_cached_blocks_max {
+                    break;
+                }
+            }
+            el = el1;
+            el1 = (*el1).prev;
+        }
+    }
+    let b = mallocz(size_of::<CachedBlock>()) as *mut CachedBlock;
+    (*b).bf = bf;
+    (*b).block_num = block_num;
+    (*b).state = CBLOCK_LOADING;
+    file_buffer_init(addr_of_mut!((*b).fbuf));
+    file_buffer_resize(
+        addr_of_mut!((*b).fbuf),
+        (*bf).block_size.wrapping_mul(512) as usize,
+    );
+    list_add(addr_of_mut!((*b).link), head);
+    (*bf).n_cached_blocks += 1;
+    b
+}
+
+unsafe fn bf_update_block(b: *mut CachedBlock, data: *const u8) {
+    let bf = (*b).bf;
+    let bs = (*bf).bs;
+
+    if (*b).state != CBLOCK_LOADING {
+        __assert_fail(
+            cstr(b"b->state == CBLOCK_LOADING\0"),
+            cstr(b"block_net.c\0"),
+            346,
+            cstr(b"bf_update_block\0"),
+        );
+    }
+    file_buffer_write(
+        addr_of_mut!((*b).fbuf),
+        0,
+        data,
+        (*bf).block_size.wrapping_mul(512) as usize,
+    );
+    (*b).state = CBLOCK_LOADED;
+
+    // continue I/O read/write if necessary
+    if (*b).block_num == (*bf).cur_block_num as c_uint {
+        bf_rw_async1(bs, FALSE);
+    }
+}
+
+unsafe extern "C" fn bf_read_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let b = opaque as *mut CachedBlock;
+    let bf = (*b).bf;
+
+    if err < 0 {
+        fprintf(
+            get_stderr(),
+            cstr(b"Could not load block %u\n\0"),
+            (*b).block_num,
+        );
+        exit(1);
+    }
+
+    if size != (*bf).block_size.wrapping_mul(512) as usize {
+        __assert_fail(
+            cstr(b"size == bf->block_size * 512\0"),
+            cstr(b"block_net.c\0"),
+            366,
+            cstr(b"bf_read_onload\0"),
+        );
+    }
+    bf_update_block(b, data as *const u8);
+}
+
+unsafe extern "C" fn bf_prefetch_group_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let req = opaque as *mut PrefetchGroupRequest;
+    let bf = (*req).bf;
+
+    if err < 0 {
+        fprintf(
+            get_stderr(),
+            cstr(b"Could not load group %u\n\0"),
+            (*req).group_num as c_uint,
+        );
+        exit(1);
+    }
+    let block_bytes = (*bf).block_size.wrapping_mul(512);
+    if size != block_bytes.wrapping_mul((*req).n_block_num) as usize {
+        __assert_fail(
+            cstr(b"size == block_bytes * req->n_block_num\0"),
+            cstr(b"block_net.c\0"),
+            252,
+            cstr(b"bf_prefetch_group_onload\0"),
+        );
+    }
+    let tab = addr_of!((*req).tab_block) as *const *mut CachedBlock;
+    let mut i: c_int = 0;
+    while i < (*req).n_block_num {
+        let b = *tab.add(i as usize);
+        if !b.is_null() {
+            let off = block_bytes.wrapping_mul(i) as isize;
+            bf_update_block(b, (data as *const u8).wrapping_offset(off));
+        }
+        i += 1;
+    }
+    free(req as *mut c_void);
+}
+
+unsafe fn bf_start_load_block(bs: *mut BlockDevice, block_num: c_int) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let b = bf_add_block(bf, block_num as c_uint);
+    (*bf).n_read_blocks += 1;
+    snprintf(
+        filename.as_mut_ptr(),
+        1024,
+        cstr(b"%sblk%09u.bin\0"),
+        addr_of!((*bf).url) as *const c_char,
+        block_num as c_uint,
+    );
+    fs_wget(
+        filename.as_ptr(),
+        null(),
+        null(),
+        b as *mut c_void,
+        Some(bf_read_onload),
+        TRUE,
+    );
+}
+
+unsafe fn bf_start_load_prefetch_group(
+    bs: *mut BlockDevice,
+    group_num: c_int,
+    tab_block_num: *const c_int,
+    n_block_num: c_int,
+) {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut filename = [0 as c_char; 1024];
+    let mut req_flag: c_int = FALSE;
+
+    let req = malloc(size_of::<PrefetchGroupRequest>()) as *mut PrefetchGroupRequest;
+    (*req).bf = bf;
+    (*req).group_num = group_num;
+    (*req).n_block_num = n_block_num;
+    let tab = addr_of_mut!((*req).tab_block) as *mut *mut CachedBlock;
+    let mut i: c_int = 0;
+    while i < n_block_num {
+        let num = *tab_block_num.add(i as usize);
+        let mut b = bf_find_block(bf, num as c_uint);
+        if b.is_null() {
+            b = bf_add_block(bf, num as c_uint);
+            req_flag = TRUE;
+        } else {
+            // no need to read the block if it is already loading or loaded
+            b = null_mut();
+        }
+        *tab.add(i as usize) = b;
+        i += 1;
+    }
+
+    if req_flag != 0 {
+        snprintf(
+            filename.as_mut_ptr(),
+            1024,
+            cstr(b"%sgrp%09u.bin\0"),
+            addr_of!((*bf).url) as *const c_char,
+            group_num as c_uint,
+        );
+        fs_wget(
+            filename.as_ptr(),
+            null(),
+            null(),
+            req as *mut c_void,
+            Some(bf_prefetch_group_onload),
+            TRUE,
+        );
+    } else {
+        free(req as *mut c_void);
+    }
+}
+
+unsafe fn bf_rw_async1(bs: *mut BlockDevice, is_sync: c_int) -> c_int {
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+
+    loop {
+        let mut n: c_int = (*bf).sector_count.wrapping_sub((*bf).sector_index);
+        if n == 0 {
+            break;
+        }
+        let spc_u = (*bf).sectors_per_cluster as u64;
+        let cluster_num: c_int = if spc_u == 0 {
+            0
+        } else {
+            ((*bf).sector_num / spc_u) as c_int
+        };
+        let clusters = (*bf).clusters;
+        let c0: *mut Cluster = if clusters.is_null() {
+            null_mut()
+        } else {
+            *clusters.add(cluster_num as usize)
+        };
+        if !c0.is_null() {
+            let offset: c_int = if spc_u == 0 {
+                0
+            } else {
+                ((*bf).sector_num % spc_u) as c_int
+            };
+            n = min_int(n, (*bf).sectors_per_cluster.wrapping_sub(offset));
+            let io = (*bf)
+                .io_buf
+                .wrapping_offset((*bf).sector_index.wrapping_mul(512) as isize);
+            if (*bf).is_write != 0 {
+                file_buffer_write(
+                    addr_of_mut!((*c0).fbuf),
+                    offset.wrapping_mul(512) as usize,
+                    io,
+                    n.wrapping_mul(512) as usize,
+                );
+            } else {
+                file_buffer_read(
+                    addr_of_mut!((*c0).fbuf),
+                    offset.wrapping_mul(512) as usize,
+                    io,
+                    n.wrapping_mul(512) as usize,
+                );
+            }
+            (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+            (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+        } else {
+            let block_size_u = (*bf).block_size as u64;
+            let block_num: c_int = if block_size_u == 0 {
+                0
+            } else {
+                ((*bf).sector_num / block_size_u) as c_int
+            };
+            let offset: c_int = if block_size_u == 0 {
+                0
+            } else {
+                ((*bf).sector_num % block_size_u) as c_int
+            };
+            n = min_int(n, (*bf).block_size.wrapping_sub(offset));
+            (*bf).cur_block_num = block_num;
+
+            let b = bf_find_block(bf, block_num as c_uint);
+            if !b.is_null() {
+                if (*b).state == CBLOCK_LOADING {
+                    // wait until the block is loaded
+                    return 1;
+                } else {
+                    if (*bf).is_write != 0 {
+                        // allocate a new cluster
+                        let c = mallocz(size_of::<Cluster>()) as *mut Cluster;
+                        let cluster_size: c_int = (*bf).sectors_per_cluster.wrapping_mul(512);
+                        let buf = malloc(cluster_size as usize) as *mut u8;
+                        file_buffer_init(addr_of_mut!((*c).fbuf));
+                        file_buffer_resize(addr_of_mut!((*c).fbuf), cluster_size as usize);
+                        if !clusters.is_null() {
+                            *clusters.add(cluster_num as usize) = c;
+                        }
+                        // copy the cached block data to the cluster
+                        let cluster_offset: c_int = cluster_num
+                            .wrapping_mul((*bf).sectors_per_cluster)
+                            & (*bf).block_size.wrapping_sub(1);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            cluster_offset.wrapping_mul(512) as usize,
+                            buf,
+                            cluster_size as usize,
+                        );
+                        file_buffer_write(addr_of_mut!((*c).fbuf), 0, buf, cluster_size as usize);
+                        free(buf as *mut c_void);
+                        (*bf).n_allocated_clusters = (*bf).n_allocated_clusters.wrapping_add(1);
+                        continue; // write to the allocated cluster
+                    } else {
+                        let io = (*bf)
+                            .io_buf
+                            .wrapping_offset((*bf).sector_index.wrapping_mul(512) as isize);
+                        file_buffer_read(
+                            addr_of_mut!((*b).fbuf),
+                            offset.wrapping_mul(512) as usize,
+                            io,
+                            n.wrapping_mul(512) as usize,
+                        );
+                    }
+                    (*bf).sector_index = (*bf).sector_index.wrapping_add(n);
+                    (*bf).sector_num = (*bf).sector_num.wrapping_add(n as u64);
+                }
+            } else {
+                bf_start_load_block(bs, block_num);
+                return 1;
+            }
+            (*bf).cur_block_num = -1;
+        }
+    }
+
+    if is_sync == 0 {
+        // end of request
+        if let Some(cb) = (*bf).cb {
+            cb((*bf).opaque, 0);
+        }
+    }
+    0
+}
+
+unsafe fn config_error(cfg: JSONValue) -> ! {
+    json_free(cfg);
+    exit(1);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn bf_init_onload(
+    opaque: *mut c_void,
+    err: c_int,
+    data: *mut c_void,
+    size: usize,
+) {
+    let bs = opaque as *mut BlockDevice;
+    let bf = (*bs).opaque as *mut BlockDeviceHTTP;
+    let mut block_size_kb: c_int = 0;
+    let mut block_num: c_int = 0;
+
+    if err < 0 {
+        fprintf(
+            get_stderr(),
+            cstr(b"Could not load block device file (err=%d)\n\0"),
+            err.wrapping_neg(),
+        );
+        exit(1);
+    }
+
+    // parse the disk image info
+    let cfg: JSONValue = json_parse_value_len(data as *const c_char, size as c_int);
+    if json_is_error(cfg) != 0 {
+        vm_error(cstr(b"error: %s\n\0"), json_get_error(cfg));
+        config_error(cfg);
+    }
+
+    if vm_get_int(cfg, cstr(b"block_size\0"), addr_of_mut!(block_size_kb)) < 0 {
+        config_error(cfg);
+    }
+    (*bf).block_size = block_size_kb.wrapping_mul(2);
+    if (*bf).block_size <= 0 || ((*bf).block_size & (*bf).block_size.wrapping_sub(1)) != 0 {
+        vm_error(cstr(b"invalid block_size\n\0"));
+        config_error(cfg);
+    }
+    if vm_get_int(cfg, cstr(b"n_block\0"), addr_of_mut!((*bf).nb_blocks)) < 0 {
+        config_error(cfg);
+    }
+    if (*bf).nb_blocks <= 0 {
+        vm_error(cstr(b"invalid n_block\n\0"));
+        config_error(cfg);
+    }
+
+    // bf->nb_sectors = bf->block_size * (uint64_t)bf->nb_blocks;
+    (*bf).nb_sectors = ((*bf).block_size as u64)
+        .wrapping_mul((*bf).nb_blocks as u64) as i64;
+    (*bf).n_cached_blocks = 0;
+    let cur_kb = if block_size_kb == 0 {
+        0
+    } else {
+        (*bf).max_cache_size_kb.wrapping_div(block_size_kb)
+    };
+    (*bf).n_cached_blocks_max = max_int(1, cur_kb);
+    (*bf).cur_block_num = -1; // no request in progress
+
+    (*bf).sectors_per_cluster = 8; // 4 KB
+    let spc = (*bf).sectors_per_cluster as i64;
+    let tmp = (*bf).nb_sectors.wrapping_add(spc).wrapping_sub(1);
+    let nclu = if spc == 0 { 0 } else { tmp.wrapping_div(spc) };
+    (*bf).n_clusters = nclu as c_int;
+    (*bf).clusters = mallocz(size_of::<*mut Cluster>().wrapping_mul((*bf).n_clusters as usize))
+        as *mut *mut Cluster;
+
+    if vm_get_int_opt(
+        cfg,
+        cstr(b"prefetch_group_len\0"),
+        addr_of_mut!((*bf).prefetch_group_len),
+        1,
+    ) < 0
+    {
+        config_error(cfg);
+    }
+    if (*bf).prefetch_group_len > PREFETCH_GROUP_LEN_MAX {
+        vm_error(cstr(b"prefetch_group_len is too large\0"));
+        config_error(cfg);
+    }
+
+    let array: JSONValue = json_object_get(cfg, cstr(b"prefetch\0"));
+    if json_is_undefined(array) == 0 {
+        let mut tab_block_num = [0 as c_int; PREFETCH_GROUP_LEN_MAX as usize];
+        let tab_ptr = tab_block_num.as_mut_ptr();
+
+        if array.type_ != JSON_ARRAY {
+            vm_error(cstr(b"expecting an array\n\0"));
+            config_error(cfg);
+        }
+        let prefetch_len: c_int = (*(array.u.array)).len;
+        let mut idx: c_int = 0;
+        while idx < prefetch_len {
+            let l: c_int = min_int(prefetch_len.wrapping_sub(idx), (*bf).prefetch_group_len);
+            let mut i: c_int = 0;
+            while i < l {
+                let el: JSONValue = json_array_get(array, idx.wrapping_add(i) as c_uint);
+                if el.type_ != JSON_INT {
+                    vm_error(cstr(b"expecting an integer\n\0"));
+                    config_error(cfg);
+                }
+                *tab_ptr.add(i as usize) = el.u.int32;
+                i += 1;
+            }
+            if l == 1 {
+                block_num = *tab_ptr;
+                if bf_find_block(bf, block_num as c_uint).is_null() {
+                    bf_start_load_block(bs, block_num);
+                }
+            } else {
+                let group = if (*bf).prefetch_group_len == 0 {
+                    0
+                } else {
+                    idx.wrapping_div((*bf).prefetch_group_len)
+                };
+                bf_start_load_prefetch_group(bs, group, tab_ptr, l);
+            }
+            idx = idx.wrapping_add(l);
+        }
+    }
+    json_free(cfg);
+
+    if let Some(cb) = (*bf).start_cb {
+        cb((*bf).start_opaque);
+    }
 }
 }
 

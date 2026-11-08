@@ -1,5 +1,354 @@
 //! From `slirp/ip_icmp.c`.
 
+// ── `icmp_input` · slirp/ip_icmp.c:66-166 · chunk 2316 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     icmp_input(struct mbuf *m, int hlen)
+//     {
+//       register struct icmp *icp;
+//       register struct ip *ip=((struct ip *)(m)->m_hdr.mh_data);
+//       int icmplen=ip->ip_len;
+//       Slirp *slirp = m->slirp;
+//     
+//       ;
+//       ;
+//       ;
+//     
+//     
+//     
+//     
+//     
+//       if (icmplen < 8) {
+//       freeit:
+//         m_free(m);
+//         goto end_error;
+//       }
+//     
+//       m->m_hdr.mh_len -= hlen;
+//       m->m_hdr.mh_data += hlen;
+//       icp = ((struct icmp *)(m)->m_hdr.mh_data);
+//       if (cksum(m, icmplen)) {
+//         goto freeit;
+//       }
+//       m->m_hdr.mh_len += hlen;
+//       m->m_hdr.mh_data -= hlen;
+//     
+//       ;
+//       switch (icp->icmp_type) {
+//       case 8:
+//         icp->icmp_type = 0;
+//         ip->ip_len += hlen;
+//         if (ip->ip_dst.s_addr == slirp->vhost_addr.s_addr) {
+//           icmp_reflect(m);
+//         } else {
+//           struct socket *so;
+//           struct sockaddr_in addr;
+//           if ((so = socreate(slirp)) == 
+//                                        ((void *)0)
+//                                            ) goto freeit;
+//           if(udp_attach(so) == -1) {
+//     
+//                                  ;
+//      sofree(so);
+//      m_free(m);
+//      goto end_error;
+//           }
+//           so->so_m = m;
+//           so->so_faddr = ip->ip_dst;
+//           so->so_fport = htons(7);
+//           so->so_laddr = ip->ip_src;
+//           so->so_lport = htons(9);
+//           so->so_iptos = ip->ip_tos;
+//           so->so_type = 
+//                        IPPROTO_ICMP
+//                                    ;
+//           so->so_state = 0x004;
+//     
+//     
+//           addr.sin_family = 
+//                            2
+//                                   ;
+//           if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
+//               slirp->vnetwork_addr.s_addr) {
+//     
+//      if (so->so_faddr.s_addr == slirp->vnameserver_addr.s_addr) {
+//        if (get_dns_addr(&addr.sin_addr) < 0)
+//          addr.sin_addr = loopback_addr;
+//      } else {
+//        addr.sin_addr = loopback_addr;
+//      }
+//           } else {
+//      addr.sin_addr = so->so_faddr;
+//           }
+//           addr.sin_port = so->so_fport;
+//           if(sendto(so->s, icmp_ping_msg, strlen(icmp_ping_msg), 0,
+//       (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+//     
+//                                  ;
+//      icmp_error(m, 3,0, 0,strerror(
+//                                                             (*__errno_location ())
+//                                                                  ));
+//      udp_detach(so);
+//           }
+//         }
+//         break;
+//       case 3:
+//     
+//       case 11:
+//       case 12:
+//       case 4:
+//       case 13:
+//       case 17:
+//       case 5:
+//         m_free(m);
+//         break;
+//     
+//       default:
+//         m_free(m);
+//       }
+//     
+//     end_error:
+//     
+//       return;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2316 {
+// Rust rewrite of slirp/ip_icmp.c:icmp_input
+#![allow(non_upper_case_globals)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+// Only the leading fields that are actually accessed are mirrored; the
+// offsets match the C definition exactly.
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub m_dat_union: *mut c_char, // union M_dat { char m_dat_[1]; char *m_ext_; }
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct tcpiphdr {
+    _private: [u8; 0],
+}
+
+// Fields up to so_state are mirrored (offsets match the C layout).
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C, packed)]
+pub struct ip {
+    pub ip_hl_v: u8, // u_int ip_hl:4, ip_v:4
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: in_addr,
+    pub ip_dst: in_addr,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct icmp {
+    pub icmp_type: u8,
+    pub icmp_code: u8,
+    pub icmp_cksum: u16,
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct sockaddr {
+    pub sa_family: u16,
+    pub sa_data: [c_char; 14],
+}
+
+#[allow(non_camel_case_types)]
+#[repr(C)]
+pub struct sockaddr_in {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: in_addr,
+    pub sin_zero: [u8; 8],
+}
+
+static ICMP_PING_MSG: &[u8] =
+    b"This is a pseudo-PING packet used by Slirp to emulate ICMP ECHO-REQUEST packets.\n\0";
+
+extern "C" {
+    fn m_free(m: *mut mbuf);
+    fn cksum(m: *mut mbuf, len: c_int) -> c_int;
+    fn icmp_reflect(m: *mut mbuf);
+    fn icmp_error(msrc: *mut mbuf, ty: u8, code: u8, minsize: c_int, message: *const c_char);
+    fn socreate(slirp: *mut Slirp) -> *mut socket;
+    fn sofree(so: *mut socket);
+    fn udp_attach(so: *mut socket) -> c_int;
+    fn udp_detach(so: *mut socket);
+    fn get_dns_addr(pdns_addr: *mut in_addr) -> c_int;
+    fn htons(hostshort: u16) -> u16;
+    fn strerror(errnum: c_int) -> *mut c_char;
+    fn __errno_location() -> *mut c_int;
+    fn sendto(
+        fd: c_int,
+        buf: *const c_void,
+        n: usize,
+        flags: c_int,
+        addr: *const sockaddr,
+        addr_len: u32,
+    ) -> isize;
+    static mut loopback_addr: in_addr;
+}
+
+#[no_mangle]
+pub extern "C" fn icmp_input(m: *mut mbuf, hlen: c_int) {
+    unsafe {
+        let ip = (*m).m_hdr.mh_data as *mut ip;
+        let icmplen: c_int = (*ip).ip_len as c_int;
+        let slirp: *mut Slirp = (*m).slirp;
+
+        // Locate icmp structure in mbuf, and check that it's not corrupted
+        // and of at least minimum length.
+        if icmplen < 8 {
+            // freeit:
+            m_free(m);
+            return;
+        }
+
+        (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_sub(hlen);
+        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(hlen as isize);
+        let icp = (*m).m_hdr.mh_data as *mut icmp;
+        if cksum(m, icmplen) != 0 {
+            m_free(m);
+            return;
+        }
+        (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(hlen);
+        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset((hlen as isize).wrapping_neg());
+
+        match (*icp).icmp_type {
+            8 => {
+                // ICMP_ECHO -> ICMP_ECHOREPLY
+                (*icp).icmp_type = 0;
+                (*ip).ip_len = (*ip).ip_len.wrapping_add(hlen as u16); // ip_input subtracted hlen
+                let ip_dst = (*ip).ip_dst;
+                if ip_dst.s_addr == (*slirp).vhost_addr.s_addr {
+                    icmp_reflect(m);
+                } else {
+                    let so = socreate(slirp);
+                    if so.is_null() {
+                        m_free(m);
+                        return;
+                    }
+                    if udp_attach(so) == -1 {
+                        sofree(so);
+                        m_free(m);
+                        return;
+                    }
+                    (*so).so_m = m;
+                    (*so).so_faddr = ip_dst;
+                    (*so).so_fport = htons(7);
+                    (*so).so_laddr = (*ip).ip_src;
+                    (*so).so_lport = htons(9);
+                    (*so).so_iptos = (*ip).ip_tos;
+                    (*so).so_type = 1; // IPPROTO_ICMP
+                    (*so).so_state = 0x004; // SS_ISFCONNECTED
+
+                    let mut addr: sockaddr_in = core::mem::zeroed();
+                    addr.sin_family = 2; // AF_INET
+                    if ((*so).so_faddr.s_addr & (*slirp).vnetwork_mask.s_addr)
+                        == (*slirp).vnetwork_addr.s_addr
+                    {
+                        // It's an alias
+                        if (*so).so_faddr.s_addr == (*slirp).vnameserver_addr.s_addr {
+                            if get_dns_addr(&mut addr.sin_addr) < 0 {
+                                addr.sin_addr = core::ptr::read(core::ptr::addr_of!(loopback_addr));
+                            }
+                        } else {
+                            addr.sin_addr = core::ptr::read(core::ptr::addr_of!(loopback_addr));
+                        }
+                    } else {
+                        addr.sin_addr = (*so).so_faddr;
+                    }
+                    addr.sin_port = (*so).so_fport;
+                    let sent = sendto(
+                        (*so).s,
+                        ICMP_PING_MSG.as_ptr() as *const c_void,
+                        ICMP_PING_MSG.len().saturating_sub(1),
+                        0,
+                        &addr as *const sockaddr_in as *const sockaddr,
+                        core::mem::size_of::<sockaddr_in>() as u32,
+                    );
+                    if sent == -1 {
+                        let errnum = *__errno_location();
+                        icmp_error(m, 3, 0, 0, strerror(errnum));
+                        udp_detach(so);
+                    }
+                }
+            }
+            3 | 11 | 12 | 4 | 13 | 17 | 5 => {
+                m_free(m);
+            }
+            _ => {
+                m_free(m);
+            }
+        }
+    }
+}
+}
+
 // ── `register struct icmp *icp; register struct ip *ip=((struct ip *)(m)->m_hdr.mh_data); int icmple…` · slirp/ip_icmp.c:69-76 · chunk 2317 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -527,6 +876,376 @@ pub mod chunk2323 {
 // Ported piece of icmp_input: the end_error label body, which just returns.
 #[no_mangle]
 pub extern "C" fn icmp_input__part2323() {}
+}
+
+// ── `icmp_error` · slirp/ip_icmp.c:188-300 · chunk 2324 · deepseek/deepseek-v4.1-flash-1017 · 4 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     icmp_error(struct mbuf *msrc, u_char type, u_char code, int minsize,
+//                const char *message)
+//     {
+//       unsigned hlen, shlen, s_ip_len;
+//       register struct ip *ip;
+//       register struct icmp *icp;
+//       register struct mbuf *m;
+//     
+//       ;
+//       ;
+//       ;
+//     
+//       if(type!=3 && type!=11) goto end_error;
+//     
+//     
+//       if(!msrc) goto end_error;
+//       ip = ((struct ip *)(msrc)->m_hdr.mh_data);
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       if(ip->ip_off & 0x1fff) goto end_error;
+//     
+//       shlen=ip->ip_hl << 2;
+//       s_ip_len=ip->ip_len;
+//       if(ip->ip_p == 
+//                     IPPROTO_ICMP
+//                                 ) {
+//         icp = (struct icmp *)((char *)ip + shlen);
+//     
+//     
+//     
+//     
+//         if(icp->icmp_type>18 || icmp_flush[icp->icmp_type]) goto end_error;
+//       }
+//     
+//     
+//       m = m_get(msrc->slirp);
+//       if (!m) {
+//           goto end_error;
+//       }
+//     
+//       { int new_m_size;
+//         new_m_size=sizeof(struct ip )+8 +msrc->m_hdr.mh_len+(576 -28);
+//         if(new_m_size>m->m_hdr.mh_size) m_inc(m, new_m_size);
+//       }
+//       memcpy(m->m_hdr.mh_data, msrc->m_hdr.mh_data, msrc->m_hdr.mh_len);
+//       m->m_hdr.mh_len = msrc->m_hdr.mh_len;
+//     
+//     
+//       ip = ((struct ip *)(m)->m_hdr.mh_data);
+//       hlen= sizeof(struct ip );
+//     
+//     
+//       m->m_hdr.mh_data += hlen;
+//       m->m_hdr.mh_len -= hlen;
+//     
+//       icp = ((struct icmp *)(m)->m_hdr.mh_data);
+//     
+//       if(minsize) s_ip_len=shlen+8;
+//       else if(s_ip_len>(576 -28))
+//         s_ip_len=(576 -28);
+//     
+//       m->m_hdr.mh_len=8 +s_ip_len;
+//     
+//     
+//     
+//       icp->icmp_type = type;
+//       icp->icmp_code = code;
+//       icp->icmp_hun.ih_idseq.icd_id = 0;
+//       icp->icmp_hun.ih_idseq.icd_seq = 0;
+//     
+//       memcpy(&icp->icmp_dun.id_ip.idi_ip, msrc->m_hdr.mh_data, s_ip_len);
+//       ((icp->icmp_dun.id_ip.idi_ip.ip_len) = htons((uint16_t)(icp->icmp_dun.id_ip.idi_ip.ip_len)));
+//       ((icp->icmp_dun.id_ip.idi_ip.ip_id) = htons((uint16_t)(icp->icmp_dun.id_ip.idi_ip.ip_id)));
+//       ((icp->icmp_dun.id_ip.idi_ip.ip_off) = htons((uint16_t)(icp->icmp_dun.id_ip.idi_ip.ip_off)));
+//       icp->icmp_cksum = 0;
+//       icp->icmp_cksum = cksum(m, m->m_hdr.mh_len);
+//     
+//       m->m_hdr.mh_data -= hlen;
+//       m->m_hdr.mh_len += hlen;
+//     
+//     
+//       ip->ip_hl = hlen >> 2;
+//       ip->ip_len = m->m_hdr.mh_len;
+//     
+//       ip->ip_tos=((ip->ip_tos & 0x1E) | 0xC0);
+//     
+//       ip->ip_ttl = 255;
+//       ip->ip_p = 
+//                 IPPROTO_ICMP
+//                             ;
+//       ip->ip_dst = ip->ip_src;
+//       ip->ip_src = m->slirp->vhost_addr;
+//     
+//       (void ) ip_output((struct socket *)
+//                                         ((void *)0)
+//                                             , m);
+//     
+//     end_error:
+//       return;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2324 {
+// Rust port of slirp's icmp_error() (slirp/ip_icmp.c).
+// Layouts mirror the C structures exactly; compile-time assertions below pin
+// down every offset this code relies on.
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct InAddr {
+    s_addr: u32,
+}
+
+// struct ip (packed): the 4-bit bitfields ip_hl/ip_v share the first byte.
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+struct Ip {
+    ip_hl_v: u8,
+    ip_tos: u8,
+    ip_len: u16,
+    ip_id: u16,
+    ip_off: u16,
+    ip_ttl: u8,
+    ip_p: u8,
+    ip_sum: u16,
+    ip_src: InAddr,
+    ip_dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IhIdseq {
+    icd_id: u16,
+    icd_seq: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+union IcmpHun {
+    ih_pptr: u8,
+    ih_gwaddr: InAddr,
+    ih_idseq: IhIdseq,
+    ih_void: c_int,
+}
+
+// struct icmp up to and including icmp_hun; icmp_dun starts at offset 8.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IcmpHead {
+    icmp_type: u8,
+    icmp_code: u8,
+    icmp_cksum: u16,
+    icmp_hun: IcmpHun,
+}
+
+// struct m_hdr
+#[repr(C)]
+struct MHdr {
+    mh_next: *mut MBuf,
+    mh_prev: *mut MBuf,
+    mh_nextpkt: *mut MBuf,
+    mh_prevpkt: *mut MBuf,
+    mh_flags: c_int,
+    mh_size: c_int,
+    mh_so: *mut c_void,
+    mh_data: *mut c_char,
+    mh_len: c_int,
+}
+
+// struct mbuf (prefix; the trailing union M_dat is never touched here)
+#[repr(C)]
+struct MBuf {
+    m_hdr: MHdr,
+    slirp: *mut Slirp,
+}
+
+// struct Slirp (prefix; only vhost_addr is read here)
+#[repr(C)]
+struct Slirp {
+    vnetwork_addr: InAddr,
+    vnetwork_mask: InAddr,
+    vhost_addr: InAddr,
+}
+
+// Offsets used by this translation.
+const _: [(); 20] = [(); core::mem::size_of::<Ip>()];
+const _: [(); 8] = [(); core::mem::size_of::<IcmpHead>()];
+const _: [(); 4] = [(); core::mem::align_of::<IcmpHead>()];
+const _: [(); 4] = [(); core::mem::offset_of!(IcmpHead, icmp_hun)];
+const _: [(); 48] = [(); core::mem::offset_of!(MHdr, mh_data)];
+const _: [(); 56] = [(); core::mem::offset_of!(MHdr, mh_len)];
+const _: [(); 64] = [(); core::mem::offset_of!(MBuf, slirp)];
+const _: [(); 8] = [(); core::mem::offset_of!(Slirp, vhost_addr)];
+
+// static const int icmp_flush[19] from slirp/ip_icmp.c
+static ICMP_FLUSH: [c_int; 19] = [
+    0, // ECHO REPLY (0)
+    1, 1, 1, // DEST UNREACH (3)
+    1, // SOURCE QUENCH (4)
+    1, // REDIRECT (5)
+    1, 1,
+    0, // ECHO (8)
+    1, // ROUTERADVERT (9)
+    1, // ROUTERSOLICIT (10)
+    1, // TIME EXCEEDED (11)
+    1, // PARAMETER PROBLEM (12)
+    0, // TIMESTAMP (13)
+    0, // TIMESTAMP REPLY (14)
+    0, // INFO (15)
+    0, // INFO REPLY (16)
+    0, // ADDR MASK (17)
+    0, // ADDR MASK REPLY (18)
+];
+
+const IPPROTO_ICMP: u8 = 1;
+const IP_OFFMASK: u16 = 0x1fff;
+const ICMP_MINLEN: u32 = 8;
+const ICMP_MAXDATALEN: u32 = 576 - 28;
+const SIZEOF_IP: u32 = 20;
+const MAXTTL: u8 = 255;
+
+extern "C" {
+    fn m_get(slirp: *mut Slirp) -> *mut MBuf;
+    fn m_inc(m: *mut MBuf, size: c_int);
+    fn cksum(m: *mut MBuf, len: c_int) -> c_int;
+    fn ip_output(so: *mut c_void, m: *mut MBuf) -> c_int;
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[inline]
+fn icmp_dun_ip(icp: *mut IcmpHead) -> *mut Ip {
+    // offsetof(struct icmp, icmp_dun.id_ip.idi_ip) == 8 (asserted above)
+    unsafe { (icp as *mut u8).add(8) as *mut Ip }
+}
+
+#[no_mangle]
+pub extern "C" fn icmp_error(
+    msrc: *mut MBuf,
+    ty: u8,
+    code: u8,
+    minsize: c_int,
+    message: *const c_char,
+) {
+    // `message` is only consumed by the #ifdef DEBUG block, which is compiled out.
+    let _ = message;
+    unsafe {
+        icmp_error_impl(msrc, ty, code, minsize);
+    }
+}
+
+unsafe fn icmp_error_impl(msrc: *mut MBuf, ty: u8, code: u8, minsize: c_int) {
+    'end_error: {
+        // if(type!=ICMP_UNREACH && type!=ICMP_TIMXCEED) goto end_error;
+        if ty != 3 && ty != 11 {
+            break 'end_error;
+        }
+
+        // check msrc
+        if msrc.is_null() {
+            break 'end_error;
+        }
+        let mut ip = (*msrc).m_hdr.mh_data as *mut Ip;
+
+        // Only reply to fragment 0
+        if ((*ip).ip_off & IP_OFFMASK) != 0 {
+            break 'end_error;
+        }
+
+        let shlen: u32 = (((*ip).ip_hl_v & 0x0f) as u32) << 2;
+        let mut s_ip_len: u32 = (*ip).ip_len as u32;
+        if (*ip).ip_p == IPPROTO_ICMP {
+            let icp = (ip as *mut u8).add(shlen as usize) as *mut IcmpHead;
+            // Assume any unknown ICMP type is an error.
+            let icmp_type = (*icp).icmp_type;
+            if icmp_type > 18 || *ICMP_FLUSH.get(icmp_type as usize).unwrap_or(&1) != 0 {
+                break 'end_error;
+            }
+        }
+
+        // make a copy
+        let m = m_get((*msrc).slirp);
+        if m.is_null() {
+            break 'end_error;
+        }
+
+        {
+            let new_m_size: c_int = SIZEOF_IP as c_int
+                + ICMP_MINLEN as c_int
+                + (*msrc).m_hdr.mh_len
+                + ICMP_MAXDATALEN as c_int;
+            if new_m_size > (*m).m_hdr.mh_size {
+                m_inc(m, new_m_size);
+            }
+        }
+        memcpy(
+            (*m).m_hdr.mh_data as *mut c_void,
+            (*msrc).m_hdr.mh_data as *const c_void,
+            (*msrc).m_hdr.mh_len as usize,
+        );
+        (*m).m_hdr.mh_len = (*msrc).m_hdr.mh_len; // copy msrc to m
+
+        // make the header of the reply packet
+        ip = (*m).m_hdr.mh_data as *mut Ip;
+        let hlen: u32 = SIZEOF_IP; // no options in reply
+
+        // fill in icmp
+        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.add(hlen as usize);
+        (*m).m_hdr.mh_len -= hlen as c_int;
+
+        let icp = (*m).m_hdr.mh_data as *mut IcmpHead;
+
+        if minsize != 0 {
+            s_ip_len = shlen + ICMP_MINLEN; // return header+8b only
+        } else if s_ip_len > ICMP_MAXDATALEN {
+            // maximum size
+            s_ip_len = ICMP_MAXDATALEN;
+        }
+
+        (*m).m_hdr.mh_len = ICMP_MINLEN as c_int + s_ip_len as c_int; // 8 bytes ICMP header
+
+        (*icp).icmp_type = ty;
+        (*icp).icmp_code = code;
+        let hun = core::ptr::addr_of_mut!((*icp).icmp_hun) as *mut IhIdseq;
+        (*hun).icd_id = 0;
+        (*hun).icd_seq = 0;
+
+        let idi_ip = icmp_dun_ip(icp);
+        memcpy(
+            idi_ip as *mut c_void,
+            (*msrc).m_hdr.mh_data as *const c_void,
+            s_ip_len as usize,
+        ); // report the ip packet
+        // HTONS() on each of these three fields.
+        (*idi_ip).ip_len = (*idi_ip).ip_len.to_be();
+        (*idi_ip).ip_id = (*idi_ip).ip_id.to_be();
+        (*idi_ip).ip_off = (*idi_ip).ip_off.to_be();
+
+        (*icp).icmp_cksum = 0;
+        (*icp).icmp_cksum = cksum(m, (*m).m_hdr.mh_len) as u16;
+
+        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.sub(hlen as usize);
+        (*m).m_hdr.mh_len += hlen as c_int;
+
+        // fill in ip (the bitfield write keeps ip_v in the high nibble)
+        let hl_v = (*ip).ip_hl_v;
+        (*ip).ip_hl_v = (hl_v & 0xf0) | (((hlen >> 2) as u8) & 0x0f);
+        (*ip).ip_len = (*m).m_hdr.mh_len as u16;
+
+        (*ip).ip_tos = ((*ip).ip_tos & 0x1E) | 0xC0; // high priority for errors
+
+        (*ip).ip_ttl = MAXTTL;
+        (*ip).ip_p = IPPROTO_ICMP;
+        (*ip).ip_dst = (*ip).ip_src; // ip addresses
+        (*ip).ip_src = (*(*m).slirp).vhost_addr;
+
+        let _ = ip_output(core::ptr::null_mut(), m);
+    }
+}
 }
 
 // ── `unsigned hlen, shlen, s_ip_len; register struct ip *ip; register struct icmp *icp; register str…` · slirp/ip_icmp.c:192-199 · chunk 2325 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
@@ -1355,6 +2074,167 @@ pub mod chunk2338 {
 #[no_mangle]
 pub extern "C" fn icmp_error__part2338() {
     // nothing to do: the original body was just `return;`
+}
+}
+
+// ── `icmp_reflect` · slirp/ip_icmp.c:306-351 · chunk 2339 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     icmp_reflect(struct mbuf *m)
+//     {
+//       register struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data);
+//       int hlen = ip->ip_hl << 2;
+//       int optlen = hlen - sizeof(struct ip );
+//       register struct icmp *icp;
+//     
+//     
+//     
+//     
+//     
+//       m->m_hdr.mh_data += hlen;
+//       m->m_hdr.mh_len -= hlen;
+//       icp = ((struct icmp *)(m)->m_hdr.mh_data);
+//     
+//       icp->icmp_cksum = 0;
+//       icp->icmp_cksum = cksum(m, ip->ip_len - hlen);
+//     
+//       m->m_hdr.mh_data -= hlen;
+//       m->m_hdr.mh_len += hlen;
+//     
+//     
+//       if (optlen > 0) {
+//     
+//     
+//     
+//     
+//         memmove((caddr_t)(ip + 1), (caddr_t)ip + hlen,
+//          (unsigned )(m->m_hdr.mh_len - hlen));
+//         hlen -= optlen;
+//         ip->ip_hl = hlen >> 2;
+//         ip->ip_len -= optlen;
+//         m->m_hdr.mh_len -= optlen;
+//       }
+//     
+//       ip->ip_ttl = 255;
+//       {
+//         struct in_addr icmp_dst;
+//         icmp_dst = ip->ip_dst;
+//         ip->ip_dst = ip->ip_src;
+//         ip->ip_src = icmp_dst;
+//       }
+//     
+//       (void ) ip_output((struct socket *)
+//                                         ((void *)0)
+//                                             , m);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2339 {
+// Port of slirp/ip_icmp.c: icmp_reflect()
+//
+// The C struct ip is declared `__attribute__((packed))` with an `u_int
+// ip_hl:4, ip_v:4` bitfield word, so the on-the-wire header is 20 bytes and
+// the first byte holds ip_hl in its low nibble (little endian).
+
+use core::ffi::{c_char, c_int, c_void};
+
+/// `sizeof(struct ip)` in the C program.
+const SIZEOF_IP: c_int = 20;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C, packed)]
+pub struct Ip {
+    // `u_int ip_hl:4, ip_v:4;` packed bitfield word (occupies 1 byte here)
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut c_void, // struct socket *
+    pub mh_data: *mut c_char, // caddr_t
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    // remaining members (slirp, M_dat) are not accessed here
+}
+
+extern "C" {
+    fn cksum(m: *mut Mbuf, len: c_int) -> c_int;
+    fn ip_output(so: *mut c_void, m: *mut Mbuf) -> c_int;
+    fn memmove(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn icmp_reflect(m: *mut Mbuf) {
+    let ip = (*m).m_hdr.mh_data as *mut Ip;
+    let mut hlen: c_int = (((*ip).ip_hl_v & 0x0f) as c_int) << 2;
+    let optlen: c_int = hlen - SIZEOF_IP;
+
+    /*
+     * Send an icmp packet back to the ip level,
+     * after supplying a checksum.
+     */
+    (*m).m_hdr.mh_data = ((*m).m_hdr.mh_data as *mut u8).offset(hlen as isize) as *mut c_char;
+    (*m).m_hdr.mh_len -= hlen;
+
+    // icp = mtod(m, struct icmp *); icmp_cksum lives at offset 2
+    let cksum_ptr = ((*m).m_hdr.mh_data as *mut u8).add(2) as *mut u16;
+    core::ptr::write_unaligned(cksum_ptr, 0u16);
+    let ck: c_int = cksum(m, (*ip).ip_len as c_int - hlen);
+    core::ptr::write_unaligned(cksum_ptr, ck as u16);
+
+    (*m).m_hdr.mh_data = ((*m).m_hdr.mh_data as *mut u8).offset(-(hlen as isize)) as *mut c_char;
+    (*m).m_hdr.mh_len += hlen;
+
+    /* fill in ip */
+    if optlen > 0 {
+        /*
+         * Strip out original options by copying rest of first
+         * mbuf's data back, and adjust the IP length.
+         */
+        let n: usize = ((*m).m_hdr.mh_len - hlen) as u32 as usize;
+        let dest = (ip as *mut u8).add(SIZEOF_IP as usize) as *mut c_void;
+        let src = (ip as *mut u8).offset(hlen as isize) as *const c_void;
+        memmove(dest, src, n);
+
+        hlen -= optlen;
+        let v = (*ip).ip_hl_v;
+        (*ip).ip_hl_v = (v & 0xf0) | (((hlen >> 2) as u8) & 0x0f);
+        (*ip).ip_len = (*ip).ip_len.wrapping_sub(optlen as u16);
+        (*m).m_hdr.mh_len -= optlen;
+    }
+
+    (*ip).ip_ttl = 255;
+
+    /* swap ip_dst and ip_src */
+    let icmp_dst: InAddr = (*ip).ip_dst;
+    (*ip).ip_dst = (*ip).ip_src;
+    (*ip).ip_src = icmp_dst;
+
+    let _ = ip_output(core::ptr::null_mut(), m);
 }
 }
 

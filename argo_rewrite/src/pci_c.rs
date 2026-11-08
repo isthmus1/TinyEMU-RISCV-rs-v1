@@ -1,5 +1,62 @@
 //! From `pci.c`.
 
+// ── `bus_map_irq` · pci.c:63-68 · chunk 1478 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int bus_map_irq(PCIDevice *d, int irq_num)
+//     {
+//         int slot_addend;
+//         slot_addend = (d->devfn >> 3) - 1;
+//         return (irq_num + slot_addend) & 3;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1478 {
+// Rust port of: static int bus_map_irq(PCIDevice *d, int irq_num)
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque forward-declared C types (only used behind pointers here).
+pub enum PCIBus {}
+pub enum PhysMemoryMap {}
+
+// typedef void SetIRQFunc(void *opaque, int irq_num, int level);
+pub type SetIRQFunc =
+    Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>;
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: SetIRQFunc,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[no_mangle]
+pub extern "C" fn bus_map_irq(d: *mut PCIDevice, irq_num: c_int) -> c_int {
+    let devfn = unsafe { (*d).devfn } as c_int;
+    let slot_addend: c_int = (devfn >> 3) - 1;
+    irq_num.wrapping_add(slot_addend) & 3
+}
+}
+
 // ── `int slot_addend; slot_addend = (d->devfn >> 3) - 1; return (irq_num + slot_addend) & 3;` · pci.c:65-67 · chunk 1479 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -54,6 +111,126 @@ pub unsafe extern "C" fn bus_map_irq__part1479(d: *mut PCIDevice, irq_num: c_int
     let devfn: c_int = (*d).devfn as c_int;
     let slot_addend: c_int = (devfn >> 3) - 1;
     (irq_num + slot_addend) & 3
+}
+}
+
+// ── `pci_device_set_irq` · pci.c:70-91 · chunk 1480 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void pci_device_set_irq(void *opaque, int irq_num, int level)
+//     {
+//         PCIDevice *d = opaque;
+//         PCIBus *b = d->bus;
+//         uint32_t mask;
+//         int i, irq_level;
+//     
+//     
+//         irq_num = bus_map_irq(d, irq_num);
+//         mask = 1 << (d->devfn & 0x1f);
+//         if (level)
+//             b->irq_state[irq_num][d->devfn >> 5] |= mask;
+//         else
+//             b->irq_state[irq_num][d->devfn >> 5] &= ~mask;
+//     
+//     
+//         mask = 0;
+//         for(i = 0; i < 8; i++)
+//             mask |= b->irq_state[irq_num][i];
+//         irq_level = (mask != 0);
+//         set_irq(&b->irq[irq_num], irq_level);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1480 {
+// Rust rewrite of pci_device_set_irq (pci.c), plus its private helpers
+// bus_map_irq and set_irq (both C `static`).
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type SetIRQFunc = unsafe extern "C" fn(*mut c_void, c_int, c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+pub type PCIBarSetFunc =
+    unsafe extern "C" fn(*mut c_void, c_int, u32, c_int);
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[inline]
+unsafe fn bus_map_irq(d: *mut PCIDevice, irq_num: c_int) -> c_int {
+    let devfn = (*d).devfn;
+    let slot_addend: c_int = ((devfn >> 3) as c_int) - 1;
+    irq_num.wrapping_add(slot_addend) & 3
+}
+
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    if let Some(f) = (*irq).set_irq {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_set_irq(opaque: *mut c_void, mut irq_num: c_int, level: c_int) {
+    let d = opaque as *mut PCIDevice;
+    let b = (*d).bus;
+    let mut mask: u32;
+
+    let devfn = (*d).devfn;
+    irq_num = bus_map_irq(d, irq_num);
+    mask = 1u32 << ((devfn & 0x1f) as u32);
+
+    let row: *mut u32 = (&mut (*b).irq_state as *mut [[u32; 8]; 4] as *mut u32)
+        .add((irq_num as usize) * 8);
+    let cell = row.add((devfn >> 5) as usize);
+    if level != 0 {
+        *cell |= mask;
+    } else {
+        *cell &= !mask;
+    }
+
+    /* compute the IRQ state */
+    mask = 0;
+    let mut i: c_int = 0;
+    while i < 8 {
+        mask |= *row.add(i as usize);
+        i += 1;
+    }
+    let irq_level: c_int = if mask != 0 { 1 } else { 0 };
+    let irq = (&mut (*b).irq as *mut [IRQSignal; 4] as *mut IRQSignal).add(irq_num as usize);
+    set_irq(irq, irq_level);
 }
 }
 
@@ -299,6 +476,54 @@ pub extern "C" fn pci_device_set_irq__part1485(b: *mut PCIBus, irq_num: c_int, m
 }
 }
 
+// ── `devfn_alloc` · pci.c:93-101 · chunk 1486 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int devfn_alloc(PCIBus *b)
+//     {
+//         int devfn;
+//         for(devfn = 0; devfn < 256; devfn += 8) {
+//             if (!b->device[devfn])
+//                 return devfn;
+//         }
+//         return -1;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1486 {
+// Rewrite of the static C function devfn_alloc(PCIBus *b) from pci.c.
+//
+// The C original only reads `b->device[0..256]`, so we mirror the exact
+// prefix layout of `struct PCIBus` up to and including that array.
+
+use core::ffi::{c_int, c_void};
+
+/// Prefix mirror of `struct PCIBus`:
+///   struct PCIBus {
+///       int bus_num;
+///       PCIDevice *device[256];
+///       ... (rest not accessed here)
+///   };
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut c_void; 256],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn devfn_alloc(b: *mut PCIBus) -> c_int {
+    // for (devfn = 0; devfn < 256; devfn += 8)
+    let mut devfn: c_int = 0;
+    while devfn < 256 {
+        // if (!b->device[devfn]) return devfn;
+        if (*b).device[devfn as usize].is_null() {
+            return devfn;
+        }
+        devfn += 8;
+    }
+    -1
+}
+}
+
 // ── `for (devfn = 0; devfn < 256; devfn += 8)` · pci.c:96-99 · chunk 1487 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -374,6 +599,212 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn devfn_alloc__part1488() -> c_int {
     -1
+}
+}
+
+// ── `pci_register_device` · pci.c:104-136 · chunk 1489 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PCIDevice *pci_register_device(PCIBus *b, const char *name, int devfn,
+//                                    uint16_t vendor_id, uint16_t device_id,
+//                                    uint8_t revision, uint16_t class_id)
+//     {
+//         PCIDevice *d;
+//         int i;
+//     
+//         if (devfn < 0) {
+//             devfn = devfn_alloc(b);
+//             if (devfn < 0)
+//                 return 
+//                       ((void *)0)
+//                           ;
+//         }
+//         if (b->device[devfn])
+//             return 
+//                   ((void *)0)
+//                       ;
+//     
+//         d = mallocz(sizeof(PCIDevice));
+//         d->bus = b;
+//         d->name = strdup(name);
+//         d->devfn = devfn;
+//     
+//         put_le16(d->config + 0x00, vendor_id);
+//         put_le16(d->config + 0x02, device_id);
+//         d->config[0x08] = revision;
+//         put_le16(d->config + 0x0a, class_id);
+//         d->config[0x0e] = 0x00;
+//         d->next_cap_offset = 0x40;
+//     
+//         for(i = 0; i < 4; i++)
+//             irq_init(&d->irq[i], pci_device_set_irq, d, i);
+//         b->device[devfn] = d;
+//     
+//         return d;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1489 {
+// Port of PCIBus/PCIDevice device registration from pci.c
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+type SetIRQFunc = unsafe extern "C" fn(*mut c_void, c_int, c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn irq_init(
+        irq: *mut IRQSignal,
+        set_irq: Option<SetIRQFunc>,
+        opaque: *mut c_void,
+        irq_num: c_int,
+    );
+}
+
+// static inline void put_le16(uint8_t *ptr, uint16_t v)
+#[inline]
+unsafe fn put_le16(ptr: *mut u8, v: u16) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+}
+
+// static int devfn_alloc(PCIBus *b)
+unsafe fn devfn_alloc(b: *mut PCIBus) -> c_int {
+    let mut devfn: c_int = 0;
+    while devfn < 256 {
+        let dev = *(*b).device.as_ptr().add(devfn as usize);
+        if dev.is_null() {
+            return devfn;
+        }
+        devfn += 8;
+    }
+    -1
+}
+
+// static void pci_device_set_irq(void *opaque, int irq_num, int level)
+unsafe extern "C" fn pci_device_set_irq_rs(opaque: *mut c_void, irq_num: c_int, level: c_int) {
+    let d = opaque as *mut PCIDevice;
+    let b = (*d).bus;
+    let mut mask: u32;
+    let mut irq_num = irq_num;
+
+    // irq_num = bus_map_irq(d, irq_num);
+    let slot_addend: c_int = (((*d).devfn >> 3) as c_int) - 1;
+    irq_num = (irq_num + slot_addend) & 3;
+
+    mask = 1u32 << ((*d).devfn & 0x1f);
+    if level != 0 {
+        (*b).irq_state[irq_num as usize][((*d).devfn >> 5) as usize] |= mask;
+    } else {
+        (*b).irq_state[irq_num as usize][((*d).devfn >> 5) as usize] &= !mask;
+    }
+
+    // compute the IRQ state
+    mask = 0;
+    let mut i: c_int = 0;
+    while i < 8 {
+        mask |= (*b).irq_state[irq_num as usize][i as usize];
+        i += 1;
+    }
+    let irq_level: c_int = (mask != 0) as c_int;
+
+    // set_irq(&b->irq[irq_num], irq_level);
+    let sig = &mut (*b).irq[irq_num as usize];
+    if let Some(f) = sig.set_irq {
+        f(sig.opaque, sig.irq_num, irq_level);
+    }
+}
+
+/// devfn < 0 means to allocate it
+#[no_mangle]
+pub unsafe extern "C" fn pci_register_device(
+    b: *mut PCIBus,
+    name: *const c_char,
+    devfn: c_int,
+    vendor_id: u16,
+    device_id: u16,
+    revision: u8,
+    class_id: u16,
+) -> *mut PCIDevice {
+    let mut devfn: c_int = devfn;
+    let d: *mut PCIDevice;
+    let mut i: c_int;
+
+    if devfn < 0 {
+        devfn = devfn_alloc(b);
+        if devfn < 0 {
+            return core::ptr::null_mut();
+        }
+    }
+    if !(*b).device.as_ptr().add(devfn as usize).read().is_null() {
+        return core::ptr::null_mut();
+    }
+
+    d = mallocz(core::mem::size_of::<PCIDevice>()) as *mut PCIDevice;
+    (*d).bus = b;
+    (*d).name = strdup(name);
+    (*d).devfn = devfn as u8;
+
+    let config = (*d).config.as_mut_ptr();
+    put_le16(config.add(0x00), vendor_id);
+    put_le16(config.add(0x02), device_id);
+    (*d).config[0x08] = revision;
+    put_le16(config.add(0x0a), class_id);
+    (*d).config[0x0e] = 0x00; // header type
+    (*d).next_cap_offset = 0x40;
+
+    i = 0;
+    while i < 4 {
+        irq_init(
+            (*d).irq.as_mut_ptr().add(i as usize),
+            Some(pci_device_set_irq_rs),
+            d as *mut c_void,
+            i,
+        );
+        i += 1;
+    }
+    (*b).device.as_mut_ptr().add(devfn as usize).write(d);
+
+    d
 }
 }
 
@@ -652,6 +1083,99 @@ pub unsafe extern "C" fn pci_register_device__part1494(
 type _UnusedChar = c_char;
 }
 
+// ── `pci_device_get_irq` · pci.c:138-142 · chunk 1495 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     IRQSignal *pci_device_get_irq(PCIDevice *d, unsigned int irq_num)
+//     {
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        irq_num < 4
+//        )), __extension__ ({ if (
+//        irq_num < 4
+//        ) ; else __assert_fail (
+//        "irq_num < 4"
+//        , "pci.c", 140, __extension__ __PRETTY_FUNCTION__); }))
+//                           ;
+//         return &d->irq[irq_num];
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1495 {
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+pub type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+pub type PCIBarSetFunc = unsafe extern "C" fn(
+    opaque: *mut c_void,
+    bar_num: c_int,
+    addr: u32,
+    enabled: c_int,
+);
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_get_irq(
+    d: *mut PCIDevice,
+    irq_num: c_uint,
+) -> *mut IRQSignal {
+    if !(irq_num < 4) {
+        __assert_fail(
+            b"irq_num < 4\0".as_ptr() as *const c_char,
+            b"pci.c\0".as_ptr() as *const c_char,
+            140,
+            b"pci_device_get_irq\0".as_ptr() as *const c_char,
+        );
+    }
+    let base = core::ptr::addr_of_mut!((*d).irq) as *mut IRQSignal;
+    base.add(irq_num as usize)
+}
+}
+
 // ── `((void) sizeof (__assert_single_arg ( irq_num < 4 )), __extension__ ({ if ( irq_num < 4 ) ; els…` · pci.c:140-141 · chunk 1496 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -711,6 +1235,133 @@ pub unsafe extern "C" fn pci_device_get_irq__part1496(
         );
     }
     core::ptr::addr_of_mut!((*d).irq[irq_num as usize])
+}
+}
+
+// ── `pci_device_config_read` · pci.c:144-171 · chunk 1497 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t pci_device_config_read(PCIDevice *d, uint32_t addr,
+//                                            int size_log2)
+//     {
+//         uint32_t val;
+//         switch(size_log2) {
+//         case 0:
+//             val = *(uint8_t *)(d->config + addr);
+//             break;
+//         case 1:
+//     
+//             if (addr <= 0xfe)
+//                 val = get_le16(d->config + addr);
+//             else
+//                 val = *(uint8_t *)(d->config + addr);
+//             break;
+//         case 2:
+//     
+//             val = get_le32(d->config + addr);
+//             break;
+//         default:
+//             abort();
+//         }
+//     
+//     
+//     
+//     
+//         return val;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1497 {
+// Port of pci_device_config_read from pci.c
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    #[cfg(target_endian = "little")]
+    pub type_: u8,
+    #[cfg(target_endian = "little")]
+    pub enabled: u8,
+    #[cfg(target_endian = "little")]
+    pub opaque: *mut c_void,
+    #[cfg(target_endian = "little")]
+    pub bar_set: *mut c_void,
+}
+
+// The layout above must match the C struct exactly; using explicit fields.
+#[repr(C)]
+pub struct PCIIORegionFull {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut c_void,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegionFull; 7],
+}
+
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    let p0 = *ptr as u16;
+    let p1 = (*ptr.add(1) as u16) << 8;
+    p0 | p1
+}
+
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    let p0 = *ptr as u32;
+    let p1 = (*ptr.add(1) as u32) << 8;
+    let p2 = (*ptr.add(2) as u32) << 16;
+    let p3 = (*ptr.add(3) as u32) << 24;
+    p0 | p1 | p2 | p3
+}
+
+extern "C" {
+    fn abort() -> !;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_config_read(
+    d: *mut PCIDevice,
+    addr: u32,
+    size_log2: c_int,
+) -> u32 {
+    let base: *const u8 = (*d).config.as_ptr();
+    let p = base.add(addr as usize);
+    let val: u32;
+    match size_log2 {
+        0 => {
+            val = *p as u32;
+        }
+        1 => {
+            if addr <= 0xfe {
+                val = get_le16(p) as u32;
+            } else {
+                val = *p as u32;
+            }
+        }
+        2 => {
+            val = get_le32(p);
+        }
+        _ => {
+            abort();
+        }
+    }
+    val
 }
 }
 
@@ -792,6 +1443,121 @@ pub extern "C" fn pci_device_config_read__part1499(val: u32) -> u32 {
 }
 }
 
+// ── `pci_device_get_mem_map` · pci.c:173-176 · chunk 1500 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryMap *pci_device_get_mem_map(PCIDevice *d)
+//     {
+//         return d->bus->mem_map;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1500 {
+// Port of: PhysMemoryMap *pci_device_get_mem_map(PCIDevice *d)
+// Returns the memory map of the bus the device hangs off.
+
+use core::ffi::{c_char, c_int, c_uint};
+
+// ---- types mirrored from the C translation unit -------------------------
+
+pub type BOOL = c_int;
+
+pub type DeviceReadFunc =
+    unsafe extern "C" fn(opaque: *mut core::ffi::c_void, offset: u32, size_log2: c_int) -> u32;
+pub type DeviceWriteFunc = unsafe extern "C" fn(
+    opaque: *mut core::ffi::c_void,
+    offset: u32,
+    val: u32,
+    size_log2: c_int,
+);
+
+#[repr(C)]
+pub struct PhysMemoryMap;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: BOOL,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut core::ffi::c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+pub type PCIBarSetFunc =
+    unsafe extern "C" fn(opaque: *mut core::ffi::c_void, bar_num: c_int, addr: u32, enabled: BOOL);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(opaque: *mut core::ffi::c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut core::ffi::c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut core::ffi::c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut PhysMemoryMap,
+    pub port_map: *mut PhysMemoryMap,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+// ---- the ported function -------------------------------------------------
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_get_mem_map(d: *mut PCIDevice) -> *mut PhysMemoryMap {
+    let _ = c_uint::default();
+    let _ = PhysMemoryRange {
+        map: core::ptr::null_mut(),
+        addr: 0,
+        org_size: 0,
+        size: 0,
+        is_ram: 0,
+        devram_flags: 0,
+        phys_mem: core::ptr::null_mut(),
+        dirty_bits_size: 0,
+        dirty_bits: core::ptr::null_mut(),
+        dirty_bits_tab: [core::ptr::null_mut(); 2],
+        dirty_bits_index: 0,
+        opaque: core::ptr::null_mut(),
+        read_func: None,
+        write_func: None,
+        devio_flags: 0,
+    };
+    (*d).bus.as_ref().map_or(core::ptr::null_mut(), |b| b.mem_map)
+}
+}
+
 // ── `return d->bus->mem_map;` · pci.c:175-175 · chunk 1501 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -839,6 +1605,61 @@ pub extern "C" fn pci_device_get_mem_map__part1501(d: *mut PCIDevice) -> *mut Ph
         }
         (*(bus as *mut PCIBus)).mem_map
     }
+}
+}
+
+// ── `pci_device_get_port_map` · pci.c:178-181 · chunk 1502 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     PhysMemoryMap *pci_device_get_port_map(PCIDevice *d)
+//     {
+//         return d->bus->port_map;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1502 {
+// Rust rewrite of:
+//   PhysMemoryMap *pci_device_get_port_map(PCIDevice *d)
+//   {
+//       return d->bus->port_map;
+//   }
+#![allow(non_camel_case_types)]
+#![allow(dead_code)]
+
+use core::ffi::{c_int, c_void};
+
+// PhysMemoryMap is only handled through pointers here; its layout is never
+// inspected, so an opaque placeholder is enough.
+#[repr(C)]
+pub struct PhysMemoryMap {
+    _opaque: [u8; 0],
+}
+
+// Only the leading fields of PCIDevice that matter for this accessor are
+// mirrored (offset 0: the bus pointer).
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+}
+
+// Prefix of struct PCIBus up to and including port_map; the trailing
+// irq_state/irq members are not touched by this function.
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut PhysMemoryMap,
+    pub port_map: *mut PhysMemoryMap,
+}
+
+const _: () = {
+    // bus_num (4) + 4 bytes padding + device (2048) + mem_map (8) = 2064
+    assert!(core::mem::size_of::<PCIBus>() >= 2064 + core::mem::size_of::<*mut c_void>());
+};
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_get_port_map(d: *mut PCIDevice) -> *mut PhysMemoryMap {
+    let bus = (*d).bus;
+    (*bus).port_map
 }
 }
 
@@ -899,6 +1720,178 @@ pub unsafe extern "C" fn pci_device_get_port_map__part1503(
 ) -> *mut PhysMemoryMap {
     let bus = (*d).bus;
     (*bus).port_map
+}
+}
+
+// ── `pci_register_bar` · pci.c:183-209 · chunk 1504 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void pci_register_bar(PCIDevice *d, unsigned int bar_num,
+//                           uint32_t size, int type,
+//                           void *opaque, PCIBarSetFunc *bar_set)
+//     {
+//         PCIIORegion *r;
+//         uint32_t val, config_addr;
+//     
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        bar_num < 7
+//        )), __extension__ ({ if (
+//        bar_num < 7
+//        ) ; else __assert_fail (
+//        "bar_num < PCI_NUM_REGIONS"
+//        , "pci.c", 190, __extension__ __PRETTY_FUNCTION__); }))
+//                                         ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        (size & (size - 1)) == 0
+//        )), __extension__ ({ if (
+//        (size & (size - 1)) == 0
+//        ) ; else __assert_fail (
+//        "(size & (size - 1)) == 0"
+//        , "pci.c", 191, __extension__ __PRETTY_FUNCTION__); }))
+//                                        ;
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        size >= 4
+//        )), __extension__ ({ if (
+//        size >= 4
+//        ) ; else __assert_fail (
+//        "size >= 4"
+//        , "pci.c", 192, __extension__ __PRETTY_FUNCTION__); }))
+//                         ;
+//         r = &d->io_regions[bar_num];
+//         
+//        ((void) sizeof (__assert_single_arg (
+//        r->size == 0
+//        )), __extension__ ({ if (
+//        r->size == 0
+//        ) ; else __assert_fail (
+//        "r->size == 0"
+//        , "pci.c", 194, __extension__ __PRETTY_FUNCTION__); }))
+//                            ;
+//         r->size = size;
+//         r->type = type;
+//         r->enabled = FALSE;
+//         r->opaque = opaque;
+//         r->bar_set = bar_set;
+//     
+//         val = 0;
+//         if (bar_num == 6) {
+//             config_addr = 0x30;
+//         } else {
+//             val |= r->type;
+//             config_addr = 0x10 + 4 * bar_num;
+//         }
+//         put_le32(&d->config[config_addr], val);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1504 {
+// Port of pci_register_bar() from pci.c
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+pub type PCIBarSetFunc = unsafe extern "C" fn(*mut c_void, c_int, u32, c_int);
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut c_void,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+extern "C" {
+    fn __assert_fail(
+        assertion: *const c_char,
+        file: *const c_char,
+        line: c_uint,
+        function: *const c_char,
+    ) -> !;
+}
+
+// static inline void put_le32(uint8_t *ptr, uint32_t v)
+#[inline]
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+#[inline]
+unsafe fn assert_or_fail(cond: bool, assertion: *const c_char, line: c_uint) {
+    if !cond {
+        __assert_fail(
+            assertion,
+            b"pci.c\0".as_ptr() as *const c_char,
+            line,
+            b"pci_register_bar\0".as_ptr() as *const c_char,
+        );
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_register_bar(
+    d: *mut PCIDevice,
+    bar_num: c_uint,
+    size: u32,
+    r#type: c_int,
+    opaque: *mut c_void,
+    bar_set: Option<PCIBarSetFunc>,
+) {
+    assert_or_fail(
+        bar_num < 7,
+        b"bar_num < PCI_NUM_REGIONS\0".as_ptr() as *const c_char,
+        190,
+    );
+    assert_or_fail(
+        (size & size.wrapping_sub(1)) == 0,
+        b"(size & (size - 1)) == 0\0".as_ptr() as *const c_char,
+        191,
+    );
+    assert_or_fail(size >= 4, b"size >= 4\0".as_ptr() as *const c_char, 192);
+
+    let r: *mut PCIIORegion = &mut (*d).io_regions[bar_num as usize];
+    assert_or_fail(
+        (*r).size == 0,
+        b"r->size == 0\0".as_ptr() as *const c_char,
+        194,
+    );
+    (*r).size = size;
+    (*r).r#type = r#type as u8;
+    (*r).enabled = 0; // FALSE
+    (*r).opaque = opaque;
+    (*r).bar_set = bar_set;
+
+    // set the config value
+    let mut val: u32 = 0;
+    let config_addr: u32;
+    if bar_num == 6 {
+        config_addr = 0x30;
+    } else {
+        val |= (*r).r#type as u32;
+        config_addr = 0x10 + 4 * bar_num;
+    }
+    put_le32((*d).config.as_mut_ptr().add(config_addr as usize), val);
 }
 }
 
@@ -1128,6 +2121,153 @@ pub extern "C" fn pci_register_bar__part1507(ptr: *mut u8, v: u32) {
 }
 }
 
+// ── `pci_update_mappings` · pci.c:211-253 · chunk 1508 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void pci_update_mappings(PCIDevice *d)
+//     {
+//         int cmd, i, offset;
+//         uint32_t new_addr;
+//         BOOL new_enabled;
+//         PCIIORegion *r;
+//     
+//         cmd = get_le16(&d->config[0x04]);
+//     
+//         for(i = 0; i < 7; i++) {
+//             r = &d->io_regions[i];
+//             if (i == 6) {
+//                 offset = 0x30;
+//             } else {
+//                 offset = 0x10 + i * 4;
+//             }
+//             new_addr = get_le32(&d->config[offset]);
+//             new_enabled = FALSE;
+//             if (r->size != 0) {
+//                 if ((r->type & 0x01) &&
+//                     (cmd & (1 << 0))) {
+//                     new_enabled = TRUE;
+//                 } else {
+//                     if (cmd & (1 << 1)) {
+//                         if (i == 6) {
+//                             new_enabled = (new_addr & 1);
+//                         } else {
+//                             new_enabled = TRUE;
+//                         }
+//                     }
+//                 }
+//             }
+//             if (new_enabled) {
+//     
+//                 new_addr = get_le32(&d->config[offset]) & ~(r->size - 1);
+//                 r->bar_set(r->opaque, i, new_addr, TRUE);
+//                 r->enabled = TRUE;
+//             } else if (r->enabled) {
+//                 r->bar_set(r->opaque, i, 0, FALSE);
+//                 r->enabled = FALSE;
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1508 {
+// Rust rewrite of static void pci_update_mappings(PCIDevice *d)
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IrqSignal {
+    pub set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PciIoRegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>,
+}
+
+#[repr(C)]
+pub struct PciDevice {
+    pub bus: *mut c_void,
+    pub devfn: u8,
+    pub irq: [IrqSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PciIoRegion; 7],
+}
+
+#[inline]
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    let b0 = *ptr as u16;
+    let b1 = *ptr.add(1) as u16;
+    b0 | (b1 << 8)
+}
+
+#[inline]
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    let b0 = *ptr as u32;
+    let b1 = *ptr.add(1) as u32;
+    let b2 = *ptr.add(2) as u32;
+    let b3 = *ptr.add(3) as u32;
+    b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_update_mappings(d: *mut PciDevice) {
+    if d.is_null() {
+        return;
+    }
+    let dev = &mut *d;
+
+    let config_ptr = dev.config.as_ptr();
+    let cmd: c_int = get_le16(config_ptr.add(0x04)) as c_int;
+
+    let mut i: c_int = 0;
+    while i < 7 {
+        let idx = i as usize;
+        let r: *mut PciIoRegion = &mut dev.io_regions[idx];
+
+        let offset: c_int = if i == 6 { 0x30 } else { 0x10 + i * 4 };
+
+        let mut new_addr: u32 = get_le32(config_ptr.add(offset as usize));
+        let mut new_enabled: c_int = 0;
+
+        let rsize = (*r).size;
+        if rsize != 0 {
+            if ((*r).type_ as c_int & 0x01) != 0 && (cmd & (1 << 0)) != 0 {
+                new_enabled = 1;
+            } else if (cmd & (1 << 1)) != 0 {
+                if i == 6 {
+                    new_enabled = (new_addr & 1) as c_int;
+                } else {
+                    new_enabled = 1;
+                }
+            }
+        }
+
+        if new_enabled != 0 {
+            let mask: u32 = !(rsize.wrapping_sub(1));
+            new_addr = get_le32(config_ptr.add(offset as usize)) & mask;
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, new_addr, 1);
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, 0, 0);
+            }
+            (*r).enabled = 0;
+        }
+
+        i += 1;
+    }
+}
+}
+
 // ── `int cmd, i, offset; uint32_t new_addr; BOOL new_enabled; PCIIORegion *r; cmd = get_le16(&d->con…` · pci.c:213-218 · chunk 1509 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1280,6 +2420,185 @@ pub unsafe extern "C" fn pci_update_mappings__part1510(d: *mut PCIDevice) {
 
         i += 1;
     }
+}
+}
+
+// ── `pci_write_bar` · pci.c:256-278 · chunk 1511 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int pci_write_bar(PCIDevice *d, uint32_t addr,
+//                               uint32_t val)
+//     {
+//         PCIIORegion *r;
+//         int reg;
+//     
+//         if (addr == 0x30)
+//             reg = 6;
+//         else
+//             reg = (addr - 0x10) >> 2;
+//     
+//         r = &d->io_regions[reg];
+//         if (r->size == 0)
+//             return -1;
+//         if (reg == 6) {
+//             val = val & ((~(r->size - 1)) | 1);
+//         } else {
+//             val = (val & ~(r->size - 1)) | r->type;
+//         }
+//         put_le32(d->config + addr, val);
+//         pci_update_mappings(d);
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1511 {
+// Port of pci_write_bar (pci.c) from the QEMU-derived C sources.
+// pci_update_mappings, get_le16/get_le32/put_le32 are `static`/`static inline`
+// in the same translation unit, so they have no linker symbols and are
+// re-implemented here as private Rust functions.
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type BOOL = c_int;
+
+type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+type PCIBarSetFunc =
+    unsafe extern "C" fn(opaque: *mut c_void, bar_num: c_int, addr: u32, enabled: BOOL);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+const PCI_ROM_SLOT: c_int = 6;
+
+#[inline]
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    (*ptr as u16) | ((*ptr.add(1) as u16) << 8)
+}
+
+#[inline]
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    (*ptr as u32)
+        | ((*ptr.add(1) as u32) << 8)
+        | ((*ptr.add(2) as u32) << 16)
+        | ((*ptr.add(3) as u32) << 24)
+}
+
+#[inline]
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+// Port of the static helper pci_update_mappings().
+unsafe fn pci_update_mappings(d: *mut PCIDevice) {
+    let cmd: c_int = get_le16((*d).config.as_ptr().add(0x04)) as c_int;
+
+    let mut i: c_int = 0;
+    while i < 7 {
+        let r: *mut PCIIORegion = (*d).io_regions.as_mut_ptr().add(i as usize);
+        let offset: u32 = if i == PCI_ROM_SLOT {
+            0x30
+        } else {
+            0x10 + (i as u32) * 4
+        };
+        let mut new_addr: u32 = get_le32((*d).config.as_ptr().add(offset as usize));
+        let mut new_enabled: BOOL = 0;
+        if (*r).size != 0 {
+            if ((*r).r#type & 0x01) != 0 && (cmd & (1 << 0)) != 0 {
+                new_enabled = 1;
+            } else if (cmd & (1 << 1)) != 0 {
+                if i == PCI_ROM_SLOT {
+                    new_enabled = (new_addr & 1) as BOOL;
+                } else {
+                    new_enabled = 1;
+                }
+            }
+        }
+        if new_enabled != 0 {
+            // new address
+            new_addr = get_le32((*d).config.as_ptr().add(offset as usize))
+                & !((*r).size).wrapping_sub(1);
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, new_addr, 1);
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, 0, 0);
+            }
+            (*r).enabled = 0;
+        }
+        i += 1;
+    }
+}
+
+// return != 0 if write is not handled
+#[no_mangle]
+pub unsafe extern "C" fn pci_write_bar(d: *mut PCIDevice, addr: u32, val: u32) -> c_int {
+    if d.is_null() {
+        return -1;
+    }
+
+    let reg: c_int = if addr == 0x30 {
+        PCI_ROM_SLOT
+    } else {
+        (addr.wrapping_sub(0x10) >> 2) as c_int
+    };
+
+    // Reject out-of-range register indices rather than indexing out of bounds.
+    if reg < 0 || reg >= 7 {
+        return -1;
+    }
+
+    let r: *mut PCIIORegion = (*d).io_regions.as_mut_ptr().add(reg as usize);
+    if (*r).size == 0 {
+        return -1;
+    }
+
+    let val: u32 = if reg == PCI_ROM_SLOT {
+        val & (!((*r).size).wrapping_sub(1) | 1)
+    } else {
+        (val & !((*r).size).wrapping_sub(1)) | ((*r).r#type as u32)
+    };
+
+    put_le32((*d).config.as_mut_ptr().add(addr as usize), val);
+    pci_update_mappings(d);
+    0
 }
 }
 
@@ -1537,6 +2856,144 @@ pub extern "C" fn pci_write_bar__part1516(d: *mut PCIDevice, addr: u32, val: u32
 }
 }
 
+// ── `pci_device_config_write8` · pci.c:280-338 · chunk 1517 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void pci_device_config_write8(PCIDevice *d, uint32_t addr,
+//                                          uint32_t data)
+//     {
+//         int can_write;
+//     
+//         if (addr == 0x06 || addr == (0x06 + 1)) {
+//     
+//             d->config[addr] &= ~data;
+//             return;
+//         }
+//     
+//         switch(d->config[0x0e]) {
+//         case 0x00:
+//         case 0x80:
+//             switch(addr) {
+//             case 0x00:
+//             case 0x01:
+//             case 0x02:
+//             case 0x03:
+//             case 0x08:
+//             case 0x09:
+//             case 0x0a:
+//             case 0x0b:
+//             case 0x0e:
+//             case 0x10 ... 0x27:
+//             case 0x30 ... 0x33:
+//             case 0x3d:
+//                 can_write = 0;
+//                 break;
+//             default:
+//                 can_write = 1;
+//                 break;
+//             }
+//             break;
+//         default:
+//         case 0x01:
+//             switch(addr) {
+//             case 0x00:
+//             case 0x01:
+//             case 0x02:
+//             case 0x03:
+//             case 0x08:
+//             case 0x09:
+//             case 0x0a:
+//             case 0x0b:
+//             case 0x0e:
+//             case 0x38 ... 0x3b:
+//             case 0x3d:
+//                 can_write = 0;
+//                 break;
+//             default:
+//                 can_write = 1;
+//                 break;
+//             }
+//             break;
+//         }
+//         if (can_write)
+//             d->config[addr] = data;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1517 {
+// Rust rewrite of pci_device_config_write8 from pci.c
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IrqSignal {
+    pub set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PciIoRegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>,
+}
+
+#[repr(C)]
+pub struct PciDevice {
+    pub bus: *mut c_void,
+    pub devfn: u8,
+    pub irq: [IrqSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PciIoRegion; 7],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_config_write8(
+    d: *mut PciDevice,
+    addr: u32,
+    data: u32,
+) {
+    if d.is_null() {
+        return;
+    }
+    let cfg = (*d).config.as_mut_ptr();
+
+    if addr == 0x06 || addr == (0x06 + 1) {
+        let p = cfg.add(addr as usize);
+        *p = (*p) & (!data) as u8;
+        return;
+    }
+
+    let can_write: c_int;
+    match *cfg.add(0x0e) {
+        0x00 | 0x80 => {
+            can_write = match addr {
+                0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x3d => 0,
+                0x10..=0x27 => 0,
+                0x30..=0x33 => 0,
+                _ => 1,
+            };
+        }
+        // default: and case 0x01
+        _ => {
+            can_write = match addr {
+                0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x3d => 0,
+                0x38..=0x3b => 0,
+                _ => 1,
+            };
+        }
+    }
+
+    if can_write != 0 {
+        *cfg.add(addr as usize) = data as u8;
+    }
+}
+}
+
 // ── `if (addr == 0x06 || addr == (0x06 + 1)` · pci.c:285-289 · chunk 1518 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1769,6 +3226,221 @@ pub unsafe extern "C" fn pci_device_config_write8__part1520(
     if can_write != 0 {
         let cfg: *mut u8 = core::ptr::addr_of_mut!((*d).config) as *mut u8;
         *cfg.add(addr as usize) = data as u8;
+    }
+}
+}
+
+// ── `pci_device_config_write` · pci.c:341-367 · chunk 1521 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void pci_device_config_write(PCIDevice *d, uint32_t addr,
+//                                         uint32_t data, int size_log2)
+//     {
+//         int size, i;
+//         uint32_t addr1;
+//     
+//     
+//     
+//     
+//     
+//         if (size_log2 == 2 &&
+//             ((addr >= 0x10 && addr < 0x10 + 4 * 6) ||
+//              addr == 0x30)) {
+//             if (pci_write_bar(d, addr, data) == 0)
+//                 return;
+//         }
+//         size = 1 << size_log2;
+//         for(i = 0; i < size; i++) {
+//             addr1 = addr + i;
+//             if (addr1 <= 0xff) {
+//                 pci_device_config_write8(d, addr1, (data >> (i * 8)) & 0xff);
+//             }
+//         }
+//         if (0x04 >= addr && 0x04 < addr + size) {
+//             pci_update_mappings(d);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1521 {
+// Rust rewrite of pci_device_config_write (pci.c), including the static
+// helpers it uses: pci_write_bar, pci_device_config_write8, pci_update_mappings.
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct PCIBus {
+    _opaque: [u8; 0],
+}
+
+pub type PCIBarSetFunc =
+    Option<unsafe extern "C" fn(opaque: *mut c_void, bar_num: c_int, addr: u32, enabled: c_int)>;
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: PCIBarSetFunc,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[inline]
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    let b0 = *ptr as u16;
+    let b1 = (*ptr.add(1) as u16) << 8;
+    b0 | b1
+}
+
+#[inline]
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    let b0 = *ptr as u32;
+    let b1 = (*ptr.add(1) as u32) << 8;
+    let b2 = (*ptr.add(2) as u32) << 16;
+    let b3 = (*ptr.add(3) as u32) << 24;
+    b0 | b1 | b2 | b3
+}
+
+#[inline]
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+// static void pci_update_mappings(PCIDevice *d)
+unsafe fn pci_update_mappings(d: *mut PCIDevice) {
+    let cmd = get_le16((*d).config.as_ptr().add(0x04)) as c_int;
+    let mut i: c_int = 0;
+    while i < 7 {
+        let r: *mut PCIIORegion = (*d).io_regions.as_mut_ptr().add(i as usize);
+        let offset: usize = if i == 6 { 0x30 } else { 0x10 + (i as usize) * 4 };
+        let mut new_addr: u32 = get_le32((*d).config.as_ptr().add(offset));
+        let mut new_enabled: c_int = 0;
+        if (*r).size != 0 {
+            if ((*r).type_ & 0x01) != 0 && (cmd & 1) != 0 {
+                new_enabled = 1;
+            } else if (cmd & 2) != 0 {
+                if i == 6 {
+                    new_enabled = (new_addr & 1) as c_int;
+                } else {
+                    new_enabled = 1;
+                }
+            }
+        }
+        if new_enabled != 0 {
+            new_addr = get_le32((*d).config.as_ptr().add(offset)) & !((*r).size.wrapping_sub(1));
+            match (*r).bar_set {
+                Some(f) => f((*r).opaque, i, new_addr, 1),
+                None => {}
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            match (*r).bar_set {
+                Some(f) => f((*r).opaque, i, 0, 0),
+                None => {}
+            }
+            (*r).enabled = 0;
+        }
+        i += 1;
+    }
+}
+
+// static int pci_write_bar(PCIDevice *d, uint32_t addr, uint32_t val)
+unsafe fn pci_write_bar(d: *mut PCIDevice, addr: u32, val: u32) -> c_int {
+    let reg: c_int = if addr == 0x30 {
+        6
+    } else {
+        (addr.wrapping_sub(0x10) >> 2) as c_int
+    };
+
+    let r: *mut PCIIORegion = (*d).io_regions.as_mut_ptr().add(reg as usize);
+    if (*r).size == 0 {
+        return -1;
+    }
+    let new_val: u32 = if reg == 6 {
+        val & (!(*r).size.wrapping_sub(1) | 1)
+    } else {
+        (val & !(*r).size.wrapping_sub(1)) | ((*r).type_ as u32)
+    };
+    put_le32((*d).config.as_mut_ptr().add(addr as usize), new_val);
+    pci_update_mappings(d);
+    0
+}
+
+// static void pci_device_config_write8(PCIDevice *d, uint32_t addr, uint32_t data)
+unsafe fn pci_device_config_write8(d: *mut PCIDevice, addr: u32, data: u32) {
+    if addr == 0x06 || addr == 0x07 {
+        let p: *mut u8 = (*d).config.as_mut_ptr().add(addr as usize);
+        *p = *p & ((!data) as u8);
+        return;
+    }
+
+    let mut can_write: c_int = 0;
+    match (*d).config[0x0e] {
+        0x00 | 0x80 => {
+            can_write = match addr {
+                0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x10..=0x27
+                | 0x30..=0x33 | 0x3d => 0,
+                _ => 1,
+            };
+        }
+        _ => {
+            // default: and case 0x01
+            can_write = match addr {
+                0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x38..=0x3b
+                | 0x3d => 0,
+                _ => 1,
+            };
+        }
+    }
+    if can_write != 0 {
+        *(*d).config.as_mut_ptr().add(addr as usize) = data as u8;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_config_write(
+    d: *mut PCIDevice,
+    addr: u32,
+    data: u32,
+    size_log2: c_int,
+) {
+    if size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30) {
+        if pci_write_bar(d, addr, data) == 0 {
+            return;
+        }
+    }
+    let size: c_int = 1i32.wrapping_shl(size_log2 as u32);
+    let mut i: c_int = 0;
+    while i < size {
+        let addr1: u32 = addr.wrapping_add(i as u32);
+        if addr1 <= 0xff {
+            let shifted: u32 = data.wrapping_shr((i * 8) as u32);
+            pci_device_config_write8(d, addr1, shifted & 0xff);
+        }
+        i += 1;
+    }
+    // PCI_COMMAND == 0x04
+    if 0x04 >= addr && 0x04 < addr.wrapping_add(size as u32) {
+        pci_update_mappings(d);
     }
 }
 }
@@ -2169,6 +3841,248 @@ pub extern "C" fn pci_device_config_write__part1525(
 }
 }
 
+// ── `pci_data_write` · pci.c:370-385 · chunk 1526 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void pci_data_write(PCIBus *s, uint32_t addr,
+//                                uint32_t data, int size_log2)
+//     {
+//         PCIDevice *d;
+//         int bus_num, devfn, config_addr;
+//     
+//         bus_num = (addr >> 16) & 0xff;
+//         if (bus_num != s->bus_num)
+//             return;
+//         devfn = (addr >> 8) & 0xff;
+//         d = s->device[devfn];
+//         if (!d)
+//             return;
+//         config_addr = addr & 0xff;
+//         pci_device_config_write(d, config_addr, data, size_log2);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1526 {
+// Port of qemu's pci_data_write plus the static helpers it needs.
+// The C helpers pci_device_config_write, pci_write_bar,
+// pci_device_config_write8 and pci_update_mappings have internal linkage
+// (no linker symbols), so their logic is ported here as private fns.
+
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int};
+
+type SetIRQFunc = unsafe extern "C" fn(*mut core::ffi::c_void, c_int, c_int);
+type PCIBarSetFunc = unsafe extern "C" fn(*mut core::ffi::c_void, c_int, u32, c_int);
+
+// typedef struct { SetIRQFunc *set_irq; void *opaque; int irq_num; } IRQSignal;
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut core::ffi::c_void,
+    pub irq_num: c_int,
+}
+
+// typedef struct { uint32_t size; uint8_t type; uint8_t enabled;
+//                  void *opaque; PCIBarSetFunc *bar_set; } PCIIORegion;
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut core::ffi::c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut core::ffi::c_void,
+    pub port_map: *mut core::ffi::c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[inline]
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    (*ptr as u16) | ((*ptr.add(1) as u16) << 8)
+}
+
+#[inline]
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    (*ptr as u32)
+        | ((*ptr.add(1) as u32) << 8)
+        | ((*ptr.add(2) as u32) << 16)
+        | ((*ptr.add(3) as u32) << 24)
+}
+
+#[inline]
+unsafe fn put_le32(ptr: *mut u8, v: u32) {
+    *ptr = v as u8;
+    *ptr.add(1) = (v >> 8) as u8;
+    *ptr.add(2) = (v >> 16) as u8;
+    *ptr.add(3) = (v >> 24) as u8;
+}
+
+// static void pci_update_mappings(PCIDevice *d)
+unsafe fn pci_update_mappings(d: *mut PCIDevice) {
+    let config = (*d).config.as_mut_ptr();
+    let cmd = get_le16(config.add(0x04)) as c_int;
+    let regions = (*d).io_regions.as_mut_ptr();
+
+    let mut i: c_int = 0;
+    while i < 7 {
+        let r = regions.add(i as usize);
+        let offset: usize = if i == 6 { 0x30 } else { 0x10 + (i as usize) * 4 };
+        let mut new_addr = get_le32(config.add(offset));
+        let mut new_enabled: c_int = 0;
+        if (*r).size != 0 {
+            if ((*r).type_ & 0x01) != 0 && (cmd & (1 << 0)) != 0 {
+                new_enabled = 1;
+            } else if (cmd & (1 << 1)) != 0 {
+                if i == 6 {
+                    new_enabled = (new_addr & 1) as c_int;
+                } else {
+                    new_enabled = 1;
+                }
+            }
+        }
+        if new_enabled != 0 {
+            let mask = !((*r).size).wrapping_sub(1);
+            new_addr = get_le32(config.add(offset)) & mask;
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, new_addr, 1);
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            if let Some(f) = (*r).bar_set {
+                f((*r).opaque, i, 0, 0);
+            }
+            (*r).enabled = 0;
+        }
+        i += 1;
+    }
+}
+
+// static int pci_write_bar(PCIDevice *d, uint32_t addr, uint32_t val)
+unsafe fn pci_write_bar(d: *mut PCIDevice, addr: u32, val: u32) -> c_int {
+    let reg: u32 = if addr == 0x30 {
+        6
+    } else {
+        addr.wrapping_sub(0x10) >> 2
+    };
+    if reg as usize >= 7 {
+        return -1;
+    }
+    let r = (*d).io_regions.as_mut_ptr().add(reg as usize);
+    if (*r).size == 0 {
+        return -1;
+    }
+    let newval: u32 = if reg == 6 {
+        val & ((!((*r).size).wrapping_sub(1)) | 1)
+    } else {
+        (val & !((*r).size).wrapping_sub(1)) | ((*r).type_ as u32)
+    };
+    put_le32((*d).config.as_mut_ptr().add(addr as usize), newval);
+    pci_update_mappings(d);
+    0
+}
+
+// static void pci_device_config_write8(PCIDevice *d, uint32_t addr, uint32_t data)
+unsafe fn pci_device_config_write8(d: *mut PCIDevice, addr: u32, data: u32) {
+    let config = (*d).config.as_mut_ptr();
+
+    if addr == 0x06 || addr == 0x07 {
+        let idx = (addr & 0xff) as usize;
+        let old = *config.add(idx);
+        *config.add(idx) = old & !(data as u8);
+        return;
+    }
+
+    let revision = *config.add(0x0e);
+    let can_write: c_int = match revision {
+        0x00 | 0x80 => {
+            if addr < 0x04
+                || (addr >= 0x08 && addr < 0x0c)
+                || addr == 0x0e
+                || (addr >= 0x10 && addr < 0x28)
+                || (addr >= 0x30 && addr < 0x34)
+                || addr == 0x3d
+            {
+                0
+            } else {
+                1
+            }
+        }
+        _ => {
+            // default: (also 0x01)
+            if addr < 0x04
+                || (addr >= 0x08 && addr < 0x0c)
+                || addr == 0x0e
+                || (addr >= 0x38 && addr < 0x3c)
+                || addr == 0x3d
+            {
+                0
+            } else {
+                1
+            }
+        }
+    };
+    if can_write != 0 {
+        *config.add((addr & 0xff) as usize) = data as u8;
+    }
+}
+
+// static void pci_device_config_write(PCIDevice *d, uint32_t addr,
+//                                     uint32_t data, int size_log2)
+unsafe fn pci_device_config_write(d: *mut PCIDevice, addr: u32, data: u32, size_log2: c_int) {
+    if size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30) {
+        if pci_write_bar(d, addr, data) == 0 {
+            return;
+        }
+    }
+    let size: c_int = 1i32.wrapping_shl(size_log2 as u32);
+    let mut i: c_int = 0;
+    while i < size {
+        let addr1 = addr.wrapping_add(i as u32);
+        if addr1 <= 0xff {
+            let shift = (i as u32).wrapping_mul(8) & 31;
+            pci_device_config_write8(d, addr1, (data >> shift) & 0xff);
+        }
+        i += 1;
+    }
+    if 0x04 >= addr && 0x04 < addr.wrapping_add(size as u32) {
+        pci_update_mappings(d);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_data_write(s: *mut PCIBus, addr: u32, data: u32, size_log2: c_int) {
+    let bus_num: c_int = ((addr >> 16) & 0xff) as c_int;
+    if bus_num != (*s).bus_num {
+        return;
+    }
+    let devfn = ((addr >> 8) & 0xff) as usize;
+    let d = (*s).device[devfn];
+    if d.is_null() {
+        return;
+    }
+    let config_addr = addr & 0xff;
+    pci_device_config_write(d, config_addr, data, size_log2);
+}
+}
+
 // ── `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` · pci.c:373-376 · chunk 1527 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2488,6 +4402,144 @@ pub unsafe extern "C" fn pci_data_write__part1531(
 }
 }
 
+// ── `pci_data_read` · pci.c:389-403 · chunk 1533 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t pci_data_read(PCIBus *s, uint32_t addr, int size_log2)
+//     {
+//         PCIDevice *d;
+//         int bus_num, devfn, config_addr;
+//     
+//         bus_num = (addr >> 16) & 0xff;
+//         if (bus_num != s->bus_num)
+//             return val_ones[size_log2];
+//         devfn = (addr >> 8) & 0xff;
+//         d = s->device[devfn];
+//         if (!d)
+//             return val_ones[size_log2];
+//         config_addr = addr & 0xff;
+//         return pci_device_config_read(d, config_addr, size_log2);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1533 {
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+pub type BOOL = c_int;
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq:
+        Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set:
+        Option<unsafe extern "C" fn(opaque: *mut c_void, bar_num: c_int, addr: u32, enabled: BOOL)>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut PhysMemoryMap,
+    pub port_map: *mut PhysMemoryMap,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+extern "C" {
+    fn abort() -> !;
+}
+
+static VAL_ONES: [u32; 3] = [0xff, 0xffff, 0xffff_ffff];
+
+// Mirrors C's val_ones[size_log2], without panicking on an out-of-range index.
+#[inline]
+fn val_ones(size_log2: c_int) -> u32 {
+    if size_log2 >= 0 && (size_log2 as usize) < 3 {
+        if let Some(v) = VAL_ONES.get(size_log2 as usize) {
+            return *v;
+        }
+    }
+    unsafe {
+        core::ptr::read_volatile(
+            (core::ptr::addr_of!(VAL_ONES) as *const u32).wrapping_offset(size_log2 as isize),
+        )
+    }
+}
+
+#[inline]
+unsafe fn get_le16(ptr: *const u8) -> u16 {
+    (*ptr as u16) | ((*ptr.add(1) as u16) << 8)
+}
+
+#[inline]
+unsafe fn get_le32(ptr: *const u8) -> u32 {
+    (*ptr as u32)
+        | ((*ptr.add(1) as u32) << 8)
+        | ((*ptr.add(2) as u32) << 16)
+        | ((*ptr.add(3) as u32) << 24)
+}
+
+// Port of the static C function pci_device_config_read().
+unsafe fn pci_device_config_read(d: *mut PCIDevice, addr: u32, size_log2: c_int) -> u32 {
+    let config: *const u8 = core::ptr::addr_of!((*d).config) as *const u8;
+    let a = addr as usize;
+    match size_log2 {
+        0 => *config.add(a) as u32,
+        1 => {
+            if addr <= 0xfe {
+                get_le16(config.add(a)) as u32
+            } else {
+                *config.add(a) as u32
+            }
+        }
+        2 => get_le32(config.add(a)),
+        _ => abort(),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_data_read(s: *mut PCIBus, addr: u32, size_log2: c_int) -> u32 {
+    let bus_num: c_int = ((addr >> 16) & 0xff) as c_int;
+    if bus_num != (*s).bus_num {
+        return val_ones(size_log2);
+    }
+    let devfn: c_int = ((addr >> 8) & 0xff) as c_int;
+    let d: *mut PCIDevice = *(core::ptr::addr_of!((*s).device).cast::<*mut PCIDevice>().add(devfn as usize));
+    if d.is_null() {
+        return val_ones(size_log2);
+    }
+    let config_addr: u32 = addr & 0xff;
+    pci_device_config_read(d, config_addr, size_log2)
+}
+}
+
 // ── `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` · pci.c:391-394 · chunk 1534 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2716,6 +4768,60 @@ pub unsafe extern "C" fn pci_data_read__part1538(
 }
 }
 
+// ── `pci_device_get_dma_ptr` · pci.c:407-410 · chunk 1539 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint8_t *pci_device_get_dma_ptr(PCIDevice *d, uint64_t addr, BOOL is_rw)
+//     {
+//         return phys_mem_get_ram_ptr(d->bus->mem_map, addr, is_rw);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1539 {
+// Rewrite of pci_device_get_dma_ptr from pci.c
+use core::ffi::{c_char, c_int, c_void};
+
+// phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw)
+extern "C" {
+    fn phys_mem_get_ram_ptr(map: *mut c_void, paddr: u64, is_rw: c_int) -> *mut u8;
+}
+
+// Prefix of `struct PCIIORegion`/`IRQSignal`/etc. is not needed; only the
+// fields actually touched by the target are mirrored, in order.
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    // remaining fields of the C struct are not accessed here
+    pub devfn: u8,
+    // The C struct continues with irq[4], config[256], next_cap_offset, name,
+    // io_regions[7]; they are never read or written by this function and are
+    // only reachable through pointers supplied by the C side.
+    pub _unused: [u8; 0],
+}
+
+// Keep the (otherwise unused) c_char import from breaking nothing.
+#[allow(dead_code)]
+fn _unused_c_char(_p: *const c_char) {}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_get_dma_ptr(
+    d: *mut PCIDevice,
+    addr: u64,
+    is_rw: c_int,
+) -> *mut u8 {
+    let bus = (*d).bus;
+    let map = (*bus).mem_map;
+    phys_mem_get_ram_ptr(map, addr, is_rw)
+}
+}
+
 // ── `return phys_mem_get_ram_ptr(d->bus->mem_map, addr, is_rw);` · pci.c:409-409 · chunk 1540 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2787,6 +4893,64 @@ pub unsafe extern "C" fn pci_device_get_dma_ptr__part1540(
 }
 }
 
+// ── `pci_device_set_config8` · pci.c:412-415 · chunk 1541 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void pci_device_set_config8(PCIDevice *d, uint8_t addr, uint8_t val)
+//     {
+//         d->config[addr] = val;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1541 {
+// Rust rewrite of pci_device_set_config8 from pci.c
+use core::ffi::{c_char, c_int, c_void};
+
+// IRQSignal: typedef struct { SetIRQFunc *set_irq; void *opaque; int irq_num; }
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: *mut c_void,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+// PCIIORegion: { uint32_t size; uint8_t type; uint8_t enabled; void *opaque; PCIBarSetFunc *bar_set; }
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+// struct PCIDevice {
+//     PCIBus *bus;
+//     uint8_t devfn;
+//     IRQSignal irq[4];
+//     uint8_t config[256];
+//     uint8_t next_cap_offset;
+//     char *name;
+//     PCIIORegion io_regions[7];
+// };
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut c_void,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_device_set_config8(d: *mut PCIDevice, addr: u8, val: u8) {
+    // d->config[addr] = val;  (addr is uint8_t, so always within config[256])
+    let cfg: *mut u8 = core::ptr::addr_of_mut!((*d).config) as *mut u8;
+    *cfg.add(addr as usize) = val;
+}
+}
+
 // ── `d->config[addr] = val;` · pci.c:414-414 · chunk 1542 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2844,6 +5008,66 @@ pub extern "C" fn pci_device_set_config8__part1542(d: *mut PCIDevice, addr: u8, 
 }
 }
 
+// ── `pci_device_set_config16` · pci.c:417-420 · chunk 1543 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void pci_device_set_config16(PCIDevice *d, uint8_t addr, uint16_t val)
+//     {
+//         put_le16(&d->config[addr], val);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1543 {
+// Rust rewrite of pci_device_set_config16 from pci.c
+// void pci_device_set_config16(PCIDevice *d, uint8_t addr, uint16_t val)
+//
+// Original body:
+//     put_le16(&d->config[addr], val);
+// where the static inline put_le16 was:
+//     ptr[0] = v; ptr[1] = v >> 8;
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<unsafe extern "C" fn(opaque: *mut c_void, bar_num: c_int, addr: u32, enabled: c_int)>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut c_void, /* PCIBus * */
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[no_mangle]
+pub extern "C" fn pci_device_set_config16(d: *mut PCIDevice, addr: u8, val: u16) {
+    unsafe {
+        if d.is_null() {
+            return;
+        }
+        // &d->config[addr]
+        let ptr: *mut u8 = (*d).config.as_mut_ptr().add(addr as usize);
+        *ptr = val as u8;
+        *ptr.add(1) = (val >> 8) as u8;
+    }
+}
+}
+
 // ── `put_le16(&d->config[addr], val);` · pci.c:419-419 · chunk 1544 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2861,6 +5085,78 @@ pub unsafe extern "C" fn pci_device_set_config16__part1544(ptr: *mut u8, v: u16)
     }
     core::ptr::write(ptr, v as u8);
     core::ptr::write(ptr.add(1), (v >> 8) as u8);
+}
+}
+
+// ── `pci_device_get_devfn` · pci.c:422-425 · chunk 1545 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int pci_device_get_devfn(PCIDevice *d)
+//     {
+//         return d->devfn;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1545 {
+// Rewrite of pci_device_get_devfn from pci.c
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque forward-declared C structs.
+#[repr(C)]
+pub struct PCIBus {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    _private: [u8; 0],
+}
+
+// typedef struct { SetIRQFunc *set_irq; void *opaque; int irq_num; } IRQSignal;
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: *mut c_void,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+// typedef struct {
+//     uint32_t size; uint8_t type; uint8_t enabled;
+//     void *opaque; PCIBarSetFunc *bar_set;
+// } PCIIORegion;
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+// struct PCIDevice {
+//     PCIBus *bus;
+//     uint8_t devfn;
+//     IRQSignal irq[4];
+//     uint8_t config[256];
+//     uint8_t next_cap_offset;
+//     char *name;
+//     PCIIORegion io_regions[7];
+// };
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[no_mangle]
+pub extern "C" fn pci_device_get_devfn(d: *mut PCIDevice) -> c_int {
+    unsafe { (*d).devfn as c_int }
 }
 }
 
@@ -2924,6 +5220,98 @@ pub unsafe extern "C" fn pci_device_get_devfn__part1546(d: *mut PCIDevice) -> c_
         return 0;
     }
     (*d).devfn as c_int
+}
+}
+
+// ── `pci_add_capability` · pci.c:428-441 · chunk 1547 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int pci_add_capability(PCIDevice *d, const uint8_t *buf, int size)
+//     {
+//         int offset;
+//     
+//         offset = d->next_cap_offset;
+//         if ((offset + size) > 256)
+//             return -1;
+//         d->next_cap_offset += size;
+//         d->config[0x06] |= (1 << 4);
+//         memcpy(d->config + offset, buf, size);
+//         d->config[offset + 1] = d->config[0x34];
+//         d->config[0x34] = offset;
+//         return offset;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1547 {
+// Rust rewrite of pci_add_capability() from pci.c.
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+}
+
+pub type SetIRQFunc = unsafe extern "C" fn(opaque: *mut c_void, irq_num: c_int, level: c_int);
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<SetIRQFunc>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+pub type PCIBarSetFunc = unsafe extern "C" fn(
+    opaque: *mut c_void,
+    bar_num: c_int,
+    addr: u32,
+    enabled: c_int,
+);
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<PCIBarSetFunc>,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+const PCI_STATUS: usize = 0x06;
+const PCI_STATUS_CAP_LIST: u8 = 1 << 4;
+const PCI_CAPABILITY_LIST: usize = 0x34;
+
+#[no_mangle]
+pub unsafe extern "C" fn pci_add_capability(
+    d: *mut PCIDevice,
+    buf: *const u8,
+    size: c_int,
+) -> c_int {
+    let offset: c_int = (*d).next_cap_offset as c_int;
+    if (offset + size) > 256 {
+        return -1;
+    }
+    (*d).next_cap_offset = (*d).next_cap_offset.wrapping_add(size as u8);
+    (*d).config[PCI_STATUS] |= PCI_STATUS_CAP_LIST;
+    let dst = (*d).config.as_mut_ptr().add(offset as usize);
+    core::ptr::copy_nonoverlapping(buf, dst, size as usize);
+    (*d).config[offset as usize + 1] = (*d).config[PCI_CAPABILITY_LIST];
+    (*d).config[PCI_CAPABILITY_LIST] = offset as u8;
+    offset
 }
 }
 
@@ -3069,6 +5457,61 @@ pub extern "C" fn pci_add_capability__part1550(
 }
 }
 
+// ── `i440fx_write_addr` · pci.c:454-459 · chunk 1552 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void i440fx_write_addr(void *opaque, uint32_t offset,
+//                                   uint32_t data, int size_log2)
+//     {
+//         I440FXState *s = opaque;
+//         s->config_reg = data;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1552 {
+// Rust rewrite of the static C function i440fx_write_addr (pci.c).
+// It stores the value written to config port 0xcf8 into I440FXState::config_reg.
+
+use core::ffi::{c_int, c_void};
+
+// Opaque mirrors of pointer-only struct types used by I440FXState.
+#[repr(C)]
+pub struct PCIBus {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct IRQSignal {
+    _opaque: [u8; 0],
+}
+
+// Exact mirror of `struct I440FXState` from pci.c.
+#[repr(C)]
+pub struct I440FXState {
+    pci_bus: *mut PCIBus,
+    pci_dev: *mut PCIDevice,
+    piix3_dev: *mut PCIDevice,
+    config_reg: u32,
+    pic_irq_state: [u8; 16],
+    pic_irqs: *mut IRQSignal,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn i440fx_write_addr(
+    opaque: *mut c_void,
+    _offset: u32,
+    data: u32,
+    _size_log2: c_int,
+) {
+    let s = opaque as *mut I440FXState;
+    (*s).config_reg = data;
+}
+}
+
 // ── `I440FXState *s = opaque; s->config_reg = data;` · pci.c:457-458 · chunk 1553 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3101,6 +5544,57 @@ pub extern "C" fn i440fx_write_addr__part1553(opaque: *mut c_void, data: u32) {
 fn _unused(_x: c_int) {}
 }
 
+// ── `i440fx_read_addr` · pci.c:461-465 · chunk 1554 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t i440fx_read_addr(void *opaque, uint32_t offset, int size_log2)
+//     {
+//         I440FXState *s = opaque;
+//         return s->config_reg;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1554 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct PCIBus {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct IRQSignal {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct I440FXState {
+    pub pci_bus: *mut PCIBus,
+    pub pci_dev: *mut PCIDevice,
+    pub piix3_dev: *mut PCIDevice,
+    pub config_reg: u32,
+    pub pic_irq_state: [u8; 16],
+    pub pic_irqs: *mut IRQSignal,
+}
+
+#[no_mangle]
+pub extern "C" fn i440fx_read_addr(
+    opaque: *mut c_void,
+    _offset: u32,
+    _size_log2: c_int,
+) -> u32 {
+    if opaque.is_null() {
+        return 0;
+    }
+    let s = opaque as *mut I440FXState;
+    unsafe { (*s).config_reg }
+}
+}
+
 // ── `I440FXState *s = opaque; return s->config_reg;` · pci.c:463-464 · chunk 1555 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3130,6 +5624,244 @@ pub extern "C" fn i440fx_read_addr__part1555(opaque: *mut c_void) -> c_uint {
     }
     let s = opaque as *const I440FXState;
     unsafe { (*s).config_reg }
+}
+}
+
+// ── `i440fx_write_data` · pci.c:467-480 · chunk 1556 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void i440fx_write_data(void *opaque, uint32_t offset,
+//                                   uint32_t data, int size_log2)
+//     {
+//         I440FXState *s = opaque;
+//         if (s->config_reg & 0x80000000) {
+//             if (size_log2 == 2) {
+//     
+//     
+//                 pci_data_write(s->pci_bus, s->config_reg & ~3, data, size_log2);
+//             } else {
+//                 pci_data_write(s->pci_bus, s->config_reg | offset, data, size_log2);
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1556 {
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: *mut c_void,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>,
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct I440FXState {
+    pub pci_bus: *mut PCIBus,
+    pub pci_dev: *mut PCIDevice,
+    pub piix3_dev: *mut PCIDevice,
+    pub config_reg: u32,
+    pub pic_irq_state: [u8; 16],
+    pub pic_irqs: *mut IRQSignal,
+}
+
+#[inline]
+unsafe fn get_le16(p: *const u8) -> u16 {
+    let b0 = *p as u32;
+    let b1 = *p.add(1) as u32;
+    (b0 | (b1 << 8)) as u16
+}
+
+#[inline]
+unsafe fn get_le32(p: *const u8) -> u32 {
+    let b0 = *p as u32;
+    let b1 = *p.add(1) as u32;
+    let b2 = *p.add(2) as u32;
+    let b3 = *p.add(3) as u32;
+    b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
+}
+
+#[inline]
+unsafe fn put_le32(p: *mut u8, v: u32) {
+    *p = v as u8;
+    *p.add(1) = (v >> 8) as u8;
+    *p.add(2) = (v >> 16) as u8;
+    *p.add(3) = (v >> 24) as u8;
+}
+
+unsafe fn pci_update_mappings(d: *mut PCIDevice) {
+    let config = (*d).config.as_mut_ptr();
+    let cmd = get_le16(config.add(0x04)) as c_int;
+
+    let mut i: c_int = 0;
+    while i < 7 {
+        let r = (*d).io_regions.as_mut_ptr().add(i as usize);
+        let offset: u32 = if i == 6 { 0x30 } else { 0x10 + (i as u32) * 4 };
+        let mut new_addr = get_le32(config.add(offset as usize));
+        let mut new_enabled: c_int = 0;
+        let rsize = (*r).size;
+        if rsize != 0 {
+            if ((*r).r#type as c_int & 0x01) != 0 && (cmd & (1 << 0)) != 0 {
+                new_enabled = 1;
+            } else if (cmd & (1 << 1)) != 0 {
+                if i == 6 {
+                    new_enabled = (new_addr & 1) as c_int;
+                } else {
+                    new_enabled = 1;
+                }
+            }
+        }
+        if new_enabled != 0 {
+            new_addr = get_le32(config.add(offset as usize)) & !(rsize.wrapping_sub(1));
+            let bar_set = (*r).bar_set;
+            if let Some(f) = bar_set {
+                f((*r).opaque, i, new_addr, 1);
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            let bar_set = (*r).bar_set;
+            if let Some(f) = bar_set {
+                f((*r).opaque, i, 0, 0);
+            }
+            (*r).enabled = 0;
+        }
+        i += 1;
+    }
+}
+
+unsafe fn pci_write_bar(d: *mut PCIDevice, addr: u32, val: u32) -> c_int {
+    let reg: c_int = if addr == 0x30 {
+        6
+    } else {
+        (addr.wrapping_sub(0x10) >> 2) as c_int
+    };
+
+    if reg < 0 || reg >= 7 {
+        return -1;
+    }
+    let r = (*d).io_regions.as_mut_ptr().add(reg as usize);
+    let rsize = (*r).size;
+    if rsize == 0 {
+        return -1;
+    }
+    let newval: u32 = if reg == 6 {
+        val & ((!rsize.wrapping_sub(1)) | 1)
+    } else {
+        (val & !rsize.wrapping_sub(1)) | ((*r).r#type as u32)
+    };
+    let idx = addr as usize;
+    if idx + 4 <= 256 {
+        put_le32((*d).config.as_mut_ptr().add(idx), newval);
+    }
+    pci_update_mappings(d);
+    0
+}
+
+unsafe fn pci_device_config_write8(d: *mut PCIDevice, addr: u32, data: u32) {
+    if addr > 0xff {
+        return;
+    }
+    let idx = addr as usize;
+
+    if addr == 0x06 || addr == (0x06 + 1) {
+        let cur = *(*d).config.as_ptr().add(idx) as u32;
+        *(*d).config.as_mut_ptr().add(idx) = (cur & !data) as u8;
+        return;
+    }
+
+    let cap = *(*d).config.as_ptr().add(0x0e);
+    let can_write: bool = match cap {
+        0x00 | 0x80 => !matches!(
+            addr,
+            0x00..=0x03 | 0x08..=0x0b | 0x0e | 0x10..=0x27 | 0x30..=0x33 | 0x3d
+        ),
+        _ => !matches!(addr, 0x00..=0x03 | 0x08..=0x0b | 0x0e | 0x38..=0x3b | 0x3d),
+    };
+    if can_write {
+        *(*d).config.as_mut_ptr().add(idx) = data as u8;
+    }
+}
+
+unsafe fn pci_device_config_write(d: *mut PCIDevice, addr: u32, data: u32, size_log2: c_int) {
+    if size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30) {
+        if pci_write_bar(d, addr, data) == 0 {
+            return;
+        }
+    }
+    let size: c_int = 1i32.wrapping_shl(size_log2 as u32);
+    let mut i: c_int = 0;
+    while i < size {
+        let addr1: u32 = addr.wrapping_add(i as u32);
+        if addr1 <= 0xff {
+            let shifted = data.wrapping_shr((i as u32).wrapping_mul(8));
+            pci_device_config_write8(d, addr1, shifted & 0xff);
+        }
+        i += 1;
+    }
+    if 0x04 >= addr && 0x04 < addr.wrapping_add(size as u32) {
+        pci_update_mappings(d);
+    }
+}
+
+unsafe fn pci_data_write(s: *mut PCIBus, addr: u32, data: u32, size_log2: c_int) {
+    let bus_num = ((addr >> 16) & 0xff) as c_int;
+    if bus_num != (*s).bus_num {
+        return;
+    }
+    let devfn = ((addr >> 8) & 0xff) as usize;
+    let d = *(*s).device.as_ptr().add(devfn);
+    if d.is_null() {
+        return;
+    }
+    let config_addr = addr & 0xff;
+    pci_device_config_write(d, config_addr, data, size_log2);
+}
+
+#[no_mangle]
+pub extern "C" fn i440fx_write_data(opaque: *mut c_void, offset: u32, data: u32, size_log2: c_int) {
+    unsafe {
+        let s = opaque as *mut I440FXState;
+        if (*s).config_reg & 0x80000000 != 0 {
+            if size_log2 == 2 {
+                // it is simpler to assume 32 bit config accesses are always aligned
+                pci_data_write((*s).pci_bus, (*s).config_reg & !3u32, data, size_log2);
+            } else {
+                pci_data_write((*s).pci_bus, (*s).config_reg | offset, data, size_log2);
+            }
+        }
+    }
 }
 }
 
@@ -3382,6 +6114,162 @@ pub extern "C" fn i440fx_write_data__part1557(
 }
 }
 
+// ── `i440fx_read_data` · pci.c:482-494 · chunk 1558 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t i440fx_read_data(void *opaque, uint32_t offset, int size_log2)
+//     {
+//         I440FXState *s = opaque;
+//         if (!(s->config_reg & 0x80000000))
+//             return val_ones[size_log2];
+//         if (size_log2 == 2) {
+//     
+//     
+//             return pci_data_read(s->pci_bus, s->config_reg & ~3, size_log2);
+//         } else {
+//             return pci_data_read(s->pci_bus, s->config_reg | offset, size_log2);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1558 {
+// Port of static uint32_t i440fx_read_data(void *opaque, uint32_t offset, int size_log2)
+// from pci.c.  The static helpers it calls (pci_data_read, pci_device_config_read)
+// have no linker symbols, so their logic is reproduced here as private Rust fns.
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+// IRQSignal layout is irrelevant here; only a pointer to it is stored.
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [[u8; 0]; 4], // placeholder-free: IRQSignal irq[4] (pointer-sized each)
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [[u8; 0]; 4],
+}
+
+#[repr(C)]
+struct I440FXState {
+    pci_bus: *mut PCIBus,
+    pci_dev: *mut PCIDevice,
+    piix3_dev: *mut PCIDevice,
+    config_reg: u32,
+    pic_irq_state: [u8; 16],
+    pic_irqs: *mut c_void,
+}
+
+extern "C" {
+    fn abort() -> !;
+}
+
+static VAL_ONES: [u32; 3] = [0xff, 0xffff, 0xffff_ffff];
+
+#[inline]
+fn get_le16(ptr: *const u8) -> u16 {
+    unsafe {
+        (ptr.read_unaligned() as u16) | ((ptr.add(1).read_unaligned() as u16) << 8)
+    }
+}
+
+#[inline]
+fn get_le32(ptr: *const u8) -> u32 {
+    unsafe {
+        (ptr.read_unaligned() as u32)
+            | ((ptr.add(1).read_unaligned() as u32) << 8)
+            | ((ptr.add(2).read_unaligned() as u32) << 16)
+            | ((ptr.add(3).read_unaligned() as u32) << 24)
+    }
+}
+
+// static uint32_t pci_device_config_read(PCIDevice *d, uint32_t addr, int size_log2)
+fn pci_device_config_read(d: *mut PCIDevice, addr: u32, size_log2: c_int) -> u32 {
+    unsafe {
+        let base = (*d).config.as_mut_ptr();
+        let p = base.add(addr as usize);
+        match size_log2 {
+            0 => *p as u32,
+            1 => {
+                if addr <= 0xfe {
+                    get_le16(p) as u32
+                } else {
+                    *p as u32
+                }
+            }
+            2 => get_le32(p),
+            _ => abort(),
+        }
+    }
+}
+
+// static uint32_t pci_data_read(PCIBus *s, uint32_t addr, int size_log2)
+fn pci_data_read(s: *mut PCIBus, addr: u32, size_log2: c_int) -> u32 {
+    unsafe {
+        let bus_num = ((addr >> 16) & 0xff) as c_int;
+        if bus_num != (*s).bus_num {
+            return val_ones(size_log2);
+        }
+        let devfn = ((addr >> 8) & 0xff) as usize;
+        let d = (*s).device[devfn];
+        if d.is_null() {
+            return val_ones(size_log2);
+        }
+        let config_addr = addr & 0xff;
+        pci_device_config_read(d, config_addr, size_log2)
+    }
+}
+
+#[inline]
+fn val_ones(size_log2: c_int) -> u32 {
+    match size_log2 {
+        0 => VAL_ONES[0],
+        1 => VAL_ONES[1],
+        2 => VAL_ONES[2],
+        _ => 0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn i440fx_read_data(
+    opaque: *mut c_void,
+    offset: u32,
+    size_log2: c_int,
+) -> u32 {
+    unsafe {
+        let s = opaque as *mut I440FXState;
+        if (*s).config_reg & 0x8000_0000 == 0 {
+            return val_ones(size_log2);
+        }
+        if size_log2 == 2 {
+            // it is simpler to assume 32 bit config accesses are always aligned
+            pci_data_read((*s).pci_bus, (*s).config_reg & !3u32, size_log2)
+        } else {
+            pci_data_read((*s).pci_bus, (*s).config_reg | offset, size_log2)
+        }
+    }
+}
+}
+
 // ── `if (!(s->config_reg & 0x80000000)` · pci.c:485-486 · chunk 1559 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3562,6 +6450,113 @@ pub unsafe extern "C" fn i440fx_read_data__part1560(
 }
 }
 
+// ── `i440fx_set_irq` · pci.c:496-513 · chunk 1561 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void i440fx_set_irq(void *opaque, int irq_num, int irq_level)
+//     {
+//         I440FXState *s = opaque;
+//         PCIDevice *hd = s->piix3_dev;
+//         int pic_irq;
+//     
+//     
+//     
+//         hd->config[0x60 + irq_num] &= ~0x80;
+//         pic_irq = hd->config[0x60 + irq_num];
+//         if (pic_irq < 16) {
+//             if (irq_level)
+//                 s->pic_irq_state[pic_irq] |= 1 << irq_num;
+//             else
+//                 s->pic_irq_state[pic_irq] &= ~(1 << irq_num);
+//             set_irq(&s->pic_irqs[pic_irq], (s->pic_irq_state[pic_irq] != 0));
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1561 {
+// Rust rewrite of i440fx_set_irq (pci.c)
+
+use core::ffi::{c_char, c_int, c_void};
+
+type SetIRQFunc = Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>;
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: SetIRQFunc,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+type PCIBarSetFunc = Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>;
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: PCIBarSetFunc,
+}
+
+// Opaque: only ever used behind a pointer.
+#[repr(C)]
+pub struct PCIBus {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct I440FXState {
+    pub pci_bus: *mut PCIBus,
+    pub pci_dev: *mut PCIDevice,
+    pub piix3_dev: *mut PCIDevice,
+    pub config_reg: u32,
+    pub pic_irq_state: [u8; 16],
+    pub pic_irqs: *mut IRQSignal,
+}
+
+// Port of the `static inline void set_irq(IRQSignal *irq, int level)` helper.
+#[inline]
+unsafe fn set_irq(irq: *mut IRQSignal, level: c_int) {
+    let f = (*irq).set_irq;
+    if let Some(f) = f {
+        f((*irq).opaque, (*irq).irq_num, level);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn i440fx_set_irq(opaque: *mut c_void, irq_num: c_int, irq_level: c_int) {
+    let s = opaque as *mut I440FXState;
+    let hd = (*s).piix3_dev;
+    let mut pic_irq: c_int;
+
+    // hd->config[0x60 + irq_num] &= ~0x80;
+    let cfg_ptr = (*hd).config.as_mut_ptr().offset(0x60 + irq_num as isize);
+    *cfg_ptr &= !0x80u8;
+    pic_irq = *cfg_ptr as c_int;
+    if pic_irq < 16 {
+        let state_ptr = (*s).pic_irq_state.as_mut_ptr().offset(pic_irq as isize);
+        let bit = 1u32.wrapping_shl(irq_num as u32) as u8;
+        if irq_level != 0 {
+            *state_ptr |= bit;
+        } else {
+            *state_ptr &= !bit;
+        }
+        let irq = (*s).pic_irqs.offset(pic_irq as isize);
+        set_irq(irq, (*state_ptr != 0) as c_int);
+    }
+}
+}
+
 // ── `I440FXState *s = opaque; PCIDevice *hd = s->piix3_dev; int pic_irq; hd->config[0x60 + irq_num]…` · pci.c:498-505 · chunk 1562 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3712,6 +6707,530 @@ pub unsafe extern "C" fn i440fx_set_irq__part1563(
             Some(func) => func((*irq).opaque, (*irq).irq_num, level),
             None => {}
         }
+    }
+}
+}
+
+// ── `i440fx_init` · pci.c:515-554 · chunk 1564 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     I440FXState *i440fx_init(PCIBus **pbus, int *ppiix3_devfn,
+//                              PhysMemoryMap *mem_map, PhysMemoryMap *port_map,
+//                              IRQSignal *pic_irqs)
+//     {
+//         I440FXState *s;
+//         PCIBus *b;
+//         PCIDevice *d;
+//         int i;
+//     
+//         s = mallocz(sizeof(*s));
+//     
+//         b = mallocz(sizeof(PCIBus));
+//         b->bus_num = 0;
+//         b->mem_map = mem_map;
+//         b->port_map = port_map;
+//     
+//         s->pic_irqs = pic_irqs;
+//         for(i = 0; i < 4; i++) {
+//             irq_init(&b->irq[i], i440fx_set_irq, s, i);
+//         }
+//     
+//         cpu_register_device(port_map, 0xcf8, 1, s, i440fx_read_addr, i440fx_write_addr,
+//                             (1 << 2));
+//         cpu_register_device(port_map, 0xcfc, 4, s, i440fx_read_data, i440fx_write_data,
+//                             (1 << 0) | (1 << 1) | (1 << 2));
+//         d = pci_register_device(b, "i440FX", 0, 0x8086, 0x1237, 0x02, 0x0600);
+//         put_le16(&d->config[0x2c], 0x1af4);
+//         put_le16(&d->config[0x2e], 0x1100);
+//     
+//         s->pci_dev = d;
+//         s->pci_bus = b;
+//     
+//         s->piix3_dev = pci_register_device(b, "PIIX3", 8, 0x8086, 0x7000,
+//                                            0x00, 0x0601);
+//         pci_device_set_config8(s->piix3_dev, 0x0e, 0x80);
+//     
+//         *pbus = b;
+//         *ppiix3_devfn = s->piix3_dev->devfn;
+//         return s;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1564 {
+// Rust port of i440fx_init (pci.c lines 515-554)
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut PhysMemoryMap,
+    pub port_map: *mut PhysMemoryMap,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub type_: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct I440FXState {
+    pub pci_bus: *mut PCIBus,
+    pub pci_dev: *mut PCIDevice,
+    pub piix3_dev: *mut PCIDevice,
+    pub config_reg: u32,
+    pub pic_irq_state: [u8; 16],
+    pub pic_irqs: *mut IRQSignal,
+}
+
+// Opaque in Rust: only pointers to it are handled here.
+#[repr(C)]
+pub struct PhysMemoryMap {
+    _opaque: [u8; 0],
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn irq_init(
+        irq: *mut IRQSignal,
+        set_irq: Option<unsafe extern "C" fn(*mut c_void, c_int, c_int)>,
+        opaque: *mut c_void,
+        irq_num: c_int,
+    );
+    fn cpu_register_device(
+        s: *mut PhysMemoryMap,
+        addr: u64,
+        size: u64,
+        opaque: *mut c_void,
+        read_func: Option<unsafe extern "C" fn(*mut c_void, u32, c_int) -> u32>,
+        write_func: Option<unsafe extern "C" fn(*mut c_void, u32, u32, c_int)>,
+        devio_flags: c_int,
+    ) -> *mut c_void;
+    fn pci_register_device(
+        b: *mut PCIBus,
+        name: *const c_char,
+        devfn: c_int,
+        vendor_id: u16,
+        device_id: u16,
+        revision: u8,
+        class_id: u16,
+    ) -> *mut PCIDevice;
+    fn pci_device_set_config8(d: *mut PCIDevice, addr: u8, val: u8);
+}
+
+// static C helpers (static inline in the original translation unit)
+#[inline]
+fn put_le16(ptr: *mut u8, v: u16) {
+    unsafe {
+        *ptr = v as u8;
+        *ptr.add(1) = (v >> 8) as u8;
+    }
+}
+
+static I440FX_STRING: [c_char; 7] = [
+    b'i' as c_char,
+    b'4' as c_char,
+    b'4' as c_char,
+    b'0' as c_char,
+    b'F' as c_char,
+    b'X' as c_char,
+    0,
+];
+
+static PIIX3_STRING: [c_char; 6] = [
+    b'P' as c_char,
+    b'I' as c_char,
+    b'I' as c_char,
+    b'X' as c_char,
+    b'3' as c_char,
+    0,
+];
+
+// i440fx_set_irq: used as the bus IRQ callback. The original is a static C
+// function with no linker symbol, so its logic lives here as a private fn.
+unsafe extern "C" fn i440fx_set_irq(opaque: *mut c_void, irq_num: c_int, irq_level: c_int) {
+    let s = opaque as *mut I440FXState;
+    if s.is_null() {
+        return;
+    }
+    let hd = (*s).piix3_dev;
+    if hd.is_null() {
+        return;
+    }
+    let cfgidx = 0x60usize.wrapping_add(irq_num as usize);
+    // hd->config[0x60 + irq_num] &= ~0x80;
+    let cfg = (*hd).config.as_mut_ptr();
+    let cur = *cfg.add(cfgidx);
+    *cfg.add(cfgidx) = cur & !(0x80u8);
+    let pic_irq = *cfg.add(cfgidx) as c_int;
+    if pic_irq < 16 {
+        let state = (*s).pic_irq_state.as_mut_ptr().add(pic_irq as usize);
+        if irq_level != 0 {
+            *state = (*state) | (1u8 << (irq_num & 7));
+        } else {
+            *state = (*state) & !(1u8 << (irq_num & 7));
+        }
+        let level = if *state != 0 { 1 } else { 0 };
+        let irqs = (*s).pic_irqs;
+        if !irqs.is_null() {
+            let irq = irqs.add(pic_irq as usize);
+            if let Some(f) = (*irq).set_irq {
+                f((*irq).opaque, (*irq).irq_num, level);
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn i440fx_init(
+    pbus: *mut *mut PCIBus,
+    ppiix3_devfn: *mut c_int,
+    mem_map: *mut PhysMemoryMap,
+    port_map: *mut PhysMemoryMap,
+    pic_irqs: *mut IRQSignal,
+) -> *mut I440FXState {
+    let s = mallocz(core::mem::size_of::<I440FXState>()) as *mut I440FXState;
+    if s.is_null() {
+        return s;
+    }
+
+    let b = mallocz(core::mem::size_of::<PCIBus>()) as *mut PCIBus;
+    if b.is_null() {
+        return s;
+    }
+    (*b).bus_num = 0;
+    (*b).mem_map = mem_map;
+    (*b).port_map = port_map;
+
+    (*s).pic_irqs = pic_irqs;
+    let mut i: c_int = 0;
+    while i < 4 {
+        irq_init(
+            (*b).irq.as_mut_ptr().add(i as usize),
+            Some(i440fx_set_irq),
+            s as *mut c_void,
+            i,
+        );
+        i += 1;
+    }
+
+    if !port_map.is_null() {
+        cpu_register_device(
+            port_map,
+            0xcf8u64,
+            1u64,
+            s as *mut c_void,
+            Some(i440fx_read_addr),
+            Some(i440fx_write_addr),
+            1 << 2,
+        );
+        cpu_register_device(
+            port_map,
+            0xcfcu64,
+            4u64,
+            s as *mut c_void,
+            Some(i440fx_read_data),
+            Some(i440fx_write_data),
+            (1 << 0) | (1 << 1) | (1 << 2),
+        );
+    }
+
+    let d = pci_register_device(
+        b,
+        I440FX_STRING.as_ptr(),
+        0,
+        0x8086u16,
+        0x1237u16,
+        0x02u8,
+        0x0600u16,
+    );
+    if !d.is_null() {
+        put_le16((*d).config.as_mut_ptr().add(0x2c), 0x1af4u16);
+        put_le16((*d).config.as_mut_ptr().add(0x2e), 0x1100u16);
+    }
+
+    (*s).pci_dev = d;
+    (*s).pci_bus = b;
+
+    (*s).piix3_dev = pci_register_device(
+        b,
+        PIIX3_STRING.as_ptr(),
+        8,
+        0x8086u16,
+        0x7000u16,
+        0x00u8,
+        0x0601u16,
+    );
+    if !(*s).piix3_dev.is_null() {
+        pci_device_set_config8((*s).piix3_dev, 0x0e, 0x80);
+    }
+
+    if !pbus.is_null() {
+        *pbus = b;
+    }
+    if !ppiix3_devfn.is_null() {
+        let devfn = if (*s).piix3_dev.is_null() {
+            0
+        } else {
+            (*s).piix3_dev.read_volatile().devfn as c_int
+        };
+        *ppiix3_devfn = devfn;
+    }
+    s
+}
+
+// ---- static C callbacks registered as device read/write handlers ----
+// They are static in the original TU (no linker symbol), so the logic is
+// reproduced here; they are only reached through the registered callbacks.
+
+static VAL_ONES: [u32; 3] = [0xff, 0xffff, 0xffffffff];
+
+#[inline]
+fn get_le16(ptr: *const u8) -> u16 {
+    unsafe { (*ptr as u16) | ((*ptr.add(1) as u16) << 8) }
+}
+
+#[inline]
+fn get_le32(ptr: *const u8) -> u32 {
+    unsafe {
+        (*ptr as u32)
+            | ((*ptr.add(1) as u32) << 8)
+            | ((*ptr.add(2) as u32) << 16)
+            | ((*ptr.add(3) as u32) << 24)
+    }
+}
+
+#[inline]
+fn put_le32(ptr: *mut u8, v: u32) {
+    unsafe {
+        *ptr = v as u8;
+        *ptr.add(1) = (v >> 8) as u8;
+        *ptr.add(2) = (v >> 16) as u8;
+        *ptr.add(3) = (v >> 24) as u8;
+    }
+}
+
+unsafe fn pci_device_config_read(d: *mut PCIDevice, addr: u32, size_log2: c_int) -> u32 {
+    let cfg = (*d).config.as_ptr();
+    match size_log2 {
+        0 => *cfg.add(addr as usize) as u32,
+        1 => {
+            if addr <= 0xfe {
+                get_le16(cfg.add(addr as usize)) as u32
+            } else {
+                *cfg.add(addr as usize) as u32
+            }
+        }
+        2 => get_le32(cfg.add(addr as usize)),
+        _ => 0,
+    }
+}
+
+unsafe fn pci_device_config_write8(d: *mut PCIDevice, addr: u32, data: u32) {
+    let cfg = (*d).config.as_mut_ptr();
+    let a = addr as usize;
+    if addr == 0x06 || addr == 0x06 + 1 {
+        *cfg.add(a) = *cfg.add(a) & !(data as u8);
+        return;
+    }
+    let can_write: bool = match *cfg.add(0x0e) {
+        0x00 | 0x80 => !matches!(
+            addr,
+            0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x3d
+        ) && !(0x10..=0x27).contains(&addr)
+            && !(0x30..=0x33).contains(&addr),
+        _ => {
+            !matches!(addr, 0x00 | 0x01 | 0x02 | 0x03 | 0x08 | 0x09 | 0x0a | 0x0b | 0x0e | 0x3d)
+                && !(0x38..=0x3b).contains(&addr)
+        }
+    };
+    if can_write {
+        *cfg.add(a) = data as u8;
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe fn pci_write_bar(d: *mut PCIDevice, addr: u32, val: u32) -> c_int {
+    let reg: usize = if addr == 0x30 {
+        6
+    } else {
+        ((addr.wrapping_sub(0x10)) >> 2) as usize
+    };
+    if reg >= 7 {
+        return -1;
+    }
+    let r = (*d).io_regions.as_mut_ptr().add(reg);
+    if (*r).size == 0 {
+        return -1;
+    }
+    let newval = if reg == 6 {
+        val & ((!((*r).size).wrapping_sub(1)) | 1)
+    } else {
+        (val & !(((*r).size).wrapping_sub(1))) | (*r).type_ as u32
+    };
+    put_le32((*d).config.as_mut_ptr().add(addr as usize), newval);
+    pci_update_mappings(d);
+    0
+}
+
+unsafe fn pci_update_mappings(d: *mut PCIDevice) {
+    let cfg = (*d).config.as_ptr();
+    let cmd = get_le16(cfg.add(0x04)) as u32;
+    for i in 0..7usize {
+        let r = (*d).io_regions.as_mut_ptr().add(i);
+        let offset: usize = if i == 6 { 0x30 } else { 0x10 + i * 4 };
+        let mut new_addr = get_le32(cfg.add(offset));
+        let mut new_enabled = false;
+        if (*r).size != 0 {
+            if ((*r).type_ & 0x01) != 0 && (cmd & 1) != 0 {
+                new_enabled = true;
+            } else if (cmd & (1 << 1)) != 0 {
+                if i == 6 {
+                    new_enabled = (new_addr & 1) != 0;
+                } else {
+                    new_enabled = true;
+                }
+            }
+        }
+        if new_enabled {
+            new_addr = get_le32(cfg.add(offset)) & !(((*r).size).wrapping_sub(1));
+            if let Some(f) = core::mem::transmute::<*mut c_void, Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>>((*r).bar_set) {
+                f((*r).opaque, i as c_int, new_addr, 1);
+            }
+            (*r).enabled = 1;
+        } else if (*r).enabled != 0 {
+            if let Some(f) = core::mem::transmute::<*mut c_void, Option<unsafe extern "C" fn(*mut c_void, c_int, u32, c_int)>>((*r).bar_set) {
+                f((*r).opaque, i as c_int, 0, 0);
+            }
+            (*r).enabled = 0;
+        }
+    }
+}
+
+unsafe fn pci_device_config_write(d: *mut PCIDevice, addr: u32, data: u32, size_log2: c_int) {
+    if size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30) {
+        if pci_write_bar(d, addr, data) == 0 {
+            return;
+        }
+    }
+    let size: u32 = 1u32 << size_log2;
+    let mut i: u32 = 0;
+    while i < size {
+        let addr1 = addr.wrapping_add(i);
+        if addr1 <= 0xff {
+            pci_device_config_write8(d, addr1, (data >> (i * 8)) & 0xff);
+        }
+        i += 1;
+    }
+    if 0x04 >= addr && 0x04 < addr.wrapping_add(size) {
+        pci_update_mappings(d);
+    }
+}
+
+unsafe fn pci_data_write(s: *mut PCIBus, addr: u32, data: u32, size_log2: c_int) {
+    let bus_num = ((addr >> 16) & 0xff) as c_int;
+    if bus_num != (*s).bus_num {
+        return;
+    }
+    let devfn = ((addr >> 8) & 0xff) as usize;
+    let d = (*s).device[devfn];
+    if d.is_null() {
+        return;
+    }
+    let config_addr = addr & 0xff;
+    pci_device_config_write(d, config_addr, data, size_log2);
+}
+
+unsafe fn pci_data_read(s: *mut PCIBus, addr: u32, size_log2: c_int) -> u32 {
+    let ones = if size_log2 >= 0 && size_log2 < 3 {
+        VAL_ONES[size_log2 as usize]
+    } else {
+        0xffffffff
+    };
+    let bus_num = ((addr >> 16) & 0xff) as c_int;
+    if bus_num != (*s).bus_num {
+        return ones;
+    }
+    let devfn = ((addr >> 8) & 0xff) as usize;
+    let d = (*s).device[devfn];
+    if d.is_null() {
+        return ones;
+    }
+    let config_addr = addr & 0xff;
+    pci_device_config_read(d, config_addr, size_log2)
+}
+
+unsafe extern "C" fn i440fx_write_addr(opaque: *mut c_void, _offset: u32, data: u32, _size_log2: c_int) {
+    let s = opaque as *mut I440FXState;
+    if s.is_null() {
+        return;
+    }
+    (*s).config_reg = data;
+}
+
+unsafe extern "C" fn i440fx_read_addr(opaque: *mut c_void, _offset: u32, _size_log2: c_int) -> u32 {
+    let s = opaque as *mut I440FXState;
+    if s.is_null() {
+        return 0;
+    }
+    (*s).config_reg
+}
+
+unsafe extern "C" fn i440fx_write_data(opaque: *mut c_void, offset: u32, data: u32, size_log2: c_int) {
+    let s = opaque as *mut I440FXState;
+    if s.is_null() {
+        return;
+    }
+    if ((*s).config_reg & 0x80000000) != 0 {
+        if size_log2 == 2 {
+            pci_data_write((*s).pci_bus, (*s).config_reg & !3u32, data, size_log2);
+        } else {
+            pci_data_write((*s).pci_bus, (*s).config_reg | offset, data, size_log2);
+        }
+    }
+}
+
+unsafe extern "C" fn i440fx_read_data(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32 {
+    let s = opaque as *mut I440FXState;
+    if s.is_null() {
+        return 0xffffffff;
+    }
+    if ((*s).config_reg & 0x80000000) == 0 {
+        return if size_log2 >= 0 && size_log2 < 3 {
+            VAL_ONES[size_log2 as usize]
+        } else {
+            0xffffffff
+        };
+    }
+    if size_log2 == 2 {
+        pci_data_read((*s).pci_bus, (*s).config_reg & !3u32, size_log2)
+    } else {
+        pci_data_read((*s).pci_bus, (*s).config_reg | offset, size_log2)
     }
 }
 }
@@ -4352,6 +7871,144 @@ pub unsafe extern "C" fn i440fx_init__part1567(
 
     *pbus = b;
     (*piix3).devfn as c_int
+}
+}
+
+// ── `i440fx_map_interrupts` · pci.c:557-588 · chunk 1568 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void i440fx_map_interrupts(I440FXState *s, uint8_t *elcr,
+//                                const uint8_t *pci_irqs)
+//     {
+//         PCIBus *b = s->pci_bus;
+//         PCIDevice *d, *hd;
+//         int irq_num, pic_irq, devfn, i;
+//     
+//     
+//         hd = s->piix3_dev;
+//     
+//         elcr[0] = 0;
+//         elcr[1] = 0;
+//         for(i = 0; i < 4; i++) {
+//             irq_num = pci_irqs[i];
+//             hd->config[0x60 + i] = irq_num;
+//             elcr[irq_num >> 3] |= (1 << (irq_num & 7));
+//         }
+//     
+//         for(devfn = 0; devfn < 256; devfn++) {
+//             d = b->device[devfn];
+//             if (!d)
+//                 continue;
+//             if (d->config[0x3d]) {
+//                 irq_num = 0;
+//                 irq_num = bus_map_irq(d, irq_num);
+//                 pic_irq = hd->config[0x60 + irq_num];
+//                 if (pic_irq < 16) {
+//                     d->config[0x3c] = pic_irq;
+//                 }
+//             }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk1568 {
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct IRQSignal {
+    pub set_irq: *mut c_void,
+    pub opaque: *mut c_void,
+    pub irq_num: c_int,
+}
+
+#[repr(C)]
+pub struct PCIIORegion {
+    pub size: u32,
+    pub r#type: u8,
+    pub enabled: u8,
+    pub opaque: *mut c_void,
+    pub bar_set: *mut c_void,
+}
+
+#[repr(C)]
+pub struct PCIDevice {
+    pub bus: *mut PCIBus,
+    pub devfn: u8,
+    pub irq: [IRQSignal; 4],
+    pub config: [u8; 256],
+    pub next_cap_offset: u8,
+    pub name: *mut c_char,
+    pub io_regions: [PCIIORegion; 7],
+}
+
+#[repr(C)]
+pub struct PCIBus {
+    pub bus_num: c_int,
+    pub device: [*mut PCIDevice; 256],
+    pub mem_map: *mut c_void,
+    pub port_map: *mut c_void,
+    pub irq_state: [[u32; 8]; 4],
+    pub irq: [IRQSignal; 4],
+}
+
+#[repr(C)]
+pub struct I440FXState {
+    pub pci_bus: *mut PCIBus,
+    pub pci_dev: *mut PCIDevice,
+    pub piix3_dev: *mut PCIDevice,
+    pub config_reg: u32,
+    pub pic_irq_state: [u8; 16],
+    pub pic_irqs: *mut IRQSignal,
+}
+
+/* ported from the C static helper `bus_map_irq` */
+fn bus_map_irq(d: *mut PCIDevice, irq_num: c_int) -> c_int {
+    let devfn = unsafe { (*d).devfn } as c_int;
+    let slot_addend = (devfn >> 3) - 1;
+    (irq_num + slot_addend) & 3
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn i440fx_map_interrupts(
+    s: *mut I440FXState,
+    elcr: *mut u8,
+    pci_irqs: *const u8,
+) {
+    let b: *mut PCIBus = (*s).pci_bus;
+    let hd: *mut PCIDevice = (*s).piix3_dev;
+    let mut irq_num: c_int;
+    let mut pic_irq: c_int;
+
+    *elcr.offset(0) = 0;
+    *elcr.offset(1) = 0;
+    let mut i: c_int = 0;
+    while i < 4 {
+        irq_num = *pci_irqs.offset(i as isize) as c_int;
+        *(*hd).config.as_mut_ptr().offset(0x60 + i as isize) = irq_num as u8;
+        let idx = (irq_num >> 3) as isize;
+        let bit = 1u32 << (irq_num & 7);
+        *elcr.offset(idx) |= bit as u8;
+        i += 1;
+    }
+
+    let mut devfn: c_int = 0;
+    while devfn < 256 {
+        let d: *mut PCIDevice = *(*b).device.as_ptr().offset(devfn as isize);
+        if d.is_null() {
+            devfn += 1;
+            continue;
+        }
+        if *(*d).config.as_ptr().offset(0x3d) != 0 {
+            irq_num = 0;
+            irq_num = bus_map_irq(d, irq_num);
+            pic_irq = *(*hd).config.as_ptr().offset(0x60 + irq_num as isize) as c_int;
+            if pic_irq < 16 {
+                *(*d).config.as_mut_ptr().offset(0x3c) = pic_irq as u8;
+            }
+        }
+        devfn += 1;
+    }
 }
 }
 

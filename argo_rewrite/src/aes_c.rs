@@ -1,5 +1,331 @@
 //! From `aes.c`.
 
+// ── `AES_set_encrypt_key` · aes.c:738-834 · chunk 66 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
+//        AES_KEY *key) {
+//     
+//      u32 *rk;
+//         int i = 0;
+//      u32 temp;
+//     
+//      if (!userKey || !key)
+//       return -1;
+//      if (bits != 128 && bits != 192 && bits != 256)
+//       return -2;
+//     
+//      rk = key->rd_key;
+//     
+//      if (bits==128)
+//       key->rounds = 10;
+//      else if (bits==192)
+//       key->rounds = 12;
+//      else
+//       key->rounds = 14;
+//     
+//      rk[0] = (((u32)(userKey)[0] << 24) ^ ((u32)(userKey)[1] << 16) ^ ((u32)(userKey)[2] << 8) ^ ((u32)(userKey)[3]));
+//      rk[1] = (((u32)(userKey + 4)[0] << 24) ^ ((u32)(userKey + 4)[1] << 16) ^ ((u32)(userKey + 4)[2] << 8) ^ ((u32)(userKey + 4)[3]));
+//      rk[2] = (((u32)(userKey + 8)[0] << 24) ^ ((u32)(userKey + 8)[1] << 16) ^ ((u32)(userKey + 8)[2] << 8) ^ ((u32)(userKey + 8)[3]));
+//      rk[3] = (((u32)(userKey + 12)[0] << 24) ^ ((u32)(userKey + 12)[1] << 16) ^ ((u32)(userKey + 12)[2] << 8) ^ ((u32)(userKey + 12)[3]));
+//      if (bits == 128) {
+//       while (1) {
+//        temp = rk[3];
+//        rk[4] = rk[0] ^
+//         (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
+//         (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
+//         (Te4[(temp ) & 0xff] & 0x0000ff00) ^
+//         (Te4[(temp >> 24) ] & 0x000000ff) ^
+//         rcon[i];
+//        rk[5] = rk[1] ^ rk[4];
+//        rk[6] = rk[2] ^ rk[5];
+//        rk[7] = rk[3] ^ rk[6];
+//        if (++i == 10) {
+//         return 0;
+//        }
+//        rk += 4;
+//       }
+//      }
+//      rk[4] = (((u32)(userKey + 16)[0] << 24) ^ ((u32)(userKey + 16)[1] << 16) ^ ((u32)(userKey + 16)[2] << 8) ^ ((u32)(userKey + 16)[3]));
+//      rk[5] = (((u32)(userKey + 20)[0] << 24) ^ ((u32)(userKey + 20)[1] << 16) ^ ((u32)(userKey + 20)[2] << 8) ^ ((u32)(userKey + 20)[3]));
+//      if (bits == 192) {
+//       while (1) {
+//        temp = rk[ 5];
+//        rk[ 6] = rk[ 0] ^
+//         (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
+//         (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
+//         (Te4[(temp ) & 0xff] & 0x0000ff00) ^
+//         (Te4[(temp >> 24) ] & 0x000000ff) ^
+//         rcon[i];
+//        rk[ 7] = rk[ 1] ^ rk[ 6];
+//        rk[ 8] = rk[ 2] ^ rk[ 7];
+//        rk[ 9] = rk[ 3] ^ rk[ 8];
+//        if (++i == 8) {
+//         return 0;
+//        }
+//        rk[10] = rk[ 4] ^ rk[ 9];
+//        rk[11] = rk[ 5] ^ rk[10];
+//        rk += 6;
+//       }
+//      }
+//      rk[6] = (((u32)(userKey + 24)[0] << 24) ^ ((u32)(userKey + 24)[1] << 16) ^ ((u32)(userKey + 24)[2] << 8) ^ ((u32)(userKey + 24)[3]));
+//      rk[7] = (((u32)(userKey + 28)[0] << 24) ^ ((u32)(userKey + 28)[1] << 16) ^ ((u32)(userKey + 28)[2] << 8) ^ ((u32)(userKey + 28)[3]));
+//      if (bits == 256) {
+//       while (1) {
+//        temp = rk[ 7];
+//        rk[ 8] = rk[ 0] ^
+//         (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
+//         (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
+//         (Te4[(temp ) & 0xff] & 0x0000ff00) ^
+//         (Te4[(temp >> 24) ] & 0x000000ff) ^
+//         rcon[i];
+//        rk[ 9] = rk[ 1] ^ rk[ 8];
+//        rk[10] = rk[ 2] ^ rk[ 9];
+//        rk[11] = rk[ 3] ^ rk[10];
+//        if (++i == 7) {
+//         return 0;
+//        }
+//        temp = rk[11];
+//        rk[12] = rk[ 4] ^
+//         (Te4[(temp >> 24) ] & 0xff000000) ^
+//         (Te4[(temp >> 16) & 0xff] & 0x00ff0000) ^
+//         (Te4[(temp >> 8) & 0xff] & 0x0000ff00) ^
+//         (Te4[(temp ) & 0xff] & 0x000000ff);
+//        rk[13] = rk[ 5] ^ rk[12];
+//        rk[14] = rk[ 6] ^ rk[13];
+//        rk[15] = rk[ 7] ^ rk[14];
+//     
+//        rk += 8;
+//              }
+//      }
+//      return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk66 {
+// Rust rewrite of AES_set_encrypt_key from aes.c
+#![allow(non_snake_case)]
+
+use core::ffi::{c_int, c_uchar};
+
+#[repr(C)]
+pub struct AesKeySt {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+static TE4: [u32; 256] = [
+    0x63636363, 0x7c7c7c7c, 0x77777777, 0x7b7b7b7b,
+    0xf2f2f2f2, 0x6b6b6b6b, 0x6f6f6f6f, 0xc5c5c5c5,
+    0x30303030, 0x01010101, 0x67676767, 0x2b2b2b2b,
+    0xfefefefe, 0xd7d7d7d7, 0xabababab, 0x76767676,
+    0xcacacaca, 0x82828282, 0xc9c9c9c9, 0x7d7d7d7d,
+    0xfafafafa, 0x59595959, 0x47474747, 0xf0f0f0f0,
+    0xadadadad, 0xd4d4d4d4, 0xa2a2a2a2, 0xafafafaf,
+    0x9c9c9c9c, 0xa4a4a4a4, 0x72727272, 0xc0c0c0c0,
+    0xb7b7b7b7, 0xfdfdfdfd, 0x93939393, 0x26262626,
+    0x36363636, 0x3f3f3f3f, 0xf7f7f7f7, 0xcccccccc,
+    0x34343434, 0xa5a5a5a5, 0xe5e5e5e5, 0xf1f1f1f1,
+    0x71717171, 0xd8d8d8d8, 0x31313131, 0x15151515,
+    0x04040404, 0xc7c7c7c7, 0x23232323, 0xc3c3c3c3,
+    0x18181818, 0x96969696, 0x05050505, 0x9a9a9a9a,
+    0x07070707, 0x12121212, 0x80808080, 0xe2e2e2e2,
+    0xebebebeb, 0x27272727, 0xb2b2b2b2, 0x75757575,
+    0x09090909, 0x83838383, 0x2c2c2c2c, 0x1a1a1a1a,
+    0x1b1b1b1b, 0x6e6e6e6e, 0x5a5a5a5a, 0xa0a0a0a0,
+    0x52525252, 0x3b3b3b3b, 0xd6d6d6d6, 0xb3b3b3b3,
+    0x29292929, 0xe3e3e3e3, 0x2f2f2f2f, 0x84848484,
+    0x53535353, 0xd1d1d1d1, 0x00000000, 0xedededed,
+    0x20202020, 0xfcfcfcfc, 0xb1b1b1b1, 0x5b5b5b5b,
+    0x6a6a6a6a, 0xcbcbcbcb, 0xbebebebe, 0x39393939,
+    0x4a4a4a4a, 0x4c4c4c4c, 0x58585858, 0xcfcfcfcf,
+    0xd0d0d0d0, 0xefefefef, 0xaaaaaaaa, 0xfbfbfbfb,
+    0x43434343, 0x4d4d4d4d, 0x33333333, 0x85858585,
+    0x45454545, 0xf9f9f9f9, 0x02020202, 0x7f7f7f7f,
+    0x50505050, 0x3c3c3c3c, 0x9f9f9f9f, 0xa8a8a8a8,
+    0x51515151, 0xa3a3a3a3, 0x40404040, 0x8f8f8f8f,
+    0x92929292, 0x9d9d9d9d, 0x38383838, 0xf5f5f5f5,
+    0xbcbcbcbc, 0xb6b6b6b6, 0xdadadada, 0x21212121,
+    0x10101010, 0xffffffff, 0xf3f3f3f3, 0xd2d2d2d2,
+    0xcdcdcdcd, 0x0c0c0c0c, 0x13131313, 0xecececec,
+    0x5f5f5f5f, 0x97979797, 0x44444444, 0x17171717,
+    0xc4c4c4c4, 0xa7a7a7a7, 0x7e7e7e7e, 0x3d3d3d3d,
+    0x64646464, 0x5d5d5d5d, 0x19191919, 0x73737373,
+    0x60606060, 0x81818181, 0x4f4f4f4f, 0xdcdcdcdc,
+    0x22222222, 0x2a2a2a2a, 0x90909090, 0x88888888,
+    0x46464646, 0xeeeeeeee, 0xb8b8b8b8, 0x14141414,
+    0xdededede, 0x5e5e5e5e, 0x0b0b0b0b, 0xdbdbdbdb,
+    0xe0e0e0e0, 0x32323232, 0x3a3a3a3a, 0x0a0a0a0a,
+    0x49494949, 0x06060606, 0x24242424, 0x5c5c5c5c,
+    0xc2c2c2c2, 0xd3d3d3d3, 0xacacacac, 0x62626262,
+    0x91919191, 0x95959595, 0xe4e4e4e4, 0x79797979,
+    0xe7e7e7e7, 0xc8c8c8c8, 0x37373737, 0x6d6d6d6d,
+    0x8d8d8d8d, 0xd5d5d5d5, 0x4e4e4e4e, 0xa9a9a9a9,
+    0x6c6c6c6c, 0x56565656, 0xf4f4f4f4, 0xeaeaeaea,
+    0x65656565, 0x7a7a7a7a, 0xaeaeaeae, 0x08080808,
+    0xbabababa, 0x78787878, 0x25252525, 0x2e2e2e2e,
+    0x1c1c1c1c, 0xa6a6a6a6, 0xb4b4b4b4, 0xc6c6c6c6,
+    0xe8e8e8e8, 0xdddddddd, 0x74747474, 0x1f1f1f1f,
+    0x4b4b4b4b, 0xbdbdbdbd, 0x8b8b8b8b, 0x8a8a8a8a,
+    0x70707070, 0x3e3e3e3e, 0xb5b5b5b5, 0x66666666,
+    0x48484848, 0x03030303, 0xf6f6f6f6, 0x0e0e0e0e,
+    0x61616161, 0x35353535, 0x57575757, 0xb9b9b9b9,
+    0x86868686, 0xc1c1c1c1, 0x1d1d1d1d, 0x9e9e9e9e,
+    0xe1e1e1e1, 0xf8f8f8f8, 0x98989898, 0x11111111,
+    0x69696969, 0xd9d9d9d9, 0x8e8e8e8e, 0x94949494,
+    0x9b9b9b9b, 0x1e1e1e1e, 0x87878787, 0xe9e9e9e9,
+    0xcececece, 0x55555555, 0x28282828, 0xdfdfdfdf,
+    0x8c8c8c8c, 0xa1a1a1a1, 0x89898989, 0x0d0d0d0d,
+    0xbfbfbfbf, 0xe6e6e6e6, 0x42424242, 0x68686868,
+    0x41414141, 0x99999999, 0x2d2d2d2d, 0x0f0f0f0f,
+    0xb0b0b0b0, 0x54545454, 0xbbbbbbbb, 0x16161616,
+];
+
+static RCON: [u32; 10] = [
+    0x01000000, 0x02000000, 0x04000000, 0x08000000,
+    0x10000000, 0x20000000, 0x40000000, 0x80000000,
+    0x1B000000, 0x36000000,
+];
+
+#[inline]
+fn te4(idx: u32) -> u32 {
+    // idx is always masked to 0..=255 before the call, so this cannot fail.
+    let i = (idx & 0xff) as usize;
+    match TE4.get(i) {
+        Some(v) => *v,
+        None => 0,
+    }
+}
+
+#[inline]
+fn rcon_at(i: c_int) -> u32 {
+    let idx = i as usize;
+    match RCON.get(idx) {
+        Some(v) => *v,
+        None => 0,
+    }
+}
+
+#[inline]
+unsafe fn getu32(p: *const c_uchar) -> u32 {
+    ((*p as u32) << 24)
+        ^ ((*p.add(1) as u32) << 16)
+        ^ ((*p.add(2) as u32) << 8)
+        ^ (*p.add(3) as u32)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_set_encrypt_key(
+    userKey: *const c_uchar,
+    bits: c_int,
+    key: *mut AesKeySt,
+) -> c_int {
+    if userKey.is_null() || key.is_null() {
+        return -1;
+    }
+    if bits != 128 && bits != 192 && bits != 256 {
+        return -2;
+    }
+
+    let rk_base: *mut u32 = core::ptr::addr_of_mut!((*key).rd_key) as *mut u32;
+
+    if bits == 128 {
+        (*key).rounds = 10;
+    } else if bits == 192 {
+        (*key).rounds = 12;
+    } else {
+        (*key).rounds = 14;
+    }
+
+    *rk_base.add(0) = getu32(userKey);
+    *rk_base.add(1) = getu32(userKey.add(4));
+    *rk_base.add(2) = getu32(userKey.add(8));
+    *rk_base.add(3) = getu32(userKey.add(12));
+
+    let mut i: c_int = 0;
+    let mut rk = rk_base;
+
+    if bits == 128 {
+        loop {
+            let temp = *rk.add(3);
+            *rk.add(4) = *rk.add(0)
+                ^ (te4(temp >> 16) & 0xff00_0000u32)
+                ^ (te4(temp >> 8) & 0x00ff_0000u32)
+                ^ (te4(temp) & 0x0000_ff00u32)
+                ^ (te4(temp >> 24) & 0x0000_00ffu32)
+                ^ rcon_at(i);
+            *rk.add(5) = *rk.add(1) ^ *rk.add(4);
+            *rk.add(6) = *rk.add(2) ^ *rk.add(5);
+            *rk.add(7) = *rk.add(3) ^ *rk.add(6);
+            i += 1;
+            if i == 10 {
+                return 0;
+            }
+            rk = rk.add(4);
+        }
+    }
+
+    *rk.add(4) = getu32(userKey.add(16));
+    *rk.add(5) = getu32(userKey.add(20));
+
+    if bits == 192 {
+        loop {
+            let temp = *rk.add(5);
+            *rk.add(6) = *rk.add(0)
+                ^ (te4(temp >> 16) & 0xff00_0000u32)
+                ^ (te4(temp >> 8) & 0x00ff_0000u32)
+                ^ (te4(temp) & 0x0000_ff00u32)
+                ^ (te4(temp >> 24) & 0x0000_00ffu32)
+                ^ rcon_at(i);
+            *rk.add(7) = *rk.add(1) ^ *rk.add(6);
+            *rk.add(8) = *rk.add(2) ^ *rk.add(7);
+            *rk.add(9) = *rk.add(3) ^ *rk.add(8);
+            i += 1;
+            if i == 8 {
+                return 0;
+            }
+            *rk.add(10) = *rk.add(4) ^ *rk.add(9);
+            *rk.add(11) = *rk.add(5) ^ *rk.add(10);
+            rk = rk.add(6);
+        }
+    }
+
+    *rk.add(6) = getu32(userKey.add(24));
+    *rk.add(7) = getu32(userKey.add(28));
+
+    if bits == 256 {
+        loop {
+            let mut temp = *rk.add(7);
+            *rk.add(8) = *rk.add(0)
+                ^ (te4(temp >> 16) & 0xff00_0000u32)
+                ^ (te4(temp >> 8) & 0x00ff_0000u32)
+                ^ (te4(temp) & 0x0000_ff00u32)
+                ^ (te4(temp >> 24) & 0x0000_00ffu32)
+                ^ rcon_at(i);
+            *rk.add(9) = *rk.add(1) ^ *rk.add(8);
+            *rk.add(10) = *rk.add(2) ^ *rk.add(9);
+            *rk.add(11) = *rk.add(3) ^ *rk.add(10);
+            i += 1;
+            if i == 7 {
+                return 0;
+            }
+            temp = *rk.add(11);
+            *rk.add(12) = *rk.add(4)
+                ^ (te4(temp >> 24) & 0xff00_0000u32)
+                ^ (te4(temp >> 16) & 0x00ff_0000u32)
+                ^ (te4(temp >> 8) & 0x0000_ff00u32)
+                ^ (te4(temp) & 0x0000_00ffu32);
+            *rk.add(13) = *rk.add(5) ^ *rk.add(12);
+            *rk.add(14) = *rk.add(6) ^ *rk.add(13);
+            *rk.add(15) = *rk.add(7) ^ *rk.add(14);
+
+            rk = rk.add(8);
+        }
+    }
+
+    0
+}
+}
+
 // ── `if (!userKey || !key)` · aes.c:745-746 · chunk 67 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -545,6 +871,287 @@ pub extern "C" fn AES_set_encrypt_key__part77() -> c_int {
 }
 }
 
+// ── `AES_set_decrypt_key` · aes.c:839-885 · chunk 78 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
+//         AES_KEY *key) {
+//     
+//             u32 *rk;
+//      int i, j, status;
+//      u32 temp;
+//     
+//     
+//      status = AES_set_encrypt_key(userKey, bits, key);
+//      if (status < 0)
+//       return status;
+//     
+//      rk = key->rd_key;
+//     
+//     
+//      for (i = 0, j = 4*(key->rounds); i < j; i += 4, j -= 4) {
+//       temp = rk[i ]; rk[i ] = rk[j ]; rk[j ] = temp;
+//       temp = rk[i + 1]; rk[i + 1] = rk[j + 1]; rk[j + 1] = temp;
+//       temp = rk[i + 2]; rk[i + 2] = rk[j + 2]; rk[j + 2] = temp;
+//       temp = rk[i + 3]; rk[i + 3] = rk[j + 3]; rk[j + 3] = temp;
+//      }
+//     
+//      for (i = 1; i < (key->rounds); i++) {
+//       rk += 4;
+//       rk[0] =
+//        Td0[Te4[(rk[0] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[0] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[0] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[0] ) & 0xff] & 0xff];
+//       rk[1] =
+//        Td0[Te4[(rk[1] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[1] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[1] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[1] ) & 0xff] & 0xff];
+//       rk[2] =
+//        Td0[Te4[(rk[2] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[2] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[2] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[2] ) & 0xff] & 0xff];
+//       rk[3] =
+//        Td0[Te4[(rk[3] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[3] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[3] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[3] ) & 0xff] & 0xff];
+//      }
+//      return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk78 {
+// Port of AES_set_decrypt_key() from aes.c
+use core::ffi::c_int;
+
+#[repr(C)]
+pub struct AesKey {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+extern "C" {
+    fn AES_set_encrypt_key(userKey: *const u8, bits: c_int, key: *mut AesKey) -> c_int;
+}
+
+// Td0 is the base decryption table; Td1..Td3 are its byte rotations
+// (identical to the static const tables in aes.c).
+static TD0: [u32; 256] = [
+    0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96,
+    0x3bab6bcb, 0x1f9d45f1, 0xacfa58ab, 0x4be30393,
+    0x2030fa55, 0xad766df6, 0x88cc7691, 0xf5024c25,
+    0x4fe5d7fc, 0xc52acbd7, 0x26354480, 0xb562a38f,
+    0xdeb15a49, 0x25ba1b67, 0x45ea0e98, 0x5dfec0e1,
+    0xc32f7502, 0x814cf012, 0x8d4697a3, 0x6bd3f9c6,
+    0x038f5fe7, 0x15929c95, 0xbf6d7aeb, 0x955259da,
+    0xd4be832d, 0x587421d3, 0x49e06929, 0x8ec9c844,
+    0x75c2896a, 0xf48e7978, 0x99583e6b, 0x27b971dd,
+    0xbee14fb6, 0xf088ad17, 0xc920ac66, 0x7dce3ab4,
+    0x63df4a18, 0xe51a3182, 0x97513360, 0x62537f45,
+    0xb16477e0, 0xbb6bae84, 0xfe81a01c, 0xf9082b94,
+    0x70486858, 0x8f45fd19, 0x94de6c87, 0x527bf8b7,
+    0xab73d323, 0x724b02e2, 0xe31f8f57, 0x6655ab2a,
+    0xb2eb2807, 0x2fb5c203, 0x86c57b9a, 0xd33708a5,
+    0x302887f2, 0x23bfa5b2, 0x02036aba, 0xed16825c,
+    0x8acf1c2b, 0xa779b492, 0xf307f2f0, 0x4e69e2a1,
+    0x65daf4cd, 0x0605bed5, 0xd134621f, 0xc4a6fe8a,
+    0x342e539d, 0xa2f355a0, 0x058ae132, 0xa4f6eb75,
+    0x0b83ec39, 0x4060efaa, 0x5e719f06, 0xbd6e1051,
+    0x3e218af9, 0x96dd063d, 0xdd3e05ae, 0x4de6bd46,
+    0x91548db5, 0x71c45d05, 0x0406d46f, 0x605015ff,
+    0x1998fb24, 0xd6bde997, 0x894043cc, 0x67d99e77,
+    0xb0e842bd, 0x07898b88, 0xe7195b38, 0x79c8eedb,
+    0xa17c0a47, 0x7c420fe9, 0xf8841ec9, 0x00000000,
+    0x09808683, 0x322bed48, 0x1e1170ac, 0x6c5a724e,
+    0xfd0efffb, 0x0f853856, 0x3daed51e, 0x362d3927,
+    0x0a0fd964, 0x685ca621, 0x9b5b54d1, 0x24362e3a,
+    0x0c0a67b1, 0x9357e70f, 0xb4ee96d2, 0x1b9b919e,
+    0x80c0c54f, 0x61dc20a2, 0x5a774b69, 0x1c121a16,
+    0xe293ba0a, 0xc0a02ae5, 0x3c22e043, 0x121b171d,
+    0x0e090d0b, 0xf28bc7ad, 0x2db6a8b9, 0x141ea9c8,
+    0x57f11985, 0xaf75074c, 0xee99ddbb, 0xa37f60fd,
+    0xf701269f, 0x5c72f5bc, 0x44663bc5, 0x5bfb7e34,
+    0x8b432976, 0xcb23c6dc, 0xb6edfc68, 0xb8e4f163,
+    0xd731dcca, 0x42638510, 0x13972240, 0x84c61120,
+    0x854a247d, 0xd2bb3df8, 0xaef93211, 0xc729a16d,
+    0x1d9e2f4b, 0xdcb230f3, 0x0d8652ec, 0x77c1e3d0,
+    0x2bb3166c, 0xa970b999, 0x119448fa, 0x47e96422,
+    0xa8fc8cc4, 0xa0f03f1a, 0x567d2cd8, 0x223390ef,
+    0x87494ec7, 0xd938d1c1, 0x8ccaa2fe, 0x98d40b36,
+    0xa6f581cf, 0xa57ade28, 0xdab78e26, 0x3fadbfa4,
+    0x2c3a9de4, 0x5078920d, 0x6a5fcc9b, 0x547e4662,
+    0xf68d13c2, 0x90d8b8e8, 0x2e39f75e, 0x82c3aff5,
+    0x9f5d80be, 0x69d0937c, 0x6fd52da9, 0xcf2512b3,
+    0xc8ac993b, 0x10187da7, 0xe89c636e, 0xdb3bbb7b,
+    0xcd267809, 0x6e5918f4, 0xec9ab701, 0x834f9aa8,
+    0xe6956e65, 0xaaffe67e, 0x21bccf08, 0xef15e8e6,
+    0xbae79bd9, 0x4a6f36ce, 0xea9f09d4, 0x29b07cd6,
+    0x31a4b2af, 0x2a3f2331, 0xc6a59430, 0x35a266c0,
+    0x744ebc37, 0xfc82caa6, 0xe090d0b0, 0x33a7d815,
+    0xf104984a, 0x41ecdaf7, 0x7fcd500e, 0x1791f62f,
+    0x764dd68d, 0x43efb04d, 0xccaa4d54, 0xe49604df,
+    0x9ed1b5e3, 0x4c6a881b, 0xc12c1fb8, 0x4665517f,
+    0x9d5eea04, 0x018c355d, 0xfa877473, 0xfb0b412e,
+    0xb3671d5a, 0x92dbd252, 0xe9105633, 0x6dd64713,
+    0x9ad7618c, 0x37a10c7a, 0x59f8148e, 0xeb133c89,
+    0xcea927ee, 0xb761c935, 0xe11ce5ed, 0x7a47b13c,
+    0x9cd2df59, 0x55f2733f, 0x1814ce79, 0x73c737bf,
+    0x53f7cdea, 0x5ffdaa5b, 0xdf3d6f14, 0x7844db86,
+    0xcaaff381, 0xb968c43e, 0x3824342c, 0xc2a3405f,
+    0x161dc372, 0xbce2250c, 0x283c498b, 0xff0d9541,
+    0x39a80171, 0x080cb3de, 0xd8b4e49c, 0x6456c190,
+    0x7bcb8461, 0xd532b670, 0x486c5c74, 0xd0b85742,
+];
+
+static TE4: [u32; 256] = [
+    0x63636363, 0x7c7c7c7c, 0x77777777, 0x7b7b7b7b,
+    0xf2f2f2f2, 0x6b6b6b6b, 0x6f6f6f6f, 0xc5c5c5c5,
+    0x30303030, 0x01010101, 0x67676767, 0x2b2b2b2b,
+    0xfefefefe, 0xd7d7d7d7, 0xabababab, 0x76767676,
+    0xcacacaca, 0x82828282, 0xc9c9c9c9, 0x7d7d7d7d,
+    0xfafafafa, 0x59595959, 0x47474747, 0xf0f0f0f0,
+    0xadadadad, 0xd4d4d4d4, 0xa2a2a2a2, 0xafafafaf,
+    0x9c9c9c9c, 0xa4a4a4a4, 0x72727272, 0xc0c0c0c0,
+    0xb7b7b7b7, 0xfdfdfdfd, 0x93939393, 0x26262626,
+    0x36363636, 0x3f3f3f3f, 0xf7f7f7f7, 0xcccccccc,
+    0x34343434, 0xa5a5a5a5, 0xe5e5e5e5, 0xf1f1f1f1,
+    0x71717171, 0xd8d8d8d8, 0x31313131, 0x15151515,
+    0x04040404, 0xc7c7c7c7, 0x23232323, 0xc3c3c3c3,
+    0x18181818, 0x96969696, 0x05050505, 0x9a9a9a9a,
+    0x07070707, 0x12121212, 0x80808080, 0xe2e2e2e2,
+    0xebebebeb, 0x27272727, 0xb2b2b2b2, 0x75757575,
+    0x09090909, 0x83838383, 0x2c2c2c2c, 0x1a1a1a1a,
+    0x1b1b1b1b, 0x6e6e6e6e, 0x5a5a5a5a, 0xa0a0a0a0,
+    0x52525252, 0x3b3b3b3b, 0xd6d6d6d6, 0xb3b3b3b3,
+    0x29292929, 0xe3e3e3e3, 0x2f2f2f2f, 0x84848484,
+    0x53535353, 0xd1d1d1d1, 0x00000000, 0xedededed,
+    0x20202020, 0xfcfcfcfc, 0xb1b1b1b1, 0x5b5b5b5b,
+    0x6a6a6a6a, 0xcbcbcbcb, 0xbebebebe, 0x39393939,
+    0x4a4a4a4a, 0x4c4c4c4c, 0x58585858, 0xcfcfcfcf,
+    0xd0d0d0d0, 0xefefefef, 0xaaaaaaaa, 0xfbfbfbfb,
+    0x43434343, 0x4d4d4d4d, 0x33333333, 0x85858585,
+    0x45454545, 0xf9f9f9f9, 0x02020202, 0x7f7f7f7f,
+    0x50505050, 0x3c3c3c3c, 0x9f9f9f9f, 0xa8a8a8a8,
+    0x51515151, 0xa3a3a3a3, 0x40404040, 0x8f8f8f8f,
+    0x92929292, 0x9d9d9d9d, 0x38383838, 0xf5f5f5f5,
+    0xbcbcbcbc, 0xb6b6b6b6, 0xdadadada, 0x21212121,
+    0x10101010, 0xffffffff, 0xf3f3f3f3, 0xd2d2d2d2,
+    0xcdcdcdcd, 0x0c0c0c0c, 0x13131313, 0xecececec,
+    0x5f5f5f5f, 0x97979797, 0x44444444, 0x17171717,
+    0xc4c4c4c4, 0xa7a7a7a7, 0x7e7e7e7e, 0x3d3d3d3d,
+    0x64646464, 0x5d5d5d5d, 0x19191919, 0x73737373,
+    0x60606060, 0x81818181, 0x4f4f4f4f, 0xdcdcdcdc,
+    0x22222222, 0x2a2a2a2a, 0x90909090, 0x88888888,
+    0x46464646, 0xeeeeeeee, 0xb8b8b8b8, 0x14141414,
+    0xdededede, 0x5e5e5e5e, 0x0b0b0b0b, 0xdbdbdbdb,
+    0xe0e0e0e0, 0x32323232, 0x3a3a3a3a, 0x0a0a0a0a,
+    0x49494949, 0x06060606, 0x24242424, 0x5c5c5c5c,
+    0xc2c2c2c2, 0xd3d3d3d3, 0xacacacac, 0x62626262,
+    0x91919191, 0x95959595, 0xe4e4e4e4, 0x79797979,
+    0xe7e7e7e7, 0xc8c8c8c8, 0x37373737, 0x6d6d6d6d,
+    0x8d8d8d8d, 0xd5d5d5d5, 0x4e4e4e4e, 0xa9a9a9a9,
+    0x6c6c6c6c, 0x56565656, 0xf4f4f4f4, 0xeaeaeaea,
+    0x65656565, 0x7a7a7a7a, 0xaeaeaeae, 0x08080808,
+    0xbabababa, 0x78787878, 0x25252525, 0x2e2e2e2e,
+    0x1c1c1c1c, 0xa6a6a6a6, 0xb4b4b4b4, 0xc6c6c6c6,
+    0xe8e8e8e8, 0xdddddddd, 0x74747474, 0x1f1f1f1f,
+    0x4b4b4b4b, 0xbdbdbdbd, 0x8b8b8b8b, 0x8a8a8a8a,
+    0x70707070, 0x3e3e3e3e, 0xb5b5b5b5, 0x66666666,
+    0x48484848, 0x03030303, 0xf6f6f6f6, 0x0e0e0e0e,
+    0x61616161, 0x35353535, 0x57575757, 0xb9b9b9b9,
+    0x86868686, 0xc1c1c1c1, 0x1d1d1d1d, 0x9e9e9e9e,
+    0xe1e1e1e1, 0xf8f8f8f8, 0x98989898, 0x11111111,
+    0x69696969, 0xd9d9d9d9, 0x8e8e8e8e, 0x94949494,
+    0x9b9b9b9b, 0x1e1e1e1e, 0x87878787, 0xe9e9e9e9,
+    0xcececece, 0x55555555, 0x28282828, 0xdfdfdfdf,
+    0x8c8c8c8c, 0xa1a1a1a1, 0x89898989, 0x0d0d0d0d,
+    0xbfbfbfbf, 0xe6e6e6e6, 0x42424242, 0x68686868,
+    0x41414141, 0x99999999, 0x2d2d2d2d, 0x0f0f0f0f,
+    0xb0b0b0b0, 0x54545454, 0xbbbbbbbb, 0x16161616,
+];
+
+const fn rot_tab(base: &[u32; 256], n: u32) -> [u32; 256] {
+    let mut out = [0u32; 256];
+    let mut i = 0usize;
+    while i < 256 {
+        out[i] = base[i].rotate_right(n);
+        i += 1;
+    }
+    out
+}
+
+static TD1: [u32; 256] = rot_tab(&TD0, 8);
+static TD2: [u32; 256] = rot_tab(&TD0, 16);
+static TD3: [u32; 256] = rot_tab(&TD0, 24);
+
+#[inline]
+fn te4(i: u32) -> u32 {
+    // masked so the index is always in bounds (never panics)
+    TE4[(i & 0xff) as usize]
+}
+
+#[inline]
+fn td(t: &[u32; 256], i: u32) -> u32 {
+    t[(i & 0xff) as usize]
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_set_decrypt_key(
+    userKey: *const u8,
+    bits: c_int,
+    key: *mut AesKey,
+) -> c_int {
+    let mut status: c_int = AES_set_encrypt_key(userKey, bits, key);
+    if status < 0 {
+        return status;
+    }
+
+    let keyp: *mut AesKey = key;
+    let rk: *mut u32 = (*keyp).rd_key.as_mut_ptr();
+    let rounds: c_int = (*keyp).rounds;
+
+    // invert the order of the round keys
+    let mut i: c_int = 0;
+    let mut j: c_int = 4 * rounds;
+    while i < j {
+        let ii = i as usize;
+        let jj = j as usize;
+        let mut temp: u32;
+
+        temp = *rk.add(ii); *rk.add(ii) = *rk.add(jj); *rk.add(jj) = temp;
+        temp = *rk.add(ii + 1); *rk.add(ii + 1) = *rk.add(jj + 1); *rk.add(jj + 1) = temp;
+        temp = *rk.add(ii + 2); *rk.add(ii + 2) = *rk.add(jj + 2); *rk.add(jj + 2) = temp;
+        temp = *rk.add(ii + 3); *rk.add(ii + 3) = *rk.add(jj + 3); *rk.add(jj + 3) = temp;
+
+        i += 4;
+        j -= 4;
+    }
+
+    // apply the inverse MixColumn transform to all round keys but the first
+    // and the last
+    let mut r: c_int = 1;
+    while r < rounds {
+        let base: usize = 4 * (r as usize);
+        let mut k: usize = 0;
+        while k < 4 {
+            let x: u32 = *rk.add(base + k);
+            let v: u32 = td(&TD0, te4(x >> 24))
+                ^ td(&TD1, te4((x >> 16) & 0xff))
+                ^ td(&TD2, te4((x >> 8) & 0xff))
+                ^ td(&TD3, te4(x));
+            *rk.add(base + k) = v;
+            k += 1;
+        }
+        r += 1;
+    }
+
+    status = 0;
+    status
+}
+}
+
 // ── `u32 *rk; int i, j, status; u32 temp; status = AES_set_encrypt_key(userKey, bits, key);` · aes.c:842-847 · chunk 79 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -862,6 +1469,364 @@ pub extern "C" fn AES_set_decrypt_key__part84(
     key: *mut aes_key_st,
 ) -> c_int {
     0
+}
+}
+
+// ── `AES_encrypt` · aes.c:892-1077 · chunk 85 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void AES_encrypt(const unsigned char *in, unsigned char *out,
+//        const AES_KEY *key) {
+//     
+//      const u32 *rk;
+//      u32 s0, s1, s2, s3, t0, t1, t2, t3;
+//     
+//      int r;
+//     
+//     
+//      
+//     ((void) (0))
+//                             ;
+//      rk = key->rd_key;
+//     
+//     
+//     
+//     
+//     
+//      s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+//      s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+//      s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+//      s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
+//         r = key->rounds >> 1;
+//         for (;;) {
+//             t0 =
+//                 Te0[(s0 >> 24) ] ^
+//                 Te1[(s1 >> 16) & 0xff] ^
+//                 Te2[(s2 >> 8) & 0xff] ^
+//                 Te3[(s3 ) & 0xff] ^
+//                 rk[4];
+//             t1 =
+//                 Te0[(s1 >> 24) ] ^
+//                 Te1[(s2 >> 16) & 0xff] ^
+//                 Te2[(s3 >> 8) & 0xff] ^
+//                 Te3[(s0 ) & 0xff] ^
+//                 rk[5];
+//             t2 =
+//                 Te0[(s2 >> 24) ] ^
+//                 Te1[(s3 >> 16) & 0xff] ^
+//                 Te2[(s0 >> 8) & 0xff] ^
+//                 Te3[(s1 ) & 0xff] ^
+//                 rk[6];
+//             t3 =
+//                 Te0[(s3 >> 24) ] ^
+//                 Te1[(s0 >> 16) & 0xff] ^
+//                 Te2[(s1 >> 8) & 0xff] ^
+//                 Te3[(s2 ) & 0xff] ^
+//                 rk[7];
+//     
+//             rk += 8;
+//             if (--r == 0) {
+//                 break;
+//             }
+//     
+//             s0 =
+//                 Te0[(t0 >> 24) ] ^
+//                 Te1[(t1 >> 16) & 0xff] ^
+//                 Te2[(t2 >> 8) & 0xff] ^
+//                 Te3[(t3 ) & 0xff] ^
+//                 rk[0];
+//             s1 =
+//                 Te0[(t1 >> 24) ] ^
+//                 Te1[(t2 >> 16) & 0xff] ^
+//                 Te2[(t3 >> 8) & 0xff] ^
+//                 Te3[(t0 ) & 0xff] ^
+//                 rk[1];
+//             s2 =
+//                 Te0[(t2 >> 24) ] ^
+//                 Te1[(t3 >> 16) & 0xff] ^
+//                 Te2[(t0 >> 8) & 0xff] ^
+//                 Te3[(t1 ) & 0xff] ^
+//                 rk[2];
+//             s3 =
+//                 Te0[(t3 >> 24) ] ^
+//                 Te1[(t0 >> 16) & 0xff] ^
+//                 Te2[(t1 >> 8) & 0xff] ^
+//                 Te3[(t2 ) & 0xff] ^
+//                 rk[3];
+//         }
+//     
+//     
+//     
+//     
+//     
+//      s0 =
+//       (Te4[(t0 >> 24) ] & 0xff000000) ^
+//       (Te4[(t1 >> 16) & 0xff] & 0x00ff0000) ^
+//       (Te4[(t2 >> 8) & 0xff] & 0x0000ff00) ^
+//       (Te4[(t3 ) & 0xff] & 0x000000ff) ^
+//       rk[0];
+//      { (out)[0] = (u8)((s0) >> 24); (out)[1] = (u8)((s0) >> 16); (out)[2] = (u8)((s0) >> 8); (out)[3] = (u8)(s0); };
+//      s1 =
+//       (Te4[(t1 >> 24) ] & 0xff000000) ^
+//       (Te4[(t2 >> 16) & 0xff] & 0x00ff0000) ^
+//       (Te4[(t3 >> 8) & 0xff] & 0x0000ff00) ^
+//       (Te4[(t0 ) & 0xff] & 0x000000ff) ^
+//       rk[1];
+//      { (out + 4)[0] = (u8)((s1) >> 24); (out + 4)[1] = (u8)((s1) >> 16); (out + 4)[2] = (u8)((s1) >> 8); (out + 4)[3] = (u8)(s1); };
+//      s2 =
+//       (Te4[(t2 >> 24) ] & 0xff000000) ^
+//       (Te4[(t3 >> 16) & 0xff] & 0x00ff0000) ^
+//       (Te4[(t0 >> 8) & 0xff] & 0x0000ff00) ^
+//       (Te4[(t1 ) & 0xff] & 0x000000ff) ^
+//       rk[2];
+//      { (out + 8)[0] = (u8)((s2) >> 24); (out + 8)[1] = (u8)((s2) >> 16); (out + 8)[2] = (u8)((s2) >> 8); (out + 8)[3] = (u8)(s2); };
+//      s3 =
+//       (Te4[(t3 >> 24) ] & 0xff000000) ^
+//       (Te4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
+//       (Te4[(t1 >> 8) & 0xff] & 0x0000ff00) ^
+//       (Te4[(t2 ) & 0xff] & 0x000000ff) ^
+//       rk[3];
+//      { (out + 12)[0] = (u8)((s3) >> 24); (out + 12)[1] = (u8)((s3) >> 16); (out + 12)[2] = (u8)((s3) >> 8); (out + 12)[3] = (u8)(s3); };
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk85 {
+// Rust port of OpenSSL-style AES_encrypt (T-table implementation).
+#![allow(dead_code)]
+
+use core::ffi::{c_int, c_uchar};
+
+/* ---------- compile-time construction of the T tables ---------- */
+
+const fn gmul(mut a: u8, mut b: u8) -> u8 {
+    let mut p: u8 = 0;
+    let mut i = 0;
+    while i < 8 {
+        if b & 1u8 != 0 {
+            p ^= a;
+        }
+        let hi: u8 = a & 0x80u8;
+        a = (a << 1) & 0xffu8;
+        if hi != 0 {
+            a ^= 0x1bu8;
+        }
+        b >>= 1;
+        i += 1;
+    }
+    p
+}
+
+const fn ginv(a: u8) -> u8 {
+    if a == 0 {
+        return 0;
+    }
+    let mut b: u8 = 1;
+    while b != 0 {
+        if gmul(a, b) == 1 {
+            return b;
+        }
+        b = b.wrapping_add(1);
+    }
+    0
+}
+
+const fn rotl8(x: u8, n: u32) -> u8 {
+    (((x as u32) << n) | ((x as u32) >> (8 - n))) as u8
+}
+
+const fn sbox(i: u8) -> u8 {
+    let x = ginv(i);
+    let s = x ^ rotl8(x, 1) ^ rotl8(x, 2) ^ rotl8(x, 3) ^ rotl8(x, 4);
+    s ^ 0x63u8
+}
+
+const fn ror32(x: u32, n: u32) -> u32 {
+    (x >> n) | (x << (32 - n))
+}
+
+const fn make_te0() -> [u32; 256] {
+    let mut t = [0u32; 256];
+    let mut i: usize = 0;
+    while i < 256 {
+        let s8 = sbox(i as u8);
+        let s = s8 as u32;
+        let s2 = gmul(s8, 2) as u32;
+        let s3 = gmul(s8, 3) as u32;
+        t[i] = (s2 << 24) ^ (s << 16) ^ (s << 8) ^ s3;
+        i += 1;
+    }
+    t
+}
+
+const fn make_te4() -> [u32; 256] {
+    let mut t = [0u32; 256];
+    let mut i: usize = 0;
+    while i < 256 {
+        let s = sbox(i as u8) as u32;
+        t[i] = s ^ (s << 8) ^ (s << 16) ^ (s << 24);
+        i += 1;
+    }
+    t
+}
+
+const fn ror_all(src: &[u32; 256], n: u32) -> [u32; 256] {
+    let mut t = [0u32; 256];
+    let mut i: usize = 0;
+    while i < 256 {
+        t[i] = ror32(src[i], n);
+        i += 1;
+    }
+    t
+}
+
+static TE0: [u32; 256] = make_te0();
+static TE1: [u32; 256] = ror_all(&TE0, 8);
+static TE2: [u32; 256] = ror_all(&TE0, 16);
+static TE3: [u32; 256] = ror_all(&TE0, 24);
+static TE4: [u32; 256] = make_te4();
+
+/* ---------- helpers over raw C pointers ---------- */
+
+#[repr(C)]
+struct AesKey {
+    rd_key: [u32; 4 * (14 + 1)],
+    rounds: c_int,
+}
+
+#[inline]
+fn te(t: &'static [u32; 256], i: u32) -> u32 {
+    // Index is always masked to 8 bits by the callers, so it is in bounds.
+    unsafe { *t.get_unchecked((i & 0xff) as usize) }
+}
+
+#[inline]
+fn rk_at(rk: *const u32, i: usize) -> u32 {
+    unsafe { *rk.add(i) }
+}
+
+#[inline]
+fn rk_adv(rk: *const u32, n: usize) -> *const u32 {
+    unsafe { rk.add(n) }
+}
+
+#[inline]
+fn getu32(p: *const c_uchar, off: usize) -> u32 {
+    unsafe {
+        let q = p.add(off);
+        (((*q as u32) << 24)
+            ^ (((*q.add(1) as u32) << 16))
+            ^ (((*q.add(2) as u32) << 8))
+            ^ (*q.add(3) as u32)) as u32
+    }
+}
+
+#[inline]
+fn putu32(p: *mut c_uchar, off: usize, v: u32) {
+    unsafe {
+        let q = p.add(off);
+        *q = (v >> 24) as c_uchar;
+        *q.add(1) = (v >> 16) as c_uchar;
+        *q.add(2) = (v >> 8) as c_uchar;
+        *q.add(3) = v as c_uchar;
+    }
+}
+
+/* ---------- the ported function ---------- */
+
+#[no_mangle]
+pub extern "C" fn AES_encrypt(inp: *const c_uchar, out: *mut c_uchar, key: *const AesKey) {
+    let mut rk: *const u32 = unsafe { (*key).rd_key.as_ptr() };
+
+    /* map byte array block to cipher state and add initial round key */
+    let mut s0: u32 = getu32(inp, 0) ^ rk_at(rk, 0);
+    let mut s1: u32 = getu32(inp, 4) ^ rk_at(rk, 1);
+    let mut s2: u32 = getu32(inp, 8) ^ rk_at(rk, 2);
+    let mut s3: u32 = getu32(inp, 12) ^ rk_at(rk, 3);
+
+    let mut t0: u32 = 0;
+    let mut t1: u32 = 0;
+    let mut t2: u32 = 0;
+    let mut t3: u32 = 0;
+
+    /* Nr - 1 full rounds */
+    let mut r: c_int = unsafe { (*key).rounds } >> 1;
+    loop {
+        t0 = te(&TE0, s0 >> 24)
+            ^ te(&TE1, (s1 >> 16) & 0xff)
+            ^ te(&TE2, (s2 >> 8) & 0xff)
+            ^ te(&TE3, s3 & 0xff)
+            ^ rk_at(rk, 4);
+        t1 = te(&TE0, s1 >> 24)
+            ^ te(&TE1, (s2 >> 16) & 0xff)
+            ^ te(&TE2, (s3 >> 8) & 0xff)
+            ^ te(&TE3, s0 & 0xff)
+            ^ rk_at(rk, 5);
+        t2 = te(&TE0, s2 >> 24)
+            ^ te(&TE1, (s3 >> 16) & 0xff)
+            ^ te(&TE2, (s0 >> 8) & 0xff)
+            ^ te(&TE3, s1 & 0xff)
+            ^ rk_at(rk, 6);
+        t3 = te(&TE0, s3 >> 24)
+            ^ te(&TE1, (s0 >> 16) & 0xff)
+            ^ te(&TE2, (s1 >> 8) & 0xff)
+            ^ te(&TE3, s2 & 0xff)
+            ^ rk_at(rk, 7);
+
+        rk = rk_adv(rk, 8);
+        r -= 1;
+        if r == 0 {
+            break;
+        }
+
+        s0 = te(&TE0, t0 >> 24)
+            ^ te(&TE1, (t1 >> 16) & 0xff)
+            ^ te(&TE2, (t2 >> 8) & 0xff)
+            ^ te(&TE3, t3 & 0xff)
+            ^ rk_at(rk, 0);
+        s1 = te(&TE0, t1 >> 24)
+            ^ te(&TE1, (t2 >> 16) & 0xff)
+            ^ te(&TE2, (t3 >> 8) & 0xff)
+            ^ te(&TE3, t0 & 0xff)
+            ^ rk_at(rk, 1);
+        s2 = te(&TE0, t2 >> 24)
+            ^ te(&TE1, (t3 >> 16) & 0xff)
+            ^ te(&TE2, (t0 >> 8) & 0xff)
+            ^ te(&TE3, t1 & 0xff)
+            ^ rk_at(rk, 2);
+        s3 = te(&TE0, t3 >> 24)
+            ^ te(&TE1, (t0 >> 16) & 0xff)
+            ^ te(&TE2, (t1 >> 8) & 0xff)
+            ^ te(&TE3, t2 & 0xff)
+            ^ rk_at(rk, 3);
+    }
+
+    /* apply last round and map cipher state to byte array block */
+    s0 = (te(&TE4, t0 >> 24) & 0xff00_0000)
+        ^ (te(&TE4, (t1 >> 16) & 0xff) & 0x00ff_0000)
+        ^ (te(&TE4, (t2 >> 8) & 0xff) & 0x0000_ff00)
+        ^ (te(&TE4, t3 & 0xff) & 0x0000_00ff)
+        ^ rk_at(rk, 0);
+    putu32(out, 0, s0);
+
+    s1 = (te(&TE4, t1 >> 24) & 0xff00_0000)
+        ^ (te(&TE4, (t2 >> 16) & 0xff) & 0x00ff_0000)
+        ^ (te(&TE4, (t3 >> 8) & 0xff) & 0x0000_ff00)
+        ^ (te(&TE4, t0 & 0xff) & 0x0000_00ff)
+        ^ rk_at(rk, 1);
+    putu32(out, 4, s1);
+
+    s2 = (te(&TE4, t2 >> 24) & 0xff00_0000)
+        ^ (te(&TE4, (t3 >> 16) & 0xff) & 0x00ff_0000)
+        ^ (te(&TE4, (t0 >> 8) & 0xff) & 0x0000_ff00)
+        ^ (te(&TE4, t1 & 0xff) & 0x0000_00ff)
+        ^ rk_at(rk, 2);
+    putu32(out, 8, s2);
+
+    s3 = (te(&TE4, t3 >> 24) & 0xff00_0000)
+        ^ (te(&TE4, (t0 >> 16) & 0xff) & 0x00ff_0000)
+        ^ (te(&TE4, (t1 >> 8) & 0xff) & 0x0000_ff00)
+        ^ (te(&TE4, t2 & 0xff) & 0x0000_00ff)
+        ^ rk_at(rk, 3);
+    putu32(out, 12, s3);
 }
 }
 
@@ -1581,6 +2546,411 @@ pub mod chunk96 {
 // Ported AES_encrypt__part96 function
 #[no_mangle]
 pub extern "C" fn AES_encrypt__part96() {
+}
+}
+
+// ── `AES_decrypt` · aes.c:1083-1268 · chunk 97 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void AES_decrypt(const unsigned char *in, unsigned char *out,
+//        const AES_KEY *key) {
+//     
+//      const u32 *rk;
+//      u32 s0, s1, s2, s3, t0, t1, t2, t3;
+//     
+//      int r;
+//     
+//     
+//      
+//     ((void) (0))
+//                             ;
+//      rk = key->rd_key;
+//     
+//     
+//     
+//     
+//     
+//         s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+//         s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+//         s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+//         s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
+//         r = key->rounds >> 1;
+//         for (;;) {
+//             t0 =
+//                 Td0[(s0 >> 24) ] ^
+//                 Td1[(s3 >> 16) & 0xff] ^
+//                 Td2[(s2 >> 8) & 0xff] ^
+//                 Td3[(s1 ) & 0xff] ^
+//                 rk[4];
+//             t1 =
+//                 Td0[(s1 >> 24) ] ^
+//                 Td1[(s0 >> 16) & 0xff] ^
+//                 Td2[(s3 >> 8) & 0xff] ^
+//                 Td3[(s2 ) & 0xff] ^
+//                 rk[5];
+//             t2 =
+//                 Td0[(s2 >> 24) ] ^
+//                 Td1[(s1 >> 16) & 0xff] ^
+//                 Td2[(s0 >> 8) & 0xff] ^
+//                 Td3[(s3 ) & 0xff] ^
+//                 rk[6];
+//             t3 =
+//                 Td0[(s3 >> 24) ] ^
+//                 Td1[(s2 >> 16) & 0xff] ^
+//                 Td2[(s1 >> 8) & 0xff] ^
+//                 Td3[(s0 ) & 0xff] ^
+//                 rk[7];
+//     
+//             rk += 8;
+//             if (--r == 0) {
+//                 break;
+//             }
+//     
+//             s0 =
+//                 Td0[(t0 >> 24) ] ^
+//                 Td1[(t3 >> 16) & 0xff] ^
+//                 Td2[(t2 >> 8) & 0xff] ^
+//                 Td3[(t1 ) & 0xff] ^
+//                 rk[0];
+//             s1 =
+//                 Td0[(t1 >> 24) ] ^
+//                 Td1[(t0 >> 16) & 0xff] ^
+//                 Td2[(t3 >> 8) & 0xff] ^
+//                 Td3[(t2 ) & 0xff] ^
+//                 rk[1];
+//             s2 =
+//                 Td0[(t2 >> 24) ] ^
+//                 Td1[(t1 >> 16) & 0xff] ^
+//                 Td2[(t0 >> 8) & 0xff] ^
+//                 Td3[(t3 ) & 0xff] ^
+//                 rk[2];
+//             s3 =
+//                 Td0[(t3 >> 24) ] ^
+//                 Td1[(t2 >> 16) & 0xff] ^
+//                 Td2[(t1 >> 8) & 0xff] ^
+//                 Td3[(t0 ) & 0xff] ^
+//                 rk[3];
+//         }
+//     
+//     
+//     
+//     
+//     
+//         s0 =
+//          (Td4[(t0 >> 24) ] & 0xff000000) ^
+//          (Td4[(t3 >> 16) & 0xff] & 0x00ff0000) ^
+//          (Td4[(t2 >> 8) & 0xff] & 0x0000ff00) ^
+//          (Td4[(t1 ) & 0xff] & 0x000000ff) ^
+//          rk[0];
+//      { (out)[0] = (u8)((s0) >> 24); (out)[1] = (u8)((s0) >> 16); (out)[2] = (u8)((s0) >> 8); (out)[3] = (u8)(s0); };
+//         s1 =
+//          (Td4[(t1 >> 24) ] & 0xff000000) ^
+//          (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
+//          (Td4[(t3 >> 8) & 0xff] & 0x0000ff00) ^
+//          (Td4[(t2 ) & 0xff] & 0x000000ff) ^
+//          rk[1];
+//      { (out + 4)[0] = (u8)((s1) >> 24); (out + 4)[1] = (u8)((s1) >> 16); (out + 4)[2] = (u8)((s1) >> 8); (out + 4)[3] = (u8)(s1); };
+//         s2 =
+//          (Td4[(t2 >> 24) ] & 0xff000000) ^
+//          (Td4[(t1 >> 16) & 0xff] & 0x00ff0000) ^
+//          (Td4[(t0 >> 8) & 0xff] & 0x0000ff00) ^
+//          (Td4[(t3 ) & 0xff] & 0x000000ff) ^
+//          rk[2];
+//      { (out + 8)[0] = (u8)((s2) >> 24); (out + 8)[1] = (u8)((s2) >> 16); (out + 8)[2] = (u8)((s2) >> 8); (out + 8)[3] = (u8)(s2); };
+//         s3 =
+//          (Td4[(t3 >> 24) ] & 0xff000000) ^
+//          (Td4[(t2 >> 16) & 0xff] & 0x00ff0000) ^
+//          (Td4[(t1 >> 8) & 0xff] & 0x0000ff00) ^
+//          (Td4[(t0 ) & 0xff] & 0x000000ff) ^
+//          rk[3];
+//      { (out + 12)[0] = (u8)((s3) >> 24); (out + 12)[1] = (u8)((s3) >> 16); (out + 12)[2] = (u8)((s3) >> 8); (out + 12)[3] = (u8)(s3); };
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk97 {
+// Rust rewrite of AES_decrypt() from aes.c (AES_ASM / non-FULL_UNROLL path).
+// The C lookup tables Td0..Td4 are file-static, so they are embedded here.
+// Td1/Td2/Td3 are byte rotations of Td0, so they are derived from TD0.
+
+#[repr(C)]
+pub struct AesKey {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: i32,
+}
+
+static TD0: [u32; 256] = [
+    0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96,
+    0x3bab6bcb, 0x1f9d45f1, 0xacfa58ab, 0x4be30393,
+    0x2030fa55, 0xad766df6, 0x88cc7691, 0xf5024c25,
+    0x4fe5d7fc, 0xc52acbd7, 0x26354480, 0xb562a38f,
+    0xdeb15a49, 0x25ba1b67, 0x45ea0e98, 0x5dfec0e1,
+    0xc32f7502, 0x814cf012, 0x8d4697a3, 0x6bd3f9c6,
+    0x038f5fe7, 0x15929c95, 0xbf6d7aeb, 0x955259da,
+    0xd4be832d, 0x587421d3, 0x49e06929, 0x8ec9c844,
+    0x75c2896a, 0xf48e7978, 0x99583e6b, 0x27b971dd,
+    0xbee14fb6, 0xf088ad17, 0xc920ac66, 0x7dce3ab4,
+    0x63df4a18, 0xe51a3182, 0x97513360, 0x62537f45,
+    0xb16477e0, 0xbb6bae84, 0xfe81a01c, 0xf9082b94,
+    0x70486858, 0x8f45fd19, 0x94de6c87, 0x527bf8b7,
+    0xab73d323, 0x724b02e2, 0xe31f8f57, 0x6655ab2a,
+    0xb2eb2807, 0x2fb5c203, 0x86c57b9a, 0xd33708a5,
+    0x302887f2, 0x23bfa5b2, 0x02036aba, 0xed16825c,
+    0x8acf1c2b, 0xa779b492, 0xf307f2f0, 0x4e69e2a1,
+    0x65daf4cd, 0x0605bed5, 0xd134621f, 0xc4a6fe8a,
+    0x342e539d, 0xa2f355a0, 0x058ae132, 0xa4f6eb75,
+    0x0b83ec39, 0x4060efaa, 0x5e719f06, 0xbd6e1051,
+    0x3e218af9, 0x96dd063d, 0xdd3e05ae, 0x4de6bd46,
+    0x91548db5, 0x71c45d05, 0x0406d46f, 0x605015ff,
+    0x1998fb24, 0xd6bde997, 0x894043cc, 0x67d99e77,
+    0xb0e842bd, 0x07898b88, 0xe7195b38, 0x79c8eedb,
+    0xa17c0a47, 0x7c420fe9, 0xf8841ec9, 0x00000000,
+    0x09808683, 0x322bed48, 0x1e1170ac, 0x6c5a724e,
+    0xfd0efffb, 0x0f853856, 0x3daed51e, 0x362d3927,
+    0x0a0fd964, 0x685ca621, 0x9b5b54d1, 0x24362e3a,
+    0x0c0a67b1, 0x9357e70f, 0xb4ee96d2, 0x1b9b919e,
+    0x80c0c54f, 0x61dc20a2, 0x5a774b69, 0x1c121a16,
+    0xe293ba0a, 0xc0a02ae5, 0x3c22e043, 0x121b171d,
+    0x0e090d0b, 0xf28bc7ad, 0x2db6a8b9, 0x141ea9c8,
+    0x57f11985, 0xaf75074c, 0xee99ddbb, 0xa37f60fd,
+    0xf701269f, 0x5c72f5bc, 0x44663bc5, 0x5bfb7e34,
+    0x8b432976, 0xcb23c6dc, 0xb6edfc68, 0xb8e4f163,
+    0xd731dcca, 0x42638510, 0x13972240, 0x84c61120,
+    0x854a247d, 0xd2bb3df8, 0xaef93211, 0xc729a16d,
+    0x1d9e2f4b, 0xdcb230f3, 0x0d8652ec, 0x77c1e3d0,
+    0x2bb3166c, 0xa970b999, 0x119448fa, 0x47e96422,
+    0xa8fc8cc4, 0xa0f03f1a, 0x567d2cd8, 0x223390ef,
+    0x87494ec7, 0xd938d1c1, 0x8ccaa2fe, 0x98d40b36,
+    0xa6f581cf, 0xa57ade28, 0xdab78e26, 0x3fadbfa4,
+    0x2c3a9de4, 0x5078920d, 0x6a5fcc9b, 0x547e4662,
+    0xf68d13c2, 0x90d8b8e8, 0x2e39f75e, 0x82c3aff5,
+    0x9f5d80be, 0x69d0937c, 0x6fd52da9, 0xcf2512b3,
+    0xc8ac993b, 0x10187da7, 0xe89c636e, 0xdb3bbb7b,
+    0xcd267809, 0x6e5918f4, 0xec9ab701, 0x834f9aa8,
+    0xe6956e65, 0xaaffe67e, 0x21bccf08, 0xef15e8e6,
+    0xbae79bd9, 0x4a6f36ce, 0xea9f09d4, 0x29b07cd6,
+    0x31a4b2af, 0x2a3f2331, 0xc6a59430, 0x35a266c0,
+    0x744ebc37, 0xfc82caa6, 0xe090d0b0, 0x33a7d815,
+    0xf104984a, 0x41ecdaf7, 0x7fcd500e, 0x1791f62f,
+    0x764dd68d, 0x43efb04d, 0xccaa4d54, 0xe49604df,
+    0x9ed1b5e3, 0x4c6a881b, 0xc12c1fb8, 0x4665517f,
+    0x9d5eea04, 0x018c355d, 0xfa877473, 0xfb0b412e,
+    0xb3671d5a, 0x92dbd252, 0xe9105633, 0x6dd64713,
+    0x9ad7618c, 0x37a10c7a, 0x59f8148e, 0xeb133c89,
+    0xcea927ee, 0xb761c935, 0xe11ce5ed, 0x7a47b13c,
+    0x9cd2df59, 0x55f2733f, 0x1814ce79, 0x73c737bf,
+    0x53f7cdea, 0x5ffdaa5b, 0xdf3d6f14, 0x7844db86,
+    0xcaaff381, 0xb968c43e, 0x3824342c, 0xc2a3405f,
+    0x161dc372, 0xbce2250c, 0x283c498b, 0xff0d9541,
+    0x39a80171, 0x080cb3de, 0xd8b4e49c, 0x6456c190,
+    0x7bcb8461, 0xd532b670, 0x486c5c74, 0xd0b85742,
+];
+
+static TD4: [u32; 256] = [
+    0x52525252, 0x09090909, 0x6a6a6a6a, 0xd5d5d5d5,
+    0x30303030, 0x36363636, 0xa5a5a5a5, 0x38383838,
+    0xbfbfbfbf, 0x40404040, 0xa3a3a3a3, 0x9e9e9e9e,
+    0x81818181, 0xf3f3f3f3, 0xd7d7d7d7, 0xfbfbfbfb,
+    0x7c7c7c7c, 0xe3e3e3e3, 0x39393939, 0x82828282,
+    0x9b9b9b9b, 0x2f2f2f2f, 0xffffffff, 0x87878787,
+    0x34343434, 0x8e8e8e8e, 0x43434343, 0x44444444,
+    0xc4c4c4c4, 0xdededede, 0xe9e9e9e9, 0xcbcbcbcb,
+    0x54545454, 0x7b7b7b7b, 0x94949494, 0x32323232,
+    0xa6a6a6a6, 0xc2c2c2c2, 0x23232323, 0x3d3d3d3d,
+    0xeeeeeeee, 0x4c4c4c4c, 0x95959595, 0x0b0b0b0b,
+    0x42424242, 0xfafafafa, 0xc3c3c3c3, 0x4e4e4e4e,
+    0x08080808, 0x2e2e2e2e, 0xa1a1a1a1, 0x66666666,
+    0x28282828, 0xd9d9d9d9, 0x24242424, 0xb2b2b2b2,
+    0x76767676, 0x5b5b5b5b, 0xa2a2a2a2, 0x49494949,
+    0x6d6d6d6d, 0x8b8b8b8b, 0xd1d1d1d1, 0x25252525,
+    0x72727272, 0xf8f8f8f8, 0xf6f6f6f6, 0x64646464,
+    0x86868686, 0x68686868, 0x98989898, 0x16161616,
+    0xd4d4d4d4, 0xa4a4a4a4, 0x5c5c5c5c, 0xcccccccc,
+    0x5d5d5d5d, 0x65656565, 0xb6b6b6b6, 0x92929292,
+    0x6c6c6c6c, 0x70707070, 0x48484848, 0x50505050,
+    0xfdfdfdfd, 0xedededed, 0xb9b9b9b9, 0xdadadada,
+    0x5e5e5e5e, 0x15151515, 0x46464646, 0x57575757,
+    0xa7a7a7a7, 0x8d8d8d8d, 0x9d9d9d9d, 0x84848484,
+    0x90909090, 0xd8d8d8d8, 0xabababab, 0x00000000,
+    0x8c8c8c8c, 0xbcbcbcbc, 0xd3d3d3d3, 0x0a0a0a0a,
+    0xf7f7f7f7, 0xe4e4e4e4, 0x58585858, 0x05050505,
+    0xb8b8b8b8, 0xb3b3b3b3, 0x45454545, 0x06060606,
+    0xd0d0d0d0, 0x2c2c2c2c, 0x1e1e1e1e, 0x8f8f8f8f,
+    0xcacacaca, 0x3f3f3f3f, 0x0f0f0f0f, 0x02020202,
+    0xc1c1c1c1, 0xafafafaf, 0xbdbdbdbd, 0x03030303,
+    0x01010101, 0x13131313, 0x8a8a8a8a, 0x6b6b6b6b,
+    0x3a3a3a3a, 0x91919191, 0x11111111, 0x41414141,
+    0x4f4f4f4f, 0x67676767, 0xdcdcdcdc, 0xeaeaeaea,
+    0x97979797, 0xf2f2f2f2, 0xcfcfcfcf, 0xcececece,
+    0xf0f0f0f0, 0xb4b4b4b4, 0xe6e6e6e6, 0x73737373,
+    0x96969696, 0xacacacac, 0x74747474, 0x22222222,
+    0xe7e7e7e7, 0xadadadad, 0x35353535, 0x85858585,
+    0xe2e2e2e2, 0xf9f9f9f9, 0x37373737, 0xe8e8e8e8,
+    0x1c1c1c1c, 0x75757575, 0xdfdfdfdf, 0x6e6e6e6e,
+    0x47474747, 0xf1f1f1f1, 0x1a1a1a1a, 0x71717171,
+    0x1d1d1d1d, 0x29292929, 0xc5c5c5c5, 0x89898989,
+    0x6f6f6f6f, 0xb7b7b7b7, 0x62626262, 0x0e0e0e0e,
+    0xaaaaaaaa, 0x18181818, 0xbebebebe, 0x1b1b1b1b,
+    0xfcfcfcfc, 0x56565656, 0x3e3e3e3e, 0x4b4b4b4b,
+    0xc6c6c6c6, 0xd2d2d2d2, 0x79797979, 0x20202020,
+    0x9a9a9a9a, 0xdbdbdbdb, 0xc0c0c0c0, 0xfefefefe,
+    0x78787878, 0xcdcdcdcd, 0x5a5a5a5a, 0xf4f4f4f4,
+    0x1f1f1f1f, 0xdddddddd, 0xa8a8a8a8, 0x33333333,
+    0x88888888, 0x07070707, 0xc7c7c7c7, 0x31313131,
+    0xb1b1b1b1, 0x12121212, 0x10101010, 0x59595959,
+    0x27272727, 0x80808080, 0xecececec, 0x5f5f5f5f,
+    0x60606060, 0x51515151, 0x7f7f7f7f, 0xa9a9a9a9,
+    0x19191919, 0xb5b5b5b5, 0x4a4a4a4a, 0x0d0d0d0d,
+    0x2d2d2d2d, 0xe5e5e5e5, 0x7a7a7a7a, 0x9f9f9f9f,
+    0x93939393, 0xc9c9c9c9, 0x9c9c9c9c, 0xefefefef,
+    0xa0a0a0a0, 0xe0e0e0e0, 0x3b3b3b3b, 0x4d4d4d4d,
+    0xaeaeaeae, 0x2a2a2a2a, 0xf5f5f5f5, 0xb0b0b0b0,
+    0xc8c8c8c8, 0xebebebeb, 0xbbbbbbbb, 0x3c3c3c3c,
+    0x83838383, 0x53535353, 0x99999999, 0x61616161,
+    0x17171717, 0x2b2b2b2b, 0x04040404, 0x7e7e7e7e,
+    0xbabababa, 0x77777777, 0xd6d6d6d6, 0x26262626,
+    0xe1e1e1e1, 0x69696969, 0x14141414, 0x63636363,
+    0x55555555, 0x21212121, 0x0c0c0c0c, 0x7d7d7d7d,
+];
+
+#[inline]
+fn td0(i: u32) -> u32 {
+    TD0[(i & 0xff) as usize]
+}
+
+#[inline]
+fn td1(i: u32) -> u32 {
+    TD0[(i & 0xff) as usize].rotate_right(8)
+}
+
+#[inline]
+fn td2(i: u32) -> u32 {
+    TD0[(i & 0xff) as usize].rotate_right(16)
+}
+
+#[inline]
+fn td3(i: u32) -> u32 {
+    TD0[(i & 0xff) as usize].rotate_right(24)
+}
+
+#[inline]
+fn td4(i: u32) -> u32 {
+    TD4[(i & 0xff) as usize]
+}
+
+#[inline]
+unsafe fn getu32(p: *const u8) -> u32 {
+    ((*p as u32) << 24)
+        ^ ((*p.add(1) as u32) << 16)
+        ^ ((*p.add(2) as u32) << 8)
+        ^ (*p.add(3) as u32)
+}
+
+#[inline]
+unsafe fn putu32(p: *mut u8, s: u32) {
+    *p = (s >> 24) as u8;
+    *p.add(1) = (s >> 16) as u8;
+    *p.add(2) = (s >> 8) as u8;
+    *p.add(3) = s as u8;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_decrypt(in_: *const u8, out: *mut u8, key: *const AesKey) {
+    unsafe {
+        let rk: *const u32 = (*key).rd_key.as_ptr();
+
+        // map byte array block to cipher state and add initial round key
+        let mut s0: u32 = getu32(in_) ^ *rk.add(0);
+        let mut s1: u32 = getu32(in_.add(4)) ^ *rk.add(1);
+        let mut s2: u32 = getu32(in_.add(8)) ^ *rk.add(2);
+        let mut s3: u32 = getu32(in_.add(12)) ^ *rk.add(3);
+
+        let mut t0: u32;
+        let mut t1: u32;
+        let mut t2: u32;
+        let mut t3: u32;
+
+        // Nr - 1 full rounds
+        let mut r: i32 = (*key).rounds >> 1;
+        let mut base: usize = 0;
+
+        loop {
+            t0 = td0(s0 >> 24)
+                ^ td1((s3 >> 16) & 0xff)
+                ^ td2((s2 >> 8) & 0xff)
+                ^ td3(s1 & 0xff)
+                ^ *rk.add(base + 4);
+            t1 = td0(s1 >> 24)
+                ^ td1((s0 >> 16) & 0xff)
+                ^ td2((s3 >> 8) & 0xff)
+                ^ td3(s2 & 0xff)
+                ^ *rk.add(base + 5);
+            t2 = td0(s2 >> 24)
+                ^ td1((s1 >> 16) & 0xff)
+                ^ td2((s0 >> 8) & 0xff)
+                ^ td3(s3 & 0xff)
+                ^ *rk.add(base + 6);
+            t3 = td0(s3 >> 24)
+                ^ td1((s2 >> 16) & 0xff)
+                ^ td2((s1 >> 8) & 0xff)
+                ^ td3(s0 & 0xff)
+                ^ *rk.add(base + 7);
+
+            base += 8;
+            r -= 1;
+            if r == 0 {
+                break;
+            }
+
+            s0 = td0(t0 >> 24)
+                ^ td1((t3 >> 16) & 0xff)
+                ^ td2((t2 >> 8) & 0xff)
+                ^ td3(t1 & 0xff)
+                ^ *rk.add(base);
+            s1 = td0(t1 >> 24)
+                ^ td1((t0 >> 16) & 0xff)
+                ^ td2((t3 >> 8) & 0xff)
+                ^ td3(t2 & 0xff)
+                ^ *rk.add(base + 1);
+            s2 = td0(t2 >> 24)
+                ^ td1((t1 >> 16) & 0xff)
+                ^ td2((t0 >> 8) & 0xff)
+                ^ td3(t3 & 0xff)
+                ^ *rk.add(base + 2);
+            s3 = td0(t3 >> 24)
+                ^ td1((t2 >> 16) & 0xff)
+                ^ td2((t1 >> 8) & 0xff)
+                ^ td3(t0 & 0xff)
+                ^ *rk.add(base + 3);
+        }
+
+        // apply last round and map cipher state to byte array block
+        s0 = (td4(t0 >> 24) & 0xff000000)
+            ^ (td4((t3 >> 16) & 0xff) & 0x00ff0000)
+            ^ (td4((t2 >> 8) & 0xff) & 0x0000ff00)
+            ^ (td4(t1 & 0xff) & 0x000000ff)
+            ^ *rk.add(base);
+        putu32(out, s0);
+
+        s1 = (td4(t1 >> 24) & 0xff000000)
+            ^ (td4((t0 >> 16) & 0xff) & 0x00ff0000)
+            ^ (td4((t3 >> 8) & 0xff) & 0x0000ff00)
+            ^ (td4(t2 & 0xff) & 0x000000ff)
+            ^ *rk.add(base + 1);
+        putu32(out.add(4), s1);
+
+        s2 = (td4(t2 >> 24) & 0xff000000)
+            ^ (td4((t1 >> 16) & 0xff) & 0x00ff0000)
+            ^ (td4((t0 >> 8) & 0xff) & 0x0000ff00)
+            ^ (td4(t3 & 0xff) & 0x000000ff)
+            ^ *rk.add(base + 2);
+        putu32(out.add(8), s2);
+
+        s3 = (td4(t3 >> 24) & 0xff000000)
+            ^ (td4((t2 >> 16) & 0xff) & 0x00ff0000)
+            ^ (td4((t1 >> 8) & 0xff) & 0x0000ff00)
+            ^ (td4(t0 & 0xff) & 0x000000ff)
+            ^ *rk.add(base + 3);
+        putu32(out.add(12), s3);
+    }
 }
 }
 
@@ -2407,6 +3777,162 @@ pub extern "C" fn AES_decrypt__part107(s3: c_uint, mut out: *mut c_uchar) {
 pub mod chunk108 {
 #[no_mangle]
 pub extern "C" fn AES_decrypt__part108() {
+}
+}
+
+// ── `AES_cbc_encrypt` · aes.c:1272-1321 · chunk 109 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
+//            const unsigned long length, const AES_KEY *key,
+//            unsigned char *ivec, const int enc)
+//     {
+//     
+//      unsigned long n;
+//      unsigned long len = length;
+//      unsigned char tmp[16];
+//     
+//      
+//     ((void) (0))
+//                                     ;
+//     
+//      if (enc) {
+//       while (len >= 16) {
+//        for(n=0; n < 16; ++n)
+//         tmp[n] = in[n] ^ ivec[n];
+//        AES_encrypt(tmp, out, key);
+//        memcpy(ivec, out, 16);
+//        len -= 16;
+//        in += 16;
+//        out += 16;
+//       }
+//       if (len) {
+//        for(n=0; n < len; ++n)
+//         tmp[n] = in[n] ^ ivec[n];
+//        for(n=len; n < 16; ++n)
+//         tmp[n] = ivec[n];
+//        AES_encrypt(tmp, tmp, key);
+//        memcpy(out, tmp, 16);
+//        memcpy(ivec, tmp, 16);
+//       }
+//      } else {
+//       while (len >= 16) {
+//        memcpy(tmp, in, 16);
+//        AES_decrypt(in, out, key);
+//        for(n=0; n < 16; ++n)
+//         out[n] ^= ivec[n];
+//        memcpy(ivec, tmp, 16);
+//        len -= 16;
+//        in += 16;
+//        out += 16;
+//       }
+//       if (len) {
+//        memcpy(tmp, in, 16);
+//        AES_decrypt(tmp, tmp, key);
+//        for(n=0; n < len; ++n)
+//         out[n] = tmp[n] ^ ivec[n];
+//        memcpy(ivec, tmp, 16);
+//       }
+//      }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk109 {
+#![allow(non_snake_case)]
+
+use core::ffi::{c_int, c_uchar, c_ulong};
+
+const AES_BLOCK_SIZE: usize = 16;
+
+#[repr(C)]
+pub struct AesKeySt {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: c_int,
+}
+
+extern "C" {
+    fn AES_encrypt(inp: *const c_uchar, out: *mut c_uchar, key: *const AesKeySt);
+    fn AES_decrypt(inp: *const c_uchar, out: *mut c_uchar, key: *const AesKeySt);
+}
+
+#[inline]
+unsafe fn copy_block(dst: *mut c_uchar, src: *const c_uchar) {
+    core::ptr::copy_nonoverlapping(src, dst, AES_BLOCK_SIZE);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_cbc_encrypt(
+    in_: *const c_uchar,
+    out: *mut c_uchar,
+    length: c_ulong,
+    key: *const AesKeySt,
+    ivec: *mut c_uchar,
+    enc: c_int,
+) {
+    let mut n: c_ulong;
+    let mut len: c_ulong = length;
+    let mut tmp = [0 as c_uchar; AES_BLOCK_SIZE];
+
+    let mut inp: *const c_uchar = in_;
+    let mut outp: *mut c_uchar = out;
+
+    if enc != 0 {
+        while len >= AES_BLOCK_SIZE as c_ulong {
+            n = 0;
+            while n < AES_BLOCK_SIZE as c_ulong {
+                let i = n as usize;
+                *tmp.get_unchecked_mut(i) = *inp.add(i) ^ *ivec.add(i);
+                n += 1;
+            }
+            AES_encrypt(tmp.as_ptr(), outp, key);
+            copy_block(ivec, outp);
+            len -= AES_BLOCK_SIZE as c_ulong;
+            inp = inp.add(AES_BLOCK_SIZE);
+            outp = outp.add(AES_BLOCK_SIZE);
+        }
+        if len != 0 {
+            n = 0;
+            while n < len {
+                let i = n as usize;
+                *tmp.get_unchecked_mut(i) = *inp.add(i) ^ *ivec.add(i);
+                n += 1;
+            }
+            n = len;
+            while n < AES_BLOCK_SIZE as c_ulong {
+                let i = n as usize;
+                *tmp.get_unchecked_mut(i) = *ivec.add(i);
+                n += 1;
+            }
+            AES_encrypt(tmp.as_ptr(), tmp.as_mut_ptr(), key);
+            copy_block(outp, tmp.as_ptr());
+            copy_block(ivec, tmp.as_ptr());
+        }
+    } else {
+        while len >= AES_BLOCK_SIZE as c_ulong {
+            copy_block(tmp.as_mut_ptr(), inp);
+            AES_decrypt(inp, outp, key);
+            n = 0;
+            while n < AES_BLOCK_SIZE as c_ulong {
+                let i = n as usize;
+                *outp.add(i) ^= *ivec.add(i);
+                n += 1;
+            }
+            copy_block(ivec, tmp.as_ptr());
+            len -= AES_BLOCK_SIZE as c_ulong;
+            inp = inp.add(AES_BLOCK_SIZE);
+            outp = outp.add(AES_BLOCK_SIZE);
+        }
+        if len != 0 {
+            copy_block(tmp.as_mut_ptr(), inp);
+            AES_decrypt(tmp.as_ptr(), tmp.as_mut_ptr(), key);
+            n = 0;
+            while n < len {
+                let i = n as usize;
+                *outp.add(i) = *tmp.get_unchecked(i) ^ *ivec.add(i);
+                n += 1;
+            }
+            copy_block(ivec, tmp.as_ptr());
+        }
+    }
 }
 }
 

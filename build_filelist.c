@@ -5098,23 +5098,11 @@ typedef enum {
 
 typedef uint64_t FSFileID;
 
-static inline BOOL isspace_nolf(int c)
-{
-    int isspace_nolf__part351(int c);
-return isspace_nolf__part351(c);
-}
+static inline BOOL isspace_nolf(int c);
 
-static inline int from_hex(int c)
-{
-    extern int from_hex__part353(int c);
-return from_hex__part353(c);
-}
+static inline int from_hex(int c);
 
-static inline uint64_t block_align(uint64_t val, uint64_t align)
-{
-    uint64_t block_align__part355(uint64_t val, uint64_t align);
-return block_align__part355(val, align);
-}
+static inline uint64_t block_align(uint64_t val, uint64_t align);
 
 void pstrcpy(char *buf, int buf_size, const char *str);
 char *pstrcat(char *buf, int buf_size, const char *s);
@@ -5140,54 +5128,11 @@ int parse_tag_uint64(uint64_t *pval, const char *str, const char *tag);
 int parse_tag_file_id(FSFileID *pval, const char *str, const char *tag);
 int parse_tag_version(const char *str);
 
-void print_str(FILE *f, const char *str)
-{
-    const char *print_str__part358(const char *str);
-const char *s = print_str__part358(str);
-int c;
-    int print_str__part359(const char *s);
-if (print_str__part359(s)) {
-    goto use_quote;
-}
-        void print_str__part360(FILE *f, const char *str);
-    print_str__part360(f, str);
-    return;
- use_quote:
-void print_str__part361(const char *str);
-print_str__part361(str);
-    void print_str__part362(FILE *f, int c);
-print_str__part362(f, '"');
-    void print_str__part363(const char *s, FILE *f);
-
-print_str__part363(s, f);
-    void print_str__part364(void *f);
-print_str__part364(f);
-}
+void print_str(FILE *f, const char *str);
 
 
 
-static void copy_file(const char *src_filename, const char *dst_filename)
-{
-    uint8_t *buf;
-FILE *fi, *fo;
-int len;
-
-void copy_file__part366(uint8_t **buf, FILE **fi, int *len, const char *src_filename);
-copy_file__part366(&buf, &fi, &len, src_filename);
-    void copy_file__part367(const char *src_filename);
-
-if (!fi) {
-    copy_file__part367(src_filename);
-}
-    FILE *copy_file__part368(const char *dst_filename);
-fo = copy_file__part368(dst_filename);
-    void copy_file__part369(void *fo, const char *dst_filename);
-copy_file__part369(fo, dst_filename);
-    void copy_file__part370(uint8_t *buf, FILE *fi, FILE *fo);
-copy_file__part370(buf, fi, fo);
-    extern void copy_file__part371(void *fo, void *fi);
-copy_file__part371(fo, fi);
-}
+static void copy_file(const char *src_filename, const char *dst_filename);
 
 typedef struct {
     char *files_path;
@@ -5197,44 +5142,9 @@ typedef struct {
     FILE *f;
 } ScanState;
 
-static void add_file_size(ScanState *s, uint64_t size)
-{
-    void add_file_size__part375(ScanState *s, uint64_t size);
-add_file_size__part375(s, size);
-    extern int add_file_size__part376(uint64_t fs_size, uint64_t fs_max_size);
-if (add_file_size__part376(s->fs_size, s->fs_max_size)) {
-    fprintf(
-           stderr
-                 , "Filesystem Quota exceeded (%" 
-                                                "l" "d" 
-                                                  " bytes)\n", s->fs_max_size);
-    exit(1);
-}
-}
+static void add_file_size(ScanState *s, uint64_t size);
 
-void scan_dir(ScanState *s, const char *path)
-{
-    void *scan_dir__part378(const char *path);
-FILE *f = s->f;
-DIR *dirp;
-struct dirent *de;
-const char *name;
-struct stat st;
-char *path1;
-uint32_t mode, v;
-dirp = scan_dir__part378(path);
-    void *scan_dir__part379(const char *path);
-dirp = scan_dir__part379(path);
-        int scan_dir__part380(ScanState *s, const char *path, DIR *dirp);
-    for (;;) {
-        if (scan_dir__part380(s, path, dirp))
-            break;
-    }
-
-
-    int scan_dir__part381(DIR *dirp, FILE *f);
-scan_dir__part381(dirp, f);
-}
+void scan_dir(ScanState *s, const char *path);
 
 void help(void)
 {

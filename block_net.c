@@ -4686,74 +4686,30 @@ typedef __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 
 
-static inline int max_int(int a, int b)
-{
-    int max_int__part118(int a, int b);
-return max_int__part118(a, b);
-}
+static inline int max_int(int a, int b);
 
-static inline int min_int(int a, int b)
-{
-    extern int min_int__part120(int a, int b);
-return min_int__part120(a, b);
-}
+static inline int min_int(int a, int b);
 
 void *mallocz(size_t size);
 
 
-static inline uint16_t get_le16(const uint8_t *ptr)
-{
-    uint16_t get_le16__part122(const uint8_t *ptr);
-return get_le16__part122(ptr);
-}
+static inline uint16_t get_le16(const uint8_t *ptr);
 
-static inline uint32_t get_le32(const uint8_t *ptr)
-{
-    uint32_t get_le32__part124(const uint8_t *ptr);
-return get_le32__part124(ptr);
-}
+static inline uint32_t get_le32(const uint8_t *ptr);
 
-static inline uint64_t get_le64(const uint8_t *ptr)
-{
-    uint64_t get_le64_rust(const uint8_t *ptr);
-return get_le64_rust(ptr);
-}
+static inline uint64_t get_le64(const uint8_t *ptr);
 
-static inline void put_le16(uint8_t *ptr, uint16_t v)
-{
-    void put_le16__part128(uint8_t *ptr, uint16_t v);
-put_le16__part128(ptr, v);
-}
+static inline void put_le16(uint8_t *ptr, uint16_t v);
 
-static inline void put_le32(uint8_t *ptr, uint32_t v)
-{
-    void put_le32__part130(uint8_t *ptr, uint32_t v);
-put_le32__part130(ptr, v);
-}
+static inline void put_le32(uint8_t *ptr, uint32_t v);
 
-static inline void put_le64(uint8_t *ptr, uint64_t v)
-{
-    void put_le64__part132(uint8_t *ptr, uint64_t v);
-put_le64__part132(ptr, v);
-}
+static inline void put_le64(uint8_t *ptr, uint64_t v);
 
-static inline uint32_t get_be32(const uint8_t *d)
-{
-    uint32_t get_be32__part134(const uint8_t *d);
-return get_be32__part134(d);
-}
+static inline uint32_t get_be32(const uint8_t *d);
 
-static inline void put_be32(uint8_t *d, uint32_t v)
-{
-    void put_be32__part136(uint8_t *d, uint32_t v);
-put_be32__part136(d, v);
-}
+static inline void put_be32(uint8_t *d, uint32_t v);
 
-static inline void put_be64(uint8_t *d, uint64_t v)
-{
-    void put_be64__part138(uint8_t *d, uint64_t v);
-put_be64__part138(d, v);
-}
+static inline void put_be64(uint8_t *d, uint64_t v);
 
 
 
@@ -4761,19 +4717,10 @@ put_be64__part138(d, v);
 
 
 
-static inline uint32_t cpu_to_be32(uint32_t v)
-{
-    extern uint32_t cpu_to_be32__part140(uint32_t v);
-return cpu_to_be32__part140(v);
-}
+static inline uint32_t cpu_to_be32(uint32_t v);
 
 
-static inline int ctz32(uint32_t val)
-{
-
-    int ctz32__part142(uint32_t val);
-return ctz32__part142(val);
-}
+static inline int ctz32(uint32_t val);
 
 
 void *mallocz(size_t size);
@@ -4839,11 +4786,7 @@ void phys_mem_map_end(PhysMemoryMap *s);
 PhysMemoryRange *register_ram_entry(PhysMemoryMap *s, uint64_t addr,
                                     uint64_t size, int devram_flags);
 static inline PhysMemoryRange *cpu_register_ram(PhysMemoryMap *s, uint64_t addr,
-                                  uint64_t size, int devram_flags)
-{
-    PhysMemoryRange *cpu_register_ram__part153(PhysMemoryMap *s, uint64_t addr, uint64_t size, int devram_flags);
-return cpu_register_ram__part153(s, addr, size, devram_flags);
-}
+                                  uint64_t size, int devram_flags);
 PhysMemoryRange *cpu_register_device(PhysMemoryMap *s, uint64_t addr,
                                      uint64_t size, void *opaque,
                                      DeviceReadFunc *read_func, DeviceWriteFunc *write_func,
@@ -4851,30 +4794,11 @@ PhysMemoryRange *cpu_register_device(PhysMemoryMap *s, uint64_t addr,
 PhysMemoryRange *get_phys_mem_range(PhysMemoryMap *s, uint64_t paddr);
 void phys_mem_set_addr(PhysMemoryRange *pr, uint64_t addr, BOOL enabled);
 
-static inline const uint32_t *phys_mem_get_dirty_bits(PhysMemoryRange *pr)
-{
-    const uint32_t *phys_mem_get_dirty_bits__part155(PhysMemoryMap *map, PhysMemoryRange *pr);
-return phys_mem_get_dirty_bits__part155(pr->map, pr);
-}
+static inline const uint32_t *phys_mem_get_dirty_bits(PhysMemoryRange *pr);
 
-static inline void phys_mem_set_dirty_bit(PhysMemoryRange *pr, size_t offset)
-{
-    size_t page_index;
-    uint32_t mask, *dirty_bits_ptr;
-    void phys_mem_set_dirty_bit__part157(PhysMemoryRange *pr, size_t offset);
-phys_mem_set_dirty_bit__part157(pr, offset);
-}
+static inline void phys_mem_set_dirty_bit(PhysMemoryRange *pr, size_t offset);
 
-static inline BOOL phys_mem_is_dirty_bit(PhysMemoryRange *pr, size_t offset)
-{
-    size_t page_index;
-    uint32_t *dirty_bits_ptr;
-    extern int phys_mem_is_dirty_bit__part159(PhysMemoryRange *);
-if (phys_mem_is_dirty_bit__part159(pr))
-    return TRUE;
-    int phys_mem_is_dirty_bit__part160(PhysMemoryRange *pr, size_t offset);
-return phys_mem_is_dirty_bit__part160(pr, offset);
-}
+static inline BOOL phys_mem_is_dirty_bit(PhysMemoryRange *pr, size_t offset);
 
 void phys_mem_reset_dirty_bit(PhysMemoryRange *pr, size_t offset);
 uint8_t *phys_mem_get_ram_ptr(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw);
@@ -4891,11 +4815,7 @@ typedef struct {
 
 void irq_init(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque, int irq_num);
 
-static inline void set_irq(IRQSignal *irq, int level)
-{
-    void set_irq__part165(IRQSignal *irq, int level);
-set_irq__part165(irq, level);
-}
+static inline void set_irq(IRQSignal *irq, int level);
 typedef struct PCIBus PCIBus;
 typedef struct PCIDevice PCIDevice;
 typedef void PCIBarSetFunc(void *opaque, int bar_num, uint32_t addr,
@@ -10469,45 +10389,21 @@ struct list_head {
 
 
 
-static inline void init_list_head(struct list_head *head)
-{
-    void init_list_head__part209(struct list_head *head);
-init_list_head__part209(head);
-}
+static inline void init_list_head(struct list_head *head);
 
 
 static inline void __list_add(struct list_head *el,
-                              struct list_head *prev, struct list_head *next)
-{
-    void __list_add(struct list_head *el, struct list_head *prev, struct list_head *next);
-__list_add(el, prev, next);
-}
+                              struct list_head *prev, struct list_head *next);
 
 
-static inline void list_add(struct list_head *el, struct list_head *head)
-{
-    void list_add__part213(struct list_head *el, struct list_head *prev, struct list_head *next);
-list_add__part213(el, head, head->next);
-}
+static inline void list_add(struct list_head *el, struct list_head *head);
 
 
-static inline void list_add_tail(struct list_head *el, struct list_head *head)
-{
-    void list_add_tail__part215(struct list_head *el, struct list_head *prev, struct list_head *next);
-list_add_tail__part215(el, head->prev, head);
-}
+static inline void list_add_tail(struct list_head *el, struct list_head *head);
 
-static inline void list_del(struct list_head *el)
-{
-    void list_del__part217(struct list_head *el);
-list_del__part217(el);
-}
+static inline void list_del(struct list_head *el);
 
-static inline int list_empty(struct list_head *el)
-{
-    int list_empty__part219(struct list_head *el);
-return list_empty__part219(el);
-}
+static inline int list_empty(struct list_head *el);
 
 
 
@@ -10585,44 +10481,17 @@ JSONValue json_array_new(void);
 JSONValue json_array_get(JSONValue val, unsigned int idx);
 int json_array_set(JSONValue val, unsigned int idx, JSONValue prop_val);
 
-static inline BOOL json_is_error(JSONValue val)
-{
-    int json_is_error__part237(JSONValue val);
-return json_is_error__part237(val);
-}
+static inline BOOL json_is_error(JSONValue val);
 
-static inline BOOL json_is_undefined(JSONValue val)
-{
-    int json_is_undefined__part239(JSONValue val);
-return json_is_undefined__part239(val);
-}
+static inline BOOL json_is_undefined(JSONValue val);
 
-static inline JSONValue json_undefined_new(void)
-{
-    JSONValue json_undefined_new__part241(void);
-return json_undefined_new__part241();
-}
+static inline JSONValue json_undefined_new(void);
 
-static inline JSONValue json_null_new(void)
-{
-    JSONValue json_null_new__part243(void);
+static inline JSONValue json_null_new(void);
 
-return json_null_new__part243();
-}
+static inline JSONValue json_int32_new(int v);
 
-static inline JSONValue json_int32_new(int v)
-{
-    JSONValue json_int32_new_rust(int v);
-JSONValue val;
-val = json_int32_new_rust(v);
-return val;
-}
-
-static inline JSONValue json_bool_new(BOOL v)
-{
-    JSONValue json_bool_new__part247(BOOL v);
-return json_bool_new__part247(v);
-}
+static inline JSONValue json_bool_new(BOOL v);
 
 const char *json_get_str(JSONValue val);
 const char *json_get_error(JSONValue val);
@@ -10755,32 +10624,12 @@ char *get_file_path(const char *base_filename, const char *filename);
 void virt_machine_free_config(VirtMachineParams *p);
 VirtMachine *virt_machine_init(const VirtMachineParams *p);
 void virt_machine_end(VirtMachine *s);
-static inline int virt_machine_get_sleep_duration(VirtMachine *s, int delay)
-{
-    extern int virt_machine_get_sleep_duration__part269(VirtMachine *s, int delay);
-return virt_machine_get_sleep_duration__part269(s, delay);
-}
-static inline void virt_machine_interp(VirtMachine *s, int max_exec_cycle)
-{
-    void virt_machine_interp__part271(void *s, int max_exec_cycle);
-virt_machine_interp__part271(s, max_exec_cycle);
-}
-static inline BOOL vm_mouse_is_absolute(VirtMachine *s)
-{
-    extern int vm_mouse_is_absolute__part273(VirtMachine *s);
-return vm_mouse_is_absolute__part273(s);
-}
+static inline int virt_machine_get_sleep_duration(VirtMachine *s, int delay);
+static inline void virt_machine_interp(VirtMachine *s, int max_exec_cycle);
+static inline BOOL vm_mouse_is_absolute(VirtMachine *s);
 static inline void vm_send_mouse_event(VirtMachine *s1, int dx, int dy, int dz,
-                                       unsigned int buttons)
-{
-    void vm_send_mouse_event__part275(VirtMachine *s1, int dx, int dy, int dz, unsigned int buttons);
-vm_send_mouse_event__part275(s1, dx, dy, dz, buttons);
-}
-static inline void vm_send_key_event(VirtMachine *s1, BOOL is_down, uint16_t key_code)
-{
-    void vm_send_key_event__part277(VirtMachine *s1, BOOL is_down, uint16_t key_code);
-vm_send_key_event__part277(s1, is_down, key_code);
-}
+                                       unsigned int buttons);
+static inline void vm_send_key_event(VirtMachine *s1, BOOL is_down, uint16_t key_code);
 
 
 void sdl_refresh(VirtMachine *m);
@@ -10882,304 +10731,40 @@ static void bf_init_onload(void *opaque, int err, void *data, size_t size);
 static void bf_prefetch_group_onload(void *opaque, int err, void *data,
                                      size_t size);
 
-static CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num)
-{
-    CachedBlock *b;
-    struct list_head *el;
+static CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num);
 
-        CachedBlock *bf_find_block__part292(BlockDeviceHTTP *bf, unsigned int block_num);
-    CachedBlock *found292 = bf_find_block__part292(bf, block_num);
-    if (found292)
-        return found292;
+static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b);
 
-    extern void *bf_find_block__part293(void);
-return bf_find_block__part293();
-}
+static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num);
 
-static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)
-{
-    void bf_free_block__part295(BlockDeviceHTTP *bf, CachedBlock *b);
-    bf_free_block__part295(bf, b);
-}
+static int64_t bf_get_sector_count(BlockDevice *bs);
 
-static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
-{
-    CachedBlock *b;
-    // C replacement for TARGET lines 10937-10954 of bf_add_block
-// The TARGET is the cache eviction loop; we replace it with a call to the Rust function
-
-// Declare the Rust-exported function with exact C ABI types
-// bf_add_block__part297 takes a BlockDeviceHTTP pointer (as void*) and returns unsigned int
-unsigned int bf_add_block__part297(void *bf);
-
-// Replace the TARGET with a call to the Rust function
-// Original TARGET was:
-//   if (bf->n_cached_blocks >= bf->n_cached_blocks_max) {
-//       struct list_head *el, *el1;
-//       for(el = (&bf->cached_blocks)->prev, el1 = el->prev; el != (&bf->cached_blocks); el = el1, el1 = el->prev) {
-//           b = ((CachedBlock *)((uint8_t *)(el) - __builtin_offsetof(CachedBlock, link)));
-//           if (b->state == CBLOCK_LOADED) {
-//               bf_free_block(bf, b);
-//               if (bf->n_cached_blocks < bf->n_cached_blocks_max)
-//                   break;
-//           }
-//       }
-//   }
-bf_add_block__part297(bf);
-        {
-        CachedBlock *bf_add_block__part298(BlockDeviceHTTP *bf, unsigned int block_num);
-        return bf_add_block__part298(bf, block_num);
-    }
-
-}
-
-static int64_t bf_get_sector_count(BlockDevice *bs)
-{
-    extern int64_t bf_get_sector_count__part300(BlockDevice *bs);
-return bf_get_sector_count__part300(bs);
-}
-
-static void bf_start_load_block(BlockDevice *bs, int block_num)
-{
-    void bf_start_load_block__part302(BlockDevice *bs, int block_num,
-                                  void (*cb)(void *opaque, int err, void *data, size_t size));
-    bf_start_load_block__part302(bs, block_num, bf_read_onload);
-
-}
+static void bf_start_load_block(BlockDevice *bs, int block_num);
 
 static void bf_start_load_prefetch_group(BlockDevice *bs, int group_num,
                                          const int *tab_block_num,
-                                         int n_block_num)
-{
-        void bf_start_load_prefetch_group__part304(BlockDevice *bs, int group_num,
-                                               int n_block_num,
-                                               BlockDeviceHTTP **out_bf,
-                                               PrefetchGroupRequest **out_req,
-                                               BOOL *out_req_flag);
-    BlockDeviceHTTP *bf;
-    CachedBlock *b;
-    PrefetchGroupRequest *req;
-    char filename[1024];
-    BOOL req_flag;
-    int i;
-
-    bf_start_load_prefetch_group__part304(bs, group_num, n_block_num,
-                                          &bf, &req, &req_flag);
-
-        void bf_start_load_prefetch_group__part305(void *bf, const int *tab_block_num,
-                                               int n_block_num, void *req, void **p_b,
-                                               int *p_req_flag, int *p_i);
-    bf_start_load_prefetch_group__part305(bf, tab_block_num, n_block_num, req,
-                                          (void **)&b, &req_flag, &i);
-
-
-    int bf_start_load_prefetch_group__part306(
-    int req_flag,
-    const char *bf_url,
-    unsigned int group_num,
-    void *req,
-    void *cb
-);
-bf_start_load_prefetch_group__part306(
-    req_flag,
-    bf->url,
-    (unsigned int)group_num,
-    req,
-    bf_prefetch_group_onload
-);
-}
+                                         int n_block_num);
 
 static void bf_prefetch_group_onload(void *opaque, int err, void *data,
-                                     size_t size)
-{
-    PrefetchGroupRequest *req = opaque;
-    BlockDeviceHTTP *bf = req->bf;
-    CachedBlock *b;
-    int block_bytes, i;
+                                     size_t size);
 
-    void bf_prefetch_group_onload__part308(int err, int group_num);
-bf_prefetch_group_onload__part308(err, req->group_num);
-    int bf_prefetch_group_onload__part309(BlockDeviceHTTP *bf, size_t size, int n_block_num);
-block_bytes = bf_prefetch_group_onload__part309(bf, size, req->n_block_num);
-        void bf_prefetch_group_onload__part310(PrefetchGroupRequest *req,
-                                           const uint8_t *data, int block_bytes,
-                                           int *i, CachedBlock **b,
-                                           void (*update)(CachedBlock *, const uint8_t *));
-    bf_prefetch_group_onload__part310(req, (const uint8_t *)data, block_bytes,
-                                      &i, &b, bf_update_block);
+static int bf_rw_async1(BlockDevice *bs, BOOL is_sync);
 
-    void bf_prefetch_group_onload__part311(void *req);
-bf_prefetch_group_onload__part311(req);
-}
+static void bf_update_block(CachedBlock *b, const uint8_t *data);
 
-static int bf_rw_async1(BlockDevice *bs, BOOL is_sync)
-{
-    BlockDeviceHTTP *bf = bs->opaque;
-    int offset, block_num, n, cluster_num;
-    CachedBlock *b;
-    Cluster *c;
-
-    int bf_rw_async1__part313(BlockDeviceHTTP *bf);
-int __bf_rw_async1_ret = bf_rw_async1__part313(bf);
-if (__bf_rw_async1_ret == 1) {
-    return 1;
-}
-
-    void bf_rw_async1__part314(int is_sync, void (*cb)(void *opaque, int ret), void *opaque);
-bf_rw_async1__part314(is_sync, bf->cb, bf->opaque);
-    int bf_rw_async1__part315(void);
-return bf_rw_async1__part315();
-}
-
-static void bf_update_block(CachedBlock *b, const uint8_t *data)
-{
-    void bf_update_block__part317(CachedBlock *b, const uint8_t *data);
-bf_update_block__part317(b, data);
-BlockDeviceHTTP *bf = b->bf;
-BlockDevice *bs = bf->bs;
-
-
-    void bf_update_block__part318(unsigned int block_num, int cur_block_num, void *bs);
-bf_update_block__part318(b->block_num, b->bf->cur_block_num, b->bf->bs);
-}
-
-static void bf_read_onload(void *opaque, int err, void *data, size_t size)
-{
-    CachedBlock *b = opaque;
-    BlockDeviceHTTP *bf = b->bf;
-
-    extern void bf_read_onload__part320(int, unsigned int);
-bf_read_onload__part320(err, b->block_num);
-
-    
-       {
-        extern void bf_read_onload__part321(void *opaque, size_t size);
-        bf_read_onload__part321(b, size);
-    }
-    bf_update_block(b, data);
-
-}
+static void bf_read_onload(void *opaque, int err, void *data, size_t size);
 
 static int bf_read_async(BlockDevice *bs,
                          uint64_t sector_num, uint8_t *buf, int n,
-                         BlockDeviceCompletionFunc *cb, void *opaque)
-{
-    int bf_read_async__part323(BlockDevice *bs, uint64_t sector_num, uint8_t *buf, int n, BlockDeviceCompletionFunc *cb, void *opaque);
-return bf_read_async__part323(bs, sector_num, buf, n, cb, opaque);
-}
+                         BlockDeviceCompletionFunc *cb, void *opaque);
 
 static int bf_write_async(BlockDevice *bs,
                           uint64_t sector_num, const uint8_t *buf, int n,
-                          BlockDeviceCompletionFunc *cb, void *opaque)
-{
-    int bf_write_async__part325(BlockDevice *bs,
-                              uint64_t sector_num, const uint8_t *buf, int n,
-                              BlockDeviceCompletionFunc *cb, void *opaque);
-return bf_write_async__part325(bs, sector_num, (uint8_t *)buf, n, cb, opaque);
-}
+                          BlockDeviceCompletionFunc *cb, void *opaque);
 
 BlockDevice *block_device_init_http(const char *url,
                                     int max_cache_size_kb,
                                     void (*start_cb)(void *opaque),
-                                    void *start_opaque)
-{
-        BlockDevice *bs;
-    BlockDeviceHTTP *bf;
-    char *p;
+                                    void *start_opaque);
 
-    void block_device_init_http__part327(const char *url,
-                                         BlockDevice **out_bs,
-                                         BlockDeviceHTTP **out_bf,
-                                         char **out_p);
-
-    block_device_init_http__part327(url, &bs, &bf, &p);
-
-    void block_device_init_http__part328(char **p, const char *url);
-block_device_init_http__part328(&p, bf->url);
-    BlockDevice *block_device_init_http__part329(const char *url,
-                                                int max_cache_size_kb,
-                                                void (*start_cb)(void *opaque),
-                                                void *start_opaque);
-bs = block_device_init_http__part329(bf->url, max_cache_size_kb, start_cb, start_opaque);
-return bs;
-}
-
-static void bf_init_onload(void *opaque, int err, void *data, size_t size)
-{
-    BlockDevice *bs = opaque;
-    BlockDeviceHTTP *bf = bs->opaque;
-    int block_size_kb, block_num;
-    JSONValue cfg, array;
-
-    void bf_init_onload__part331(int err);
-bf_init_onload__part331(err);
-
-
-    JSONValue bf_init_onload__part332(void *data, unsigned long size);
-cfg = bf_init_onload__part332(data, size);
-    int bf_init_onload__part333(int type);
-int ret = bf_init_onload__part333(cfg.type);
-if (ret != 0) {
-    vm_error("error: %s\n", json_get_error(cfg));
-    json_free(cfg);
-    exit(1);
-}
-// config_error label preserved for the rest of the function's goto statements
-config_error:
-    json_free(cfg);
-    exit(1);
-
-    int bf_init_onload__part334(JSONValue cfg, const char *name, int *pval);
-if (bf_init_onload__part334(cfg, "block_size", &block_size_kb) < 0)
-    goto config_error;
-    void bf_init_onload__part335(int *, int);
-bf_init_onload__part335(&bf->block_size, block_size_kb);
-    int bf_init_onload__part336(int block_size);
-if (bf_init_onload__part336(bf->block_size)) {
-    goto config_error;
-}
-    int bf_init_onload__part337(JSONValue cfg, int *nb_blocks);
-if (bf_init_onload__part337(cfg, &bf->nb_blocks) < 0) goto config_error;
-    int bf_init_onload__part338(int nb_blocks);
-if (bf_init_onload__part338(bf->nb_blocks)) { goto config_error; }
-
-        void bf_init_onload__part339(BlockDeviceHTTP *bf, int block_size_kb);
-    bf_init_onload__part339(bf, block_size_kb);
-
-
-    int bf_init_onload__part340(JSONValue cfg, int *prefetch_group_len);
-if (bf_init_onload__part340(cfg, &bf->prefetch_group_len) < 0)
-    goto config_error;
-    extern int bf_init_onload__part341(int prefetch_group_len);
-
-if (bf_init_onload__part341(bf->prefetch_group_len)) {
-    vm_error("prefetch_group_len is too large");
-    goto config_error;
-}
-
-    JSONValue bf_init_onload__part342(JSONValue cfg);
-array = bf_init_onload__part342(cfg);
-        {
-        int bf_prefetch_res;
-        int bf_init_onload__part343(BlockDevice *bs, BlockDeviceHTTP *bf,
-                                    JSONValue array,
-                                    CachedBlock *(*find_block)(BlockDeviceHTTP *,
-                                                               unsigned int),
-                                    void (*start_load_block)(BlockDevice *, int),
-                                    void (*start_prefetch_group)(BlockDevice *,
-                                                                 int,
-                                                                 const int *,
-                                                                 int));
-        bf_prefetch_res = bf_init_onload__part343(bs, bf, array, bf_find_block,
-                                                  bf_start_load_block,
-                                                  bf_start_load_prefetch_group);
-        if (bf_prefetch_res < 0)
-            goto config_error;
-    }
-
-    void bf_init_onload__part344(JSONValue val);
-bf_init_onload__part344(cfg);
-
-    void bf_init_onload__part345(BlockDeviceHTTP *bf);
-bf_init_onload__part345(bf);
-}
+static void bf_init_onload(void *opaque, int err, void *data, size_t size);

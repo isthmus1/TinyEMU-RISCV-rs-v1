@@ -8438,181 +8438,30 @@ static struct in_addr dns_addr;
 static u_int dns_addr_time;
 static struct stat dns_addr_stat;
 
-int get_dns_addr(struct in_addr *pdns_addr)
-{
-    char buff[512];
-    char buff2[257];
-    FILE *f;
-    int found = 0;
-    struct in_addr tmp_addr;
-
-        {
-        int get_dns_addr__part2498(struct in_addr *pdns_addr, struct in_addr *dns_addr, u_int curtime_val, u_int dns_addr_time_val, struct stat *dns_addr_stat);
-        int _dns_part_rc = get_dns_addr__part2498(pdns_addr, &dns_addr, curtime, dns_addr_time, &dns_addr_stat);
-        if (_dns_part_rc < 0)
-            return -1;
-        if (_dns_part_rc > 0)
-            return 0;
-    }
-
-
-    FILE *get_dns_addr__part2499(void);
-f = get_dns_addr__part2499();
-    int get_dns_addr__part2500(void *f);
-    if (get_dns_addr__part2500(f))
-        return -1;
+int get_dns_addr(struct in_addr *pdns_addr);
 
 
 
-
-
-        void get_dns_addr__part2501(char *buff, char *buff2, void *f, int *found,
-                                struct in_addr *tmp_addr,
-                                struct in_addr *pdns_addr,
-                                struct in_addr *dns_addr,
-                                unsigned int *dns_addr_time);
-    get_dns_addr__part2501(buff, buff2, (void *)f, &found, &tmp_addr, pdns_addr,
-                           &dns_addr, &dns_addr_time);
-
-    int get_dns_addr__part2502(void *f);
-    get_dns_addr__part2502(f);
-
-
-
-
-    {
-    int get_dns_addr__part2503(int found);
-    if (get_dns_addr__part2503(found))
-        return -1;
-}
-
-    int get_dns_addr__part2504(void);
-    return get_dns_addr__part2504();
-
-}
-
-
-
-static void slirp_init_once(void)
-{
-    static int initialized;
-
-
-
-
-        extern int slirp_init_once__part2506(int initialized);
-    if (slirp_init_once__part2506(initialized)) {
-        return;
-    }
-    void slirp_init_once__part2507(int *initialized);
-    slirp_init_once__part2507(&initialized);
-
-}
+static void slirp_init_once(void);
 
 Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   struct in_addr vnetmask, struct in_addr vhost,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
-                  struct in_addr vnameserver, void *opaque)
-{
-        void *slirp_init__part2509(int restricted, struct in_addr vnetwork,
-                               struct in_addr vnetmask, struct in_addr vhost,
-                               size_t slirp_size);
-    Slirp *slirp = slirp_init__part2509(restricted, vnetwork, vnetmask, vhost,
-                                        sizeof(Slirp));
+                  struct in_addr vnameserver, void *opaque);
 
-    void slirp_init__part2510(char *buf, int buf_size, const char *str);
-    slirp_init__part2510(slirp->client_hostname,
-                         (int)sizeof(slirp->client_hostname), vhostname);
-
-    void slirp_init__part2511(char **tftp_prefix, const char *tftp_path);
-    if (tftp_path) {
-        slirp_init__part2511(&slirp->tftp_prefix, tftp_path);
-    }
-    void slirp_init__part2512(char **slot, const char *bootfile);
-    if (bootfile) {
-        slirp_init__part2512(&slirp->bootp_filename, bootfile);
-    }
-
-        {
-        extern Slirp *slirp_init__part2513(Slirp *slirp, struct in_addr vdhcp_start,
-                                           struct in_addr vnameserver, void *opaque);
-        return slirp_init__part2513(slirp, vdhcp_start, vnameserver, opaque);
-    }
-}
-
-void slirp_cleanup(Slirp *slirp)
-{
-        void slirp_cleanup__part2515(Slirp *slirp);
-    slirp_cleanup__part2515(slirp);
-
-}
+void slirp_cleanup(Slirp *slirp);
 
 
 
 
 
 void slirp_select_fill(Slirp *slirp, int *pnfds,
-                       fd_set *readfds, fd_set *writefds, fd_set *xfds)
-{
-    struct socket *so, *so_next;
-    int nfds;
-
-    int slirp_select_fill__part2517(int pnfds);
-
-    nfds = slirp_select_fill__part2517(*pnfds);
-
- do_slowtimo = 0;
-
-     {
-        extern unsigned int slirp_select_fill__part2518(
-            Slirp *slirp, int *nfds, fd_set *readfds, fd_set *writefds,
-            fd_set *xfds, int *p_do_slowtimo, u_int *p_time_fasttimo);
-
-        slirp_select_fill__part2518(slirp, &nfds, readfds, writefds, xfds,
-                                    &do_slowtimo, &time_fasttimo);
-    }
-
-
-        void slirp_select_fill__part2519(int *pnfds, int nfds);
-        slirp_select_fill__part2519(pnfds, nfds);
-}
+                       fd_set *readfds, fd_set *writefds, fd_set *xfds);
 
 void slirp_select_poll(Slirp *slirp,
                        fd_set *readfds, fd_set *writefds, fd_set *xfds,
-                       int select_error)
-{
-    struct socket *so, *so_next;
-    int ret;
-
-    {
-        extern void slirp_select_poll__part2521(fd_set *readfds, fd_set *writefds, fd_set *xfds);
-        slirp_select_poll__part2521(readfds, writefds, xfds);
-    }
-
-
-        {
-        void slirp_select_poll__part2522(void *p_slirp, struct socket *p_tcb,
-            struct socket *p_udb, int *p_if_queued, fd_set *p_readfds,
-            fd_set *p_writefds, fd_set *p_xfds, int p_select_error,
-            int p_ip_size, u_int *p_time_fasttimo, u_int *p_last_slowtimo,
-            int *p_do_slowtimo, int *p_ret);
-        slirp_select_poll__part2522((void *)slirp, &slirp->tcb, &slirp->udb,
-            &slirp->if_queued, readfds, writefds, xfds, select_error,
-            (int)sizeof(struct ip), &time_fasttimo, &last_slowtimo,
-            &do_slowtimo, &ret);
-    }
-
-
-
-
-
-
-
-  void slirp_select_poll__part2523(void);
-  slirp_select_poll__part2523();
-
-}
+                       int select_error);
 struct ethhdr
 {
  unsigned char h_dest[6];
@@ -8637,211 +8486,30 @@ struct arphdr
  uint32_t ar_tip ;
 } __attribute__((packed));
 
-static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
-{
-    int arp_input__part2527(const uint8_t *pkt);
-    struct ethhdr *eh = (struct ethhdr *)pkt;
-    struct arphdr *ah = (struct arphdr *)(pkt + 14);
-    uint8_t arp_reply[((14 + sizeof(struct arphdr)) > (64) ? (14 + sizeof(struct arphdr)) : (64))];
-    struct ethhdr *reh = (struct ethhdr *)arp_reply;
-    struct arphdr *rah = (struct arphdr *)(arp_reply + 14);
-    struct ex_list *ex_ptr;
+static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 
-    int ar_op = arp_input__part2527(pkt);
-
-    {
-    int arp_input__part2528(void *opaque, uint8_t *client_ethaddr, struct ethhdr *eh, struct arphdr *ah, uint8_t *arp_reply, struct ethhdr *reh, struct arphdr *rah, int ar_op, uint32_t vnetwork_mask, uint32_t vnetwork_addr, uint32_t vnameserver_addr, uint32_t vhost_addr, uint32_t client_ipaddr, struct ex_list *exec_list, struct ex_list **ex_ptr_out);
-    int arp_rc = arp_input__part2528(slirp->opaque, slirp->client_ethaddr, eh, ah, arp_reply, reh, rah, ar_op,
-                                     slirp->vnetwork_mask.s_addr, slirp->vnetwork_addr.s_addr,
-                                     slirp->vnameserver_addr.s_addr, slirp->vhost_addr.s_addr,
-                                     slirp->client_ipaddr.s_addr, slirp->exec_list, &ex_ptr);
-    if (arp_rc)
-        return;
-}
-}
-
-void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
-{
-    struct mbuf *m;
-    int proto;
-
-    int slirp_input__part2530(int pkt_len);
-    if (slirp_input__part2530(pkt_len))
-        return;
-
-    int slirp_input__part2531(const uint8_t *pkt);
-    proto = slirp_input__part2531(pkt);
-
-        {
-        extern int slirp_input__part2532(Slirp *slirp, const uint8_t *pkt, int pkt_len,
-                                         int proto, struct mbuf **mp,
-                                         uint8_t *client_ethaddr,
-                                         uint32_t client_ipaddr,
-                                         uint32_t vnetwork_addr,
-                                         uint32_t vnetwork_mask,
-                                         uint32_t vhost_addr,
-                                         uint32_t vnameserver_addr,
-                                         struct ex_list *exec_list,
-                                         void *opaque);
-        int slirp_input__ret =
-            slirp_input__part2532(slirp, pkt, pkt_len, proto, &m,
-                                  slirp->client_ethaddr,
-                                  slirp->client_ipaddr.s_addr,
-                                  slirp->vnetwork_addr.s_addr,
-                                  slirp->vnetwork_mask.s_addr,
-                                  slirp->vhost_addr.s_addr,
-                                  slirp->vnameserver_addr.s_addr,
-                                  slirp->exec_list,
-                                  slirp->opaque);
-        if (slirp_input__ret)
-            return;
-    }
-
-}
+void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 
 
-void if_encap(Slirp *slirp, const uint8_t *ip_data, int ip_data_len)
-{
-    uint8_t buf[1600];
-    struct ethhdr *eh = (struct ethhdr *)buf;
-
-        {
-        int if_encap__part2534(int ip_data_len);
-        if (if_encap__part2534(ip_data_len))
-            return;
-    }
-
-
-    void if_encap__part2535(uint8_t *client_ethaddr, const uint8_t *vhost_addr, uint8_t *client_ipaddr, void *opaque, const uint8_t *ip_data, int ip_data_len, uint8_t *buf, uint8_t *eh);
-    if_encap__part2535(slirp->client_ethaddr, (const uint8_t *)&slirp->vhost_addr, (uint8_t *)&slirp->client_ipaddr, slirp->opaque, ip_data, ip_data_len, buf, (uint8_t *)eh);
-
-}
+void if_encap(Slirp *slirp, const uint8_t *ip_data, int ip_data_len);
 
 
 int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
-                         int host_port)
-{
-    struct socket *so;
-    struct socket *head = (is_udp ? &slirp->udb : &slirp->tcb);
-    struct sockaddr_in addr;
-    int port = htons(host_port);
-    socklen_t addr_len;
-
-        int slirp_remove_hostfwd__part2537(struct socket *head,
-                                      uint32_t host_addr_s_addr, int port);
-    if (slirp_remove_hostfwd__part2537(head, host_addr.s_addr, port) == 0)
-        return 0;
-
-
-    int slirp_remove_hostfwd__part2538(void);
-    return slirp_remove_hostfwd__part2538();
-}
+                         int host_port);
 
 int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
-                      int host_port, struct in_addr guest_addr, int guest_port)
-{
-    struct in_addr slirp_add_hostfwd__part2540(Slirp *slirp, struct in_addr guest_addr);
-    guest_addr = slirp_add_hostfwd__part2540(slirp, guest_addr);
-
-    {
-        int slirp_add_hostfwd__part2541(Slirp *slirp, int is_udp, uint32_t host_s_addr,
-                                        int host_port, uint32_t guest_s_addr,
-                                        int guest_port);
-        if (slirp_add_hostfwd__part2541(slirp, is_udp, host_addr.s_addr, host_port,
-                                        guest_addr.s_addr, guest_port))
-            return -1;
-    }
-
-    int slirp_add_hostfwd__part2542(void);
-return slirp_add_hostfwd__part2542();
-
-}
+                      int host_port, struct in_addr guest_addr, int guest_port);
 
 int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
-                   struct in_addr *guest_addr, int guest_port)
-{
-        void slirp_add_exec__part2544(struct in_addr *guest_addr,
-                                  uint32_t vnetwork_addr,
-                                  uint32_t vnetwork_mask);
-    slirp_add_exec__part2544(guest_addr, slirp->vnetwork_addr.s_addr,
-                             slirp->vnetwork_mask.s_addr);
+                   struct in_addr *guest_addr, int guest_port);
 
-        int slirp_add_exec__part2545(Slirp *slirp, struct in_addr *guest_addr);
-    if (slirp_add_exec__part2545(slirp, guest_addr)) {
-        return -1;
-    }
-
-        int slirp_add_exec__part2546(Slirp *slirp, int do_pty, const void *args, const struct in_addr *guest_addr, int guest_port);
-    return slirp_add_exec__part2546(slirp, do_pty, args, guest_addr, guest_port);
-}
-
-ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags)
-{
-
-
-
-
-
-
- ssize_t slirp_send__part2548(struct socket *so, const void *buf, size_t len, int flags);
- return slirp_send__part2548(so, buf, len, flags);
-
-}
+ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags);
 
 static struct socket *
-slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr, int guest_port)
-{
-    struct socket *so;
-
-    struct socket *slirp_find_ctl_socket__part2550(struct socket *head, struct in_addr guest_addr, int guest_port);
-    so = slirp_find_ctl_socket__part2550(&slirp->tcb, guest_addr, guest_port);
-    if (so != ((void *)0))
-        return so;
-    struct socket *slirp_find_ctl_socket__part2551(void);
-return slirp_find_ctl_socket__part2551();
-
-}
+slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr, int guest_port);
 
 size_t slirp_socket_can_recv(Slirp *slirp, struct in_addr guest_addr,
-                             int guest_port)
-{
- struct socket *slirp_socket_can_recv__part2553(Slirp *slirp, struct in_addr guest_addr, int guest_port);
- struct iovec iov[2];
- struct socket *so;
-
- so = slirp_socket_can_recv__part2553(slirp, guest_addr, guest_port);
-
-
- int slirp_socket_can_recv__part2554(struct socket *so);
- if (slirp_socket_can_recv__part2554(so))
-  return 0;
-
-  int slirp_socket_can_recv__part2555(struct socket *so);
- if (slirp_socket_can_recv__part2555(so))
-  return 0;
-
-
- size_t slirp_socket_can_recv__part2556(void *so, void *iov);
-return slirp_socket_can_recv__part2556(so, iov);
-
-}
+                             int guest_port);
 
 void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
-                       const uint8_t *buf, int size)
-{
-    int ret;
-    struct socket *so = slirp_find_ctl_socket(slirp, guest_addr, guest_port);
-
-    int slirp_socket_recv__part2558(struct socket *so);
-    if (slirp_socket_recv__part2558(so))
-        return;
-
-
-    int slirp_socket_recv__part2559(struct socket *so, const uint8_t *buf, int size);
-ret = slirp_socket_recv__part2559(so, buf, size);
-
-
-    void slirp_socket_recv__part2560(int ret, struct socket *so);
-    slirp_socket_recv__part2560(ret, so);
-
-}
+                       const uint8_t *buf, int size);

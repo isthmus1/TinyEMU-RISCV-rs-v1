@@ -8427,38 +8427,13 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 static void sbappendsb(struct sbuf *sb, struct mbuf *m);
 
 void
-sbfree(struct sbuf *sb)
-{
- void sbfree__part2460(struct sbuf *sb);
-sbfree__part2460(sb);
-
-}
+sbfree(struct sbuf *sb);
 
 void
-sbdrop(struct sbuf *sb, int num)
-{
-
-
-
-
- int sbdrop__part2462(int num, unsigned int sb_cc);
- num = sbdrop__part2462(num, sb->sb_cc);
-
- void sbdrop__part2463(struct sbuf *sb, int num);
- sbdrop__part2463(sb, num);
- void sbdrop__part2464(struct sbuf *sb);
- sbdrop__part2464(sb);
-
-
-}
+sbdrop(struct sbuf *sb, int num);
 
 void
-sbreserve(struct sbuf *sb, int size)
-{
- void sbreserve__part2466(struct sbuf *sb, int size);
- sbreserve__part2466(sb, size);
-
-}
+sbreserve(struct sbuf *sb, int size);
 
 
 
@@ -8467,73 +8442,14 @@ sbreserve(struct sbuf *sb, int size)
 
 
 void
-sbappend(struct socket *so, struct mbuf *m)
-{
- int sbappend__part2468(void);
- int ret = sbappend__part2468();
-
-
-
-   {
-    int sbappend__part2469(struct mbuf *m);
-    if (sbappend__part2469(m))
-      return;
-  }
-
-
-
-
-
-
-
-  int sbappend__part2470(struct socket *so, struct mbuf *m);
- if (sbappend__part2470(so, m)) {
-  return;
- }
-
-
-
-
-
-
-  int sbappend__part2471(struct socket *so, struct mbuf *m);
- if (!so->so_rcv.sb_cc)
-    ret = sbappend__part2471(so, m);
-
-
- {
-  extern void sbappend__part2472(struct sbuf *sb, struct mbuf *m, int ret);
-  sbappend__part2472(&so->so_rcv, m, ret);
- }
-
-
-  void sbappend__part2473(struct mbuf *m);
- sbappend__part2473(m);
-}
+sbappend(struct socket *so, struct mbuf *m);
 
 
 
 
 
 static void
-sbappendsb(struct sbuf *sb, struct mbuf *m)
-{
- int sbappendsb__part2475(struct mbuf *m);
- int n, nn;
- int len = sbappendsb__part2475(m);
-
-
-  int sbappendsb__part2476(struct sbuf *sb, struct mbuf *m, int len, int *nn);
- n = sbappendsb__part2476(sb, m, len, &nn);
-
-
- void sbappendsb__part2477(struct sbuf *sb, int n);
- sbappendsb__part2477(sb, n);
-
- void sbappendsb__part2478(struct sbuf *sb);
-sbappendsb__part2478(sb);
-
-}
+sbappendsb(struct sbuf *sb, struct mbuf *m);
 
 
 
@@ -8541,17 +8457,4 @@ sbappendsb__part2478(sb);
 
 
 void
-sbcopy(struct sbuf *sb, int off, int len, char *to)
-{
- char *from;
-char *sbcopy__part2480(struct sbuf *sb, int off);
-
- from = sbcopy__part2480(sb, off);
-
- void sbcopy__part2481(struct sbuf *sb, char **from);
- sbcopy__part2481(sb, &from);
-
- void sbcopy__part2482(struct sbuf *sb, char *from, int off, int len, char *to);
- sbcopy__part2482(sb, from, off, len, to);
-
-}
+sbcopy(struct sbuf *sb, int off, int len, char *to);

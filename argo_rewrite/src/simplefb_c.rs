@@ -1,5 +1,242 @@
 //! From `simplefb.c`.
 
+// ── `simplefb_refresh` · simplefb.c:48-96 · chunk 2174 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void simplefb_refresh(FBDevice *fb_dev,
+//                           SimpleFBDrawFunc *redraw_func, void *opaque,
+//                           PhysMemoryRange *mem_range,
+//                           int fb_page_count)
+//     {
+//         const uint32_t *dirty_bits;
+//         uint32_t dirty_val;
+//         int y0, y1, page_y0, page_y1, byte_pos, page_index, bit_pos;
+//     
+//         dirty_bits = phys_mem_get_dirty_bits(mem_range);
+//     
+//         page_index = 0;
+//         y0 = y1 = 0;
+//         while (page_index < fb_page_count) {
+//             dirty_val = dirty_bits[page_index >> 5];
+//             if (dirty_val != 0) {
+//                 bit_pos = 0;
+//                 while (dirty_val != 0) {
+//                     while (((dirty_val >> bit_pos) & 1) == 0)
+//                         bit_pos++;
+//                     dirty_val &= ~(1 << bit_pos);
+//     
+//                     byte_pos = (page_index + bit_pos) * (1 << 12);
+//                     page_y0 = byte_pos / fb_dev->stride;
+//                     page_y1 = ((byte_pos + (1 << 12) - 1) / fb_dev->stride) + 1;
+//                     page_y1 = min_int(page_y1, fb_dev->height);
+//                     if (y0 == y1) {
+//                         y0 = page_y0;
+//                         y1 = page_y1;
+//                     } else if (page_y0 <= (y1 + 3)) {
+//     
+//                         y1 = page_y1;
+//                     } else {
+//     
+//                         redraw_func(fb_dev, opaque,
+//                                     0, y0, fb_dev->width, y1 - y0);
+//                         y0 = page_y0;
+//                         y1 = page_y1;
+//                     }
+//                 }
+//             }
+//             page_index += 32;
+//         }
+//     
+//         if (y0 != y1) {
+//             redraw_func(fb_dev, opaque,
+//                         0, y0, fb_dev->width, y1 - y0);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2174 {
+// Port of simplefb_refresh() from simplefb.c
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct FBDevice {
+    pub width: c_int,
+    pub height: c_int,
+    pub stride: c_int,
+    pub fb_data: *mut u8,
+    pub fb_size: c_int,
+    pub device_opaque: *mut c_void,
+    pub refresh: Option<
+        unsafe extern "C" fn(
+            fb_dev: *mut FBDevice,
+            redraw_func: Option<SimpleFBDrawFunc>,
+            opaque: *mut c_void,
+        ),
+    >,
+}
+
+pub type SimpleFBDrawFunc =
+    unsafe extern "C" fn(fb_dev: *mut FBDevice, opaque: *mut c_void, x: c_int, y: c_int, w: c_int, h: c_int);
+
+pub type DeviceWriteFunc =
+    unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int);
+pub type DeviceReadFunc =
+    unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32;
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<DeviceReadFunc>,
+    pub write_func: Option<DeviceWriteFunc>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram:
+        Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange>,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits:
+        Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32>,
+    pub set_ram_addr: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange, addr: u64, enabled: c_int),
+    >,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range:
+        Option<unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize)>,
+}
+
+const DEVRAM_PAGE_SIZE: c_int = 1 << 12;
+const MAX_MERGE_DISTANCE: c_int = 3;
+
+#[inline]
+fn min_int(a: c_int, b: c_int) -> c_int {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+// Integer division that never panics (C behaviour is undefined on a zero divisor).
+#[inline]
+fn c_div(a: c_int, b: c_int) -> c_int {
+    match a.checked_div(b) {
+        Some(v) => v,
+        None => 0,
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn simplefb_refresh(
+    fb_dev: *mut FBDevice,
+    redraw_func: Option<SimpleFBDrawFunc>,
+    opaque: *mut c_void,
+    mem_range: *mut PhysMemoryRange,
+    fb_page_count: c_int,
+) {
+    // phys_mem_get_dirty_bits(mem_range) (static inline in iomem.h)
+    let dirty_bits: *const u32 = {
+        if mem_range.is_null() {
+            core::ptr::null()
+        } else {
+            let map = (*mem_range).map;
+            if map.is_null() {
+                core::ptr::null()
+            } else {
+                match (*map).get_dirty_bits {
+                    Some(f) => f(map, mem_range),
+                    None => core::ptr::null(),
+                }
+            }
+        }
+    };
+
+    let mut y0: c_int;
+    let mut y1: c_int;
+    let mut page_index: c_int;
+    let mut dirty_val: u32;
+    let mut bit_pos: c_int;
+    let mut byte_pos: c_int;
+    let mut page_y0: c_int;
+    let mut page_y1: c_int;
+
+    page_index = 0;
+    y0 = 0;
+    y1 = 0;
+    while page_index < fb_page_count {
+        dirty_val = *dirty_bits.offset((page_index >> 5) as isize);
+        if dirty_val != 0 {
+            bit_pos = 0;
+            while dirty_val != 0 {
+                while ((dirty_val.wrapping_shr((bit_pos as u32) & 31)) & 1) == 0 {
+                    bit_pos += 1;
+                }
+                dirty_val &= !(1u32.wrapping_shl((bit_pos as u32) & 31));
+
+                byte_pos = (page_index.wrapping_add(bit_pos)).wrapping_mul(DEVRAM_PAGE_SIZE);
+                page_y0 = c_div(byte_pos, (*fb_dev).stride);
+                page_y1 = c_div(
+                    byte_pos.wrapping_add(DEVRAM_PAGE_SIZE - 1),
+                    (*fb_dev).stride,
+                )
+                .wrapping_add(1);
+                page_y1 = min_int(page_y1, (*fb_dev).height);
+                if y0 == y1 {
+                    y0 = page_y0;
+                    y1 = page_y1;
+                } else if page_y0 <= y1.wrapping_add(MAX_MERGE_DISTANCE) {
+                    // union with current region
+                    y1 = page_y1;
+                } else {
+                    // flush
+                    if let Some(f) = redraw_func {
+                        f(
+                            fb_dev,
+                            opaque,
+                            0,
+                            y0,
+                            (*fb_dev).width,
+                            y1.wrapping_sub(y0),
+                        );
+                    }
+                    y0 = page_y0;
+                    y1 = page_y1;
+                }
+            }
+        }
+        page_index += 32;
+    }
+
+    if y0 != y1 {
+        if let Some(f) = redraw_func {
+            f(
+                fb_dev,
+                opaque,
+                0,
+                y0,
+                (*fb_dev).width,
+                y1.wrapping_sub(y0),
+            );
+        }
+    }
+}
+}
+
 // ── `const uint32_t *dirty_bits; uint32_t dirty_val; int y0, y1, page_y0, page_y1, byte_pos, page_in…` · simplefb.c:53-60 · chunk 2175 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -258,6 +495,95 @@ pub extern "C" fn simplefb_refresh__part2177(
 }
 }
 
+// ── `simplefb_refresh1` · simplefb.c:98-104 · chunk 2178 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void simplefb_refresh1(FBDevice *fb_dev,
+//                                   SimpleFBDrawFunc *redraw_func, void *opaque)
+//     {
+//         SimpleFBState *s = fb_dev->device_opaque;
+//         simplefb_refresh(fb_dev, redraw_func, opaque, s->mem_range,
+//                          s->fb_page_count);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2178 {
+// Port of simplefb_refresh1 from simplefb.c
+// static void simplefb_refresh1(FBDevice *fb_dev,
+//                               SimpleFBDrawFunc *redraw_func, void *opaque)
+
+use core::ffi::{c_int, c_void};
+
+/// Mirrors the C `PhysMemoryRange` type; only used as an opaque pointer here.
+#[repr(C)]
+pub struct PhysMemoryRange {
+    _opaque: [u8; 0],
+}
+
+/// Draw callback type: typedef void SimpleFBDrawFunc(FBDevice *fb_dev,
+///                                                  void *opaque,
+///                                                  int x, int y, int w, int h);
+pub type SimpleFBDrawFunc = extern "C" fn(
+    fb_dev: *mut FBDevice,
+    opaque: *mut c_void,
+    x: c_int,
+    y: c_int,
+    w: c_int,
+    h: c_int,
+);
+
+/// Mirrors the C `FBDevice` struct.
+#[repr(C)]
+pub struct FBDevice {
+    pub width: c_int,
+    pub height: c_int,
+    pub stride: c_int,
+    pub fb_data: *mut u8,
+    pub fb_size: c_int,
+    pub device_opaque: *mut c_void,
+    pub refresh: Option<unsafe extern "C" fn(*mut FBDevice, SimpleFBDrawFunc, *mut c_void)>,
+}
+
+/// Mirrors the C `SimpleFBState` struct.
+#[repr(C)]
+pub struct SimpleFBState {
+    pub fb_dev: *mut FBDevice,
+    pub fb_page_count: c_int,
+    pub mem_range: *mut PhysMemoryRange,
+}
+
+extern "C" {
+    fn simplefb_refresh(
+        fb_dev: *mut FBDevice,
+        redraw_func: SimpleFBDrawFunc,
+        opaque: *mut c_void,
+        mem_range: *mut PhysMemoryRange,
+        fb_page_count: c_int,
+    );
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn simplefb_refresh1(
+    fb_dev: *mut FBDevice,
+    redraw_func: SimpleFBDrawFunc,
+    opaque: *mut c_void,
+) {
+    if fb_dev.is_null() {
+        return;
+    }
+    let s = (*fb_dev).device_opaque as *mut SimpleFBState;
+    if s.is_null() {
+        return;
+    }
+    simplefb_refresh(
+        fb_dev,
+        redraw_func,
+        opaque,
+        (*s).mem_range,
+        (*s).fb_page_count,
+    );
+}
+}
+
 // ── `SimpleFBState *s = fb_dev->device_opaque; simplefb_refresh(fb_dev, redraw_func, opaque, s->mem_…` · simplefb.c:101-103 · chunk 2179 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -317,6 +643,171 @@ pub unsafe extern "C" fn simplefb_refresh1__part2179(
         (*s).mem_range,
         (*s).fb_page_count,
     );
+}
+}
+
+// ── `simplefb_init` · simplefb.c:106-127 · chunk 2180 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     SimpleFBState *simplefb_init(PhysMemoryMap *map, uint64_t phys_addr,
+//                                  FBDevice *fb_dev, int width, int height)
+//     {
+//         SimpleFBState *s;
+//     
+//         s = mallocz(sizeof(*s));
+//         s->fb_dev = fb_dev;
+//     
+//         fb_dev->width = width;
+//         fb_dev->height = height;
+//         fb_dev->stride = width * 4;
+//         fb_dev->fb_size = (height * fb_dev->stride + 65536 - 1) & ~(65536 - 1);
+//         s->fb_page_count = fb_dev->fb_size >> 12;
+//     
+//         s->mem_range = cpu_register_ram(map, phys_addr, fb_dev->fb_size,
+//                                         (1 << 1));
+//     
+//         fb_dev->fb_data = s->mem_range->phys_mem;
+//         fb_dev->device_opaque = s;
+//         fb_dev->refresh = simplefb_refresh1;
+//         return s;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2180 {
+// Rust rewrite of simplefb_init from simplefb.c
+#![allow(non_snake_case, non_camel_case_types, dead_code)]
+
+use core::ffi::{c_int, c_void};
+
+type SimpleFBDrawFunc = Option<
+    unsafe extern "C" fn(fb_dev: *mut FBDevice, opaque: *mut c_void, x: c_int, y: c_int, w: c_int, h: c_int),
+>;
+
+#[repr(C)]
+pub struct FBDevice {
+    pub width: c_int,
+    pub height: c_int,
+    pub stride: c_int,
+    pub fb_data: *mut u8,
+    pub fb_size: c_int,
+    pub device_opaque: *mut c_void,
+    pub refresh: Option<
+        unsafe extern "C" fn(fb_dev: *mut FBDevice, redraw_func: SimpleFBDrawFunc, opaque: *mut c_void),
+    >,
+}
+
+#[repr(C)]
+pub struct PhysMemoryRange {
+    pub map: *mut PhysMemoryMap,
+    pub addr: u64,
+    pub org_size: u64,
+    pub size: u64,
+    pub is_ram: c_int,
+    pub devram_flags: c_int,
+    pub phys_mem: *mut u8,
+    pub dirty_bits_size: c_int,
+    pub dirty_bits: *mut u32,
+    pub dirty_bits_tab: [*mut u32; 2],
+    pub dirty_bits_index: c_int,
+    pub opaque: *mut c_void,
+    pub read_func: Option<unsafe extern "C" fn(opaque: *mut c_void, offset: u32, size_log2: c_int) -> u32>,
+    pub write_func: Option<unsafe extern "C" fn(opaque: *mut c_void, offset: u32, val: u32, size_log2: c_int)>,
+    pub devio_flags: c_int,
+}
+
+#[repr(C)]
+pub struct PhysMemoryMap {
+    pub n_phys_mem_range: c_int,
+    pub phys_mem_range: [PhysMemoryRange; 32],
+    pub register_ram: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, addr: u64, size: u64, devram_flags: c_int) -> *mut PhysMemoryRange,
+    >,
+    pub free_ram: Option<unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange)>,
+    pub get_dirty_bits: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange) -> *const u32,
+    >,
+    pub set_ram_addr: Option<
+        unsafe extern "C" fn(s: *mut PhysMemoryMap, pr: *mut PhysMemoryRange, addr: u64, enabled: c_int),
+    >,
+    pub opaque: *mut c_void,
+    pub flush_tlb_write_range: Option<
+        unsafe extern "C" fn(opaque: *mut c_void, ram_addr: *mut u8, ram_size: usize),
+    >,
+}
+
+#[repr(C)]
+pub struct SimpleFBState {
+    pub fb_dev: *mut FBDevice,
+    pub fb_page_count: c_int,
+    pub mem_range: *mut PhysMemoryRange,
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+    fn simplefb_refresh(
+        fb_dev: *mut FBDevice,
+        redraw_func: SimpleFBDrawFunc,
+        opaque: *mut c_void,
+        mem_range: *mut PhysMemoryRange,
+        fb_page_count: c_int,
+    );
+}
+
+// was `static void simplefb_refresh1(...)` in simplefb.c
+unsafe extern "C" fn simplefb_refresh1(
+    fb_dev: *mut FBDevice,
+    redraw_func: SimpleFBDrawFunc,
+    opaque: *mut c_void,
+) {
+    let s = (*fb_dev).device_opaque as *mut SimpleFBState;
+    simplefb_refresh(
+        fb_dev,
+        redraw_func,
+        opaque,
+        (*s).mem_range,
+        (*s).fb_page_count,
+    );
+}
+
+const FB_ALLOC_ALIGN: c_int = 65536;
+const DEVRAM_PAGE_SIZE_LOG2: c_int = 12;
+const DEVRAM_FLAG_DIRTY_BITS: c_int = 1 << 1;
+
+#[no_mangle]
+pub unsafe extern "C" fn simplefb_init(
+    map: *mut PhysMemoryMap,
+    phys_addr: u64,
+    fb_dev: *mut FBDevice,
+    width: c_int,
+    height: c_int,
+) -> *mut SimpleFBState {
+    let s = mallocz(core::mem::size_of::<SimpleFBState>()) as *mut SimpleFBState;
+    (*s).fb_dev = fb_dev;
+
+    (*fb_dev).width = width;
+    (*fb_dev).height = height;
+    (*fb_dev).stride = width.wrapping_mul(4);
+    (*fb_dev).fb_size = height
+        .wrapping_mul((*fb_dev).stride)
+        .wrapping_add(FB_ALLOC_ALIGN - 1)
+        & !(FB_ALLOC_ALIGN - 1);
+    (*s).fb_page_count = (*fb_dev).fb_size >> DEVRAM_PAGE_SIZE_LOG2;
+
+    let register_ram = (*map).register_ram;
+    let mem_range = match register_ram {
+        Some(f) => f(
+            map,
+            phys_addr,
+            (*fb_dev).fb_size as u64,
+            DEVRAM_FLAG_DIRTY_BITS,
+        ),
+        None => core::ptr::null_mut(),
+    };
+    (*s).mem_range = mem_range;
+
+    (*fb_dev).fb_data = (*mem_range).phys_mem;
+    (*fb_dev).device_opaque = s as *mut c_void;
+    (*fb_dev).refresh = Some(simplefb_refresh1);
+    s
 }
 }
 

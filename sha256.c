@@ -2042,32 +2042,10 @@ void SHA256_Init(SHA256_CTX *s);
 void SHA256_Update(SHA256_CTX *s, const uint8_t *in, unsigned long inlen);
 void SHA256_Final(uint8_t *out, SHA256_CTX *s);
 void SHA256(const uint8_t *buf, int buf_len, uint8_t *out);
-static void sha256_compress(SHA256_CTX *s, unsigned char *buf)
-{
-    uint32_t S[8], W[64], t0, t1;
+static void sha256_compress(SHA256_CTX *s, unsigned char *buf);
+void SHA256_Init(SHA256_CTX *s);
 
-
-
-    int i;
-
-
-        {
-        void sha256_compress__part2152(SHA256_CTX *s, uint32_t *S, int *i);
-        sha256_compress__part2152(s, S, &i);
-    }
-
-
-
-    {
-        void sha256_compress__part2153(const unsigned char *buf, uint32_t *W);
-        sha256_compress__part2153(buf, W);
-    }
-
-
-
-    void sha256_compress__part2154(uint32_t *W, int *i);
-sha256_compress__part2154(W, &i);
-        void sha256_compress__part2155(uint32_t *S, const uint32_t *W); sha256_compress__part2155(S, W);
+void SHA256_Update(SHA256_CTX *s, const uint8_t *in, unsigned long inlen);
 
 
 
@@ -2075,81 +2053,6 @@ sha256_compress__part2154(W, &i);
 
 
 
-    void sha256_compress__part2156(SHA256_CTX *s, uint32_t *S);
-    sha256_compress__part2156(s, S);
+void SHA256_Final(uint8_t *out, SHA256_CTX *s);
 
-}
-void SHA256_Init(SHA256_CTX *s)
-{
-    void SHA256_Init__part2158(SHA256_CTX *s);
-    SHA256_Init__part2158(s);
-}
-
-void SHA256_Update(SHA256_CTX *s, const uint8_t *in, unsigned long inlen)
-{
-    unsigned long n;
-
-    void SHA256_Update__part2160(SHA256_CTX *s);
-    SHA256_Update__part2160(s);
-
-        void SHA256_Update__part2161(SHA256_CTX *s, unsigned long inlen);
-    SHA256_Update__part2161(s, inlen);
-
-        void SHA256_Update__part2162(SHA256_CTX *s, const uint8_t *in, unsigned long *inlen, unsigned long *n);
-    SHA256_Update__part2162(s, in, &inlen, &n);
- }
-
-
-
-
-
-
-
-void SHA256_Final(uint8_t *out, SHA256_CTX *s)
-{
-    int i;
-
-    void SHA256_Final__part2164(SHA256_CTX *s);
-    SHA256_Final__part2164(s);
-
-
-
-
-        void SHA256_Final__part2165(SHA256_CTX *s);
-    SHA256_Final__part2165(s);
-
-
-
-
-
-
-        void SHA256_Final__part2166(SHA256_CTX *s);
-    SHA256_Final__part2166(s);
-
-
-
-    void SHA256_Final__part2167(SHA256_CTX *s);
-    SHA256_Final__part2167(s);
-
-
-    {
-    void SHA256_Final__part2168(SHA256_CTX *s);
-    SHA256_Final__part2168(s);
-}
-
-
-
-    void SHA256_Final__part2169(uint8_t *out, SHA256_CTX *s);
-    SHA256_Final__part2169(out, s);
-
-
-
-
-}
-
-void SHA256(const uint8_t *buf, int buf_len, uint8_t *out)
-{
-        void SHA256__part2171(const uint8_t *buf, int buf_len, uint8_t *out);
-    SHA256__part2171(buf, buf_len, out);
-
-}
+void SHA256(const uint8_t *buf, int buf_len, uint8_t *out);

@@ -5523,148 +5523,35 @@ typedef struct RISCVMachine {
 
     int virtio_count;
 } RISCVMachine;
-static uint64_t rtc_get_real_time(RISCVMachine *s)
-{
-    uint64_t rtc_get_real_time__part1962(void);
-    return rtc_get_real_time__part1962();
+static uint64_t rtc_get_real_time(RISCVMachine *s);
 
-}
-
-static uint64_t rtc_get_time(RISCVMachine *m)
-{
-    uint64_t val;
-    {
-        uint64_t rtc_get_time__part1964(int rtc_real_time, uint64_t rtc_start_time, RISCVCPUState *cpu_state);
-        val = rtc_get_time__part1964(m->rtc_real_time, m->rtc_start_time, m->cpu_state);
-    }
-
-    uint64_t rtc_get_time__part1965(uint64_t val);
-    return rtc_get_time__part1965(val);
-}
+static uint64_t rtc_get_time(RISCVMachine *m);
 
 static uint32_t htif_read(void *opaque, uint32_t offset,
-                          int size_log2)
-{
-    void *htif_read__part1967(void *opaque, int size_log2);
-    RISCVMachine *s = (RISCVMachine *)htif_read__part1967(opaque, size_log2);
-    uint32_t val;
+                          int size_log2);
 
-        uint32_t htif_read__part1968(RISCVMachine *s, uint32_t offset);
-    val = htif_read__part1968(s, offset);
-
-        {
-        uint32_t htif_read__part1969(uint32_t val);
-        return htif_read__part1969(val);
-    }
-
-}
-
-static void htif_handle_cmd(RISCVMachine *s)
-{
-    uint32_t device, cmd;
-    void htif_handle_cmd__part1971(uint64_t tohost, uint32_t *device, uint32_t *cmd);
-
-    htif_handle_cmd__part1971(s->htif_tohost, &device, &cmd);
-
-    void htif_handle_cmd__part1972(RISCVMachine *s, uint32_t device, uint32_t cmd);
-    htif_handle_cmd__part1972(s, device, cmd);
-}
+static void htif_handle_cmd(RISCVMachine *s);
 
 static void htif_write(void *opaque, uint32_t offset, uint32_t val,
-                       int size_log2)
-{
-    void *htif_write__part1974(void *opaque, int size_log2);
-RISCVMachine *s = (RISCVMachine *)htif_write__part1974(opaque, size_log2);
-    void htif_write__part1975(RISCVMachine *s, uint32_t offset, uint32_t val);
-    htif_write__part1975(s, offset, val);
-
-}
-static uint32_t clint_read(void *opaque, uint32_t offset, int size_log2)
-{
-        void *clint_read__part1977(void *opaque, int size_log2);
-    RISCVMachine *m = clint_read__part1977(opaque, size_log2);
-    uint32_t val;
-
-    uint32_t clint_read__part1978(void *opaque, uint32_t offset);
-    val = clint_read__part1978(m, offset);
-
-        uint32_t clint_read__part1979(uint32_t val);
-    return clint_read__part1979(val);
-
-}
+                       int size_log2);
+static uint32_t clint_read(void *opaque, uint32_t offset, int size_log2);
 
 static void clint_write(void *opaque, uint32_t offset, uint32_t val,
-                      int size_log2)
-{
-    void *clint_write__part1981(void *opaque, int size_log2);
-RISCVMachine *m = clint_write__part1981(opaque, size_log2);
+                      int size_log2);
 
-        void clint_write__part1982(RISCVMachine *m, uint32_t offset, uint32_t val);
-    clint_write__part1982(m, offset, val);
-
-}
-
-static void plic_update_mip(RISCVMachine *s)
-{
-    uint32_t plic_update_mip__part1984(RISCVMachine *s, RISCVCPUState **cpu_out);
-    RISCVCPUState *cpu;
-    uint32_t mask;
-    mask = plic_update_mip__part1984(s, &cpu);
-
-    void plic_update_mip__part1985(RISCVCPUState *cpu, uint32_t mask);
-    plic_update_mip__part1985(cpu, mask);
-}
+static void plic_update_mip(RISCVMachine *s);
 
 
 
 
-static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2)
-{
-    void *plic_read__part1987(void *opaque, int size_log2);
-    RISCVMachine *s = plic_read__part1987(opaque, size_log2);
-    uint32_t val, mask;
-    int i;
-
-        {
-        uint32_t plic_read__part1988(RISCVMachine *s, uint32_t offset);
-        val = plic_read__part1988(s, offset);
-    }
-
-    uint32_t plic_read__part1989(uint32_t val);
-    return plic_read__part1989(val);
-
-}
+static uint32_t plic_read(void *opaque, uint32_t offset, int size_log2);
 
 static void plic_write(void *opaque, uint32_t offset, uint32_t val,
-                       int size_log2)
-{
-    RISCVMachine *plic_write__part1991(void *opaque, int size_log2);
+                       int size_log2);
 
-    RISCVMachine *s = plic_write__part1991(opaque, size_log2);
+static void plic_set_irq(void *opaque, int irq_num, int state);
 
-    void plic_write__part1992(void *opaque, uint32_t offset, uint32_t val);
-    plic_write__part1992(opaque, offset, val);
-}
-
-static void plic_set_irq(void *opaque, int irq_num, int state)
-{
-        RISCVMachine *s = opaque;
-    uint32_t mask;
-    uint32_t plic_set_irq__part1994(void *opaque, int irq_num);
-
-    mask = plic_set_irq__part1994(opaque, irq_num);
-    void plic_set_irq__part1995(int state, uint32_t *plic_pending_irq, uint32_t mask);
-    plic_set_irq__part1995(state, &s->plic_pending_irq, mask);
-
-    void plic_set_irq__part1996(RISCVCPUState *cpu, uint32_t plic_pending_irq, uint32_t plic_served_irq);
-    plic_set_irq__part1996(s->cpu_state, s->plic_pending_irq, s->plic_served_irq);
-}
-
-static uint8_t *get_ram_ptr(RISCVMachine *s, uint64_t paddr, BOOL is_rw)
-{
-    uint8_t *get_ram_ptr__part1998(PhysMemoryMap *map, uint64_t paddr, BOOL is_rw);
-    return get_ram_ptr__part1998(s->mem_map, paddr, is_rw);
-}
+static uint8_t *get_ram_ptr(RISCVMachine *s, uint64_t paddr, BOOL is_rw);
 
 
 
@@ -5706,128 +5593,39 @@ typedef struct {
     int string_table_size;
 } FDTState;
 
-static FDTState *fdt_init(void)
-{
-    FDTState *fdt_init__part2004(void);
-    return fdt_init__part2004();
+static FDTState *fdt_init(void);
 
-}
+static void fdt_alloc_len(FDTState *s, int len);
 
-static void fdt_alloc_len(FDTState *s, int len)
-{
-    int new_size;
-    void fdt_alloc_len__part2006(FDTState *s, int len, int *new_size);
-    fdt_alloc_len__part2006(s, len, &new_size);
-}
-
-static void fdt_put32(FDTState *s, int v)
-{
-        void fdt_put32__part2008(FDTState *s, int v);
-    fdt_put32__part2008(s, v);
-}
+static void fdt_put32(FDTState *s, int v);
 
 
-static void fdt_put_data(FDTState *s, const uint8_t *data, int len)
-{
-    int fdt_put_data__part2010(FDTState *s, const uint8_t *data, int len);
+static void fdt_put_data(FDTState *s, const uint8_t *data, int len);
 
-    int len1 = fdt_put_data__part2010(s, data, len);
+static void fdt_begin_node(FDTState *s, const char *name);
 
-}
+static void fdt_begin_node_num(FDTState *s, const char *name, uint64_t n);
 
-static void fdt_begin_node(FDTState *s, const char *name)
-{
-    void fdt_begin_node__part2012(FDTState *s, const char *name);
-    fdt_begin_node__part2012(s, name);
+static void fdt_end_node(FDTState *s);
 
-}
-
-static void fdt_begin_node_num(FDTState *s, const char *name, uint64_t n)
-{
-    void fdt_begin_node_num__part2014(char *buf, size_t buflen, const char *name, uint64_t n);
-    char buf[256];
-    fdt_begin_node_num__part2014(buf, sizeof(buf), name, n);
-    fdt_begin_node(s, buf);
-}
-
-static void fdt_end_node(FDTState *s)
-{
-    void fdt_end_node__part2016(FDTState *s);
-    fdt_end_node__part2016(s);
-}
-
-static int fdt_get_string_offset(FDTState *s, const char *name)
-{
-    int pos, new_size, name_size, new_len;
-    int fdt_get_string_offset__part2018(void);
-
-    pos = fdt_get_string_offset__part2018();
-
-    int fdt_get_string_offset__part2019(FDTState *s, const char *name, int *pos_out);
-    if (fdt_get_string_offset__part2019(s, name, &pos))
-        return pos;
-
-
-    void fdt_get_string_offset__part2020(const FDTState *s, const char *name, int *name_size, int *new_len);
-    fdt_get_string_offset__part2020(s, name, &name_size, &new_len);
-    void fdt_get_string_offset__part2021(FDTState *s, int new_len);
-    fdt_get_string_offset__part2021(s, new_len);
-    int fdt_get_string_offset__part2022(FDTState *s, const char *name, int name_size, int new_len);
-    pos = fdt_get_string_offset__part2022(s, name, name_size, new_len);
-    return pos;
-
-}
+static int fdt_get_string_offset(FDTState *s, const char *name);
 
 static void fdt_prop(FDTState *s, const char *prop_name,
-                     const void *data, int data_len)
-{
-        void fdt_prop__part2024(FDTState *s, const char *prop_name, const void *data, int data_len);
-    fdt_prop__part2024(s, prop_name, data, data_len);
-
-}
+                     const void *data, int data_len);
 
 static void fdt_prop_tab_u32(FDTState *s, const char *prop_name,
-                             uint32_t *tab, int tab_len)
-{
-    void fdt_prop_tab_u32__part2026(FDTState *s, const char *prop_name, int tab_len);
-    int i;
-    fdt_prop_tab_u32__part2026(s, prop_name, tab_len);
+                             uint32_t *tab, int tab_len);
 
-    void fdt_prop_tab_u32__part2027(FDTState *s, uint32_t *tab, int tab_len);
-    fdt_prop_tab_u32__part2027(s, tab, tab_len);
-
-}
-
-static void fdt_prop_u32(FDTState *s, const char *prop_name, uint32_t val)
-{
-    void fdt_prop_u32__part2029(FDTState *s, const char *prop_name, const uint32_t *tab, int tab_len);
-fdt_prop_u32__part2029(s, prop_name, &val, 1);
-
-}
+static void fdt_prop_u32(FDTState *s, const char *prop_name, uint32_t val);
 
 static void fdt_prop_tab_u64(FDTState *s, const char *prop_name,
-                             uint64_t v0)
-{
-    void fdt_prop_tab_u64__part2031(FDTState *s, const char *prop_name, uint64_t v0);
-    fdt_prop_tab_u64__part2031(s, prop_name, v0);
-}
+                             uint64_t v0);
 
 static void fdt_prop_tab_u64_2(FDTState *s, const char *prop_name,
-                               uint64_t v0, uint64_t v1)
-{
-    void fdt_prop_tab_u64_2__part2033(FDTState *s, const char *prop_name,
-                                   uint64_t v0, uint64_t v1);
-    fdt_prop_tab_u64_2__part2033(s, prop_name, v0, v1);
-
-}
+                               uint64_t v0, uint64_t v1);
 
 static void fdt_prop_str(FDTState *s, const char *prop_name,
-                         const char *str)
-{
-        void fdt_prop_str__part2035(FDTState *s, const char *prop_name, const char *str);
-    fdt_prop_str__part2035(s, prop_name, str);
-
-}
+                         const char *str);
 
 
 static void fdt_prop_tab_str(FDTState *s, const char *prop_name,
@@ -5894,356 +5692,41 @@ static void fdt_prop_tab_str(FDTState *s, const char *prop_name,
 }
 
 
-int fdt_output(FDTState *s, uint8_t *dst)
-{
-    void fdt_output__part2038(FDTState *s, uint8_t *dst, struct fdt_header **h_out, int *pos_out, int *dt_strings_size_out);
+int fdt_output(FDTState *s, uint8_t *dst);
 
-    struct fdt_header *h;
-    struct fdt_reserve_entry *re;
-    int dt_strings_size;
-    int pos;
-    fdt_output__part2038(s, dst, &h, &pos, &dt_strings_size);
-
-
-
-    int fdt_output__part2039(uint8_t *dst, int pos);
-    pos = fdt_output__part2039(dst, pos);
-
-        {
-        void fdt_output__part2040(FDTState *s, uint8_t *dst, int dt_strings_size, int *pos,
-                                  struct fdt_reserve_entry **re);
-        fdt_output__part2040(s, dst, dt_strings_size, &pos, &re);
-    }
-
-
-
-    int fdt_output__part2041(uint8_t *dst, int pos);
-    pos = fdt_output__part2041(dst, pos);
-
-
-    int fdt_output__part2042(struct fdt_header *h, int pos);
-    return fdt_output__part2042(h, pos);
-}
-
-void fdt_end(FDTState *s)
-{
-    void fdt_end__part2044(FDTState *s);
-    fdt_end__part2044(s);
-}
+void fdt_end(FDTState *s);
 
 static int riscv_build_fdt(RISCVMachine *m, uint8_t *dst,
                            uint64_t kernel_start, uint64_t kernel_size,
                            const char *cmd_line,
-                           uint64_t initrd_start, uint64_t initrd_size)
-{
-        FDTState *s;
-    int size, max_xlen, i, cur_phandle, intc_phandle, plic_phandle;
-    char isa_string[128], *q;
-    uint32_t misa;
-    uint32_t tab[4];
-    FBDevice *fb_dev;
-
-    void riscv_build_fdt__part2046(RISCVMachine *m, FDTState **s_out,
-                                   int *cur_phandle_out, int *max_xlen_out,
-                                   uint32_t *misa_out, char *isa_string,
-                                   char **q_out);
-    riscv_build_fdt__part2046(m, &s, &cur_phandle, &max_xlen, &misa,
-                              isa_string, &q);
-
-    void riscv_build_fdt__part2047(uint32_t misa, char **q);
-    riscv_build_fdt__part2047(misa, &q);
-    void riscv_build_fdt__part2048(RISCVMachine *m, FDTState *s, int max_xlen,
-                               char *q, char *isa_string,
-                               int *cur_phandle, int *intc_phandle,
-                               int *plic_phandle, uint32_t *tab);
-    riscv_build_fdt__part2048(m, s, max_xlen, q, isa_string,
-                              &cur_phandle, &intc_phandle, &plic_phandle, tab);
-
-
-        void riscv_build_fdt__part2049(FDTState *s, int virtio_count, int plic_phandle, uint32_t *tab);
-    riscv_build_fdt__part2049(s, m->virtio_count, plic_phandle, tab);
-
-
-        FBDevice *riscv_build_fdt__part2050(RISCVMachine *m);
-    fb_dev = riscv_build_fdt__part2050(m);
-
-    {
-        void riscv_build_fdt__part2051(FDTState *s, FBDevice *fb_dev);
-        riscv_build_fdt__part2051(s, fb_dev);
-    }
-
-
-        void riscv_build_fdt__part2052(FDTState *s, const char *cmd_line);
-    riscv_build_fdt__part2052(s, cmd_line);
-
-    void riscv_build_fdt__part2053(FDTState *s, uint64_t kernel_start, uint64_t kernel_size);
-    if (kernel_size > 0) {
-        riscv_build_fdt__part2053(s, kernel_start, kernel_size);
-    }
-    if (initrd_size > 0) {
-        extern void riscv_build_fdt__part2054(FDTState *s, uint64_t initrd_start,
-                                             uint64_t initrd_size);
-        riscv_build_fdt__part2054(s, initrd_start, initrd_size);
-    }
-
-        {
-        int riscv_build_fdt__part2055(FDTState *s, uint8_t *dst);
-        return riscv_build_fdt__part2055(s, dst);
-    }
-
-}
+                           uint64_t initrd_start, uint64_t initrd_size);
 
 static void copy_bios(RISCVMachine *s, const uint8_t *buf, int buf_len,
                       const uint8_t *kernel_buf, int kernel_buf_len,
                       const char *cmd_line,
-                      const uint8_t *initrd_buf, int initrd_buf_len)
-{
-    uint64_t fdt_addr, kernel_align, kernel_base, kernel_size;
-    uint64_t bios_base, bios_size, initrd_base, initrd_size;
-    uint64_t image_start, image_len;
-    uint8_t *ram_ptr;
-    uint32_t *q;
-    int res;
-
-    uint8_t *copy_bios__part2057(RISCVMachine *s);
-    ram_ptr = copy_bios__part2057(s);
-
-
-
-    {
-        int cb_bios_res;
-        int copy_bios__part2058(const uint8_t *buf, int buf_len, uint8_t *ram_ptr,
-                                uint64_t ram_size, uint64_t *bios_base,
-                                uint64_t *bios_size);
-
-        cb_bios_res = copy_bios__part2058(buf, buf_len, ram_ptr, s->ram_size,
-                                          &bios_base, &bios_size);
-        if (cb_bios_res != 0) {
-            if (cb_bios_res == 114) {
-                vm_error("Failed to load ELF BIOS\n");
-            } else {
-                vm_error("BIOS too big\n");
-            }
-            exit(1);
-        }
-    }
-
-
-        void copy_bios__part2059(int max_xlen, int buf_len,
-                             const uint8_t *kernel_buf, int kernel_buf_len,
-                             uint8_t *ram_ptr, uint64_t ram_size,
-                             uint64_t *kernel_base_out,
-                             uint64_t *kernel_size_out);
-    copy_bios__part2059(s->max_xlen, buf_len, kernel_buf, kernel_buf_len,
-                        ram_ptr, s->ram_size, &kernel_base, &kernel_size);
-
-
-
-    void copy_bios__part2060(uint8_t *ram_ptr, uint64_t bios_base, uint64_t bios_size,
-                         uint64_t kernel_base, uint64_t kernel_size,
-                         uint64_t ram_size,
-                         const uint8_t *initrd_buf, int initrd_buf_len,
-                         uint64_t *initrd_base, uint64_t *initrd_size);
-    copy_bios__part2060(ram_ptr, bios_base, bios_size, kernel_base, kernel_size,
-                        s->ram_size, initrd_buf, initrd_buf_len,
-                        &initrd_base, &initrd_size);
-
-
-        uint8_t *copy_bios__part2061(RISCVMachine *s, uint64_t *p_fdt_addr,
-                                 uint32_t **p_q, uint64_t kernel_base,
-                                 uint64_t kernel_size, const char *cmd_line,
-                                 uint64_t initrd_base, uint64_t initrd_size,
-                                 uint8_t *(*get_ram_ptr_fn)(RISCVMachine *, uint64_t, BOOL),
-                                 int (*build_fdt_fn)(RISCVMachine *, uint8_t *, uint64_t, uint64_t, const char *, uint64_t, uint64_t));
-    ram_ptr = copy_bios__part2061(s, &fdt_addr, &q, kernel_base, kernel_size,
-                                  cmd_line, initrd_base, initrd_size,
-                                  get_ram_ptr, riscv_build_fdt);
-
-}
+                      const uint8_t *initrd_buf, int initrd_buf_len);
 
 static void riscv_flush_tlb_write_range(void *opaque, uint8_t *ram_addr,
-                                        size_t ram_size)
-{
-        void riscv_flush_tlb_write_range__part2063(void *opaque, uint8_t *ram_addr, size_t ram_size);
-    riscv_flush_tlb_write_range__part2063(opaque, ram_addr, ram_size);
+                                        size_t ram_size);
 
-}
+static void riscv_machine_set_defaults(VirtMachineParams *p);
 
-static void riscv_machine_set_defaults(VirtMachineParams *p)
-{
-}
+static VirtMachine *riscv_machine_init(const VirtMachineParams *p);
 
-static VirtMachine *riscv_machine_init(const VirtMachineParams *p)
-{
-    RISCVMachine *s;
-    VIRTIODevice *blk_dev;
-    int irq_num, i, max_xlen, ram_flags;
-    VIRTIOBusDef vbus_s, *vbus = &vbus_s;
+static void riscv_machine_end(VirtMachine *s1);
 
 
-        {
-        int __rv_ok;
-        extern int riscv_machine_init__part2066(const char *machine_name, int *ok);
-        max_xlen = riscv_machine_init__part2066(p->machine_name, &__rv_ok);
-        if (!__rv_ok) {
-            return ((void *)0);
-        }
-    }
+static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay);
 
-
-        RISCVMachine *riscv_machine_init__part2067(const VirtMachineClass *vmc, uint64_t ram_size, int max_xlen);
-    s = riscv_machine_init__part2067(p->vmc, p->ram_size, max_xlen);
-    int riscv_machine_init__part2068(RISCVCPUState *cpu_state, int max_xlen);
-    if (!riscv_machine_init__part2068(s->cpu_state, max_xlen)) {
-        return 
-              ((void *)0)
-                  ;
-    }
-
-
-
-    uint64_t htif_start = 0x40008000;
-        uint64_t riscv_machine_init__part2069(const VMFileEntry *bios, uint64_t htif_start);
-    htif_start = riscv_machine_init__part2069(&p->files[VM_FILE_BIOS], htif_start);
-
-        void riscv_machine_init__part2070(RISCVMachine *s, uint64_t htif_start,
-                                      const VirtMachineParams *p, int *ram_flags,
-                                      uint32_t (*htif_read_f)(void *opaque, uint32_t offset, int size_log2),
-                                      void (*htif_write_f)(void *opaque, uint32_t offset, uint32_t val, int size_log2));
-    riscv_machine_init__part2070(s, htif_start, p, &ram_flags, htif_read, htif_write);
-
-        void riscv_machine_init__part2071(int rtc_real_time, uint64_t *rtc_start_time);
-    riscv_machine_init__part2071(p->rtc_real_time, &s->rtc_start_time);
-
-
-        void riscv_machine_init__part2072(RISCVMachine *s);
-    riscv_machine_init__part2072(s);
-
-    void riscv_machine_init__part2073(RISCVMachine *s);
-    riscv_machine_init__part2073(s);
-
-
-    void riscv_machine_init__part2074(RISCVMachine *s, const VirtMachineParams *p,
-                                  VIRTIOBusDef *vbus, int *irq_num);
-    riscv_machine_init__part2074(s, p, vbus, &irq_num);
-
-
-
-        void riscv_machine_init__part2075(const VirtMachineParams *p, RISCVMachine *s, VIRTIOBusDef *vbus, int *irq_num);
-    riscv_machine_init__part2075(p, s, vbus, &irq_num);
-
-
-
-    void riscv_machine_init__part2076(const VirtMachineParams *p, RISCVMachine *s, VIRTIOBusDef *vbus, int *irq_num);
-    riscv_machine_init__part2076(p, s, vbus, &irq_num);
-
-
-
-        {
-        void riscv_machine_init__part2077(RISCVMachine *s, VIRTIOBusDef *vbus,
-                                         int drive_count,
-                                         VMDriveEntry *tab_drive,
-                                         int *irq_num);
-        riscv_machine_init__part2077(s, vbus, p->drive_count, p->tab_drive,
-                                     &irq_num);
-    }
-
-
-
-        void riscv_machine_init__part2078(RISCVMachine *s, const VirtMachineParams *p, VIRTIOBusDef *vbus, int *irq_num);
-    riscv_machine_init__part2078(s, p, vbus, &irq_num);
-
-
-        void riscv_machine_init__part2079(const char *display_device, int width, int height,
-                                      void *mem_map, void **fb_dev_out);
-    riscv_machine_init__part2079(p->display_device, p->width, p->height,
-                                 s->mem_map, (void **)&s->common.fb_dev);
-
-
-        int riscv_machine_init__part2080(const char *input_device, VIRTIOBusDef *vbus, IRQSignal *plic_irq, int irq_num, VIRTIODevice **keyboard_dev, VIRTIODevice **mouse_dev, int *virtio_count);
-    irq_num = riscv_machine_init__part2080(p->input_device, vbus, s->plic_irq, irq_num, &s->keyboard_dev, &s->mouse_dev, &s->virtio_count);
-
-
-        void riscv_machine_init__part2081(const VirtMachineParams *p);
-    riscv_machine_init__part2081(p);
-
-
-    void riscv_machine_init__part2082(RISCVMachine *s, const uint8_t *buf, int buf_len,
-                                  const uint8_t *kernel_buf, int kernel_buf_len,
-                                  const char *cmd_line,
-                                  const uint8_t *initrd_buf, int initrd_buf_len);
-
-    riscv_machine_init__part2082(s, p->files[VM_FILE_BIOS].buf, p->files[VM_FILE_BIOS].len,
-              p->files[VM_FILE_KERNEL].buf, p->files[VM_FILE_KERNEL].len,
-              p->cmdline,
-              p->files[VM_FILE_INITRD].buf, p->files[VM_FILE_INITRD].len);
-
-    return (VirtMachine *)s;
-
-}
-
-static void riscv_machine_end(VirtMachine *s1)
-{
-        void riscv_machine_end__part2084(VirtMachine *s1);
-    riscv_machine_end__part2084(s1);
-
-}
-
-
-static int riscv_machine_get_sleep_duration(VirtMachine *s1, int delay)
-{
-    RISCVMachine *m = (RISCVMachine *)s1;
-    RISCVCPUState *s = m->cpu_state;
-    int64_t delay1;
-
-
-    {
-        int riscv_machine_get_sleep_duration__part2086(RISCVMachine *m, int delay);
-        delay1 = riscv_machine_get_sleep_duration__part2086(m, delay);
-        delay = (int)delay1;
-    }
-    {
-    int riscv_machine_get_sleep_duration__part2087(RISCVCPUState *s, int delay);
-    delay = riscv_machine_get_sleep_duration__part2087(s, delay);
-}
-
-    int riscv_machine_get_sleep_duration__part2088(int delay);
-return riscv_machine_get_sleep_duration__part2088(delay);
-
-}
-
-static void riscv_machine_interp(VirtMachine *s1, int max_exec_cycle)
-{
-    void riscv_machine_interp__part2090(VirtMachine *s1, int max_exec_cycle);
-    riscv_machine_interp__part2090(s1, max_exec_cycle);
-
-}
+static void riscv_machine_interp(VirtMachine *s1, int max_exec_cycle);
 
 static void riscv_vm_send_key_event(VirtMachine *s1, BOOL is_down,
-                                    uint16_t key_code)
-{
-    RISCVMachine *s = (RISCVMachine *)s1;
-    void riscv_vm_send_key_event__part2092(RISCVMachine *s, BOOL is_down, uint16_t key_code);
-    riscv_vm_send_key_event__part2092(s, is_down, key_code);
+                                    uint16_t key_code);
 
-}
-
-static BOOL riscv_vm_mouse_is_absolute(VirtMachine *s)
-{
-    {
-    int riscv_vm_mouse_is_absolute__part2094(VirtMachine *s);
-    return riscv_vm_mouse_is_absolute__part2094(s);
-}
-
-}
+static BOOL riscv_vm_mouse_is_absolute(VirtMachine *s);
 
 static void riscv_vm_send_mouse_event(VirtMachine *s1, int dx, int dy, int dz,
-                                      unsigned int buttons)
-{
-    RISCVMachine *s = (RISCVMachine *)s1;
-    void riscv_vm_send_mouse_event__part2096(RISCVMachine *s, int dx, int dy, int dz, unsigned int buttons);
-riscv_vm_send_mouse_event__part2096(s, dx, dy, dz, buttons);
-}
+                                      unsigned int buttons);
 
 const VirtMachineClass riscv_machine_class = {
     "riscv32,riscv64,riscv128",

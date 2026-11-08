@@ -1,5 +1,136 @@
 //! From `slirp/ip_input.c`.
 
+// ── `ip_init` · slirp/ip_input.c:58-64 · chunk 2346 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     ip_init(Slirp *slirp)
+//     {
+//         slirp->ipq.ip_link.next = slirp->ipq.ip_link.prev = &slirp->ipq.ip_link;
+//         udp_init(slirp);
+//         tcp_init(slirp);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2346 {
+// Port of slirp/ip_input.c ip_init()
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+// struct qlink { void *next, *prev; };
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct ipq { struct qlink frag_link; struct qlink ip_link; uint8_t ipq_ttl;
+//              uint8_t ipq_p; uint16_t ipq_id; struct in_addr ipq_src, ipq_dst;
+//            } __attribute__((packed));
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: in_addr,
+    pub ipq_dst: in_addr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+// Opaque: only ever appears behind a pointer here.
+#[repr(C)]
+pub struct socket {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+// Prefix of struct Slirp: everything up to and including the fields touched here.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: in_addr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: timeval,
+    pub exec_list: *mut c_void,
+    pub m_freelist: mbuf,
+    pub m_usedlist: mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: mbuf,
+    pub if_batchq: mbuf,
+    pub next_m: *mut mbuf,
+    pub ipq: ipq,
+    pub ip_id: u16,
+}
+
+extern "C" {
+    fn udp_init(slirp: *mut Slirp);
+    fn tcp_init(slirp: *mut Slirp);
+}
+
+#[no_mangle]
+pub extern "C" fn ip_init(slirp: *mut Slirp) {
+    unsafe {
+        // slirp->ipq.ip_link.next = slirp->ipq.ip_link.prev = &slirp->ipq.ip_link;
+        let link = core::ptr::addr_of_mut!((*slirp).ipq.ip_link);
+        let q = qlink {
+            next: link as *mut c_void,
+            prev: link as *mut c_void,
+        };
+        core::ptr::write_unaligned(link, q);
+
+        udp_init(slirp);
+        tcp_init(slirp);
+    }
+}
+}
+
 // ── `slirp->ipq.ip_link.next = slirp->ipq.ip_link.prev = &slirp->ipq.ip_link; udp_init(slirp); tcp_i…` · slirp/ip_input.c:61-63 · chunk 2347 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -33,6 +164,701 @@ pub unsafe extern "C" fn ip_init__part2347(slirp: *mut c_void, ip_link: *mut Qli
     unsafe {
         udp_init(slirp);
         tcp_init(slirp);
+    }
+}
+}
+
+// ── `ip_input` · slirp/ip_input.c:70-233 · chunk 2348 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     ip_input(struct mbuf *m)
+//     {
+//      Slirp *slirp = m->slirp;
+//      register struct ip *ip;
+//      int hlen;
+//     
+//      ;
+//      ;
+//      ;
+//     
+//      if (m->m_hdr.mh_len < sizeof (struct ip)) {
+//       return;
+//      }
+//     
+//      ip = ((struct ip *)(m)->m_hdr.mh_data);
+//     
+//      if (ip->ip_v != 4) {
+//       goto bad;
+//      }
+//     
+//      hlen = ip->ip_hl << 2;
+//      if (hlen<sizeof(struct ip ) || hlen>m->m_hdr.mh_len) {
+//        goto bad;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      if(cksum(m,hlen)) {
+//        goto bad;
+//      }
+//     
+//     
+//     
+//     
+//      ((ip->ip_len) = ntohs((uint16_t)(ip->ip_len)));
+//      if (ip->ip_len < hlen) {
+//       goto bad;
+//      }
+//      ((ip->ip_id) = ntohs((uint16_t)(ip->ip_id)));
+//      ((ip->ip_off) = ntohs((uint16_t)(ip->ip_off)));
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (m->m_hdr.mh_len < ip->ip_len) {
+//       goto bad;
+//      }
+//     
+//         if (slirp->restricted) {
+//             if ((ip->ip_dst.s_addr & slirp->vnetwork_mask.s_addr) ==
+//                 slirp->vnetwork_addr.s_addr) {
+//                 if (ip->ip_dst.s_addr == 0xffffffff && ip->ip_p != 
+//                                                                   IPPROTO_UDP
+//                                                                              )
+//                     goto bad;
+//             } else {
+//                 uint32_t inv_mask = ~slirp->vnetwork_mask.s_addr;
+//                 struct ex_list *ex_ptr;
+//     
+//                 if ((ip->ip_dst.s_addr & inv_mask) == inv_mask) {
+//                     goto bad;
+//                 }
+//                 for (ex_ptr = slirp->exec_list; ex_ptr; ex_ptr = ex_ptr->ex_next)
+//                     if (ex_ptr->ex_addr.s_addr == ip->ip_dst.s_addr)
+//                         break;
+//     
+//                 if (!ex_ptr)
+//                     goto bad;
+//             }
+//         }
+//     
+//     
+//      if (m->m_hdr.mh_len > ip->ip_len)
+//         m_adj(m, ip->ip_len - m->m_hdr.mh_len);
+//     
+//     
+//      if(ip->ip_ttl==0) {
+//        icmp_error(m, 11,0, 0,"ttl");
+//        goto bad;
+//      }
+//      if (ip->ip_off &~ 0x4000) {
+//        register struct ipq *fp;
+//           struct qlink *l;
+//     
+//     
+//     
+//     
+//       for (l = slirp->ipq.ip_link.next; l != &slirp->ipq.ip_link;
+//            l = l->next) {
+//                 fp = ({ const typeof( ((struct ipq *)0)->ip_link ) *__mptr = (l); (struct ipq *)( (char *)__mptr - 
+//                     __builtin_offsetof (
+//                     struct ipq
+//                     , 
+//                     ip_link
+//                     ) 
+//                     );});
+//                 if (ip->ip_id == fp->ipq_id &&
+//                         ip->ip_src.s_addr == fp->ipq_src.s_addr &&
+//                         ip->ip_dst.s_addr == fp->ipq_dst.s_addr &&
+//                         ip->ip_p == fp->ipq_p)
+//           goto found;
+//             }
+//             fp = 
+//                 ((void *)0)
+//                     ;
+//      found:
+//     
+//     
+//     
+//     
+//     
+//     
+//       ip->ip_len -= hlen;
+//       if (ip->ip_off & 0x2000)
+//         ip->ip_tos |= 1;
+//       else
+//         ip->ip_tos &= ~1;
+//     
+//       ip->ip_off <<= 3;
+//     
+//     
+//     
+//     
+//     
+//     
+//       if (ip->ip_tos & 1 || ip->ip_off) {
+//        ip = ip_reass(slirp, ip, fp);
+//                             if (ip == 
+//                                      ((void *)0)
+//                                          )
+//         return;
+//        m = dtom(slirp, ip);
+//       } else
+//        if (fp)
+//              ip_freef(slirp, fp);
+//     
+//      } else
+//       ip->ip_len -= hlen;
+//     
+//     
+//     
+//     
+//      switch (ip->ip_p) {
+//       case 
+//           IPPROTO_TCP
+//                      :
+//       tcp_input(m, hlen, (struct socket *)
+//                                          ((void *)0)
+//                                              );
+//       break;
+//       case 
+//           IPPROTO_UDP
+//                      :
+//       udp_input(m, hlen);
+//       break;
+//       case 
+//           IPPROTO_ICMP
+//                       :
+//       icmp_input(m, hlen);
+//       break;
+//       default:
+//       m_free(m);
+//      }
+//      return;
+//     bad:
+//      m_free(m);
+//      return;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2348 {
+// Rust port of slirp's ip_input() (slirp/ip_input.c lines 70-233).
+// The static helpers used by it (ip_reass, ip_freef, ip_enq, ip_deq) have no
+// linker symbol, so their logic is ported here as private Rust functions.
+
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+#![allow(unused_assignments)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::ptr::{addr_of, null_mut};
+
+// ---------------------------------------------------------------- structures
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct TimeVal {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+// struct m_hdr
+#[repr(C)]
+pub struct Mhdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut c_void,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+// struct mbuf (the trailing union M_dat is modelled by its pointer member,
+// which lives at the same address and has the same size/alignment)
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: Mhdr,
+    pub slirp: *mut Slirp,
+    pub m_ext: *mut c_char,
+}
+
+// struct ip -- packed, with "u_int ip_hl:4, ip_v:4;" in the first byte
+#[repr(C, packed)]
+pub struct Ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+#[repr(C, packed)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+pub struct Ipq {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C, packed)]
+pub struct Ipasfrag {
+    pub ipf_link: Qlink,
+    pub ipf_ip: Ip,
+}
+
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+// Prefix of struct Slirp that is actually touched here (everything up to and
+// including ipq); layout of a repr(C) prefix matches the C layout.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: TimeVal,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: Ipq,
+    pub ip_id: u16,
+}
+
+// -------------------------------------------------------------------- externs
+
+extern "C" {
+    fn cksum(m: *mut Mbuf, len: c_int) -> c_int;
+    fn m_adj(m: *mut Mbuf, len: c_int);
+    fn m_free(m: *mut Mbuf);
+    fn m_get(slirp: *mut Slirp) -> *mut Mbuf;
+    fn m_cat(m: *mut Mbuf, n: *mut Mbuf);
+    fn dtom(slirp: *mut Slirp, dat: *mut c_void) -> *mut Mbuf;
+    fn icmp_error(msrc: *mut Mbuf, typ: u8, code: u8, minsize: c_int, message: *const c_char);
+    fn tcp_input(m: *mut Mbuf, len: c_int, so: *mut c_void);
+    fn udp_input(m: *mut Mbuf, len: c_int);
+    fn icmp_input(m: *mut Mbuf, len: c_int);
+    fn slirp_insque(a: *mut c_void, b: *mut c_void);
+    fn slirp_remque(a: *mut c_void);
+}
+
+// -------------------------------------------------------------- small helpers
+
+const IPVERSION: c_int = 4;
+const IP_DF: u16 = 0x4000;
+const IP_MF: u16 = 0x2000;
+const IPPROTO_ICMP: c_int = 1;
+const IPPROTO_TCP: c_int = 6;
+const IPPROTO_UDP: c_int = 17;
+const ICMP_TIMXCEED: u8 = 11;
+const ICMP_TIMXCEED_INTRANS: u8 = 0;
+const M_EXT: c_int = 0x01;
+const IPFRAGTTL: u8 = 60;
+
+#[inline]
+fn ip_size() -> c_int {
+    core::mem::size_of::<Ip>() as c_int
+}
+
+#[inline]
+fn qlink_size() -> isize {
+    core::mem::size_of::<Qlink>() as isize
+}
+
+// &slirp->ipq
+#[inline]
+unsafe fn slirp_ipq(slirp: *mut Slirp) -> *mut Ipq {
+    addr_of!((*slirp).ipq) as *mut Ipq
+}
+
+// &fp->ip_link  (packed: ip_link follows frag_link with no padding)
+#[inline]
+unsafe fn ipq_ip_link(fp: *mut Ipq) -> *mut Qlink {
+    (fp as *mut c_char).add(qlink_size() as usize) as *mut Qlink
+}
+
+// m->m_dat  (address of the M_dat union)
+#[inline]
+unsafe fn mbuf_dat(m: *mut Mbuf) -> *mut c_char {
+    addr_of!((*m).m_ext) as *mut c_char
+}
+
+// iptofrag(P) / fragtoip(P)
+#[inline]
+unsafe fn iptofrag(p: *mut Ip) -> *mut Ipasfrag {
+    (p as *mut c_char).sub(qlink_size() as usize) as *mut Ipasfrag
+}
+
+#[inline]
+unsafe fn fragtoip(p: *mut Ipasfrag) -> *mut Ip {
+    (p as *mut c_char).add(qlink_size() as usize) as *mut Ip
+}
+
+#[inline]
+unsafe fn ip_hl(ip: *mut Ip) -> c_int {
+    (((*ip).ip_hl_v & 0x0f) as c_int) << 2
+}
+
+// ------------------------------------------------------- static-C helpers
+
+// ip_enq(): like insque, but pointers in the middle of the structure
+unsafe fn ip_enq(p: *mut Ipasfrag, prev: *mut Ipasfrag) {
+    (*p).ipf_link.prev = prev as *mut c_void;
+    (*p).ipf_link.next = (*prev).ipf_link.next;
+    let next = (*prev).ipf_link.next as *mut Ipasfrag;
+    (*next).ipf_link.prev = p as *mut c_void;
+    (*prev).ipf_link.next = p as *mut c_void;
+}
+
+// ip_deq(): to ip_enq as remque is to insque
+unsafe fn ip_deq(p: *mut Ipasfrag) {
+    let prev = (*p).ipf_link.prev as *mut Ipasfrag;
+    let next = (*p).ipf_link.next as *mut Ipasfrag;
+    (*prev).ipf_link.next = (*p).ipf_link.next;
+    (*next).ipf_link.prev = (*p).ipf_link.prev;
+}
+
+// ip_freef(): free a fragment reassembly header and all associated datagrams
+unsafe fn ip_freef(slirp: *mut Slirp, fp: *mut Ipq) {
+    let head = fp as *mut Ipasfrag;
+    let mut q = (*fp).frag_link.next as *mut Ipasfrag;
+    while q != head {
+        let p = (*q).ipf_link.next as *mut Ipasfrag;
+        ip_deq(q);
+        m_free(dtom(slirp, q as *mut c_void));
+        q = p;
+    }
+    slirp_remque(ipq_ip_link(fp) as *mut c_void);
+    m_free(dtom(slirp, fp as *mut c_void));
+}
+
+// ip_reass(): try to reassemble an incoming fragment into a whole datagram
+unsafe fn ip_reass(slirp: *mut Slirp, ip_in: *mut Ip, fp_in: *mut Ipq) -> *mut Ip {
+    let mut ip = ip_in;
+    let mut fp = fp_in;
+    let mut m: *mut Mbuf = dtom(slirp, ip as *mut c_void);
+    let hlen: c_int = ip_hl(ip);
+    let mut q: *mut Ipasfrag;
+    let mut next: c_int;
+
+    // Presence of header sizes in mbufs would confuse code below.
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(hlen as isize);
+    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_sub(hlen);
+
+    if fp.is_null() {
+        // First fragment to arrive: create a reassembly queue.
+        let t = m_get(slirp);
+        if t.is_null() {
+            // dropfrag
+            m_free(m);
+            return null_mut();
+        }
+        fp = (*t).m_hdr.mh_data as *mut Ipq;
+        slirp_insque(
+            ipq_ip_link(fp) as *mut c_void,
+            ipq_ip_link(slirp_ipq(slirp)) as *mut c_void,
+        );
+        (*fp).ipq_ttl = IPFRAGTTL;
+        (*fp).ipq_p = (*ip).ip_p;
+        (*fp).ipq_id = (*ip).ip_id;
+        (*fp).frag_link.next = fp as *mut c_void;
+        (*fp).frag_link.prev = fp as *mut c_void;
+        (*fp).ipq_src = (*ip).ip_src;
+        (*fp).ipq_dst = (*ip).ip_dst;
+        q = fp as *mut Ipasfrag;
+    } else {
+        let head = fp as *mut Ipasfrag;
+
+        // Find a segment which begins after this one does.
+        q = (*fp).frag_link.next as *mut Ipasfrag;
+        while q != head {
+            if ((*q).ipf_ip.ip_off as c_int) > ((*ip).ip_off as c_int) {
+                break;
+            }
+            q = (*q).ipf_link.next as *mut Ipasfrag;
+        }
+
+        // If there is a preceding segment, it may provide some of our data
+        // already; if so drop the data from the incoming segment, and if it
+        // provides all of it, drop us.
+        if ((*q).ipf_link.prev as *mut Ipasfrag) != head {
+            let pq = (*q).ipf_link.prev as *mut Ipasfrag;
+            let i: c_int = ((*pq).ipf_ip.ip_off as c_int)
+                .wrapping_add((*pq).ipf_ip.ip_len as c_int)
+                .wrapping_sub((*ip).ip_off as c_int);
+            if i > 0 {
+                if i >= (*ip).ip_len as c_int {
+                    // dropfrag
+                    m_free(m);
+                    return null_mut();
+                }
+                m_adj(dtom(slirp, ip as *mut c_void), i);
+                (*ip).ip_off = ((*ip).ip_off as c_int).wrapping_add(i) as u16;
+                (*ip).ip_len = ((*ip).ip_len as c_int).wrapping_sub(i) as u16;
+            }
+        }
+
+        // While we overlap succeeding segments trim them or, if they are
+        // completely covered, dequeue them.
+        while q != head
+            && ((*ip).ip_off as c_int).wrapping_add((*ip).ip_len as c_int)
+                > (*q).ipf_ip.ip_off as c_int
+        {
+            let i: c_int = ((*ip).ip_off as c_int)
+                .wrapping_add((*ip).ip_len as c_int)
+                .wrapping_sub((*q).ipf_ip.ip_off as c_int);
+            if i < (*q).ipf_ip.ip_len as c_int {
+                (*q).ipf_ip.ip_len = ((*q).ipf_ip.ip_len as c_int).wrapping_sub(i) as u16;
+                (*q).ipf_ip.ip_off = ((*q).ipf_ip.ip_off as c_int).wrapping_add(i) as u16;
+                m_adj(dtom(slirp, q as *mut c_void), i);
+                break;
+            }
+            q = (*q).ipf_link.next as *mut Ipasfrag;
+            let prevp = (*q).ipf_link.prev;
+            m_free(dtom(slirp, prevp));
+            ip_deq(prevp as *mut Ipasfrag);
+        }
+    }
+
+    // insert: stick the new segment in its place, check for completion
+    let head = fp as *mut Ipasfrag;
+    ip_enq(iptofrag(ip), (*q).ipf_link.prev as *mut Ipasfrag);
+
+    next = 0;
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+    while q != head {
+        if (*q).ipf_ip.ip_off as c_int != next {
+            return null_mut();
+        }
+        next = next.wrapping_add((*q).ipf_ip.ip_len as c_int);
+        q = (*q).ipf_link.next as *mut Ipasfrag;
+    }
+    // here q == &fp->frag_link, so q->prev is the last fragment
+    let last = (*q).ipf_link.prev as *mut Ipasfrag;
+    if ((*last).ipf_ip.ip_tos & 1) != 0 {
+        return null_mut();
+    }
+
+    // Reassembly is complete; concatenate the fragments.
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+    m = dtom(slirp, q as *mut c_void);
+
+    q = (*q).ipf_link.next as *mut Ipasfrag;
+    while q != head {
+        let t = dtom(slirp, q as *mut c_void);
+        q = (*q).ipf_link.next as *mut Ipasfrag;
+        m_cat(m, t);
+    }
+
+    // Create the header for the new ip packet from the first packet's header.
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+
+    // If the fragments concatenated into an M_EXT buffer, q must be moved
+    // into the new buffer.
+    if ((*m).m_hdr.mh_flags & M_EXT) != 0 {
+        let delta = (q as *mut c_char as isize) - (mbuf_dat(m) as isize);
+        q = ((*m).m_ext as isize).wrapping_add(delta) as *mut Ipasfrag;
+    }
+
+    ip = fragtoip(q);
+    (*ip).ip_len = next as u16;
+    (*ip).ip_tos &= !1u8;
+    (*ip).ip_src = (*fp).ipq_src;
+    (*ip).ip_dst = (*fp).ipq_dst;
+    slirp_remque(ipq_ip_link(fp) as *mut c_void);
+    m_free(dtom(slirp, fp as *mut c_void));
+    let hl = ip_hl(ip);
+    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(hl);
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(-(hl as isize));
+
+    ip
+}
+
+// ------------------------------------------------------------------ ip_input
+
+// Returns false for the C "goto bad" path (mbuf must be freed), true for the
+// plain "return" paths (mbuf ownership was passed on / taken over).
+unsafe fn ip_input_body(m_in: *mut Mbuf) -> bool {
+    let mut m: *mut Mbuf = m_in;
+    let slirp: *mut Slirp = (*m).slirp;
+    let mut ip: *mut Ip = (*m).m_hdr.mh_data as *mut Ip;
+
+    if ((*ip).ip_hl_v >> 4) as c_int != IPVERSION {
+        return false;
+    }
+
+    let hlen: c_int = ip_hl(ip);
+    if hlen < ip_size() || hlen > (*m).m_hdr.mh_len {
+        return false;
+    }
+
+    // keep ip header intact for ICMP reply
+    if cksum(m, hlen) != 0 {
+        return false;
+    }
+
+    // Convert fields to host representation.
+    (*ip).ip_len = u16::from_be((*ip).ip_len);
+    if ((*ip).ip_len as c_int) < hlen {
+        return false;
+    }
+    (*ip).ip_id = u16::from_be((*ip).ip_id);
+    (*ip).ip_off = u16::from_be((*ip).ip_off);
+
+    // The amount of data in the buffers must be at least what the IP header
+    // would have us expect.
+    if (*m).m_hdr.mh_len < (*ip).ip_len as c_int {
+        return false;
+    }
+
+    if (*slirp).restricted != 0 {
+        let dst: u32 = (*ip).ip_dst.s_addr;
+        if (dst & (*slirp).vnetwork_mask.s_addr) == (*slirp).vnetwork_addr.s_addr {
+            if dst == 0xffff_ffffu32 && (*ip).ip_p as c_int != IPPROTO_UDP {
+                return false;
+            }
+        } else {
+            let inv_mask: u32 = !(*slirp).vnetwork_mask.s_addr;
+            if (dst & inv_mask) == inv_mask {
+                return false;
+            }
+            let mut ex_ptr: *mut ExList = (*slirp).exec_list;
+            while !ex_ptr.is_null() {
+                if (*ex_ptr).ex_addr.s_addr == dst {
+                    break;
+                }
+                ex_ptr = (*ex_ptr).ex_next;
+            }
+            if ex_ptr.is_null() {
+                return false;
+            }
+        }
+    }
+
+    // Should drop packet if mbuf too long? hmmm...
+    if (*m).m_hdr.mh_len > (*ip).ip_len as c_int {
+        m_adj(m, ((*ip).ip_len as c_int).wrapping_sub((*m).m_hdr.mh_len));
+    }
+
+    // check ip_ttl for a correct ICMP reply
+    if (*ip).ip_ttl == 0 {
+        icmp_error(
+            m,
+            ICMP_TIMXCEED,
+            ICMP_TIMXCEED_INTRANS,
+            0,
+            b"ttl\0".as_ptr() as *const c_char,
+        );
+        return false;
+    }
+
+    // If offset or IP_MF are set, must reassemble.
+    if ((*ip).ip_off & !IP_DF) != 0 {
+        let ipq_link: *mut Qlink = ipq_ip_link(slirp_ipq(slirp));
+        let mut fp: *mut Ipq = null_mut();
+
+        // Look for a queue of fragments of this datagram.
+        let mut l: *mut Qlink = (*ipq_link).next as *mut Qlink;
+        while l != ipq_link {
+            let cand = (l as *mut c_char).sub(qlink_size() as usize) as *mut Ipq;
+            if (*ip).ip_id == (*cand).ipq_id
+                && (*ip).ip_src.s_addr == (*cand).ipq_src.s_addr
+                && (*ip).ip_dst.s_addr == (*cand).ipq_dst.s_addr
+                && (*ip).ip_p == (*cand).ipq_p
+            {
+                fp = cand; // found:
+                break;
+            }
+            l = (*l).next as *mut Qlink;
+        }
+
+        // Adjust ip_len to not reflect the header, set ip_tos bit 0 if more
+        // fragments are expected, and convert the offset to bytes.
+        (*ip).ip_len = (*ip).ip_len.wrapping_sub(hlen as u16);
+        if ((*ip).ip_off & IP_MF) != 0 {
+            (*ip).ip_tos |= 1u8;
+        } else {
+            (*ip).ip_tos &= !1u8;
+        }
+        (*ip).ip_off = (((*ip).ip_off as c_int) << 3) as u16;
+
+        if ((*ip).ip_tos & 1) != 0 || (*ip).ip_off != 0 {
+            ip = ip_reass(slirp, ip, fp);
+            if ip.is_null() {
+                return true;
+            }
+            m = dtom(slirp, ip as *mut c_void);
+        } else if !fp.is_null() {
+            ip_freef(slirp, fp);
+        }
+    } else {
+        (*ip).ip_len = (*ip).ip_len.wrapping_sub(hlen as u16);
+    }
+
+    // Switch out to the protocol's input routine.
+    match (*ip).ip_p as c_int {
+        IPPROTO_TCP => tcp_input(m, hlen, null_mut()),
+        IPPROTO_UDP => udp_input(m, hlen),
+        IPPROTO_ICMP => icmp_input(m, hlen),
+        _ => {
+            m_free(m);
+        }
+    }
+    true
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_input(m: *mut Mbuf) {
+    if (*m).m_hdr.mh_len < ip_size() {
+        return;
+    }
+    if !ip_input_body(m) {
+        // bad:
+        m_free(m);
     }
 }
 }
@@ -1079,6 +1905,505 @@ pub mod chunk2367 {
 #[no_mangle]
 pub extern "C" fn ip_input__part2367() {
     // The C caller performs the return itself; nothing to do here.
+}
+}
+
+// ── `ip_reass` · slirp/ip_input.c:243-392 · chunk 2368 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static struct ip *
+//     ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp)
+//     {
+//      register struct mbuf *m = dtom(slirp, ip);
+//      register struct ipasfrag *q;
+//      int hlen = ip->ip_hl << 2;
+//      int i, next;
+//     
+//      ;
+//      ;
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//     
+//     
+//      m->m_hdr.mh_data += hlen;
+//      m->m_hdr.mh_len -= hlen;
+//     
+//     
+//     
+//     
+//             if (fp == 
+//                      ((void *)0)
+//                          ) {
+//        struct mbuf *t = m_get(slirp);
+//     
+//        if (t == 
+//                ((void *)0)
+//                    ) {
+//            goto dropfrag;
+//        }
+//        fp = ((struct ipq *)(t)->m_hdr.mh_data);
+//        slirp_insque(&fp->ip_link, &slirp->ipq.ip_link);
+//        fp->ipq_ttl = 60;
+//        fp->ipq_p = ip->ip_p;
+//        fp->ipq_id = ip->ip_id;
+//        fp->frag_link.next = fp->frag_link.prev = &fp->frag_link;
+//        fp->ipq_src = ip->ip_src;
+//        fp->ipq_dst = ip->ip_dst;
+//        q = (struct ipasfrag *)fp;
+//        goto insert;
+//      }
+//     
+//     
+//     
+//     
+//      for (q = fp->frag_link.next; q != (struct ipasfrag *)&fp->frag_link;
+//                 q = q->ipf_link.next)
+//       if (q->ipf_ip.ip_off > ip->ip_off)
+//        break;
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (q->ipf_link.prev != &fp->frag_link) {
+//             struct ipasfrag *pq = q->ipf_link.prev;
+//       i = pq->ipf_ip.ip_off + pq->ipf_ip.ip_len - ip->ip_off;
+//       if (i > 0) {
+//        if (i >= ip->ip_len)
+//         goto dropfrag;
+//        m_adj(dtom(slirp, ip), i);
+//        ip->ip_off += i;
+//        ip->ip_len -= i;
+//       }
+//      }
+//     
+//     
+//     
+//     
+//     
+//      while (q != (struct ipasfrag*)&fp->frag_link &&
+//                 ip->ip_off + ip->ip_len > q->ipf_ip.ip_off) {
+//       i = (ip->ip_off + ip->ip_len) - q->ipf_ip.ip_off;
+//       if (i < q->ipf_ip.ip_len) {
+//        q->ipf_ip.ip_len -= i;
+//        q->ipf_ip.ip_off += i;
+//        m_adj(dtom(slirp, q), i);
+//        break;
+//       }
+//       q = q->ipf_link.next;
+//       m_free(dtom(slirp, q->ipf_link.prev));
+//       ip_deq(q->ipf_link.prev);
+//      }
+//     
+//     insert:
+//     
+//     
+//     
+//     
+//      ip_enq(((struct ipasfrag *)(((char*)(ip)) - sizeof(struct qlink))), q->ipf_link.prev);
+//      next = 0;
+//      for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link;
+//                 q = q->ipf_link.next) {
+//       if (q->ipf_ip.ip_off != next)
+//                             return 
+//                                   ((void *)0)
+//                                       ;
+//       next += q->ipf_ip.ip_len;
+//      }
+//      if (((struct ipasfrag *)(q->ipf_link.prev))->ipf_ip.ip_tos & 1)
+//                     return 
+//                           ((void *)0)
+//                               ;
+//     
+//     
+//     
+//     
+//         q = fp->frag_link.next;
+//      m = dtom(slirp, q);
+//     
+//      q = (struct ipasfrag *) q->ipf_link.next;
+//      while (q != (struct ipasfrag*)&fp->frag_link) {
+//        struct mbuf *t = dtom(slirp, q);
+//        q = (struct ipasfrag *) q->ipf_link.next;
+//        m_cat(m, t);
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      q = fp->frag_link.next;
+//      if (m->m_hdr.mh_flags & 0x01) {
+//        int delta = (char *)q - m->M_dat.m_dat_;
+//        q = (struct ipasfrag *)(m->M_dat.m_ext_ + delta);
+//      }
+//     
+//         ip = ((struct ip*)(((char*)(q)) + sizeof(struct qlink)));
+//      ip->ip_len = next;
+//      ip->ip_tos &= ~1;
+//      ip->ip_src = fp->ipq_src;
+//      ip->ip_dst = fp->ipq_dst;
+//      slirp_remque(&fp->ip_link);
+//      (void) m_free(dtom(slirp, fp));
+//      m->m_hdr.mh_len += (ip->ip_hl << 2);
+//      m->m_hdr.mh_data -= (ip->ip_hl << 2);
+//     
+//      return ip;
+//     
+//     dropfrag:
+//      m_free(m);
+//             return 
+//                   ((void *)0)
+//                       ;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2368 {
+// Rust port of the static function ip_reass() from slirp/ip_input.c
+//
+// Reassembles incoming IP fragments.  Mirrors the C code exactly, including
+// the intrusive fragment queues (struct qlink based), the mbuf data window
+// adjustments and the M_EXT relocation logic.
+
+use std::os::raw::{c_char, c_int, c_long, c_void};
+
+// struct in_addr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+// struct qlink { void *next, *prev; }
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct m_hdr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct MbufHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut c_void,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+// struct mbuf; the union M_dat { char m_dat_[1]; char *m_ext_; } is modelled
+// by a single pointer-sized slot: reading the slot yields m_ext_, and the
+// address of the slot is what C's m_dat (the array) decays to.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Mbuf {
+    pub m_hdr: MbufHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+// struct ip (packed); the u_int ip_hl:4/ip_v:4 bitfield pair is modelled as
+// one byte, ip_hl being the low nibble on little endian.
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct Ip {
+    pub ip_hl: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+// struct ipq (packed)
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct IpQ {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+// struct ipasfrag (packed)
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct Ipasfrag {
+    pub ipf_link: Qlink,
+    pub ipf_ip: Ip,
+}
+
+// struct Slirp, mirrored field for field up to (and including) `ipq`, which is
+// the only member this function touches.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut c_void,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: IpQ,
+}
+
+extern "C" {
+    fn m_get(slirp: *mut Slirp) -> *mut Mbuf;
+    fn m_free(m: *mut Mbuf);
+    fn m_cat(m: *mut Mbuf, n: *mut Mbuf);
+    fn m_adj(m: *mut Mbuf, len: c_int);
+    fn dtom(slirp: *mut Slirp, dat: *mut c_void) -> *mut Mbuf;
+}
+
+// slirp misc.c insque(): works on struct quehead, identical in layout to qlink
+#[inline]
+unsafe fn insque(element: *mut Qlink, head: *mut Qlink) {
+    (*element).next = (*head).next;
+    (*head).next = element as *mut c_void;
+    (*element).prev = head as *mut c_void;
+    let e_next = (*element).next.cast::<Qlink>();
+    (*e_next).prev = element as *mut c_void;
+}
+
+// slirp misc.c remque()
+#[inline]
+unsafe fn remque(element: *mut Qlink) {
+    let e_next = (*element).next.cast::<Qlink>();
+    let e_prev = (*element).prev.cast::<Qlink>();
+    (*e_next).prev = (*element).prev;
+    (*e_prev).next = (*element).next;
+    (*element).prev = std::ptr::null_mut();
+}
+
+// static ip_enq(): put an ip fragment on a reassembly chain (like insque, but
+// the pointers live in the middle of the structure)
+#[inline]
+unsafe fn ip_enq(p: *mut Ipasfrag, prev: *mut Ipasfrag) {
+    let p_link = std::ptr::addr_of_mut!((*p).ipf_link);
+    let prev_link = std::ptr::addr_of_mut!((*prev).ipf_link);
+    (*p_link).prev = prev as *mut c_void;
+    (*p_link).next = (*prev_link).next;
+    let next = (*prev_link).next.cast::<Qlink>();
+    (*next).prev = p as *mut c_void;
+    (*prev_link).next = p as *mut c_void;
+}
+
+// static ip_deq(): inverse of ip_enq
+#[inline]
+unsafe fn ip_deq(p: *mut Ipasfrag) {
+    let p_link = std::ptr::addr_of_mut!((*p).ipf_link);
+    let next = (*p_link).next;
+    let prev = (*p_link).prev;
+    (*next.cast::<Qlink>()).next = next;
+    (*prev.cast::<Qlink>()).prev = prev;
+}
+
+// &fp->frag_link, viewed as the sentinel ipasfrag of the chain
+#[inline]
+unsafe fn frag_head(fp: *mut IpQ) -> *mut Ipasfrag {
+    std::ptr::addr_of_mut!((*fp).frag_link) as *mut Ipasfrag
+}
+
+#[inline]
+unsafe fn ip_hl_of(ip: *mut Ip) -> c_int {
+    // ip_hl bitfield: low nibble of the first byte on little endian
+    (std::ptr::addr_of!((*ip).ip_hl).read_unaligned() & 0x0f) as c_int
+}
+
+unsafe fn dropfrag(m: *mut Mbuf) -> *mut Ip {
+    // m_freem(m) is m_free(m)
+    m_free(m);
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_reass(slirp: *mut Slirp, ip: *mut Ip, fp: *mut IpQ) -> *mut Ip {
+    let mut m: *mut Mbuf = dtom(slirp, ip as *mut c_void);
+    let mut q: *mut Ipasfrag;
+    let hlen: c_int = ip_hl_of(ip) << 2;
+    let mut i: c_int;
+    let mut next: c_int;
+    let mut fp: *mut IpQ = fp;
+
+    // Presence of header sizes in mbufs would confuse the code below.
+    // Fragment m_data is concatenated.
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.wrapping_offset(hlen as isize);
+    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_sub(hlen);
+
+    // If first fragment to arrive, create a reassembly queue.
+    if fp.is_null() {
+        let t: *mut Mbuf = m_get(slirp);
+        if t.is_null() {
+            return dropfrag(m);
+        }
+        fp = (*t).m_hdr.mh_data as *mut IpQ;
+        let fp_ip_link = std::ptr::addr_of_mut!((*fp).ip_link);
+        let ipq_link = std::ptr::addr_of_mut!((*slirp).ipq.ip_link);
+        insque(fp_ip_link, ipq_link);
+        (*fp).ipq_ttl = 60;
+        (*fp).ipq_p = (*ip).ip_p;
+        (*fp).ipq_id = (*ip).ip_id;
+        let frag_link = std::ptr::addr_of_mut!((*fp).frag_link);
+        (*frag_link).next = frag_link as *mut c_void;
+        (*frag_link).prev = frag_link as *mut c_void;
+        let src = std::ptr::read_unaligned(std::ptr::addr_of!((*ip).ip_src));
+        let dst = std::ptr::read_unaligned(std::ptr::addr_of!((*ip).ip_dst));
+        std::ptr::write_unaligned(std::ptr::addr_of_mut!((*fp).ipq_src), src);
+        std::ptr::write_unaligned(std::ptr::addr_of_mut!((*fp).ipq_dst), dst);
+        // q = (struct ipasfrag *)fp; goto insert
+        q = fp as *mut Ipasfrag;
+    } else {
+        let head = frag_head(fp);
+
+        // Find a segment which begins after this one does.
+        q = (*fp).frag_link.next as *mut Ipasfrag;
+        while q != head {
+            if ((*q).ipf_ip.ip_off as c_int) > ((*ip).ip_off as c_int) {
+                break;
+            }
+            q = (*q).ipf_link.next as *mut Ipasfrag;
+        }
+
+        // If there is a preceding segment, it may provide some of our data
+        // already.  If so, drop the data from the incoming segment.  If it
+        // provides all of our data, drop us.
+        let pq = (*q).ipf_link.prev as *mut Ipasfrag;
+        if pq != head {
+            i = (*pq).ipf_ip.ip_off as c_int + (*pq).ipf_ip.ip_len as c_int
+                - (*ip).ip_off as c_int;
+            if i > 0 {
+                if i >= (*ip).ip_len as c_int {
+                    return dropfrag(m);
+                }
+                m_adj(dtom(slirp, ip as *mut c_void), i);
+                (*ip).ip_off = ((*ip).ip_off as c_int).wrapping_add(i) as u16;
+                (*ip).ip_len = ((*ip).ip_len as c_int).wrapping_sub(i) as u16;
+            }
+        }
+
+        // While we overlap succeeding segments trim them or, if they are
+        // completely covered, dequeue them.
+        while q != head
+            && ((*ip).ip_off as c_int + (*ip).ip_len as c_int) > (*q).ipf_ip.ip_off as c_int
+        {
+            i = ((*ip).ip_off as c_int + (*ip).ip_len as c_int)
+                - (*q).ipf_ip.ip_off as c_int;
+            if i < (*q).ipf_ip.ip_len as c_int {
+                let newlen = ((*q).ipf_ip.ip_len as c_int).wrapping_sub(i) as u16;
+                let newoff = ((*q).ipf_ip.ip_off as c_int).wrapping_add(i) as u16;
+                (*q).ipf_ip.ip_len = newlen;
+                (*q).ipf_ip.ip_off = newoff;
+                m_adj(dtom(slirp, q as *mut c_void), i);
+                break;
+            }
+            q = (*q).ipf_link.next as *mut Ipasfrag;
+            let dead = (*q).ipf_link.prev as *mut Ipasfrag;
+            m_free(dtom(slirp, dead as *mut c_void));
+            ip_deq(dead);
+        }
+    }
+
+    // insert:
+    // Stick new segment in its place; check for complete reassembly.
+    let head = frag_head(fp);
+    // iptofrag(ip): container_of(ip, struct ipasfrag, ipf_ip)
+    let iptofrag = (ip as *mut u8).wrapping_sub(std::mem::size_of::<Qlink>()) as *mut Ipasfrag;
+    ip_enq(iptofrag, (*q).ipf_link.prev as *mut Ipasfrag);
+    next = 0;
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+    while q != head {
+        if (*q).ipf_ip.ip_off as c_int != next {
+            return std::ptr::null_mut();
+        }
+        next = next.wrapping_add((*q).ipf_ip.ip_len as c_int);
+        q = (*q).ipf_link.next as *mut Ipasfrag;
+    }
+    let last = (*q).ipf_link.prev as *mut Ipasfrag;
+    if ((*last).ipf_ip.ip_tos & 1) != 0 {
+        return std::ptr::null_mut();
+    }
+
+    // Reassembly is complete; concatenate fragments.
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+    m = dtom(slirp, q as *mut c_void);
+
+    q = (*q).ipf_link.next as *mut Ipasfrag;
+    while q != head {
+        let t: *mut Mbuf = dtom(slirp, q as *mut c_void);
+        q = (*q).ipf_link.next as *mut Ipasfrag;
+        m_cat(m, t);
+    }
+
+    // Create header for new ip packet by modifying the header of the first
+    // packet; dequeue and discard the fragment reassembly header.
+    q = (*fp).frag_link.next as *mut Ipasfrag;
+
+    // If the fragments concatenated to an mbuf that's bigger than the total
+    // size of the fragment, then an m_ext buffer was alloced.  But
+    // fp->ipq_next points into the old buffer (in the mbuf), so we must point
+    // ip into the new buffer.
+    if ((*m).m_hdr.mh_flags & 0x01) != 0 {
+        // C: delta = (char *)q - m->m_dat  (m_dat is the address of the union)
+        let dat_addr = std::ptr::addr_of!((*m).m_dat) as *const u8;
+        let delta: isize = (q as *const u8 as isize).wrapping_sub(dat_addr as isize);
+        // C: m->m_ext is the union's pointer value
+        let m_ext = (*m).m_dat as *const u8;
+        q = m_ext.wrapping_offset(delta) as *mut Ipasfrag;
+    }
+
+    // ip = fragtoip(q)
+    let newip: *mut Ip = (q as *mut u8).wrapping_add(std::mem::size_of::<Qlink>()) as *mut Ip;
+    (*newip).ip_len = next as u16;
+    (*newip).ip_tos &= 0xfe;
+    let src = std::ptr::read_unaligned(std::ptr::addr_of!((*fp).ipq_src));
+    let dst = std::ptr::read_unaligned(std::ptr::addr_of!((*fp).ipq_dst));
+    std::ptr::write_unaligned(std::ptr::addr_of_mut!((*newip).ip_src), src);
+    std::ptr::write_unaligned(std::ptr::addr_of_mut!((*newip).ip_dst), dst);
+    remque(std::ptr::addr_of_mut!((*fp).ip_link));
+    m_free(dtom(slirp, fp as *mut c_void));
+    let newhlen: c_int = ip_hl_of(newip) << 2;
+    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(newhlen);
+    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.wrapping_offset(-(newhlen as isize));
+
+    newip
 }
 }
 
@@ -2428,6 +3753,89 @@ pub extern "C" fn ip_reass__part2384() -> *mut c_void {
 }
 }
 
+// ── `ip_freef` · slirp/ip_input.c:398-410 · chunk 2385 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void
+//     ip_freef(Slirp *slirp, struct ipq *fp)
+//     {
+//      register struct ipasfrag *q, *p;
+//     
+//      for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = p) {
+//       p = q->ipf_link.next;
+//       ip_deq(q);
+//       m_free(dtom(slirp, q));
+//      }
+//      slirp_remque(&fp->ip_link);
+//      (void) m_free(dtom(slirp, fp));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2385 {
+// Port of slirp/ip_input.c ip_freef()
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::c_void;
+
+// Opaque Slirp structure; only the pointer is passed around.
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    // remaining fields (ipq_ttl, ipq_p, ipq_id, ipq_src, ipq_dst) are unused here
+}
+
+#[repr(C)]
+pub struct ipasfrag {
+    pub ipf_link: qlink,
+    // struct ip ipf_ip follows; unused here
+}
+
+extern "C" {
+    fn m_free(m: *mut c_void);
+    fn dtom(slirp: *mut Slirp, dat: *mut c_void) -> *mut c_void;
+    fn slirp_remque(el: *mut c_void);
+}
+
+// Equivalent of the (previously static) C helper ip_deq().
+unsafe fn ip_deq(p: *mut ipasfrag) {
+    let prev = (*p).ipf_link.prev as *mut ipasfrag;
+    let next = (*p).ipf_link.next as *mut ipasfrag;
+    if !prev.is_null() {
+        (*prev).ipf_link.next = (*p).ipf_link.next;
+    }
+    if !next.is_null() {
+        (*next).ipf_link.prev = (*p).ipf_link.prev;
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_freef(slirp: *mut Slirp, fp: *mut ipq) {
+    let head: *mut ipasfrag = core::ptr::addr_of_mut!((*fp).frag_link) as *mut ipasfrag;
+    let mut q: *mut ipasfrag = (*fp).frag_link.next as *mut ipasfrag;
+
+    while q != head {
+        let p: *mut ipasfrag = (*q).ipf_link.next as *mut ipasfrag;
+        ip_deq(q);
+        m_free(dtom(slirp, q as *mut c_void));
+        q = p;
+    }
+
+    slirp_remque(core::ptr::addr_of_mut!((*fp).ip_link) as *mut c_void);
+    m_free(dtom(slirp, fp as *mut c_void));
+}
+}
+
 // ── `for (q = fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = p)` · slirp/ip_input.c:403-407 · chunk 2386 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2580,6 +3988,49 @@ pub unsafe extern "C" fn ip_freef__part2387(slirp: *mut c_void, fp: *mut IpQ) {
 }
 }
 
+// ── `ip_enq` · slirp/ip_input.c:416-425 · chunk 2388 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void
+//     ip_enq(register struct ipasfrag *p, register struct ipasfrag *prev)
+//     {
+//      ;
+//      ;
+//      p->ipf_link.prev = prev;
+//      p->ipf_link.next = prev->ipf_link.next;
+//      ((struct ipasfrag *)(prev->ipf_link.next))->ipf_link.prev = p;
+//      prev->ipf_link.next = p;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2388 {
+// Port of slirp/ip_input.c ip_enq(): put an ip fragment on a reassembly chain.
+// Like insque, but the queue pointers live in the middle of the structure.
+
+use core::ffi::c_void;
+
+#[repr(C)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct ipasfrag is packed; ipf_link sits at offset 0, so only the link is used here.
+#[repr(C)]
+pub struct IpAsfrag {
+    pub ipf_link: Qlink,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_enq(p: *mut IpAsfrag, prev: *mut IpAsfrag) {
+    let next: *mut IpAsfrag = (*prev).ipf_link.next as *mut IpAsfrag;
+
+    (*p).ipf_link.prev = prev as *mut c_void;
+    (*p).ipf_link.next = next as *mut c_void;
+    (*next).ipf_link.prev = p as *mut c_void;
+    (*prev).ipf_link.next = p as *mut c_void;
+}
+}
+
 // ── `; ; p->ipf_link.prev = prev; p->ipf_link.next = prev->ipf_link.next; ((struct ipasfrag *)(prev-…` · slirp/ip_input.c:419-424 · chunk 2389 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2615,6 +4066,65 @@ pub unsafe extern "C" fn ip_enq__part2389(p: *mut IpasFrag, prev: *mut IpasFrag)
 }
 }
 
+// ── `ip_deq` · slirp/ip_input.c:430-435 · chunk 2390 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void
+//     ip_deq(register struct ipasfrag *p)
+//     {
+//      ((struct ipasfrag *)(p->ipf_link.prev))->ipf_link.next = p->ipf_link.next;
+//      ((struct ipasfrag *)(p->ipf_link.next))->ipf_link.prev = p->ipf_link.prev;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2390 {
+// Port of slirp/ip_input.c: ip_deq
+//
+// static void ip_deq(register struct ipasfrag *p)
+// {
+//     ((struct ipasfrag *)(p->ipf_link.prev))->ipf_link.next = p->ipf_link.next;
+//     ((struct ipasfrag *)(p->ipf_link.next))->ipf_link.prev = p->ipf_link.prev;
+// }
+//
+// struct qlink { void *next, *prev; }   and  struct ipasfrag { struct qlink ipf_link; ... }
+// are both 1-byte aligned (packed), and ipf_link is the first member of ipasfrag,
+// so the link pointers can be read/written at the address of the ipasfrag itself.
+
+use core::ffi::c_void;
+use core::ptr;
+
+#[repr(C, packed)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+pub struct Ipasfrag {
+    pub ipf_link: Qlink,
+    // remaining members (struct ip ipf_ip) are never touched by ip_deq
+}
+
+#[no_mangle]
+pub extern "C" fn ip_deq(p: *mut Ipasfrag) {
+    if p.is_null() {
+        return;
+    }
+    unsafe {
+        // qlink sits at offset 0 of the (packed) ipasfrag, so the pointer to the
+        // neighbouring ipasfrag is also a pointer to the neighbouring qlink.
+        let link: Qlink = ptr::read_unaligned(p as *const Qlink);
+        let prev_link = link.prev as *mut Qlink;
+        let next_link = link.next as *mut Qlink;
+        if !prev_link.is_null() {
+            ptr::write_unaligned(ptr::addr_of_mut!((*prev_link).next), link.next);
+        }
+        if !next_link.is_null() {
+            ptr::write_unaligned(ptr::addr_of_mut!((*next_link).prev), link.prev);
+        }
+    }
+}
+}
+
 // ── `((struct ipasfrag *)(p->ipf_link.prev))->ipf_link.next = p->ipf_link.next; ((struct ipasfrag *)…` · slirp/ip_input.c:433-434 · chunk 2391 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2639,6 +4149,313 @@ pub extern "C" fn ip_deq__part2391(p: *mut c_void) {
         (*(prev as *mut Qlink)).next = (*q).next;
         let next = (*q).next;
         (*(next as *mut Qlink)).prev = (*q).prev;
+    }
+}
+}
+
+// ── `ip_slowtimo` · slirp/ip_input.c:442-461 · chunk 2392 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     ip_slowtimo(Slirp *slirp)
+//     {
+//         struct qlink *l;
+//     
+//      ;
+//     
+//         l = slirp->ipq.ip_link.next;
+//     
+//             if (l == 
+//                     ((void *)0)
+//                         )
+//         return;
+//     
+//         while (l != &slirp->ipq.ip_link) {
+//             struct ipq *fp = ({ const typeof( ((struct ipq *)0)->ip_link ) *__mptr = (l); (struct ipq *)( (char *)__mptr - 
+//                             __builtin_offsetof (
+//                             struct ipq
+//                             , 
+//                             ip_link
+//                             ) 
+//                             );});
+//             l = l->next;
+//       if (--fp->ipq_ttl == 0) {
+//        ip_freef(slirp, fp);
+//       }
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2392 {
+// Rust port of slirp ip_slowtimo() (plus the static ip_freef()/ip_deq() it uses).
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_int, c_uint, c_void};
+
+// ---------------------------------------------------------------------------
+// C structs, mirrored from the preprocessed translation unit.
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct timeval {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// __attribute__((packed)) in C: qlink, qlink, u8, u8, u16, in_addr, in_addr.
+// Only addressed via pointer arithmetic here (no references to its fields).
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: in_addr,
+    pub ipq_dst: in_addr,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut i8,
+    pub sb_rptr: *mut i8,
+    pub sb_data: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut i8,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union M_dat {
+    pub m_dat_: [i8; 1],
+    pub m_ext_: *mut i8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[repr(C)]
+pub struct ex_list {
+    pub ex_pty: c_int,
+    pub ex_addr: in_addr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const i8,
+    pub ex_next: *mut ex_list,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct BOOTPClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct tftp_session {
+    pub slirp: *mut Slirp,
+    pub filename: *mut i8,
+    pub client_ip: in_addr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: in_addr,
+    pub client_hostname: [i8; 33],
+    pub restricted: c_int,
+    pub tt: timeval,
+    pub exec_list: *mut ex_list,
+    pub m_freelist: mbuf,
+    pub m_usedlist: mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: mbuf,
+    pub if_batchq: mbuf,
+    pub next_m: *mut mbuf,
+    pub ipq: ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BOOTPClient; 16],
+    pub bootp_filename: *mut i8,
+    pub tcb: socket,
+    pub tcp_last_so: *mut socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: socket,
+    pub udp_last_so: *mut socket,
+    pub tftp_prefix: *mut i8,
+    pub tftp_sessions: [tftp_session; 3],
+    pub opaque: *mut c_void,
+}
+
+// ---------------------------------------------------------------------------
+// C functions used.
+// ---------------------------------------------------------------------------
+
+extern "C" {
+    fn dtom(slirp: *mut Slirp, dat: *mut c_void) -> *mut mbuf;
+    fn m_free(m: *mut mbuf);
+    fn slirp_remque(a: *mut c_void);
+}
+
+// Byte offsets inside struct ipq (packed: no padding anywhere).
+const PTR_SIZE: usize = core::mem::size_of::<*mut c_void>();
+const IPQ_FRAG_LINK: usize = 0;
+const IPQ_IP_LINK: usize = 2 * PTR_SIZE;
+const IPQ_TTL: usize = 4 * PTR_SIZE;
+
+// Unaligned qlink field accessors (ipq is packed, so its qlinks can be unaligned).
+#[inline]
+unsafe fn ql_next(p: *mut c_void) -> *mut c_void {
+    core::ptr::read_unaligned(p as *const *mut c_void)
+}
+
+#[inline]
+unsafe fn ql_prev(p: *mut c_void) -> *mut c_void {
+    core::ptr::read_unaligned((p as *const u8).add(PTR_SIZE) as *const *mut c_void)
+}
+
+#[inline]
+unsafe fn ql_set_next(p: *mut c_void, v: *mut c_void) {
+    core::ptr::write_unaligned(p as *mut *mut c_void, v);
+}
+
+#[inline]
+unsafe fn ql_set_prev(p: *mut c_void, v: *mut c_void) {
+    core::ptr::write_unaligned((p as *mut u8).add(PTR_SIZE) as *mut *mut c_void, v);
+}
+
+/// static void ip_deq(register struct ipasfrag *p)
+///   ((struct ipasfrag *)(p->ipf_prev))->ipf_next = p->ipf_next;
+///   ((struct ipasfrag *)(p->ipf_next))->ipf_prev = p->ipf_prev;
+unsafe fn ip_deq(p: *mut c_void) {
+    if p.is_null() {
+        return;
+    }
+    let prev = ql_prev(p);
+    let next = ql_next(p);
+    if !prev.is_null() {
+        ql_set_next(prev, next);
+    }
+    if !next.is_null() {
+        ql_set_prev(next, prev);
+    }
+}
+
+/// static void ip_freef(Slirp *slirp, struct ipq *fp)
+unsafe fn ip_freef(slirp: *mut Slirp, fp: *mut ipq) {
+    if slirp.is_null() || fp.is_null() {
+        return;
+    }
+    let frag_head = (fp as *mut u8).add(IPQ_FRAG_LINK) as *mut c_void;
+    let mut q = ql_next(frag_head);
+    while q != frag_head {
+        if q.is_null() {
+            break;
+        }
+        let p = ql_next(q);
+        ip_deq(q);
+        m_free(dtom(slirp, q));
+        q = p;
+    }
+    let ip_link = (fp as *mut u8).add(IPQ_IP_LINK) as *mut c_void;
+    slirp_remque(ip_link);
+    m_free(dtom(slirp, fp as *mut c_void));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_slowtimo(slirp: *mut Slirp) {
+    if slirp.is_null() {
+        return;
+    }
+
+    let ipq_addr = (slirp as *mut u8).add(core::mem::offset_of!(Slirp, ipq)) as *mut c_void;
+    let head = (ipq_addr as *mut u8).add(IPQ_IP_LINK) as *mut c_void;
+
+    let mut l: *mut c_void = ql_next(head);
+
+    if l.is_null() {
+        return;
+    }
+
+    while l != head {
+        // struct ipq *fp = container_of(l, struct ipq, ip_link);
+        let fp = ((l as usize) - IPQ_IP_LINK) as *mut ipq;
+        l = ql_next(l);
+        // if (--fp->ipq_ttl == 0)
+        let ttl_ptr = (fp as *mut u8).add(IPQ_TTL);
+        let new_ttl: u8 = core::ptr::read_unaligned(ttl_ptr).wrapping_sub(1);
+        core::ptr::write_unaligned(ttl_ptr, new_ttl);
+        if new_ttl == 0 {
+            ip_freef(slirp, fp);
+        }
     }
 }
 }
@@ -2789,6 +4606,111 @@ pub unsafe extern "C" fn ip_slowtimo__part2395(
             ip_freef(slirp, fp);
         }
     }
+}
+}
+
+// ── `ip_stripoptions` · slirp/ip_input.c:670-685 · chunk 2396 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     ip_stripoptions(register struct mbuf *m, struct mbuf *mopt)
+//     {
+//      register int i;
+//      struct ip *ip = ((struct ip *)(m)->m_hdr.mh_data);
+//      register caddr_t opts;
+//      int olen;
+//     
+//      olen = (ip->ip_hl<<2) - sizeof (struct ip);
+//      opts = (caddr_t)(ip + 1);
+//      i = m->m_hdr.mh_len - (sizeof (struct ip) + olen);
+//      memcpy(opts, opts + olen, (unsigned)i);
+//      m->m_hdr.mh_len -= olen;
+//     
+//      ip->ip_hl = sizeof(struct ip) >> 2;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2396 {
+// Port of slirp ip_stripoptions().
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::size_of;
+
+// ---- opaque / mirrored C types -------------------------------------------
+
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+pub struct Socket {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MDat,
+}
+
+// struct ip is packed; on this (little endian) build the first byte holds
+// ip_hl in its low nibble and ip_v in its high nibble.
+#[repr(C, packed)]
+pub struct Ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: [u8; 4],
+    pub ip_dst: [u8; 4],
+}
+
+extern "C" {
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ip_stripoptions(m: *mut Mbuf, _mopt: *mut Mbuf) {
+    let ip = (*m).m_hdr.mh_data as *mut Ip;
+    let ipsize: c_int = size_of::<Ip>() as c_int;
+
+    let hl: c_int = ((*ip).ip_hl_v & 0x0f) as c_int;
+    let olen: c_int = (hl << 2).wrapping_sub(ipsize);
+    let opts: *mut u8 = (ip as *mut u8).add(ipsize as usize);
+
+    let m_len: c_int = (*m).m_hdr.mh_len;
+    let i: c_int = m_len.wrapping_sub(ipsize.wrapping_add(olen));
+
+    memcpy(
+        opts as *mut c_void,
+        opts.offset(olen as isize) as *const c_void,
+        (i as u32) as usize,
+    );
+    (*m).m_hdr.mh_len = m_len.wrapping_sub(olen);
+
+    let first = (*ip).ip_hl_v;
+    (*ip).ip_hl_v = (first & 0xf0) | ((ipsize >> 2) as u8 & 0x0f);
 }
 }
 

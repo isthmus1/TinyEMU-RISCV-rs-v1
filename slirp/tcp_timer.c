@@ -8423,18 +8423,7 @@ static struct tcpcb *tcp_timers(register struct tcpcb *tp, int timer);
 
 
 void
-tcp_fasttimo(Slirp *slirp)
-{
-  register struct socket *so;
- register struct tcpcb *tp;
-struct socket *tcp_fasttimo__part2853(struct socket *tcb);
-
- so = tcp_fasttimo__part2853(&slirp->tcb);
-
- void tcp_fasttimo__part2854(struct socket *so, struct socket *tcb);
- tcp_fasttimo__part2854(so, &slirp->tcb);
-
-}
+tcp_fasttimo(Slirp *slirp);
 
 
 
@@ -8442,52 +8431,13 @@ struct socket *tcp_fasttimo__part2853(struct socket *tcb);
 
 
 void
-tcp_slowtimo(Slirp *slirp)
-{
- struct socket *tcp_slowtimo__part2856(struct socket *tcb);
-
- register struct socket *ip, *ipnxt;
- register struct tcpcb *tp;
- register int i;
-
- ;
-
-
-
-
- ip = tcp_slowtimo__part2856(&slirp->tcb);
-
-                int tcp_slowtimo__part2857(struct socket *ip);
-        if (tcp_slowtimo__part2857(ip)) {
-            return;
-        }
-     {
-        extern void tcp_slowtimo__part2858(struct socket *head,
-                                           struct tcpcb *(*timers_fn)(struct tcpcb *, int));
-        (void)ip;
-        (void)ipnxt;
-        (void)tp;
-        (void)i;
-        tcp_slowtimo__part2858(&slirp->tcb, tcp_timers);
-    }
-
- void tcp_slowtimo__part2859(uint32_t *tcp_iss, uint32_t *tcp_now);
-  tcp_slowtimo__part2859(&slirp->tcp_iss, &slirp->tcp_now);
-
-}
+tcp_slowtimo(Slirp *slirp);
 
 
 
 
 void
-tcp_canceltimers(struct tcpcb *tp)
-{
- register int i;
-
- void tcp_canceltimers__part2861(short *);
- tcp_canceltimers__part2861(tp->t_timer);
-
-}
+tcp_canceltimers(struct tcpcb *tp);
 
 const int tcp_backoff[12 + 1] =
    { 1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64 };
@@ -8496,19 +8446,4 @@ const int tcp_backoff[12 + 1] =
 
 
 static struct tcpcb *
-tcp_timers(register struct tcpcb *tp, int timer)
-{
- void tcp_timers__part2864(void);
-
- register int rexmt;
-
- tcp_timers__part2864();
-
-
-   extern struct tcpcb *tcp_timers__part2865(struct tcpcb *tp, int timer);
-  tp = tcp_timers__part2865(tp, timer);
-
-
- struct tcpcb *tcp_timers__part2866(struct tcpcb *tp);
-  return (tcp_timers__part2866(tp));
-}
+tcp_timers(register struct tcpcb *tp, int timer);

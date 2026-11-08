@@ -10830,133 +10830,23 @@ void __attribute__((format(printf, 1, 2))) vm_error(const char *fmt, ...)
              ;
 }
 
-int vm_get_int(JSONValue obj, const char *name, int *pval)
-{
-    JSONValue vm_get_int__part1359(JSONValue obj, const char *name);
-    JSONValue val;
-    val = vm_get_int__part1359(obj, name);
+int vm_get_int(JSONValue obj, const char *name, int *pval);
 
-        {
-        int vm_get_int__part1360(JSONValue val, const char *name);
-        if (vm_get_int__part1360(val, name) != 0) {
-            return -1;
-        }
-    }
-
-    {
-        int vm_get_int__part1361(JSONValue val, const char *name);
-        if (vm_get_int__part1361(val, name)) {
-            return -1;
-        }
-    }
-
-    int vm_get_int__part1362(JSONValue val, int *pval);
-    return vm_get_int__part1362(val, pval);
-
-}
-
-int vm_get_int_opt(JSONValue obj, const char *name, int *pval, int def_val)
-{
-    JSONValue vm_get_int_opt__part1364(JSONValue obj, const char *name);
-    JSONValue val;
-    val = vm_get_int_opt__part1364(obj, name);
-
-    int vm_get_int_opt__part1365(JSONValue *val, int *pval, int def_val);
-    if (vm_get_int_opt__part1365(&val, pval, def_val)) {
-        return 0;
-    }
-
-    int vm_get_int_opt__part1366(int val_type, const char *name);
-    if (vm_get_int_opt__part1366((int)val.type, name) != 0) {
-        return -1;
-    }
-
-    int vm_get_int_opt__part1367(JSONValue val, int *pval);
-    return vm_get_int_opt__part1367(val, pval);
-
-}
+int vm_get_int_opt(JSONValue obj, const char *name, int *pval, int def_val);
 
 static int vm_get_str2(JSONValue obj, const char *name, const char **pstr,
-                      BOOL is_opt)
-{
-    JSONValue vm_get_str2__part1369(JSONValue obj, const char *name, const char **pstr, BOOL is_opt);
-    JSONValue val;
-    val = vm_get_str2__part1369(obj, name, pstr, is_opt);
-    {
-        int vm_part1370_res;
-        {
-            int vm_get_str2__part1370(JSONValue val, const char *name,
-                                      const char **pstr, BOOL is_opt);
-            vm_part1370_res = vm_get_str2__part1370(val, name, pstr, is_opt);
-        }
-        if (vm_part1370_res != 1)
-            return vm_part1370_res;
-    }
-    int vm_get_str2__part1371(JSONValue val, const char *name);
-    if (vm_get_str2__part1371(val, name) != 0) {
-        return -1;
-    }
+                      BOOL is_opt);
 
-        int vm_get_str2__part1372(JSONValue val, const char **pstr);
-    return vm_get_str2__part1372(val, pstr);
-}
+static int vm_get_str(JSONValue obj, const char *name, const char **pstr);
 
-static int vm_get_str(JSONValue obj, const char *name, const char **pstr)
-{
-    int vm_get_str__part1374(JSONValue obj, const char *name, const char **pstr);
-    return vm_get_str__part1374(obj, name, pstr);
-}
+static int vm_get_str_opt(JSONValue obj, const char *name, const char **pstr);
 
-static int vm_get_str_opt(JSONValue obj, const char *name, const char **pstr)
-{
-    int vm_get_str_opt__part1376(JSONValue obj, const char *name, const char **pstr);
-    return vm_get_str_opt__part1376(obj, name, pstr);
-}
-
-static char *strdup_null(const char *str)
-{
-    char *strdup_null__part1378(const char *str);
-    return strdup_null__part1378(str);
-
-}
+static char *strdup_null(const char *str);
 
 
-static char *cmdline_subst(const char *cmdline)
-{
-    DynBuf dbuf;
-    const char *p;
-    char var_name[32], *q, buf[32];
-    const char *cmdline_subst__part1380(DynBuf *dbuf, const char *cmdline);
+static char *cmdline_subst(const char *cmdline);
 
-    p = cmdline_subst__part1380(&dbuf, cmdline);
-
-        void cmdline_subst__part1381(const char *p, DynBuf *dbuf);
-
-    cmdline_subst__part1381(p, &dbuf);
-
-    char *cmdline_subst__part1382(DynBuf *dbuf);
-    return cmdline_subst__part1382(&dbuf);
-
-}
-
-static BOOL find_name(const char *name, const char *name_list)
-{
-    size_t len;
-    const char *p, *r;
-
-    extern const char *find_name__part1384(const char *name_list);
-    p = find_name__part1384(name_list);
-
-    int find_name__part1385(const char *name, const char *p);
-    {
-        int _part1385_res = find_name__part1385(name, p);
-        if (_part1385_res)
-            return TRUE;
-    }
-
-        int find_name__part1386(void);
-    return find_name__part1386();
-}
+static BOOL find_name(const char *name, const char *name_list);
 
 static const VirtMachineClass *virt_machine_list[] = {
 
@@ -10975,196 +10865,10 @@ static const VirtMachineClass *virt_machine_list[] = {
        ,
 };
 
-static const VirtMachineClass *virt_machine_find_class(const char *machine_name)
-{
-    const VirtMachineClass *vmc, **pvmc;
-
-        {
-        const VirtMachineClass *virt_machine_find_class__part1389(const char *machine_name, const VirtMachineClass *const *virt_machine_list);
-        const VirtMachineClass *found_vmc =
-            virt_machine_find_class__part1389(machine_name, virt_machine_list);
-        if (found_vmc != ((void *)0))
-            return found_vmc;
-    }
-        {
-        const VirtMachineClass *virt_machine_find_class__part1390(void);
-        return virt_machine_find_class__part1390();
-    }
-
-}
+static const VirtMachineClass *virt_machine_find_class(const char *machine_name);
 
 static int virt_machine_parse_config(VirtMachineParams *p,
-                                     char *config_file_str, int len)
-{
-    JSONValue virt_machine_parse_config__part1392(const char *config_file_str, int len);
-    int version, val;
-    const char *tag_name, *str;
-    char buf1[256];
-    JSONValue cfg, obj, el;
-
-    cfg = virt_machine_parse_config__part1392(config_file_str, len);
-
-    int virt_machine_parse_config__part1393(JSONValue cfg);
-    if (virt_machine_parse_config__part1393(cfg))
-        return -1;
-
-
-        int virt_machine_parse_config__part1394(JSONValue cfg, int *version);
-    if (virt_machine_parse_config__part1394(cfg, &version) < 0)
-        goto tag_fail;
-    int virt_machine_parse_config__part1395(int version);
-    if (virt_machine_parse_config__part1395(version) != 0)
-        return -1;
-
-
-        {
-        int virt_machine_parse_config__part1396(JSONValue cfg, const char **pstr);
-        if (virt_machine_parse_config__part1396(cfg, &str) < 0)
-            goto tag_fail;
-    }
-
-    void virt_machine_parse_config__part1397(VirtMachineParams *p, const char *str);
-    virt_machine_parse_config__part1397(p, str);
-    int virt_machine_parse_config__part1398(const void *vmc, const char *machine_name);
-    if (virt_machine_parse_config__part1398(p->vmc, p->machine_name)) {
-        goto tag_fail;
-    }
-
-    const char *virt_machine_parse_config__part1399(VirtMachineParams *p);
-    tag_name = virt_machine_parse_config__part1399(p);
-
-    int virt_machine_parse_config__part1400(JSONValue cfg, const char *tag_name, int *val);
-    if (virt_machine_parse_config__part1400(cfg, tag_name, &val) < 0)
-        goto tag_fail;
-
-    const char *virt_machine_parse_config__part1401(VirtMachineParams *p, int val);
-    tag_name = virt_machine_parse_config__part1401(p, val);
-
-        int virt_machine_parse_config__part1402(JSONValue cfg, const char *name, const char **pstr);
-    if (virt_machine_parse_config__part1402(cfg, tag_name, &str) < 0)
-        goto tag_fail;
-
-    void virt_machine_parse_config__part1403(VMFileEntry *entry, const char *str);
-    if (str) {
-        virt_machine_parse_config__part1403(&p->files[VM_FILE_BIOS], str);
-    }
-
-
-    const char *virt_machine_parse_config__part1404(void);
-tag_name = virt_machine_parse_config__part1404();
-
-    int virt_machine_parse_config__part1405(JSONValue cfg, const char *tag_name, const char **pstr);
-    if (virt_machine_parse_config__part1405(cfg, tag_name, &str) < 0)
-        goto tag_fail;
-    void virt_machine_parse_config__part1406(VirtMachineParams *p, const char *str);
-    virt_machine_parse_config__part1406(p, str);
-
-    int virt_machine_parse_config__part1407(JSONValue cfg, const char **pstr);
-    if (virt_machine_parse_config__part1407(cfg, &str) < 0)
-        goto tag_fail;
-    if (str) {
-        char *virt_machine_parse_config__part1408(const char *str);
-        p->cmdline = virt_machine_parse_config__part1408(str);
-    }
-
-    void virt_machine_parse_config__part1409(const char **tag_name);
-    virt_machine_parse_config__part1409(&tag_name);
-        {
-        extern int virt_machine_parse_config__part1410(JSONValue cfg, const char *name, const char **pstr);
-        if (virt_machine_parse_config__part1410(cfg, tag_name, &str) < 0)
-            goto tag_fail;
-    }
-
-    void virt_machine_parse_config__part1411(char **filename_slot, const char *str);
-virt_machine_parse_config__part1411(&p->files[VM_FILE_INITRD].filename, str);
-
-
-    {
-    int virt_machine_parse_config__part1412(VirtMachineParams *p, JSONValue cfg);
-    int vm_st_1412 = virt_machine_parse_config__part1412(p, cfg);
-    if (vm_st_1412 == 1)
-        return -1;
-    if (vm_st_1412 == 2)
-        goto tag_fail;
-}
-
-
-        {
-        int virt_machine_parse_config__part1413(VirtMachineParams *p, JSONValue cfg,
-                                               char *buf1, JSONValue *obj,
-                                               const char **str);
-        int part1413_ret;
-
-        part1413_ret = virt_machine_parse_config__part1413(p, cfg, buf1, &obj, &str);
-        if (part1413_ret < 0)
-            goto tag_fail;
-    }
-
-
-        {
-        int eth_parse_ret;
-        int virt_machine_parse_config__part1414(JSONValue cfg, VirtMachineParams *p);
-        eth_parse_ret = virt_machine_parse_config__part1414(cfg, p);
-        if (eth_parse_ret == 1)
-            return -1;
-        if (eth_parse_ret == 2)
-            goto tag_fail;
-    }
-
-
-    JSONValue virt_machine_parse_config__part1415(char **display_device, JSONValue cfg);
-    obj = virt_machine_parse_config__part1415(&p->display_device, cfg);
-
-        {
-        int virt_machine_parse_config__part1416(VirtMachineParams *p,
-                                                JSONValue obj,
-                                                const char **pstr);
-        if (virt_machine_parse_config__part1416(p, obj, &str) < 0)
-            goto tag_fail;
-    }
-
-        int virt_machine_parse_config__part1417(const JSONValue *pcfg, const char **pstr);
-    if (virt_machine_parse_config__part1417(&cfg, &str) < 0)
-        goto tag_fail;
-        {
-        char *virt_machine_parse_config__part1418(const char *str);
-        p->input_device = virt_machine_parse_config__part1418(str);
-    }
-
-    int virt_machine_parse_config__part1419(JSONValue cfg, const char *name, const char **pstr);
-    if (virt_machine_parse_config__part1419(cfg, "accel", &str) < 0)
-        goto tag_fail;
-        {
-        int virt_machine_parse_config__part1420(int *accel_enable, const char *str);
-        if (virt_machine_parse_config__part1420(&p->accel_enable, str) < 0)
-            return -1;
-    }
-
-
-    JSONValue virt_machine_parse_config__part1421(const char **tag_name, JSONValue cfg);
-    el = virt_machine_parse_config__part1421(&tag_name, cfg);
-
-        {
-        int virt_machine_parse_config__part1422(const JSONValue *el,
-                                                const char *tag_name,
-                                                VirtMachineParams *p);
-        if (virt_machine_parse_config__part1422(&el, tag_name, p) < 0)
-            goto tag_fail;
-    }
-
-
-        {
-        int virt_machine_parse_config__part1423(JSONValue cfg);
-        return virt_machine_parse_config__part1423(cfg);
-    }
-
- void virt_machine_parse_config__part1424(JSONValue cfg);
- tag_fail:
-    virt_machine_parse_config__part1424(cfg);
-
-    int virt_machine_parse_config__part1425(void);
-    return virt_machine_parse_config__part1425();
-}
+                                     char *config_file_str, int len);
 
 typedef void FSLoadFileCB(void *opaque, uint8_t *buf, int buf_len);
 
@@ -11184,197 +10888,35 @@ static void config_additional_file_load_cb(void *opaque,
                                            uint8_t *buf, int buf_len);
 
 
-char *get_file_path(const char *base_filename, const char *filename)
-{
-    int len, len1;
-    char *fname, *p;
-
-    int get_file_path__part1430(const char *base_filename);
-
-    if (get_file_path__part1430(base_filename))
-        goto done;
-
-        extern int get_file_path__part1431(const char *filename);
-    if (get_file_path__part1431(filename))
-        goto done;
-        int get_file_path__part1432(const char *filename);
-    if (get_file_path__part1432(filename))
-        goto done;
-
-    char *get_file_path__part1433(const char *base_filename);
-    p = get_file_path__part1433(base_filename);
-        char *get_file_path__part1434(const char *filename);
-    if (!p) {
-    done:
-        return get_file_path__part1434(filename);
-    }
-
-    char *get_file_path__part1435(const char *base_filename, const char *filename, const char *p, int *len_out, int *len1_out);
-    len = 0;
-    len1 = 0;
-    fname = get_file_path__part1435(base_filename, filename, p, &len, &len1);
-    return fname;
-}
-static int load_file(uint8_t **pbuf, const char *filename)
-{
-    void *load_file__part1437(const char *filename);
-    FILE *f;
-    int size;
-    uint8_t *buf;
-
-    f = load_file__part1437(filename);
-
-    void load_file__part1438(FILE *f, const char *filename);
-    load_file__part1438(f, filename);
-
-    void load_file__part1439(void *f, int *size, unsigned char **buf);
-    load_file__part1439(f, &size, &buf);
-
-    extern void load_file__part1440(uint8_t *buf, int size, FILE *f, const char *filename);
-    load_file__part1440(buf, size, f, filename);
-
-    int load_file__part1441(FILE *f, uint8_t **pbuf, uint8_t *buf, int size);
-    return load_file__part1441(f, pbuf, buf, size);
-}
+char *get_file_path(const char *base_filename, const char *filename);
+static int load_file(uint8_t **pbuf, const char *filename);
 
 
 
-static void config_load_file_cb(void *opaque, int err, void *data, size_t size)
-{
-    VMConfigLoadState *s = opaque;
-
-
-    void config_load_file_cb__part1443(int err);
-    config_load_file_cb__part1443(err);
-    if (0) exit(1);
-
-    void config_load_file_cb__part1444(void *opaque, void *data, size_t size);
-    config_load_file_cb__part1444(opaque, data, size);
-}
+static void config_load_file_cb(void *opaque, int err, void *data, size_t size);
 
 
 static void config_load_file(VMConfigLoadState *s, const char *filename,
-                             FSLoadFileCB *cb, void *opaque)
-{
-
-
-        void config_load_file__part1446(VMConfigLoadState *s,
-                                    const char *filename,
-                                    FSLoadFileCB *cb, void *opaque,
-                                    int (*load_file_fn)(uint8_t **pbuf,
-                                                        const char *filename),
-                                    WGetWriteCallback *wget_cb);
-    config_load_file__part1446(s, filename, cb, opaque, load_file,
-                               config_load_file_cb);
-
-}
+                             FSLoadFileCB *cb, void *opaque);
 
 void virt_machine_load_config_file(VirtMachineParams *p,
                                    const char *filename,
                                    void (*start_cb)(void *opaque),
-                                   void *opaque)
-{
-        VMConfigLoadState *s;
-    VMConfigLoadState *virt_machine_load_config_file__part1448(VirtMachineParams *p,
-                                                               const char *filename,
-                                                               void (*start_cb)(void *opaque),
-                                                               void *opaque);
+                                   void *opaque);
 
-    s = virt_machine_load_config_file__part1448(p, filename, start_cb, opaque);
-    config_load_file(s, filename, config_file_loaded, s);
+static void config_file_loaded(void *opaque, uint8_t *buf, int buf_len);
 
-}
-
-static void config_file_loaded(void *opaque, uint8_t *buf, int buf_len)
-{
-    VMConfigLoadState *s = opaque;
-    VirtMachineParams *p = s->vm_params;
-
-    int config_file_loaded__part1450(VirtMachineParams *p, char *config_file_str,
-                                 int len);
-    if (config_file_loaded__part1450(p, (char *)buf, buf_len) < 0)
-        exit(1);
-
-
-
-    void config_file_loaded__part1451(VMConfigLoadState *s);
-    config_file_loaded__part1451(s);
-
-}
-
-static void config_additional_file_load(VMConfigLoadState *s)
-{
-    VirtMachineParams *p = s->vm_params;
-    void config_additional_file_load__part1453(int *file_index, VMFileEntry *files);
-    config_additional_file_load__part1453(&s->file_index, p->files);
-
-        {
-        int config_additional_file_load__part1454(VMConfigLoadState *s,
-                                                  FSLoadFileCB *cb,
-                                                  WGetWriteCallback *load_cb);
-        if (config_additional_file_load__part1454(s,
-                                                  config_additional_file_load_cb,
-                                                  config_load_file_cb))
-            return;
-    }
-
-}
+static void config_additional_file_load(VMConfigLoadState *s);
 
 static void config_additional_file_load_cb(void *opaque,
-                                           uint8_t *buf, int buf_len)
-{
-    void config_additional_file_load_cb__part1456(void *opaque, uint8_t *buf, int buf_len);
-    config_additional_file_load_cb__part1456(opaque, buf, buf_len);
+                                           uint8_t *buf, int buf_len);
 
-}
+void vm_add_cmdline(VirtMachineParams *p, const char *cmdline);
 
-void vm_add_cmdline(VirtMachineParams *p, const char *cmdline)
-{
-    char *new_cmdline, *old_cmdline;
-    char *vm_add_cmdline__part1458(const char *cmdline, const char *p_cmdline);
-    new_cmdline = vm_add_cmdline__part1458(cmdline, p->cmdline);
-    void vm_add_cmdline__part1459(char **slot, char *new_cmdline);
-    vm_add_cmdline__part1459(&p->cmdline, new_cmdline);
+void virt_machine_free_config(VirtMachineParams *p);
 
-}
+VirtMachine *virt_machine_init(const VirtMachineParams *p);
 
-void virt_machine_free_config(VirtMachineParams *p)
-{
-    int i;
+void virt_machine_set_defaults(VirtMachineParams *p);
 
-    void virt_machine_free_config__part1461(char *machine_name, char *cmdline);
-    virt_machine_free_config__part1461(p->machine_name, p->cmdline);
-
-    void virt_machine_free_config__part1462(VMFileEntry *files);
-    virt_machine_free_config__part1462(p->files);
-        void virt_machine_free_config__part1463(VMDriveEntry *tab_drive, int drive_count, int *i);
-    virt_machine_free_config__part1463(p->tab_drive, p->drive_count, &i);
-
-        void virt_machine_free_config__part1464(int *i, int fs_count, VMFSEntry *tab_fs);
-    virt_machine_free_config__part1464(&i, p->fs_count, p->tab_fs);
-
-        void virt_machine_free_config__part1465(VMEthEntry *tab_eth, int eth_count);
-    virt_machine_free_config__part1465(p->tab_eth, p->eth_count);
-    void virt_machine_free_config__part1466(VirtMachineParams *p);
-    virt_machine_free_config__part1466(p);
-}
-
-VirtMachine *virt_machine_init(const VirtMachineParams *p)
-{
-    VirtMachine *virt_machine_init__part1468(const VirtMachineParams *p);
-    return virt_machine_init__part1468(p);
-
-}
-
-void virt_machine_set_defaults(VirtMachineParams *p)
-{
-    void virt_machine_set_defaults__part1470(VirtMachineParams *p);
-virt_machine_set_defaults__part1470(p);
-
-}
-
-void virt_machine_end(VirtMachine *s)
-{
-        void virt_machine_end__part1472(VirtMachine *s);
-    virt_machine_end__part1472(s);
-}
+void virt_machine_end(VirtMachine *s);

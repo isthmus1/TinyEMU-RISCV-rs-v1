@@ -1,5 +1,72 @@
 //! From `slirp/if.c`.
 
+// ── `ifs_insque` · slirp/if.c:12-19 · chunk 2285 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void
+//     ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
+//     {
+//      ifm->m_hdr.mh_nextpkt = ifmhead->m_hdr.mh_nextpkt;
+//      ifmhead->m_hdr.mh_nextpkt = ifm;
+//      ifm->m_hdr.mh_prevpkt = ifmhead;
+//      ifm->m_hdr.mh_nextpkt->m_hdr.mh_prevpkt = ifm;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2285 {
+// Rust rewrite of slirp/if.c ifs_insque (static helper, exported under the C name).
+#![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
+
+use core::ffi::{c_char, c_int};
+
+/// Opaque placeholder for C `Slirp` (never dereferenced here).
+#[repr(C)]
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+/// Opaque placeholder for C `struct socket` (never dereferenced here).
+#[repr(C)]
+pub struct Socket {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[no_mangle]
+pub extern "C" fn ifs_insque(ifm: *mut mbuf, ifmhead: *mut mbuf) {
+    unsafe {
+        (*ifm).m_hdr.mh_nextpkt = (*ifmhead).m_hdr.mh_nextpkt;
+        (*ifmhead).m_hdr.mh_nextpkt = ifm;
+        (*ifm).m_hdr.mh_prevpkt = ifmhead;
+        (*(*ifm).m_hdr.mh_nextpkt).m_hdr.mh_prevpkt = ifm;
+    }
+}
+}
+
 // ── `ifm->m_hdr.mh_nextpkt = ifmhead->m_hdr.mh_nextpkt; ifmhead->m_hdr.mh_nextpkt = ifm; ifm->m_hdr.…` · slirp/if.c:15-18 · chunk 2286 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -33,6 +100,60 @@ pub extern "C" fn ifs_insque__part2286(ifm: *mut Mbuf, ifmhead: *mut Mbuf) {
         let nextpkt = (*ifm).m_hdr.mh_nextpkt;
         (*nextpkt).m_hdr.mh_prevpkt = ifm;
     }
+}
+}
+
+// ── `ifs_remque` · slirp/if.c:21-26 · chunk 2287 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void
+//     ifs_remque(struct mbuf *ifm)
+//     {
+//      ifm->m_hdr.mh_prevpkt->m_hdr.mh_nextpkt = ifm->m_hdr.mh_nextpkt;
+//      ifm->m_hdr.mh_nextpkt->m_hdr.mh_prevpkt = ifm->m_hdr.mh_prevpkt;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2287 {
+// Rust rewrite of slirp/if.c ifs_remque()
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int};
+
+// Mirror of the C `struct m_hdr` (slirp/mbuf.h)
+#[repr(C)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut core::ffi::c_void, // struct socket *
+    pub mh_data: *mut c_char,          // caddr_t
+    pub mh_len: c_int,
+}
+
+// union M_dat { char m_dat_[1]; char *m_ext_; }
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+// Mirror of the C `struct mbuf`
+#[repr(C)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut core::ffi::c_void, // Slirp *
+    pub m_dat: M_dat,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ifs_remque(ifm: *mut mbuf) {
+    let prev = (*ifm).m_hdr.mh_prevpkt;
+    let next = (*ifm).m_hdr.mh_nextpkt;
+    (*prev).m_hdr.mh_nextpkt = next;
+    (*next).m_hdr.mh_prevpkt = prev;
 }
 }
 
@@ -78,6 +199,108 @@ pub unsafe extern "C" fn ifs_remque__part2288(ifm: *mut Mbuf) {
 }
 }
 
+// ── `if_init` · slirp/if.c:28-34 · chunk 2289 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     if_init(Slirp *slirp)
+//     {
+//         slirp->if_fastq.m_hdr.mh_next = slirp->if_fastq.m_hdr.mh_prev = &slirp->if_fastq;
+//         slirp->if_batchq.m_hdr.mh_next = slirp->if_batchq.m_hdr.mh_prev = &slirp->if_batchq;
+//         slirp->next_m = &slirp->if_batchq;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2289 {
+// Port of slirp/if.c: if_init
+
+use core::ffi::{c_char, c_int, c_long};
+
+#[repr(C)]
+pub struct MbufHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut core::ffi::c_void, // struct socket *
+    pub mh_data: *mut c_char,          // caddr_t
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MbufHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MDat,
+}
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct TimeVal {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+// struct ex_list is only used through a pointer.
+#[repr(C)]
+pub struct ExList {
+    _opaque: [u8; 0],
+}
+
+// Prefix of struct Slirp, up to and including next_m (the only fields used here).
+// All preceding fields are reproduced exactly to preserve offsets.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: TimeVal,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+}
+
+#[no_mangle]
+pub extern "C" fn if_init(slirp: *mut Slirp) {
+    if slirp.is_null() {
+        return;
+    }
+    unsafe {
+        let fastq: *mut Mbuf = core::ptr::addr_of_mut!((*slirp).if_fastq);
+        (*fastq).m_hdr.mh_next = fastq;
+        (*fastq).m_hdr.mh_prev = fastq;
+
+        let batchq: *mut Mbuf = core::ptr::addr_of_mut!((*slirp).if_batchq);
+        (*batchq).m_hdr.mh_next = batchq;
+        (*batchq).m_hdr.mh_prev = batchq;
+
+        (*slirp).next_m = batchq;
+    }
+}
+}
+
 // ── `slirp->if_fastq.m_hdr.mh_next = slirp->if_fastq.m_hdr.mh_prev = &slirp->if_fastq; slirp->if_bat…` · slirp/if.c:31-33 · chunk 2290 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -119,6 +342,297 @@ pub extern "C" fn if_init__part2290(
             *next_m = batchq_hdr as *mut c_void;
         }
     }
+}
+}
+
+// ── `if_output` · slirp/if.c:49-139 · chunk 2291 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     if_output(struct socket *so, struct mbuf *ifm)
+//     {
+//      Slirp *slirp = ifm->slirp;
+//      struct mbuf *ifq;
+//      int on_fastq = 1;
+//     
+//      ;
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//     
+//     
+//      if (ifm->m_hdr.mh_flags & 0x04) {
+//       slirp_remque(ifm);
+//       ifm->m_hdr.mh_flags &= ~0x04;
+//      }
+//      for (ifq = slirp->if_batchq.m_hdr.mh_prev; ifq != &slirp->if_batchq;
+//           ifq = ifq->m_hdr.mh_prev) {
+//       if (so == ifq->m_hdr.mh_so) {
+//     
+//        ifm->m_hdr.mh_so = so;
+//        ifs_insque(ifm, ifq->m_hdr.mh_prevpkt);
+//        goto diddit;
+//       }
+//      }
+//     
+//     
+//      if (so && (so->so_iptos & 0x10)) {
+//       ifq = slirp->if_fastq.m_hdr.mh_prev;
+//       on_fastq = 1;
+//     
+//     
+//     
+//     
+//       if (ifq->m_hdr.mh_so == so) {
+//        ifm->m_hdr.mh_so = so;
+//        ifs_insque(ifm, ifq->m_hdr.mh_prevpkt);
+//        goto diddit;
+//       }
+//      } else
+//       ifq = slirp->if_batchq.m_hdr.mh_prev;
+//     
+//     
+//      ifm->m_hdr.mh_so = so;
+//      ((ifm)->m_hdr.mh_nextpkt = (ifm)->m_hdr.mh_prevpkt = (ifm));
+//      slirp_insque(ifm, ifq);
+//     
+//     diddit:
+//      slirp->if_queued++;
+//     
+//      if (so) {
+//     
+//       so->so_queued++;
+//       so->so_nqueued++;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       if (on_fastq && ((so->so_nqueued >= 6) &&
+//          (so->so_nqueued - so->so_queued) >= 3)) {
+//     
+//     
+//        slirp_remque(ifm->m_hdr.mh_nextpkt);
+//     
+//     
+//        slirp_insque(ifm->m_hdr.mh_nextpkt, &slirp->if_batchq);
+//       }
+//      }
+//     
+//     
+//     
+//     
+//     
+//      if_start(ifm->slirp);
+//     
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2291 {
+// Port of slirp/if.c if_output()
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct MbufHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MbufHdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut c_void,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+}
+
+extern "C" {
+    fn slirp_insque(a: *mut c_void, b: *mut c_void);
+    fn slirp_remque(a: *mut c_void);
+    fn if_start(slirp: *mut Slirp);
+}
+
+// static void ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
+unsafe fn ifs_insque(ifm: *mut Mbuf, ifmhead: *mut Mbuf) {
+    (*ifm).m_hdr.mh_nextpkt = (*ifmhead).m_hdr.mh_nextpkt;
+    (*ifmhead).m_hdr.mh_nextpkt = ifm;
+    (*ifm).m_hdr.mh_prevpkt = ifmhead;
+    (*(*ifm).m_hdr.mh_nextpkt).m_hdr.mh_prevpkt = ifm;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn if_output(so: *mut Socket, ifm: *mut Mbuf) {
+    let slirp: *mut Slirp = (*ifm).slirp;
+    let mut ifq: *mut Mbuf;
+    let mut on_fastq: c_int = 1;
+
+    /*
+     * First remove the mbuf from m_usedlist,
+     * since we're gonna use m_next and m_prev ourselves
+     */
+    if ((*ifm).m_hdr.mh_flags & 0x04) != 0 {
+        slirp_remque(ifm as *mut c_void);
+        (*ifm).m_hdr.mh_flags &= !0x04;
+    }
+
+    let batchq: *mut Mbuf = core::ptr::addr_of_mut!((*slirp).if_batchq);
+    let fastq: *mut Mbuf = core::ptr::addr_of_mut!((*slirp).if_fastq);
+
+    /*
+     * See if there's already a batchq list for this session.
+     */
+    let mut done = false;
+    ifq = (*slirp).if_batchq.m_hdr.mh_prev;
+    while ifq != batchq {
+        if so == (*ifq).m_hdr.mh_so {
+            /* A match! */
+            (*ifm).m_hdr.mh_so = so;
+            ifs_insque(ifm, (*ifq).m_hdr.mh_prevpkt);
+            done = true;
+            break;
+        }
+        ifq = (*ifq).m_hdr.mh_prev;
+    }
+
+    if !done {
+        /* No match, check which queue to put it on */
+        if !so.is_null() && ((*so).so_iptos & 0x10) != 0 {
+            ifq = (*slirp).if_fastq.m_hdr.mh_prev;
+            on_fastq = 1;
+            /*
+             * Check if this packet is a part of the last
+             * packet's session
+             */
+            if (*ifq).m_hdr.mh_so == so {
+                (*ifm).m_hdr.mh_so = so;
+                ifs_insque(ifm, (*ifq).m_hdr.mh_prevpkt);
+                done = true;
+            }
+        } else {
+            ifq = (*slirp).if_batchq.m_hdr.mh_prev;
+        }
+
+        if !done {
+            /* Create a new doubly linked list for this session */
+            (*ifm).m_hdr.mh_so = so;
+            /* ifs_init(ifm) */
+            (*ifm).m_hdr.mh_nextpkt = ifm;
+            (*ifm).m_hdr.mh_prevpkt = ifm;
+            slirp_insque(ifm as *mut c_void, ifq as *mut c_void);
+        }
+    }
+    let _ = fastq;
+
+    // diddit:
+    (*slirp).if_queued = (*slirp).if_queued.wrapping_add(1);
+
+    if !so.is_null() {
+        /* Update *_queued */
+        (*so).so_queued = (*so).so_queued.wrapping_add(1);
+        (*so).so_nqueued = (*so).so_nqueued.wrapping_add(1);
+        /*
+         * Check if the interactive session should be downgraded to
+         * the batchq.
+         */
+        if on_fastq != 0
+            && (*so).so_nqueued >= 6
+            && ((*so).so_nqueued.wrapping_sub((*so).so_queued)) >= 3
+        {
+            /* Remove from current queue... */
+            slirp_remque((*ifm).m_hdr.mh_nextpkt as *mut c_void);
+
+            /* ...And insert in the new.  That'll teach ya! */
+            slirp_insque((*ifm).m_hdr.mh_nextpkt as *mut c_void, batchq as *mut c_void);
+        }
+    }
+
+    if_start((*ifm).slirp);
 }
 }
 
@@ -796,6 +1310,319 @@ extern "C" {
 pub extern "C" fn if_output__part2299(ifm: *mut Mbuf) {
     unsafe {
         if_start((*ifm).slirp);
+    }
+}
+}
+
+// ── `if_start` · slirp/if.c:153-209 · chunk 2300 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     if_start(Slirp *slirp)
+//     {
+//      struct mbuf *ifm, *ifqt;
+//     
+//      ;
+//     
+//      if (slirp->if_queued == 0)
+//         return;
+//     
+//      again:
+//     
+//             if (!slirp_can_output(slirp->opaque))
+//                 return;
+//     
+//     
+//     
+//     
+//     
+//      if (slirp->if_fastq.m_hdr.mh_next != &slirp->if_fastq) {
+//       ifm = slirp->if_fastq.m_hdr.mh_next;
+//      } else {
+//     
+//       if (slirp->next_m != &slirp->if_batchq)
+//          ifm = slirp->next_m;
+//       else
+//          ifm = slirp->if_batchq.m_hdr.mh_next;
+//     
+//     
+//       slirp->next_m = ifm->m_hdr.mh_next;
+//      }
+//     
+//      ifqt = ifm->m_hdr.mh_prev;
+//      slirp_remque(ifm);
+//      slirp->if_queued--;
+//     
+//     
+//      if (ifm->m_hdr.mh_nextpkt != ifm) {
+//       slirp_insque(ifm->m_hdr.mh_nextpkt, ifqt);
+//       ifs_remque(ifm);
+//      }
+//     
+//     
+//      if (ifm->m_hdr.mh_so) {
+//       if (--ifm->m_hdr.mh_so->so_queued == 0)
+//     
+//          ifm->m_hdr.mh_so->so_nqueued = 0;
+//      }
+//     
+//     
+//             if_encap(slirp, (uint8_t *)ifm->m_hdr.mh_data, ifm->m_hdr.mh_len);
+//     
+//             m_free(ifm);
+//     
+//      if (slirp->if_queued)
+//         goto again;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2300 {
+// Rust rewrite of slirp/if.c: `void if_start(Slirp *slirp)`
+#![allow(non_snake_case, non_camel_case_types, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct QLink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct ipq is declared with __attribute__((packed))
+#[repr(C, packed)]
+pub struct IpQ {
+    pub frag_link: QLink,
+    pub ip_link: QLink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: MDat,
+}
+
+#[repr(C)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+
+    pub client_ethaddr: [u8; 6],
+
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+
+    pub ipq: IpQ,
+    pub ip_id: u16,
+
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn slirp_can_output(opaque: *mut c_void) -> c_int;
+    fn slirp_insque(a: *mut c_void, b: *mut c_void);
+    fn slirp_remque(a: *mut c_void);
+    fn if_encap(slirp: *mut Slirp, ip_data: *const u8, ip_data_len: c_int);
+    fn m_free(m: *mut Mbuf);
+}
+
+// static void ifs_remque(struct mbuf *ifm)
+unsafe fn ifs_remque(ifm: *mut Mbuf) {
+    let prev: *mut Mbuf = (*ifm).m_hdr.mh_prevpkt;
+    let next: *mut Mbuf = (*ifm).m_hdr.mh_nextpkt;
+    (*prev).m_hdr.mh_nextpkt = next;
+    (*next).m_hdr.mh_prevpkt = prev;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn if_start(slirp: *mut Slirp) {
+    if (*slirp).if_queued == 0 {
+        return; // Nothing to do
+    }
+
+    loop {
+        // check if we can really output
+        if slirp_can_output((*slirp).opaque) == 0 {
+            return;
+        }
+
+        // See which queue to get next packet from
+        // If there's something in the fastq, select it immediately
+        let ifm: *mut Mbuf;
+        if (*slirp).if_fastq.m_hdr.mh_next != core::ptr::addr_of_mut!((*slirp).if_fastq) {
+            ifm = (*slirp).if_fastq.m_hdr.mh_next;
+        } else {
+            // Nothing on fastq, see if next_m is valid
+            if (*slirp).next_m != core::ptr::addr_of_mut!((*slirp).if_batchq) {
+                ifm = (*slirp).next_m;
+            } else {
+                ifm = (*slirp).if_batchq.m_hdr.mh_next;
+            }
+
+            // Set which packet to send on next iteration
+            (*slirp).next_m = (*ifm).m_hdr.mh_next;
+        }
+
+        // Remove it from the queue
+        let ifqt: *mut Mbuf = (*ifm).m_hdr.mh_prev;
+        slirp_remque(ifm as *mut c_void);
+        (*slirp).if_queued = (*slirp).if_queued.wrapping_sub(1);
+
+        // If there are more packets for this session, re-queue them
+        if (*ifm).m_hdr.mh_nextpkt != ifm {
+            slirp_insque(
+                (*ifm).m_hdr.mh_nextpkt as *mut c_void,
+                ifqt as *mut c_void,
+            );
+            ifs_remque(ifm);
+        }
+
+        // Update so_queued
+        let so: *mut Socket = (*ifm).m_hdr.mh_so;
+        if !so.is_null() {
+            let q = (*so).so_queued.wrapping_sub(1);
+            (*so).so_queued = q;
+            if q == 0 {
+                // If there's no more queued, reset nqueued
+                (*so).so_nqueued = 0;
+            }
+        }
+
+        // Encapsulate the packet for sending
+        if_encap(
+            slirp,
+            (*ifm).m_hdr.mh_data as *const u8,
+            (*ifm).m_hdr.mh_len,
+        );
+
+        m_free(ifm);
+
+        if (*slirp).if_queued == 0 {
+            return;
+        }
     }
 }
 }

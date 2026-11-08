@@ -3390,29 +3390,12 @@ struct VGAState {
 
 static void vga_draw_glyph8(uint8_t *d, int linesize,
                             const uint8_t *font_ptr, int h,
-                            uint32_t fgcol, uint32_t bgcol)
-{
-    uint32_t font_data;
-    uint32_t vga_draw_glyph8__part3625(uint32_t fgcol, uint32_t bgcol);
-    uint32_t xorcol = vga_draw_glyph8__part3625(fgcol, bgcol);
-
-    void vga_draw_glyph8__part3626(uint8_t **d, int linesize, const uint8_t **font_ptr, int *h, uint32_t xorcol, uint32_t bgcol);
-    vga_draw_glyph8__part3626(&d, linesize, &font_ptr, &h, xorcol, bgcol);
-}
+                            uint32_t fgcol, uint32_t bgcol);
 
 static void vga_draw_glyph9(uint8_t *d, int linesize,
                             const uint8_t *font_ptr, int h,
                             uint32_t fgcol, uint32_t bgcol,
-                            int dup9)
-{
-    uint32_t font_data, xorcol, v;
-
-    uint32_t vga_draw_glyph9__part3628(uint32_t fgcol, uint32_t bgcol);
-    xorcol = vga_draw_glyph9__part3628(fgcol, bgcol);
-
-    void vga_draw_glyph9__part3629(uint8_t *d, int linesize, const uint8_t *font_ptr, int h, uint32_t xorcol, uint32_t bgcol, int dup9);
-vga_draw_glyph9__part3629(d, linesize, font_ptr, h, xorcol, bgcol, dup9);
-}
+                            int dup9);
 
 static const uint8_t cursor_glyph[32] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -3421,120 +3404,17 @@ static const uint8_t cursor_glyph[32] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 };
 
-static inline int c6_to_8(int v)
-{
-        int c6_to_8__part3632(int v);
-    return c6_to_8__part3632(v);
+static inline int c6_to_8(int v);
 
-}
-
-static int update_palette16(VGAState *s, uint32_t *palette)
-{
-    int full_update, i;
-    uint32_t v, col;
-    int update_palette16__part3634(void);
-
-    full_update = update_palette16__part3634();
-        void update_palette16__part3635(VGAState *s, uint32_t *palette, int *full_update, int *i_out, uint32_t *v_out, uint32_t *col_out);
-    update_palette16__part3635(s, palette, &full_update, &i, &v, &col);
-
-    int update_palette16__part3636(int full_update);
-return update_palette16__part3636(full_update);
-}
+static int update_palette16(VGAState *s, uint32_t *palette);
 
 
 
 static void vga_text_refresh(VGAState *s,
-                             SimpleFBDrawFunc *redraw_func, void *opaque)
-{
-        FBDevice *fb_dev;
-    int width, height, cwidth, cheight, cy, cx, x1, y1, width1, height1;
-    int cx_min, cx_max, dup9;
-    uint32_t ch_attr, line_offset, start_addr, ch_addr, ch_addr1, ch, cattr;
-    uint8_t *vga_ram, *font_ptr, *dst;
-    uint32_t fgcol, bgcol, cursor_offset, cursor_start, cursor_end;
-    BOOL full_update;
-
-    void vga_text_refresh__part3638(VGAState *s, FBDevice **p_fb_dev,
-                                    uint8_t **p_vga_ram, uint32_t *p_line_offset,
-                                    uint32_t *p_start_addr, int *p_cheight,
-                                    int *p_cwidth, BOOL *p_full_update);
-    vga_text_refresh__part3638(s, &fb_dev, &vga_ram, &line_offset, &start_addr,
-                               &cheight, &cwidth, &full_update);
-
-    int vga_text_refresh__part3639(uint8_t sr1, int cwidth);
-    cwidth = vga_text_refresh__part3639(s->sr[1], cwidth);
-
-
-    void vga_text_refresh__part3640(const uint8_t *cr, int cheight, int cwidth,
-                                    int *width, int *height,
-                                    int *width1, int *height1);
-    vga_text_refresh__part3640(s->cr, cheight, cwidth,
-                               &width, &height, &width1, &height1);
-
-    int vga_text_refresh__part3641(FBDevice *fb_dev, int width1, int height1, int width, int height);
-if (vga_text_refresh__part3641(fb_dev, width1, height1, width, height))
-        return;
-
-    void vga_text_refresh__part3642(uint16_t *last_line_offset, uint16_t *last_start_addr, uint32_t *last_width, uint32_t *last_height, uint32_t line_offset, uint32_t start_addr, int width, int height, int *full_update);
-    vga_text_refresh__part3642(&s->last_line_offset, &s->last_start_addr, &s->last_width, &s->last_height, line_offset, start_addr, width, height, &full_update);
-
-
-
-        void vga_text_refresh__part3643(VGAState *s, uint32_t start_addr, uint32_t *cursor_offset, uint32_t *cursor_start, uint32_t *cursor_end);
-    vga_text_refresh__part3643(s, start_addr, &cursor_offset, &cursor_start, &cursor_end);
-
-        {
-        void vga_text_refresh__part3644(VGAState *s, uint32_t cursor_offset,
-                                        uint32_t cursor_start,
-                                        uint32_t cursor_end);
-        vga_text_refresh__part3644(s, cursor_offset, cursor_start, cursor_end);
-    }
-
-
-    void vga_text_refresh__part3645(uint32_t start_addr, uint32_t cursor_offset,
-                                int width1, int height1,
-                                int fb_width, int fb_height,
-                                uint32_t *out_ch_addr1,
-                                uint32_t *out_cursor_offset,
-                                int *out_x1, int *out_y1);
-    vga_text_refresh__part3645(start_addr, cursor_offset, width1, height1,
-                               fb_dev->width, fb_dev->height,
-                               &ch_addr1, &cursor_offset, &x1, &y1);
-
-
-
-
-
-        {
-        void vga_text_refresh__part3646(VGAState *s, FBDevice *fb_dev,
-                                       SimpleFBDrawFunc *redraw_func,
-                                       void *opaque, uint8_t *vga_ram,
-                                       int width, int height,
-                                       int cwidth, int cheight,
-                                       int x1, int y1,
-                                       uint32_t ch_addr1, uint32_t line_offset,
-                                       uint32_t cursor_offset,
-                                       uint32_t cursor_start, uint32_t cursor_end,
-                                       int full_update);
-        vga_text_refresh__part3646(s, fb_dev, redraw_func, opaque, vga_ram,
-                                   width, height, cwidth, cheight, x1, y1,
-                                   ch_addr1, line_offset, cursor_offset,
-                                   cursor_start, cursor_end, full_update);
-    }
-
-}
+                             SimpleFBDrawFunc *redraw_func, void *opaque);
 
 static void vga_refresh(FBDevice *fb_dev,
-                        SimpleFBDrawFunc *redraw_func, void *opaque)
-{
-    VGAState *s = fb_dev->device_opaque;
-
-    void vga_refresh__part3648(FBDevice *fb_dev, SimpleFBDrawFunc *redraw_func,
-                           void *opaque, VGAState *s);
-vga_refresh__part3648(fb_dev, redraw_func, opaque, s);
-
-}
+                        SimpleFBDrawFunc *redraw_func, void *opaque);
 
 
 static const uint8_t sr_mask[8] = {
@@ -3567,154 +3447,24 @@ static const uint8_t gr_mask[16] = {
     (uint8_t)~0xff,
 };
 
-static uint32_t vga_ioport_read(VGAState *s, uint32_t addr)
-{
-    int val, index;
+static uint32_t vga_ioport_read(VGAState *s, uint32_t addr);
 
-
-        int vga_ioport_read__part3652(VGAState *s, uint32_t addr);
-    val = vga_ioport_read__part3652(s, addr);
-    (void)index;
-
-
-
-
-    uint32_t vga_ioport_read__part3653(int val);
-    return vga_ioport_read__part3653(val);
-}
-
-static void vga_ioport_write(VGAState *s, uint32_t addr, uint32_t val)
-{
-    int index;
-
-
-    int vga_ioport_write__part3655(uint32_t addr, uint8_t msr);
-    if (vga_ioport_write__part3655(addr, s->msr))
-        return;
-
-
-
-
-
-
-        {
-        int vga_ioport_write_ret;
-        int vga_ioport_write__part3656(VGAState *s, uint32_t addr, uint32_t val);
-        vga_ioport_write_ret = vga_ioport_write__part3656(s, addr, val);
-        if (vga_ioport_write_ret)
-            return;
-    }
-
-}
-static uint32_t vga_read_0x3c0(void *opaque, uint32_t addr, int size_log2){ uint32_t vga_read_0x3c0__part3658(void *opaque, uint32_t addr);
-    return vga_read_0x3c0__part3658(opaque, addr);}static void vga_write_0x3c0(void *opaque, uint32_t addr, uint32_t val, int size_log2){ void vga_write_0x3c0__part3660(void *opaque, uint32_t addr, uint32_t val, int size_log2);
-    return vga_write_0x3c0__part3660(opaque, addr, val, size_log2);}
-static uint32_t vga_read_0x3b4(void *opaque, uint32_t addr, int size_log2){     extern uint32_t vga_read_0x3b4__part3662(void *opaque, uint32_t addr);
-    return vga_read_0x3b4__part3662(opaque, 0x3b4 + addr);}static void vga_write_0x3b4(void *opaque, uint32_t addr, uint32_t val, int size_log2){ void vga_write_0x3b4__part3664(VGAState *s, uint32_t addr, uint32_t val);
-vga_write_0x3b4__part3664(opaque, 0x3b4 + addr, val);}
-static uint32_t vga_read_0x3d4(void *opaque, uint32_t addr, int size_log2){ uint32_t vga_read_0x3d4__part3666(void *opaque, uint32_t addr);
-    return vga_read_0x3d4__part3666(opaque, addr);
-}static void vga_write_0x3d4(void *opaque, uint32_t addr, uint32_t val, int size_log2){ void vga_write_0x3d4__part3668(void *opaque, uint32_t addr, uint32_t val);
-vga_write_0x3d4__part3668(opaque, addr, val);
-}
-static uint32_t vga_read_0x3ba(void *opaque, uint32_t addr, int size_log2){     uint32_t vga_read_0x3ba__part3670(void *opaque, uint32_t addr);
-    return vga_read_0x3ba__part3670(opaque, 0x3ba + addr);
-}static void vga_write_0x3ba(void *opaque, uint32_t addr, uint32_t val, int size_log2){ void vga_write_0x3ba__part3672(void *opaque, uint32_t addr, uint32_t val);
-vga_write_0x3ba__part3672(opaque, addr, val);
-return;}
-static uint32_t vga_read_0x3da(void *opaque, uint32_t addr, int size_log2){ uint32_t vga_read_0x3da__part3674(void *opaque, uint32_t addr);
-return vga_read_0x3da__part3674(opaque, addr);}static void vga_write_0x3da(void *opaque, uint32_t addr, uint32_t val, int size_log2){ void vga_write_0x3da__part3676(void *opaque, uint32_t addr, uint32_t val);
-return vga_write_0x3da__part3676(opaque, addr, val);}
+static void vga_ioport_write(VGAState *s, uint32_t addr, uint32_t val);
+static uint32_t vga_read_0x3c0(void *opaque, uint32_t addr, int size_log2);static void vga_write_0x3c0(void *opaque, uint32_t addr, uint32_t val, int size_log2);
+static uint32_t vga_read_0x3b4(void *opaque, uint32_t addr, int size_log2);static void vga_write_0x3b4(void *opaque, uint32_t addr, uint32_t val, int size_log2);
+static uint32_t vga_read_0x3d4(void *opaque, uint32_t addr, int size_log2);static void vga_write_0x3d4(void *opaque, uint32_t addr, uint32_t val, int size_log2);
+static uint32_t vga_read_0x3ba(void *opaque, uint32_t addr, int size_log2);static void vga_write_0x3ba(void *opaque, uint32_t addr, uint32_t val, int size_log2);
+static uint32_t vga_read_0x3da(void *opaque, uint32_t addr, int size_log2);static void vga_write_0x3da(void *opaque, uint32_t addr, uint32_t val, int size_log2);
 
 static void vbe_write(void *opaque, uint32_t offset,
-                      uint32_t val, int size_log2)
-{
-    VGAState *s = opaque;
-    FBDevice *fb_dev = s->fb_dev;
+                      uint32_t val, int size_log2);
 
-    void vbe_write__part3678(VGAState *s, FBDevice *fb_dev, uint32_t offset, uint32_t val);
-    vbe_write__part3678(s, fb_dev, offset, val);
-
-}
-
-static uint32_t vbe_read(void *opaque, uint32_t offset, int size_log2)
-{
-    VGAState *s = opaque;
-    uint32_t val;
-
-    uint32_t vbe_read__part3680(VGAState *s, uint32_t offset);
-        val = vbe_read__part3680(s, offset);
-    uint32_t vbe_read__part3681(uint32_t val);
-    return vbe_read__part3681(val);
-}
+static uint32_t vbe_read(void *opaque, uint32_t offset, int size_log2);
 
 
 static void simplefb_bar_set(void *opaque, int bar_num,
-                              uint32_t addr, BOOL enabled)
-{
-    VGAState *s = opaque;
-    void simplefb_bar_set__part3683(VGAState *s, int bar_num, uint32_t addr, BOOL enabled);
-    simplefb_bar_set__part3683(s, bar_num, addr, enabled);
-
-}
+                              uint32_t addr, BOOL enabled);
 
 VGAState *pci_vga_init(PCIBus *bus, FBDevice *fb_dev,
                        int width, int height,
-                       const uint8_t *vga_rom_buf, int vga_rom_size)
-{
-    VGAState *s;
-    PCIDevice *d;
-    uint32_t bar_size;
-    PhysMemoryMap *mem_map, *port_map;
-
-    void pci_vga_init__part3685(VGAState **s_out, PCIDevice **d_out,
-                                uint32_t *bar_size_out,
-                                PhysMemoryMap **mem_map_out,
-                                PhysMemoryMap **port_map_out,
-                                PCIBus *bus, FBDevice *fb_dev,
-                                int width, int height);
-    pci_vga_init__part3685(&s, &d, &bar_size, &mem_map, &port_map,
-                           bus, fb_dev, width, height);
-    uint32_t pci_vga_init__part3686(FBDevice *fb_dev, uint32_t bar_size);
-    bar_size = pci_vga_init__part3686(fb_dev, bar_size);
-
-    void pci_vga_init__part3687(void *d, uint32_t bar_size, void *s);
-    pci_vga_init__part3687(d, bar_size, s);
-
-
-    {
-        extern void pci_vga_init__part3688(int vga_rom_size, VGAState *s,
-                                           PhysMemoryMap *mem_map,
-                                           const uint8_t *vga_rom_buf,
-                                           PCIDevice *d);
-        pci_vga_init__part3688(vga_rom_size, s, mem_map, vga_rom_buf, d);
-    }
-
-
-    s->mem_range2 = cpu_register_ram(mem_map, 0xa0000, 0x20000, 0);
-    s->vga_ram = s->mem_range2->phys_mem;
-
-
-
-    cpu_register_device(port_map, 0x3c0, 16, s, vga_read_0x3c0, vga_write_0x3c0,
-                        (1 << 0));
-    cpu_register_device(port_map, 0x3b4, 2, s, vga_read_0x3b4, vga_write_0x3b4,
-                        (1 << 0));
-    cpu_register_device(port_map, 0x3d4, 2, s, vga_read_0x3d4, vga_write_0x3d4,
-                        (1 << 0));
-    cpu_register_device(port_map, 0x3ba, 1, s, vga_read_0x3ba, vga_write_0x3ba,
-                        (1 << 0));
-    cpu_register_device(port_map, 0x3da, 1, s, vga_read_0x3da, vga_write_0x3da,
-                        (1 << 0));
-
-
-    cpu_register_device(port_map, 0x1ce, 2, s, vbe_read, vbe_write,
-                        (1 << 1));
-
-    s->vbe_regs[0x0] = 0xB0C5;
-    s->vbe_regs[0xa] = fb_dev->fb_size >> 16;
-
-    fb_dev->device_opaque = s;
-    fb_dev->refresh = vga_refresh;
-    return s;
-}
+                       const uint8_t *vga_rom_buf, int vga_rom_size);

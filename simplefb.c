@@ -3358,45 +3358,10 @@ struct SimpleFBState {
 void simplefb_refresh(FBDevice *fb_dev,
                       SimpleFBDrawFunc *redraw_func, void *opaque,
                       PhysMemoryRange *mem_range,
-                      int fb_page_count)
-{
-    const uint32_t *dirty_bits;
-    uint32_t dirty_val;
-    int y0, y1, page_y0, page_y1, byte_pos, page_index, bit_pos;
-    const uint32_t *simplefb_refresh__part2175(PhysMemoryRange *mem_range,
-                                               int *page_index, int *y0, int *y1);
-
-    dirty_bits = simplefb_refresh__part2175(mem_range, &page_index, &y0, &y1);
-
-    void simplefb_refresh__part2176(FBDevice *fb_dev,
-                                SimpleFBDrawFunc *redraw_func, void *opaque,
-                                const uint32_t *dirty_bits, int fb_page_count,
-                                int page_index, int *y0_ptr, int *y1_ptr);
-simplefb_refresh__part2176(fb_dev, redraw_func, opaque, dirty_bits,
-                           fb_page_count, page_index, &y0, &y1);
-
-
-    void simplefb_refresh__part2177(FBDevice *fb_dev, SimpleFBDrawFunc *redraw_func, void *opaque, int y0, int y1);
-    simplefb_refresh__part2177(fb_dev, redraw_func, opaque, y0, y1);
-}
+                      int fb_page_count);
 
 static void simplefb_refresh1(FBDevice *fb_dev,
-                              SimpleFBDrawFunc *redraw_func, void *opaque)
-{
-    void simplefb_refresh1__part2179(FBDevice *fb_dev,
-                                 SimpleFBDrawFunc *redraw_func, void *opaque);
-    simplefb_refresh1__part2179(fb_dev, redraw_func, opaque);
-
-}
+                              SimpleFBDrawFunc *redraw_func, void *opaque);
 
 SimpleFBState *simplefb_init(PhysMemoryMap *map, uint64_t phys_addr,
-                             FBDevice *fb_dev, int width, int height)
-{
-    SimpleFBState *simplefb_init__part2181(PhysMemoryMap *map, uint64_t phys_addr,
-                                       FBDevice *fb_dev, int width, int height);
-
-    SimpleFBState *s;
-
-    s = simplefb_init__part2181(map, phys_addr, fb_dev, width, height);
-    return s;
-}
+                             FBDevice *fb_dev, int width, int height);

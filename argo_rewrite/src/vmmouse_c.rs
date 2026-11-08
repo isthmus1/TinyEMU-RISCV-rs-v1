@@ -1,5 +1,52 @@
 //! From `vmmouse.c`.
 
+// ── `put_queue` · vmmouse.c:53-61 · chunk 3928 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void put_queue(VMMouseState *s, uint32_t val)
+//     {
+//         if (s->fifo_count >= (4 * 16))
+//             return;
+//         s->fifo_buf[s->fifo_windex] = val;
+//         if (++s->fifo_windex == (4 * 16))
+//             s->fifo_windex = 0;
+//         s->fifo_count++;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3928 {
+use core::ffi::c_int;
+
+const FIFO_SIZE: c_int = 4 * 16;
+
+// Mirror of the C struct VMMouseState (PS2MouseState is only used as a pointer).
+#[repr(C)]
+pub struct VMMouseState {
+    pub ps2_mouse: *mut core::ffi::c_void,
+    pub fifo_count: c_int,
+    pub fifo_rindex: c_int,
+    pub fifo_windex: c_int,
+    pub enabled: c_int,  /* BOOL == int */
+    pub absolute: c_int, /* BOOL == int */
+    pub fifo_buf: [u32; 64],
+}
+
+#[no_mangle]
+pub extern "C" fn put_queue(s: *mut VMMouseState, val: u32) {
+    unsafe {
+        let st = &mut *s;
+        if st.fifo_count >= FIFO_SIZE {
+            return;
+        }
+        *st.fifo_buf.as_mut_ptr().offset(st.fifo_windex as isize) = val;
+        st.fifo_windex = st.fifo_windex.wrapping_add(1);
+        if st.fifo_windex == FIFO_SIZE {
+            st.fifo_windex = 0;
+        }
+        st.fifo_count = st.fifo_count.wrapping_add(1);
+    }
+}
+}
+
 // ── `if (s->fifo_count >= (4 * 16)` · vmmouse.c:55-56 · chunk 3929 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -129,6 +176,67 @@ pub extern "C" fn put_queue__part3932(s: *mut VMMouseState) {
 }
 }
 
+// ── `read_data` · vmmouse.c:63-77 · chunk 3933 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void read_data(VMMouseState *s, uint32_t *regs, int size)
+//     {
+//         int i;
+//         if (size > 6 || size > s->fifo_count) {
+//     
+//             s->enabled = FALSE;
+//             return;
+//         }
+//         for(i = 0; i < size; i++) {
+//             regs[i] = s->fifo_buf[s->fifo_rindex];
+//             if (++s->fifo_rindex == (4 * 16))
+//                 s->fifo_rindex = 0;
+//         }
+//         s->fifo_count -= size;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3933 {
+// Port of vmmouse.c:read_data
+use core::ffi::c_int;
+
+const FIFO_SIZE: c_int = 4 * 16;
+
+// Mirror of `struct VMMouseState` (BOOL is `typedef int BOOL`).
+#[repr(C)]
+pub struct VMMouseState {
+    pub ps2_mouse: *mut core::ffi::c_void,
+    pub fifo_count: c_int,
+    pub fifo_rindex: c_int,
+    pub fifo_windex: c_int,
+    pub enabled: c_int,
+    pub absolute: c_int,
+    pub fifo_buf: [u32; FIFO_SIZE as usize],
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn read_data(s: *mut VMMouseState, regs: *mut u32, size: c_int) {
+    if size > 6 || size > (*s).fifo_count {
+        (*s).enabled = 0; // FALSE
+        return;
+    }
+
+    let mut i: c_int = 0;
+    while i < size {
+        let idx = (*s).fifo_rindex as usize;
+        let val = *(*s).fifo_buf.as_ptr().add(idx);
+        *regs.offset(i as isize) = val;
+
+        let next = (*s).fifo_rindex.wrapping_add(1);
+        (*s).fifo_rindex = next;
+        if next == FIFO_SIZE {
+            (*s).fifo_rindex = 0;
+        }
+        i += 1;
+    }
+    (*s).fifo_count = (*s).fifo_count.wrapping_sub(size);
+}
+}
+
 // ── `if (size > 6 || size > s->fifo_count)` · vmmouse.c:66-70 · chunk 3934 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -236,6 +344,140 @@ pub unsafe extern "C" fn read_data__part3936(s: *mut VMMouseState, size: core::f
     }
     let count = (*s).fifo_count;
     (*s).fifo_count = count.wrapping_sub(size);
+}
+}
+
+// ── `vmmouse_send_mouse_event` · vmmouse.c:79-112 · chunk 3937 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void vmmouse_send_mouse_event(VMMouseState *s, int x, int y, int dz,
+//                                   int buttons)
+//     {
+//         int state;
+//     
+//         if (!s->enabled) {
+//             ps2_mouse_event(s->ps2_mouse, x, y, dz, buttons);
+//             return;
+//         }
+//     
+//         if ((s->fifo_count + 4) > (4 * 16))
+//             return;
+//     
+//         state = 0;
+//         if (buttons & 1)
+//             state |= 0x20;
+//         if (buttons & 2)
+//             state |= 0x10;
+//         if (buttons & 4)
+//             state |= 0x08;
+//         if (s->absolute) {
+//     
+//             x *= 2;
+//             y *= 2;
+//         }
+//     
+//         put_queue(s, state);
+//         put_queue(s, x);
+//         put_queue(s, y);
+//         put_queue(s, -dz);
+//     
+//     
+//         ps2_mouse_event(s->ps2_mouse, 1, 0, 0, 0);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3937 {
+use core::ffi::{c_int, c_uint};
+
+const FIFO_SIZE: usize = 4 * 16;
+
+#[repr(C)]
+pub struct PS2MouseState {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct VMMouseState {
+    pub ps2_mouse: *mut PS2MouseState,
+    pub fifo_count: c_int,
+    pub fifo_rindex: c_int,
+    pub fifo_windex: c_int,
+    pub enabled: c_int,
+    pub absolute: c_int,
+    pub fifo_buf: [c_uint; FIFO_SIZE],
+}
+
+extern "C" {
+    fn ps2_mouse_event(
+        s: *mut PS2MouseState,
+        dx: c_int,
+        dy: c_int,
+        dz: c_int,
+        buttons_state: c_int,
+    );
+}
+
+// Port of the static C helper put_queue().
+unsafe fn put_queue(s: *mut VMMouseState, val: c_uint) {
+    if (*s).fifo_count >= FIFO_SIZE as c_int {
+        return;
+    }
+    let windex = (*s).fifo_windex;
+    if windex >= 0 && (windex as usize) < FIFO_SIZE {
+        (*s).fifo_buf[windex as usize] = val;
+    } else {
+        return;
+    }
+    let mut w = (*s).fifo_windex.wrapping_add(1);
+    if w == FIFO_SIZE as c_int {
+        w = 0;
+    }
+    (*s).fifo_windex = w;
+    (*s).fifo_count = (*s).fifo_count.wrapping_add(1);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vmmouse_send_mouse_event(
+    s: *mut VMMouseState,
+    x: c_int,
+    y: c_int,
+    dz: c_int,
+    buttons: c_int,
+) {
+    let mut x = x;
+    let mut y = y;
+
+    if (*s).enabled == 0 {
+        ps2_mouse_event((*s).ps2_mouse, x, y, dz, buttons);
+        return;
+    }
+
+    if (*s).fifo_count.wrapping_add(4) > FIFO_SIZE as c_int {
+        return;
+    }
+
+    let mut state: c_int = 0;
+    if buttons & 1 != 0 {
+        state |= 0x20;
+    }
+    if buttons & 2 != 0 {
+        state |= 0x10;
+    }
+    if buttons & 4 != 0 {
+        state |= 0x08;
+    }
+    if (*s).absolute != 0 {
+        // range = 0 ... 65535
+        x = x.wrapping_mul(2);
+        y = y.wrapping_mul(2);
+    }
+
+    put_queue(s, state as c_uint);
+    put_queue(s, x as c_uint);
+    put_queue(s, y as c_uint);
+    put_queue(s, dz.wrapping_neg() as c_uint);
+
+    // send PS/2 mouse event
+    ps2_mouse_event((*s).ps2_mouse, 1, 0, 0, 0);
 }
 }
 
@@ -522,6 +764,138 @@ pub unsafe extern "C" fn vmmouse_send_mouse_event__part3945(
 }
 }
 
+// ── `vmmouse_handler` · vmmouse.c:114-149 · chunk 3946 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void vmmouse_handler(VMMouseState *s, uint32_t *regs)
+//     {
+//         uint32_t cmd;
+//     
+//         cmd = regs[2] & 0xff;
+//         switch(cmd) {
+//         case 10:
+//             regs[1] = 0x564D5868;
+//             break;
+//         case 39:
+//             read_data(s, regs, regs[1]);
+//             break;
+//         case 40:
+//             regs[0] = ((s->enabled ? 0 : 0xffff) << 16) | s->fifo_count;
+//             break;
+//         case 41:
+//             switch(regs[1]) {
+//             case 0x45414552:
+//                 if (s->fifo_count < (4 * 16)) {
+//                     put_queue(s, 0x3442554a);
+//                     s->enabled = TRUE;
+//                 }
+//                 break;
+//             case 0x000000f5:
+//                 s->enabled = FALSE;
+//                 break;
+//             case 0x4c455252:
+//                 s->absolute = 0;
+//                 break;
+//             case 0x53424152:
+//                 s->absolute = 1;
+//                 break;
+//             }
+//             break;
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3946 {
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+pub struct VMMouseState {
+    pub ps2_mouse: *mut c_void,
+    pub fifo_count: c_int,
+    pub fifo_rindex: c_int,
+    pub fifo_windex: c_int,
+    pub enabled: c_int,
+    pub absolute: c_int,
+    pub fifo_buf: [u32; 4 * 16],
+}
+
+#[inline]
+unsafe fn put_queue(s: *mut VMMouseState, val: u32) {
+    if (*s).fifo_count >= (4 * 16) {
+        return;
+    }
+    let idx = (*s).fifo_windex;
+    if idx >= 0 && idx < (4 * 16) {
+        *(*s).fifo_buf.as_mut_ptr().offset(idx as isize) = val;
+    }
+    (*s).fifo_windex += 1;
+    if (*s).fifo_windex == (4 * 16) {
+        (*s).fifo_windex = 0;
+    }
+    (*s).fifo_count += 1;
+}
+
+unsafe fn read_data(s: *mut VMMouseState, regs: *mut u32, size: c_int) {
+    if size > 6 || size > (*s).fifo_count {
+        (*s).enabled = 0;
+        return;
+    }
+    let mut i: c_int = 0;
+    while i < size {
+        let ridx = (*s).fifo_rindex;
+        let v = if ridx >= 0 && ridx < (4 * 16) {
+            *(*s).fifo_buf.as_ptr().offset(ridx as isize)
+        } else {
+            // Out-of-range index cannot occur with the C logic above; keep it safe.
+            0
+        };
+        *regs.offset(i as isize) = v;
+        (*s).fifo_rindex += 1;
+        if (*s).fifo_rindex == (4 * 16) {
+            (*s).fifo_rindex = 0;
+        }
+        i += 1;
+    }
+    (*s).fifo_count -= size;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn vmmouse_handler(s: *mut VMMouseState, regs: *mut u32) {
+    let cmd: u32 = *regs.offset(2) & 0xff;
+    match cmd {
+        10 => {
+            *regs.offset(1) = 0x564D5868;
+        }
+        39 => {
+            let size = *regs.offset(1) as c_int;
+            read_data(s, regs, size);
+        }
+        40 => {
+            let hi: u32 = if (*s).enabled != 0 { 0u32 } else { 0xffffu32 };
+            *regs.offset(0) = (hi << 16) | ((*s).fifo_count as u32);
+        }
+        41 => match *regs.offset(1) {
+            0x45414552 => {
+                if (*s).fifo_count < (4 * 16) {
+                    put_queue(s, 0x3442554a);
+                    (*s).enabled = 1;
+                }
+            }
+            0x000000f5 => {
+                (*s).enabled = 0;
+            }
+            0x4c455252 => {
+                (*s).absolute = 0;
+            }
+            0x53424152 => {
+                (*s).absolute = 1;
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+}
+}
+
 // ── `uint32_t cmd; cmd = regs[2] & 0xff;` · vmmouse.c:116-118 · chunk 3947 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -675,6 +1049,35 @@ pub extern "C" fn vmmouse_handler__part3948(s: *mut VMMouseState, regs: *mut u32
 }
 }
 
+// ── `vmmouse_is_absolute` · vmmouse.c:151-154 · chunk 3949 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     BOOL vmmouse_is_absolute(VMMouseState *s)
+//     {
+//         return s->absolute;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3949 {
+// Rewrite of vmmouse_is_absolute from vmmouse.c
+use core::ffi::{c_int, c_uint};
+
+#[repr(C)]
+pub struct VMMouseState {
+    pub ps2_mouse: *mut core::ffi::c_void,
+    pub fifo_count: c_int,
+    pub fifo_rindex: c_int,
+    pub fifo_windex: c_int,
+    pub enabled: c_int,
+    pub absolute: c_int,
+    pub fifo_buf: [c_uint; 4 * 16],
+}
+
+#[no_mangle]
+pub extern "C" fn vmmouse_is_absolute(s: *mut VMMouseState) -> c_int {
+    unsafe { (*s).absolute }
+}
+}
+
 // ── `return s->absolute;` · vmmouse.c:153-153 · chunk 3950 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -697,6 +1100,49 @@ pub struct VMMouseState {
 #[no_mangle]
 pub extern "C" fn vmmouse_is_absolute__part3950(s: *mut VMMouseState) -> c_int {
     unsafe { (*s).absolute }
+}
+}
+
+// ── `vmmouse_init` · vmmouse.c:156-162 · chunk 3951 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     VMMouseState *vmmouse_init(PS2MouseState *ps2_mouse)
+//     {
+//         VMMouseState *s;
+//         s = mallocz(sizeof(*s));
+//         s->ps2_mouse = ps2_mouse;
+//         return s;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3951 {
+// Rewrite of vmmouse_init() from vmmouse.c
+use core::ffi::{c_int, c_void};
+
+// Mirror of `struct VMMouseState` from vmmouse.c (PS2MouseState is opaque here).
+#[repr(C)]
+pub struct VMMouseState {
+    ps2_mouse: *mut c_void,
+    fifo_count: c_int,
+    fifo_rindex: c_int,
+    fifo_windex: c_int,
+    enabled: c_int,
+    absolute: c_int,
+    fifo_buf: [u32; 4 * 16],
+}
+
+extern "C" {
+    fn mallocz(size: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub extern "C" fn vmmouse_init(ps2_mouse: *mut c_void) -> *mut VMMouseState {
+    unsafe {
+        let s = mallocz(core::mem::size_of::<VMMouseState>()) as *mut VMMouseState;
+        if !s.is_null() {
+            (*s).ps2_mouse = ps2_mouse;
+        }
+        s
+    }
 }
 }
 

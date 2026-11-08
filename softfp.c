@@ -2844,2621 +2844,406 @@ sfloat128 cvt_u64_sf128(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
 sfloat128 cvt_i128_sf128(int128_t a, RoundingModeEnum rm, uint32_t *pfflags);
 sfloat128 cvt_u128_sf128(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
 
-static inline int clz32(uint32_t a)
-{
-    int r;
-    int clz32__part2916(uint32_t a);
-    r = clz32__part2916(a);
-    extern int clz32__part2917(int r);
-return clz32__part2917(r);
+static inline int clz32(uint32_t a);
 
-}
-
-static inline int clz64(uint64_t a)
-{
-    int r;
-    int clz64__part2919(uint64_t a);
-    r = clz64__part2919(a);
-
-    int clz64__part2920(int r);
-    return clz64__part2920(r);
-
-}
+static inline int clz64(uint64_t a);
 
 
-static inline int clz128(uint128_t a)
-{
-    int r;
-    int clz128__part2922(uint128_t a);
-    r = clz128__part2922(a);
-
-    int clz128__part2923(int r);
-    return clz128__part2923(r);
-
-}
+static inline int clz128(uint128_t a);
 
 
 
 static const uint32_t F_QNAN32 = (((uint32_t)((1 << 8) - 1) << 23) | ((uint32_t)1 << (23 - 1)));
 
-static inline uint32_t pack_sf32(uint32_t a_sign, uint32_t a_exp, uint32_t a_mant)
-{
-        uint32_t pack_sf32__part2927(uint32_t a_sign, uint32_t a_exp, uint32_t a_mant);
-    return pack_sf32__part2927(a_sign, a_exp, a_mant);
-
-}
+static inline uint32_t pack_sf32(uint32_t a_sign, uint32_t a_exp, uint32_t a_mant);
 
 static inline uint32_t unpack_sf32(uint32_t *pa_sign, int32_t *pa_exp,
-                               uint32_t a)
-{
-    {
-    uint32_t unpack_sf32__part2929(uint32_t *pa_sign, int32_t *pa_exp, uint32_t a);
-    return unpack_sf32__part2929(pa_sign, pa_exp, a);
-}
+                               uint32_t a);
 
-}
-
-static uint32_t rshift_rnd32(uint32_t a, int d)
-{
-    uint32_t mask;
-    unsigned int rshift_rnd32__part2931(unsigned int a, int d);
-        a = rshift_rnd32__part2931(a, d);
-    uint32_t rshift_rnd32__part2932(uint32_t a);
-    return rshift_rnd32__part2932(a);
-}
+static uint32_t rshift_rnd32(uint32_t a, int d);
 
 
 static uint32_t roundpack_sf32(uint32_t a_sign, int a_exp, uint32_t a_mant,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int diff;
-    uint32_t addend, rnd_bits;
-
-        {
-        uint32_t roundpack_sf32__part2934(uint32_t a_sign, RoundingModeEnum rm);
-        addend = roundpack_sf32__part2934(a_sign, rm);
-    }
-
-
-
-    void roundpack_sf32__part2935(int *a_exp, uint32_t *a_mant, uint32_t addend,
-                              int *diff, uint32_t *rnd_bits, uint32_t *pfflags);
-    roundpack_sf32__part2935(&a_exp, &a_mant, addend, &diff, &rnd_bits, pfflags);
-
-    extern void roundpack_sf32__part2936(uint32_t rnd_bits, uint32_t *pfflags);
-    roundpack_sf32__part2936(rnd_bits, pfflags);
-
-        uint32_t roundpack_sf32__part2937(uint32_t a_mant, uint32_t addend);
-    a_mant = roundpack_sf32__part2937(a_mant, addend);
-
-
-    uint32_t roundpack_sf32__part2938(int rm, uint32_t rnd_bits, uint32_t a_mant);
-    a_mant = roundpack_sf32__part2938(rm, rnd_bits, a_mant);
-
-
-
-        extern int roundpack_sf32__part2939(int a_exp, uint32_t a_mant);
-    a_exp = roundpack_sf32__part2939(a_exp, a_mant);
-        void roundpack_sf32__part2940(int *a_exp, uint32_t *a_mant, uint32_t addend, uint32_t *pfflags);
-    roundpack_sf32__part2940(&a_exp, &a_mant, addend, pfflags);
-
-        uint32_t roundpack_sf32__part2941(uint32_t a_sign, int a_exp, uint32_t a_mant);
-    return roundpack_sf32__part2941(a_sign, a_exp, a_mant);
-}
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
 
 static uint32_t normalize_sf32(uint32_t a_sign, int a_exp, uint32_t a_mant,
-                           RoundingModeEnum rm, uint32_t *pfflags)
-{
-    uint32_t normalize_sf32__part2943(uint32_t a_sign, int a_exp, uint32_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize_sf32__part2943(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+                           RoundingModeEnum rm, uint32_t *pfflags);
 
 
 
 static uint32_t normalize2_sf32(uint32_t a_sign, int a_exp, uint32_t a_mant1, uint32_t a_mant0,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int l, shift;
-    int normalize2_sf32__part2945(uint32_t a_mant1, uint32_t a_mant0);
-    l = normalize2_sf32__part2945(a_mant1, a_mant0);
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
-    int normalize2_sf32__part2946(int l, int a_exp);
-    shift = l - (32 - 1 - (32 - 2));
-    a_exp = normalize2_sf32__part2946(l, a_exp);
+BOOL issignan_sf32(uint32_t a);
 
-    uint32_t normalize2_sf32__part2947(uint32_t a_mant1, uint32_t a_mant0, int shift);
-    a_mant1 = normalize2_sf32__part2947(a_mant1, a_mant0, shift);
-
-    uint32_t normalize2_sf32__part2948(uint32_t a_sign, int a_exp, uint32_t a_mant1, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize2_sf32__part2948(a_sign, a_exp, a_mant1, rm, pfflags);
-}
-
-BOOL issignan_sf32(uint32_t a)
-{
-        int issignan_sf32__part2950(uint32_t a);
-    return issignan_sf32__part2950(a);
-
-}
-
-BOOL isnan_sf32(uint32_t a)
-{
-        BOOL isnan_sf32__part2952(uint32_t a);
-    return isnan_sf32__part2952(a);
-
-}
+BOOL isnan_sf32(uint32_t a);
 
 
 uint32_t add_sf32(uint32_t a, uint32_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, a_exp, b_exp;
-    uint32_t tmp, a_mant, b_mant;
-
-
-    void add_sf32__part2954(uint32_t *a, uint32_t *b);
-    add_sf32__part2954(&a, &b);
-
-    void add_sf32__part2955(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign, uint32_t *a_exp, uint32_t *b_exp, uint32_t *a_mant, uint32_t *b_mant);
-    add_sf32__part2955(a, b, &a_sign, &b_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-    {
-        uint32_t add_sf32__part2956(uint32_t a_exp, uint32_t a_mant, uint32_t b, uint32_t b_exp, uint32_t a_sign, uint32_t a, uint32_t *pfflags, int *ptaken);
-        int add_sf32__part2956_taken;
-        uint32_t add_sf32__part2956_ret;
-        add_sf32__part2956_ret = add_sf32__part2956(a_exp, a_mant, b, b_exp, a_sign, a, pfflags, &add_sf32__part2956_taken);
-        if (add_sf32__part2956_taken)
-            return add_sf32__part2956_ret;
-    }
-    void add_sf32__part2957(uint32_t *a_exp, uint32_t *a_mant);
-    add_sf32__part2957(&a_exp, &a_mant);
-
-    void add_sf32__part2958(uint32_t *b_exp, uint32_t *b_mant);
-    add_sf32__part2958(&b_exp, &b_mant);
-
-    uint32_t add_sf32__part2959(uint32_t b_mant, uint32_t a_exp, uint32_t b_exp);
-    b_mant = add_sf32__part2959(b_mant, a_exp, b_exp);
-
-    uint32_t add_sf32__part2960(uint32_t a_sign, uint32_t b_sign, uint32_t a_mant, uint32_t b_mant, uint32_t rm, uint32_t *p_a_sign);
-    a_mant = add_sf32__part2960(a_sign, b_sign, a_mant, b_mant, (uint32_t)rm, &a_sign);
-        uint32_t add_sf32__part2961(uint32_t a_sign, uint32_t a_exp, uint32_t a_mant, unsigned int rm, uint32_t *pfflags);
-    a_exp += (((32 - 2) - 23) - 3);
-    return add_sf32__part2961(a_sign, a_exp, a_mant, rm, pfflags);
-}
+              uint32_t *pfflags);
 
 uint32_t sub_sf32(uint32_t a, uint32_t b, RoundingModeEnum rm,
-                            uint32_t *pfflags)
-{
-    uint32_t sub_sf32__part2963(uint32_t a, uint32_t b, RoundingModeEnum rm, uint32_t *pfflags);
-    return sub_sf32__part2963(a, b, rm, pfflags);
+                            uint32_t *pfflags);
 
-}
-
-static inline uint32_t normalize_subnormal_sf32(int32_t *pa_exp, uint32_t a_mant)
-{
-    uint32_t normalize_subnormal_sf32__part2965(int32_t *pa_exp, uint32_t a_mant);
-    return normalize_subnormal_sf32__part2965(pa_exp, a_mant);
-}
+static inline uint32_t normalize_subnormal_sf32(int32_t *pa_exp, uint32_t a_mant);
 
 
 
-static uint32_t mul_u32(uint32_t *plow, uint32_t a, uint32_t b)
-{
-    uint32_t mul_u32__part2967(uint32_t *plow, uint32_t a, uint32_t b);
-    return mul_u32__part2967(plow, a, b);
-}
+static uint32_t mul_u32(uint32_t *plow, uint32_t a, uint32_t b);
 uint32_t mul_sf32(uint32_t a, uint32_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint32_t a_mant, b_mant, r_mant, r_mant_low;
-    void mul_sf32__part2969(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign, uint32_t *r_sign, int32_t *a_exp, int32_t *b_exp, uint32_t *a_mant, uint32_t *b_mant);
-    mul_sf32__part2969(a, b, &a_sign, &b_sign, &r_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-        {
-        int mul_sf32__part2970(uint32_t a, uint32_t b, int32_t a_exp, int32_t b_exp, uint32_t a_mant, uint32_t b_mant, uint32_t r_sign, uint32_t *pfflags, uint32_t *ret);
-        uint32_t mul_sf32__part2970_ret;
-        if (mul_sf32__part2970(a, b, a_exp, b_exp, a_mant, b_mant, r_sign, pfflags, &mul_sf32__part2970_ret))
-            return mul_sf32__part2970_ret;
-    }
-
-    {
-        int mul_sf32__part2971(int32_t *pa_exp, uint32_t *pa_mant, uint32_t r_sign, uint32_t *pret);
-        uint32_t mul_sf32_part2971_ret;
-        if (mul_sf32__part2971(&a_exp, &a_mant, r_sign, &mul_sf32_part2971_ret))
-            return mul_sf32_part2971_ret;
-    }
-        {
-        int _early2972;
-        uint32_t _r2972 = 0;
-        int32_t mul_sf32__part2972(uint32_t r_sign, int32_t *pb_exp, uint32_t *pb_mant, uint32_t *pret);
-        _early2972 = mul_sf32__part2972(r_sign, &b_exp, &b_mant, &_r2972);
-        if (_early2972)
-            return _r2972;
-    }
-
-        uint32_t mul_sf32__part2973(uint32_t r_sign, int32_t a_exp, int32_t b_exp, uint32_t a_mant, uint32_t b_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    (void)r_exp;
-    (void)r_mant;
-    (void)r_mant_low;
-    return mul_sf32__part2973(r_sign, a_exp, b_exp, a_mant, b_mant, rm, pfflags);
-
-}
+              uint32_t *pfflags);
 
 
 uint32_t fma_sf32(uint32_t a, uint32_t b, uint32_t c, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, c_sign, r_sign;
-    int32_t a_exp, b_exp, c_exp, r_exp, shift;
-    uint32_t a_mant, b_mant, c_mant, r_mant1, r_mant0, c_mant1, c_mant0, mask;
-
-    void fma_sf32__part2975(uint32_t a, uint32_t b, uint32_t c,
-                            uint32_t *a_sign, uint32_t *b_sign, uint32_t *c_sign,
-                            uint32_t *r_sign, int32_t *a_exp, int32_t *b_exp,
-                            int32_t *c_exp, uint32_t *a_mant, uint32_t *b_mant,
-                            uint32_t *c_mant);
-    fma_sf32__part2975(a, b, c, &a_sign, &b_sign, &c_sign, &r_sign,
-                       &a_exp, &b_exp, &c_exp, &a_mant, &b_mant, &c_mant);
-    {
-        int fma_sf32__part2976(uint32_t a, uint32_t b, uint32_t c, int32_t a_exp, int32_t b_exp, int32_t c_exp, uint32_t a_mant, uint32_t b_mant, uint32_t c_mant, uint32_t r_sign, uint32_t c_sign, uint32_t *pfflags, uint32_t *pret);
-        uint32_t fma_part_ret = 0;
-        if (fma_sf32__part2976(a, b, c, a_exp, b_exp, c_exp, a_mant, b_mant, c_mant, r_sign, c_sign, pfflags, &fma_part_ret))
-            return fma_part_ret;
-    }
-    int fma_sf32__part2977(int32_t *pa_exp, uint32_t *pa_mant);
-    if (!fma_sf32__part2977(&a_exp, &a_mant))
-        goto mul_zero;
-
-    {
-        uint32_t fma_sf32__part2978(int32_t *pb_exp, uint32_t *pb_mant,
-                                    uint32_t *pr_sign, int32_t c_exp,
-                                    uint32_t c_mant, uint32_t c_sign,
-                                    uint32_t c, int rm, int mode,
-                                    int *pdo_ret);
-        int mode;
-        int do_ret = 0;
-        uint32_t res;
-
-        if (b_exp != 0) {
-            mode = 0;
-        } else if (b_mant != 0) {
-            mode = 1;
-        } else {
-        mul_zero:
-            mode = 2;
-        }
-        res = fma_sf32__part2978(&b_exp, &b_mant, &r_sign, c_exp, c_mant,
-                                 c_sign, c, (int)rm, mode, &do_ret);
-        if (do_ret)
-            return res;
-    }
-
-        void fma_sf32__part2979(int32_t a_exp, int32_t b_exp, uint32_t a_mant, uint32_t b_mant, int32_t *r_exp, uint32_t *r_mant1, uint32_t *r_mant0);
-    fma_sf32__part2979(a_exp, b_exp, a_mant, b_mant, &r_exp, &r_mant1, &r_mant0);
-
-
-        void fma_sf32__part2980(uint32_t *p_r_mant1, uint32_t *p_r_mant0, int32_t *p_r_exp);
-    fma_sf32__part2980(&r_mant1, &r_mant0, &r_exp);
+              uint32_t *pfflags);
 
 
 
-    {
-        uint32_t fma_sf32__part2981(int32_t *pc_exp, uint32_t *pc_mant,
-                                    uint32_t r_sign, int32_t r_exp,
-                                    uint32_t r_mant1, uint32_t r_mant0,
-                                    uint32_t rm, uint32_t *pfflags,
-                                    int32_t *pret);
-        int32_t part2981_ret_flag = 0;
-        uint32_t part2981_ret;
-
-        part2981_ret = fma_sf32__part2981(&c_exp, &c_mant, r_sign, r_exp,
-                                          r_mant1, r_mant0, (uint32_t)rm,
-                                          pfflags, &part2981_ret_flag);
-        if (part2981_ret_flag) {
-            return part2981_ret;
-        }
-    }
-    uint32_t fma_sf32__part2982(int32_t *c_exp, uint32_t c_mant);
-    c_mant1 = fma_sf32__part2982(&c_exp, c_mant);
-    c_mant0 = 0;
-
-
-
-
-
-
-        void fma_sf32__part2983(int32_t *r_exp, int32_t *c_exp, uint32_t *r_mant1, uint32_t *r_mant0, uint32_t *c_mant1, uint32_t *c_mant0, uint32_t *r_sign, uint32_t *c_sign);
-    fma_sf32__part2983(&r_exp, &c_exp, &r_mant1, &r_mant0, &c_mant1, &c_mant0, &r_sign, &c_sign);
-
-
-    int32_t fma_sf32__part2984(int32_t r_exp, int32_t c_exp);
-    shift = fma_sf32__part2984(r_exp, c_exp);
-
-    void fma_sf32__part2985(int32_t shift, uint32_t *c_mant0, uint32_t *c_mant1, uint32_t *mask);
-    fma_sf32__part2985(shift, &c_mant0, &c_mant1, &mask);
-
-
-
-        {
-        void fma_sf32__part2986(uint32_t *r_mant0, uint32_t *r_mant1, uint32_t *r_sign,
-                                uint32_t c_mant0, uint32_t c_mant1, uint32_t c_sign,
-                                RoundingModeEnum rm);
-        fma_sf32__part2986(&r_mant0, &r_mant1, &r_sign, c_mant0, c_mant1, c_sign, rm);
-    }
-    uint32_t fma_sf32__part2987(uint32_t r_sign, int32_t r_exp, uint32_t r_mant1, uint32_t r_mant0, int32_t rm, uint32_t *pfflags);
-    return fma_sf32__part2987(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);
-
-}
-
-
-
-static uint32_t divrem_u32(uint32_t *pr, uint32_t ah, uint32_t al, uint32_t b)
-{
-    uint32_t divrem_u32__part2989(uint32_t *pr, uint32_t ah, uint32_t al, uint32_t b);
-    return divrem_u32__part2989(pr, ah, al, b);
-
-}
+static uint32_t divrem_u32(uint32_t *pr, uint32_t ah, uint32_t al, uint32_t b);
 uint32_t div_sf32(uint32_t a, uint32_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint32_t a_mant, b_mant, r_mant, r;
-    void div_sf32__part2991(uint32_t a, uint32_t b, uint32_t *pa_sign, uint32_t *pb_sign, uint32_t *pr_sign, int32_t *pa_exp, int32_t *pb_exp, uint32_t *pa_mant, uint32_t *pb_mant);
-    div_sf32__part2991(a, b, &a_sign, &b_sign, &r_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-    uint32_t div_sf32__part2992(uint32_t a, uint32_t b, int32_t a_exp, uint32_t a_mant,
-                           int32_t b_exp, uint32_t b_mant, uint32_t r_sign,
-                           uint32_t *pfflags, int *p_handled);
-    {
-        int part2992_handled;
-        uint32_t part2992_res = div_sf32__part2992(a, b, a_exp, a_mant, b_exp, b_mant,
-                                                   r_sign, pfflags, &part2992_handled);
-        if (part2992_handled) {
-            return part2992_res;
-        }
-    }
-
-
-    uint32_t div_sf32__part2993(uint32_t r_sign, int32_t a_exp, uint32_t a_mant, int32_t *pb_exp, uint32_t *pb_mant, uint32_t *pfflags, int32_t *pdone);
-{
-        int32_t done2993;
-        uint32_t ret2993 = div_sf32__part2993(r_sign, a_exp, a_mant, &b_exp, &b_mant, pfflags, &done2993);
-        if (done2993)
-            return ret2993;
-    }
-        {
-        int div_sf32__part2994(int32_t *a_exp, uint32_t *a_mant, uint32_t r_sign, uint32_t *pret);
-        uint32_t div_sf32__part2994_ret;
-        if (div_sf32__part2994(&a_exp, &a_mant, r_sign, &div_sf32__part2994_ret))
-            return div_sf32__part2994_ret;
-    }
-
-    {
-    void div_sf32__part2995(int32_t a_exp, int32_t b_exp, uint32_t a_mant, uint32_t b_mant, int32_t *pr_exp, uint32_t *pr_mant, uint32_t *pr);
-    div_sf32__part2995(a_exp, b_exp, a_mant, b_mant, &r_exp, &r_mant, &r);
-}
-    void div_sf32__part2996(uint32_t r, uint32_t *r_mant);
-    div_sf32__part2996(r, &r_mant);
-
-    uint32_t div_sf32__part2997(uint32_t r_sign, int32_t r_exp, uint32_t r_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return div_sf32__part2997(r_sign, r_exp, r_mant, rm, pfflags);
-}
+              uint32_t *pfflags);
 
 
 
 
 
-static int sqrtrem_u32(uint32_t *pr, uint32_t ah, uint32_t al)
-{
-    uint64_t a, u, s;
-    int l, inexact;
-
-
-        {
-        int sqrtrem_u32__part2999(uint32_t *pr, uint32_t ah, uint32_t al, int *pl);
-        if (sqrtrem_u32__part2999(pr, ah, al, &l)) {
-            return 0;
-        }
-    }
-    void sqrtrem_u32__part3000(uint64_t *pa, uint64_t *pu, uint32_t ah, uint32_t al, int l);
-    sqrtrem_u32__part3000(&a, &u, ah, al, l);
-
-    extern void sqrtrem_u32__part3001(uint64_t a, uint64_t *ps, uint64_t *pu);
-    sqrtrem_u32__part3001(a, &s, &u);
-
-    int sqrtrem_u32__part3002(uint32_t *pr, uint64_t a, uint64_t s);
-    return sqrtrem_u32__part3002(pr, a, s);
-
-}
+static int sqrtrem_u32(uint32_t *pr, uint32_t ah, uint32_t al);
 uint32_t sqrt_sf32(uint32_t a, RoundingModeEnum rm,
-               uint32_t *pfflags)
-{
-    void sqrt_sf32__part3004(uint32_t a, uint32_t *pa_sign, int32_t *pa_exp, uint32_t *pa_mant);
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint32_t a_mant;
-
-    sqrt_sf32__part3004(a, &a_sign, &a_exp, &a_mant);
-
-    {
-    uint32_t sqrt_sf32__part3005_ret = 0;
-    int sqrt_sf32__part3005_st;
-    extern int sqrt_sf32__part3005(uint32_t a, uint32_t a_sign, int32_t a_exp,
-                                   uint32_t a_mant, uint32_t *pfflags,
-                                   uint32_t *p_ret);
-    sqrt_sf32__part3005_st = sqrt_sf32__part3005(a, a_sign, a_exp, a_mant,
-                                                 pfflags, &sqrt_sf32__part3005_ret);
-    if (sqrt_sf32__part3005_st == 1)
-        return sqrt_sf32__part3005_ret;
-    if (sqrt_sf32__part3005_st == 2)
-        goto neg_error;
-}
-
-        {
-        int32_t part3006_action;
-        uint32_t part3006_ret;
-        extern uint32_t sqrt_sf32__part3006(uint32_t a, uint32_t a_sign, int32_t a_exp, uint32_t a_mant, int32_t *action);
-neg_error:
-        part3006_ret = sqrt_sf32__part3006(a, a_sign, a_exp, a_mant, &part3006_action);
-        if (part3006_action == 1)
-            return part3006_ret;
-        if (part3006_action == 2) {
-            *pfflags |= (1 << 4);
-            return F_QNAN32;
-        }
-    }
-
-        {
-        uint32_t sqrt_sf32__part3007(int32_t *pa_exp, uint32_t a_mant, int *pzero);
-        int sqrt_sf32__pzero = 0;
-        a_mant = sqrt_sf32__part3007(&a_exp, a_mant, &sqrt_sf32__pzero);
-        if (sqrt_sf32__pzero)
-            return pack_sf32(0, 0, 0);
-    }
-
-    void sqrt_sf32__part3008(int32_t *pa_exp);
-sqrt_sf32__part3008(&a_exp);
-
-
-    void sqrt_sf32__part3009(int32_t *a_exp, uint32_t *a_mant);
-    sqrt_sf32__part3009(&a_exp, &a_mant);
-
-    void sqrt_sf32__part3010(int32_t *pa_exp, uint32_t *pa_mant);
-    sqrt_sf32__part3010(&a_exp, &a_mant);
-
-    int sqrt_sf32__part3011(uint32_t *a_mant);
-    if (sqrt_sf32__part3011(&a_mant))
-        a_mant |= 1;
-
-        uint32_t sqrt_sf32__part3012(uint32_t a_sign, int32_t a_exp, uint32_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return sqrt_sf32__part3012(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+               uint32_t *pfflags);
 
 
 
-uint32_t min_sf32(uint32_t a, uint32_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
+uint32_t min_sf32(uint32_t a, uint32_t b, uint32_t *pfflags);
 
-    uint32_t min_sf32__part3014(uint32_t a, uint32_t b, uint32_t *pfflags, int *pret);
-    int _min_sf32_part3014_ret = 0;
-    uint32_t _min_sf32_part3014_val = min_sf32__part3014(a, b, pfflags, &_min_sf32_part3014_ret);
-    if (_min_sf32_part3014_ret)
-        return _min_sf32_part3014_val;
+uint32_t max_sf32(uint32_t a, uint32_t b, uint32_t *pfflags);
 
-    void min_sf32__part3015(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign);
-    min_sf32__part3015(a, b, &a_sign, &b_sign);
+int eq_quiet_sf32(uint32_t a, uint32_t b, uint32_t *pfflags);
 
-    uint32_t min_sf32__part3016(uint32_t a, uint32_t b, uint32_t a_sign, uint32_t b_sign);
-    return min_sf32__part3016(a, b, a_sign, b_sign);
-}
+int le_sf32(uint32_t a, uint32_t b, uint32_t *pfflags);
 
-uint32_t max_sf32(uint32_t a, uint32_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
+int lt_sf32(uint32_t a, uint32_t b, uint32_t *pfflags);
 
-    uint32_t max_sf32__part3018(uint32_t a, uint32_t b, uint32_t *pfflags, int *p_ret);
-    {
-        int max_sf32_part3018_ret;
-        uint32_t max_sf32_part3018_val = max_sf32__part3018(a, b, pfflags, &max_sf32_part3018_ret);
-        if (max_sf32_part3018_ret)
-            return max_sf32_part3018_val;
-    }
-    void max_sf32__part3019(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign);
-    max_sf32__part3019(a, b, &a_sign, &b_sign);
-
-
-    uint32_t max_sf32__part3020(uint32_t a, uint32_t b, uint32_t a_sign, uint32_t b_sign);
-    return max_sf32__part3020(a, b, a_sign, b_sign);
-
-}
-
-int eq_quiet_sf32(uint32_t a, uint32_t b, uint32_t *pfflags)
-{
-    int eq_quiet_sf32__part3022(uint32_t a, uint32_t b, uint32_t *pfflags);
-    if (eq_quiet_sf32__part3022(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    int eq_quiet_sf32__part3023(uint32_t a, uint32_t b);
-    if (eq_quiet_sf32__part3023(a, b))
-        return 1;
-
-    int eq_quiet_sf32__part3024(uint32_t a, uint32_t b);
-return eq_quiet_sf32__part3024(a, b);
-
-}
-
-int le_sf32(uint32_t a, uint32_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-    int le_sf32__part3026(uint32_t a, uint32_t b, uint32_t *pfflags);
-    if (le_sf32__part3026(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    void le_sf32__part3027(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign);
-    le_sf32__part3027(a, b, &a_sign, &b_sign);
-    int le_sf32__part3028(uint32_t a, uint32_t b, uint32_t a_sign, uint32_t b_sign);
-    return le_sf32__part3028(a, b, a_sign, b_sign);
-
-}
-
-int lt_sf32(uint32_t a, uint32_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-    int lt_sf32__part3030(uint32_t a, uint32_t b, uint32_t *pfflags);
-    if (lt_sf32__part3030(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    void lt_sf32__part3031(uint32_t a, uint32_t b, uint32_t *a_sign, uint32_t *b_sign);
-    lt_sf32__part3031(a, b, &a_sign, &b_sign);
-
-        int lt_sf32__part3032(uint32_t a, uint32_t b, uint32_t a_sign, uint32_t b_sign);
-    return lt_sf32__part3032(a, b, a_sign, b_sign);
-}
-
-uint32_t fclass_sf32(uint32_t a)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint32_t ret;
-
-    void fclass_sf32__part3034(uint32_t a, uint32_t *a_sign, int32_t *a_exp, uint32_t *a_mant);
-    fclass_sf32__part3034(a, &a_sign, &a_exp, &a_mant);
-
-    uint32_t fclass_sf32__part3035(uint32_t a_sign, int32_t a_exp, uint32_t a_mant);
-    ret = fclass_sf32__part3035(a_sign, a_exp, a_mant);
-    uint32_t fclass_sf32__part3036(uint32_t ret);
-    return fclass_sf32__part3036(ret);
-
-}
+uint32_t fclass_sf32(uint32_t a);
 static int32_t internal_cvt_sf32_i32(uint32_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint32_t r, r_max;
-
-    void internal_cvt_sf32_i32__part3295(uint32_t a, uint32_t *a_sign, int32_t *a_exp, uint32_t *a_mant);
-
-    internal_cvt_sf32_i32__part3295(a, &a_sign, &a_exp, &a_mant);
-
-    uint32_t internal_cvt_sf32_i32__part3296(int32_t a_exp, uint32_t a_mant, uint32_t a_sign);
-    a_sign = internal_cvt_sf32_i32__part3296(a_exp, a_mant, a_sign);
-
-    void internal_cvt_sf32_i32__part3297(int32_t *a_exp, uint32_t *a_mant);
-    internal_cvt_sf32_i32__part3297(&a_exp, &a_mant);
-
-    uint32_t internal_cvt_sf32_i32__part3298(uint32_t a_mant, int32_t *a_exp);
-    a_mant = internal_cvt_sf32_i32__part3298(a_mant, &a_exp);
-
-
-    uint32_t internal_cvt_sf32_i32__part3299(uint32_t a_sign, int is_unsigned);
-    r_max = internal_cvt_sf32_i32__part3299(a_sign, is_unsigned);
-        {
-        int internal_cvt_sf32_i32__part3300(uint32_t, uint32_t, int32_t,
-                                            uint32_t *, int, uint32_t, uint32_t *);
-        int ovf;
-        ovf = internal_cvt_sf32_i32__part3300(a_sign, a_mant, a_exp, pfflags,
-                                              (int)rm, r_max, &r);
-        if (ovf)
-            return r_max;
-    }
-
-    uint32_t internal_cvt_sf32_i32__part3301(uint32_t a_sign, uint32_t r);
-    r = internal_cvt_sf32_i32__part3301(a_sign, r);
-        {
-        int32_t internal_cvt_sf32_i32__part3302(uint32_t r);
-        return internal_cvt_sf32_i32__part3302(r);
-    }
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int32_t cvt_sf32_i32(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        int32_t cvt_sf32_i32__part3304(uint32_t a, int rm, uint32_t *pfflags);
-    return cvt_sf32_i32__part3304(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 uint32_t cvt_sf32_u32(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        uint32_t cvt_sf32_u32__part3306(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf32_u32__part3306(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint32_t internal_cvt_i32_sf32(int32_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint32_t r, mask;
-    int l;
-
-    void internal_cvt_i32_sf32__part3308(int32_t a, BOOL is_unsigned, uint32_t *a_sign, uint32_t *r);
-    internal_cvt_i32_sf32__part3308(a, is_unsigned, &a_sign, &r);
-
-        void internal_cvt_i32_sf32__part3309(uint32_t r, int32_t *p_a_exp, int *p_l);
-    internal_cvt_i32_sf32__part3309(r, &a_exp, &l);
-
-    void internal_cvt_i32_sf32__part3310(int l, uint32_t *r, uint32_t *mask, int32_t *a_exp);
-    internal_cvt_i32_sf32__part3310(l, &r, &mask, &a_exp);
-
-    uint32_t internal_cvt_i32_sf32__part3311(uint32_t a_sign, int32_t a_exp, uint32_t r, RoundingModeEnum rm, uint32_t *pfflags);
-    return internal_cvt_i32_sf32__part3311(a_sign, a_exp, r, rm, pfflags);
-
-}
+                                                                       BOOL is_unsigned);
 
 uint32_t cvt_i32_sf32(int32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    extern uint32_t cvt_i32_sf32__part3313(int32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_i32_sf32__part3313(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 uint32_t cvt_u32_sf32(uint32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint32_t cvt_u32_sf32__part3315(uint32_t a, int rm, uint32_t *pfflags);
-    return cvt_u32_sf32__part3315(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 
 static int64_t internal_cvt_sf32_i64(uint32_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint64_t r, r_max;
-
-    void internal_cvt_sf32_i64__part3317(uint32_t a, uint32_t *a_sign, int32_t *a_exp, uint32_t *a_mant);
-    internal_cvt_sf32_i64__part3317(a, &a_sign, &a_exp, &a_mant);
-
-    uint32_t internal_cvt_sf32_i64__part3318(int32_t a_exp, uint32_t a_mant, uint32_t a_sign);
-    a_sign = internal_cvt_sf32_i64__part3318(a_exp, a_mant, a_sign);
-    void internal_cvt_sf32_i64__part3319(int32_t *a_exp, uint32_t *a_mant);
-    internal_cvt_sf32_i64__part3319(&a_exp, &a_mant);
-
-    void internal_cvt_sf32_i64__part3320(uint32_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf32_i64__part3320(&a_mant, &a_exp);
-
-
-    uint64_t internal_cvt_sf32_i64__part3321(uint32_t a_sign, int is_unsigned);
-    r_max = internal_cvt_sf32_i64__part3321(a_sign, is_unsigned);
-        {
-        int part_status;
-        int internal_cvt_sf32_i64__part3322(int32_t a_exp, uint32_t a_mant,
-                                            uint32_t a_sign, RoundingModeEnum rm,
-                                            uint64_t r_max, uint32_t *pfflags,
-                                            uint64_t *pr);
-        part_status = internal_cvt_sf32_i64__part3322(a_exp, a_mant, a_sign, rm,
-                                                      r_max, pfflags, &r);
-        if (part_status)
-            return r;
-    }
-
-        {
-        uint64_t internal_cvt_sf32_i64__part3323(uint32_t a_sign, uint64_t *r);
-        r = internal_cvt_sf32_i64__part3323(a_sign, &r);
-    }
-
-    int64_t internal_cvt_sf32_i64__part3324(uint64_t r);
-    return internal_cvt_sf32_i64__part3324(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int64_t cvt_sf32_i64(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    int64_t cvt_sf32_i64__part3326(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf32_i64__part3326(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 uint64_t cvt_sf32_u64(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    extern uint64_t cvt_sf32_u64__part3328(uint32_t a, RoundingModeEnum rm,
-                                       uint32_t *pfflags);
-return cvt_sf32_u64__part3328(a, rm, pfflags);
-
-}
+                                                          uint32_t *pfflags);
 
 
 static uint32_t internal_cvt_i64_sf32(int64_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint64_t r, mask;
-    int l;
-
-    void internal_cvt_i64_sf32__part3330(int64_t a, BOOL is_unsigned, uint32_t *a_sign, uint64_t *r);
-    internal_cvt_i64_sf32__part3330(a, is_unsigned, &a_sign, &r);
-        void internal_cvt_i64_sf32__part3331(uint64_t r, int32_t *pa_exp, int *pl);
-    internal_cvt_i64_sf32__part3331(r, &a_exp, &l);
-
-    void internal_cvt_i64_sf32__part3332(uint64_t *r, int32_t *a_exp, int l);
-    internal_cvt_i64_sf32__part3332(&r, &a_exp, l);
-
-    uint32_t internal_cvt_i64_sf32__part3333(uint32_t a_sign, int32_t a_exp, uint32_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    a_mant = r;
-    return internal_cvt_i64_sf32__part3333(a_sign, a_exp, a_mant, rm, pfflags);
-}
+                                                                       BOOL is_unsigned);
 
 uint32_t cvt_i64_sf32(int64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint32_t cvt_i64_sf32__part3335(int64_t a, int rm, uint32_t *pfflags);
-    return cvt_i64_sf32__part3335(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 uint32_t cvt_u64_sf32(uint64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint32_t cvt_u64_sf32__part3337(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-return cvt_u64_sf32__part3337(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 
 
 static int128_t internal_cvt_sf32_i128(uint32_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint128_t r, r_max;
-
-    void internal_cvt_sf32_i128__part3339(uint32_t a, uint32_t *a_sign, int32_t *a_exp, uint32_t *a_mant);
-    internal_cvt_sf32_i128__part3339(a, &a_sign, &a_exp, &a_mant);
-
-    void internal_cvt_sf32_i128__part3340(int32_t a_exp, uint32_t a_mant, uint32_t *a_sign);
-    internal_cvt_sf32_i128__part3340(a_exp, a_mant, &a_sign);
-
-    void internal_cvt_sf32_i128__part3341(int32_t *a_exp, uint32_t *a_mant);
-    internal_cvt_sf32_i128__part3341(&a_exp, &a_mant);
-
-        void internal_cvt_sf32_i128__part3342(uint32_t *pa_mant, int32_t *pa_exp);
-    internal_cvt_sf32_i128__part3342(&a_mant, &a_exp);
-
-
-        {
-        uint128_t internal_cvt_sf32_i128__part3343(BOOL is_unsigned, uint32_t a_sign);
-        r_max = internal_cvt_sf32_i128__part3343(is_unsigned, a_sign);
-    }
-
-        {
-        int _cvt_part_st;
-        int internal_cvt_sf32_i128__part3344(int a_exp, int rm, uint32_t a_sign,
-                                            uint32_t *a_mant, const uint128_t *r_max,
-                                            uint128_t *r, uint32_t *pfflags);
-        _cvt_part_st = internal_cvt_sf32_i128__part3344(a_exp, (int)rm, a_sign,
-                                                       &a_mant, &r_max, &r, pfflags);
-        if (_cvt_part_st == 1)
-            return r_max;
-    }
-
-    void internal_cvt_sf32_i128__part3345(uint32_t a_sign, uint128_t *r);
-    internal_cvt_sf32_i128__part3345(a_sign, &r);
-
-        int128_t internal_cvt_sf32_i128__part3346(uint128_t r);
-    return internal_cvt_sf32_i128__part3346(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int128_t cvt_sf32_i128(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        {
-        int128_t cvt_sf32_i128__part3348(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-        return cvt_sf32_i128__part3348(a, rm, pfflags);
-    }
-
-}
+                                                          uint32_t *pfflags);
 
 uint128_t cvt_sf32_u128(uint32_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        uint128_t cvt_sf32_u128__part3350(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf32_u128__part3350(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint32_t internal_cvt_i128_sf32(int128_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint32_t a_mant;
-    uint128_t r, mask;
-    int l;
-
-    void internal_cvt_i128_sf32__part3352(int128_t a, BOOL is_unsigned, uint32_t *a_sign, uint128_t *r);
-    internal_cvt_i128_sf32__part3352(a, is_unsigned, &a_sign, &r);
-
-    void internal_cvt_i128_sf32__part3353(uint64_t r_hi, uint64_t r_lo, int32_t *pa_exp, int *pl);
-    internal_cvt_i128_sf32__part3353((uint64_t)(r >> 64), (uint64_t)r, &a_exp, &l);
-
-    extern void internal_cvt_i128_sf32__part3354(uint128_t *pr, uint128_t *pmask, int32_t *pa_exp, int l);
-    internal_cvt_i128_sf32__part3354(&r, &mask, &a_exp, l);
-
-        uint32_t internal_cvt_i128_sf32__part3355(uint32_t a_sign, int32_t a_exp, uint128_t r, RoundingModeEnum rm, uint32_t *pfflags);
-    return internal_cvt_i128_sf32__part3355(a_sign, a_exp, r, rm, pfflags);
-
-}
+                                                                       BOOL is_unsigned);
 
 uint32_t cvt_i128_sf32(int128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint32_t cvt_i128_sf32__part3357(int128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_i128_sf32__part3357(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 uint32_t cvt_u128_sf32(uint128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        {
-        extern uint32_t cvt_u128_sf32__part3359(uint128_t a, RoundingModeEnum rm,
-                                               uint32_t *pfflags);
-        return cvt_u128_sf32__part3359(a, rm, pfflags);
-    }
-}
+                                                       uint32_t *pfflags);
 
 
 static const uint64_t F_QNAN64 = (((uint64_t)((1 << 11) - 1) << 52) | ((uint64_t)1 << (52 - 1)));
 
-static inline uint64_t pack_sf64(uint32_t a_sign, uint32_t a_exp, uint64_t a_mant)
-{
-        extern uint64_t pack_sf64__part3039(uint32_t a_sign, uint32_t a_exp, uint64_t a_mant);
-    return pack_sf64__part3039(a_sign, a_exp, a_mant);
-
-}
+static inline uint64_t pack_sf64(uint32_t a_sign, uint32_t a_exp, uint64_t a_mant);
 
 static inline uint64_t unpack_sf64(uint32_t *pa_sign, int32_t *pa_exp,
-                               uint64_t a)
-{
-    {
-    extern uint64_t unpack_sf64__part3041(uint32_t *pa_sign, int32_t *pa_exp, uint64_t a);
-    return unpack_sf64__part3041(pa_sign, pa_exp, a);
-}
+                               uint64_t a);
 
-}
-
-static uint64_t rshift_rnd64(uint64_t a, int d)
-{
-    uint64_t mask;
-    void rshift_rnd64__part3043(uint64_t *a, int d, uint64_t *mask);
-    rshift_rnd64__part3043(&a, d, &mask);
-    uint64_t rshift_rnd64__part3044(uint64_t a);
-return rshift_rnd64__part3044(a);
-}
+static uint64_t rshift_rnd64(uint64_t a, int d);
 
 
 static uint64_t roundpack_sf64(uint32_t a_sign, int a_exp, uint64_t a_mant,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int diff;
-    uint32_t addend, rnd_bits;
-
-    uint32_t roundpack_sf64__part3046(uint32_t a_sign, int rm);
-    addend = roundpack_sf64__part3046(a_sign, (int)rm);
-
-
-    uint32_t roundpack_sf64__part3047(uint64_t *a_mant, int *a_exp, uint32_t addend, uint32_t *pfflags);
-    rnd_bits = roundpack_sf64__part3047(&a_mant, &a_exp, addend, pfflags);
-
-    void roundpack_sf64__part3048(uint32_t rnd_bits, uint32_t *pfflags);
-    roundpack_sf64__part3048(rnd_bits, pfflags);
-
-    uint64_t roundpack_sf64__part3049(uint64_t a_mant, uint32_t addend);
-a_mant = roundpack_sf64__part3049(a_mant, addend);
-
-
-    uint64_t roundpack_sf64__part3050(int rm, uint32_t rnd_bits, uint64_t a_mant);
-    a_mant = roundpack_sf64__part3050(rm, rnd_bits, a_mant);
-
-
-
-    int roundpack_sf64__part3051(int a_exp, uint64_t a_mant);
-a_exp = roundpack_sf64__part3051(a_exp, a_mant);
-    void roundpack_sf64__part3052(int *a_exp, uint64_t *a_mant, uint32_t addend, uint32_t *pfflags);
-    roundpack_sf64__part3052(&a_exp, &a_mant, addend, pfflags);
-        uint64_t roundpack_sf64__part3053(uint32_t a_sign, int a_exp, uint64_t a_mant);
-    return roundpack_sf64__part3053(a_sign, a_exp, a_mant);
-
-}
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
 
 static uint64_t normalize_sf64(uint32_t a_sign, int a_exp, uint64_t a_mant,
-                           RoundingModeEnum rm, uint32_t *pfflags)
-{
-    uint64_t normalize_sf64__part3055(uint32_t a_sign, int a_exp, uint64_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize_sf64__part3055(a_sign, a_exp, a_mant, rm, pfflags);
-}
+                           RoundingModeEnum rm, uint32_t *pfflags);
 
 
 
 static uint64_t normalize2_sf64(uint32_t a_sign, int a_exp, uint64_t a_mant1, uint64_t a_mant0,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int l, shift;
-    int normalize2_sf64__part3057(uint64_t a_mant1, uint64_t a_mant0);
-    l = normalize2_sf64__part3057(a_mant1, a_mant0);
-    void normalize2_sf64__part3058(int l, int *shift, int *a_exp);
-    normalize2_sf64__part3058(l, &shift, &a_exp);
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
-    {
-        void normalize2_sf64__part3059(int shift, uint64_t *a_mant1, uint64_t a_mant0);
-        normalize2_sf64__part3059(shift, &a_mant1, a_mant0);
-    }
-    uint64_t normalize2_sf64__part3060(uint32_t a_sign, int a_exp, uint64_t a_mant1, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize2_sf64__part3060(a_sign, a_exp, a_mant1, rm, pfflags);
-}
+BOOL issignan_sf64(uint64_t a);
 
-BOOL issignan_sf64(uint64_t a)
-{
-    int issignan_sf64__part3062(uint64_t a);
-    return issignan_sf64__part3062(a);
-
-}
-
-BOOL isnan_sf64(uint64_t a)
-{
-    int isnan_sf64__part3064(uint64_t a);
-    return isnan_sf64__part3064(a);
-}
+BOOL isnan_sf64(uint64_t a);
 
 
 uint64_t add_sf64(uint64_t a, uint64_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, a_exp, b_exp;
-    uint64_t tmp, a_mant, b_mant;
-
-
-    void add_sf64__part3066(uint64_t *a, uint64_t *b);
-    add_sf64__part3066(&a, &b);
-    void add_sf64__part3067(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign, uint32_t *a_exp, uint32_t *b_exp, uint64_t *a_mant, uint64_t *b_mant);
-    add_sf64__part3067(a, b, &a_sign, &b_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-        {
-        int add_sf64__part3068(uint32_t a_exp, uint32_t a_sign, uint64_t a_mant,
-                               uint64_t a, uint64_t b, uint32_t b_exp,
-                               uint32_t *pfflags, uint64_t *presult);
-        uint64_t add_sf64__part3068_result;
-        if (add_sf64__part3068(a_exp, a_sign, a_mant, a, b, b_exp,
-                               pfflags, &add_sf64__part3068_result))
-            return add_sf64__part3068_result;
-    }
-
-        void add_sf64__part3069(uint32_t *a_exp, uint64_t *a_mant);
-    add_sf64__part3069(&a_exp, &a_mant);
-
-    void add_sf64__part3070(uint32_t *b_exp, uint64_t *b_mant);
-    add_sf64__part3070(&b_exp, &b_mant);
-
-        uint64_t add_sf64__part3071(uint64_t b_mant, uint32_t a_exp, uint32_t b_exp);
-    b_mant = add_sf64__part3071(b_mant, a_exp, b_exp);
-    void add_sf64__part3072(uint32_t *a_sign, uint32_t b_sign, uint64_t *a_mant, uint64_t b_mant, int rm);
-    add_sf64__part3072(&a_sign, b_sign, &a_mant, b_mant, (int)rm);
-
-    uint64_t add_sf64__part3073(uint32_t a_sign, uint32_t a_exp, uint64_t a_mant, int rm, uint32_t *pfflags);
-    a_exp += (((64 - 2) - 52) - 3);
-    return add_sf64__part3073(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+              uint32_t *pfflags);
 
 uint64_t sub_sf64(uint64_t a, uint64_t b, RoundingModeEnum rm,
-                            uint32_t *pfflags)
-{
-    uint64_t sub_sf64__part3075(uint64_t a, uint64_t b, RoundingModeEnum rm, uint32_t *pfflags);
-    return sub_sf64__part3075(a, b, rm, pfflags);
+                            uint32_t *pfflags);
 
-}
-
-static inline uint64_t normalize_subnormal_sf64(int32_t *pa_exp, uint64_t a_mant)
-{
-    uint64_t normalize_subnormal_sf64__part3077(int32_t *pa_exp, uint64_t a_mant);
-    return normalize_subnormal_sf64__part3077(pa_exp, a_mant);
-
-}
+static inline uint64_t normalize_subnormal_sf64(int32_t *pa_exp, uint64_t a_mant);
 
 
 
-static uint64_t mul_u64(uint64_t *plow, uint64_t a, uint64_t b)
-{
-        uint64_t mul_u64__part3079(uint64_t *plow, uint64_t a, uint64_t b);
-    return mul_u64__part3079(plow, a, b);
-
-}
+static uint64_t mul_u64(uint64_t *plow, uint64_t a, uint64_t b);
 uint64_t mul_sf64(uint64_t a, uint64_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint64_t a_mant, b_mant, r_mant, r_mant_low;
-    void mul_sf64__part3081(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign, uint32_t *r_sign, int32_t *a_exp, int32_t *b_exp, uint64_t *a_mant, uint64_t *b_mant);
-    mul_sf64__part3081(a, b, &a_sign, &b_sign, &r_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-    uint64_t mul_sf64__part3082(uint64_t a, uint64_t b, int32_t a_exp, int32_t b_exp,
-                                uint32_t r_sign, uint64_t a_mant, uint64_t b_mant,
-                                uint32_t *pfflags, int *p_returned);
-    {
-        int part3082_returned = 0;
-        uint64_t part3082_value = mul_sf64__part3082(a, b, a_exp, b_exp, r_sign,
-                                                     a_mant, b_mant, pfflags,
-                                                     &part3082_returned);
-        if (part3082_returned) {
-            return part3082_value;
-        }
-    }
-
-        {
-        uint64_t mul_sf64__part3083(uint32_t r_sign, int32_t *pa_exp, uint64_t *pa_mant, int32_t *pearly);
-        int32_t part3083_early = 0;
-        uint64_t part3083_val;
-        part3083_val = mul_sf64__part3083(r_sign, &a_exp, &a_mant, &part3083_early);
-        if (part3083_early)
-            return part3083_val;
-    }
-
-        {
-        int32_t mul_sf64__part3084(int32_t *pb_exp, uint64_t *pb_mant);
-        int32_t mul_sf64__part3084_ret;
-        mul_sf64__part3084_ret = mul_sf64__part3084(&b_exp, &b_mant);
-        if (mul_sf64__part3084_ret)
-            return pack_sf64(r_sign, 0, 0);
-    }
-
-    uint64_t mul_sf64__part3085(uint32_t r_sign, int32_t a_exp, int32_t b_exp,
-                            uint64_t a_mant, uint64_t b_mant,
-                            RoundingModeEnum rm, uint32_t *pfflags);
-    return mul_sf64__part3085(r_sign, a_exp, b_exp, a_mant, b_mant, rm, pfflags);
-
-}
+              uint32_t *pfflags);
 
 
 uint64_t fma_sf64(uint64_t a, uint64_t b, uint64_t c, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, c_sign, r_sign;
-    int32_t a_exp, b_exp, c_exp, r_exp, shift;
-    uint64_t a_mant, b_mant, c_mant, r_mant1, r_mant0, c_mant1, c_mant0, mask;
-
-    void fma_sf64__part3087(uint64_t a, uint64_t b, uint64_t c,
-                            uint32_t *a_sign, uint32_t *b_sign,
-                            uint32_t *c_sign, uint32_t *r_sign,
-                            int32_t *a_exp, int32_t *b_exp, int32_t *c_exp,
-                            uint64_t *a_mant, uint64_t *b_mant,
-                            uint64_t *c_mant);
-
-    fma_sf64__part3087(a, b, c,
-                       &a_sign, &b_sign, &c_sign, &r_sign,
-                       &a_exp, &b_exp, &c_exp,
-                       &a_mant, &b_mant, &c_mant);
-
-        {
-        extern uint64_t fma_sf64__part3088(uint64_t a, uint64_t b, uint64_t c,
-                                           int32_t a_exp, int32_t b_exp, int32_t c_exp,
-                                           uint64_t a_mant, uint64_t b_mant, uint64_t c_mant,
-                                           uint32_t r_sign, uint32_t c_sign,
-                                           uint32_t *pfflags, int *ptaken);
-        int taken_3088 = 0;
-        uint64_t ret_3088 = fma_sf64__part3088(a, b, c, a_exp, b_exp, c_exp,
-                                              a_mant, b_mant, c_mant,
-                                              r_sign, c_sign, pfflags, &taken_3088);
-        if (taken_3088) {
-            return ret_3088;
-        }
-    }
-
-        {
-        int fma_sf64__part3089(int32_t *pa_exp, uint64_t *pa_mant);
-        if (fma_sf64__part3089(&a_exp, &a_mant))
-            goto mul_zero;
-    }
-
-        {
-        void fma_sf64__part3090(int32_t b_exp, uint64_t b_mant, uint64_t c, int32_t c_exp, uint64_t c_mant, uint32_t c_sign, uint32_t r_sign, RoundingModeEnum rm, int32_t from_zero, uint64_t *pret, int32_t *pret_flag, uint64_t *pb_mant, int32_t *pb_exp);
-        uint64_t ret3090;
-        int32_t retflag3090, z3090;
-        uint64_t bmant3090;
-        int32_t bexp3090;
-
-        if (b_exp == 0 && b_mant == 0) {
-        mul_zero:
-            z3090 = 1;
-        } else {
-            z3090 = 0;
-        }
-        fma_sf64__part3090(b_exp, b_mant, c, c_exp, c_mant, c_sign, r_sign, rm, z3090,
-                           &ret3090, &retflag3090, &bmant3090, &bexp3090);
-        if (retflag3090)
-            return ret3090;
-        b_mant = bmant3090;
-        b_exp = bexp3090;
-    }
-
-    uint64_t fma_sf64__part3091(int32_t *p_r_exp, uint64_t *p_r_mant0, int32_t a_exp, int32_t b_exp, uint64_t a_mant, uint64_t b_mant);
-    r_mant1 = fma_sf64__part3091(&r_exp, &r_mant0, a_exp, b_exp, a_mant, b_mant);
-
-
-    void fma_sf64__part3092(uint64_t *r_mant1, uint64_t *r_mant0, int32_t *r_exp);
-fma_sf64__part3092(&r_mant1, &r_mant0, &r_exp);
+              uint32_t *pfflags);
 
 
 
-    {
-        int32_t _part3093_ret;
-        int32_t fma_sf64__part3093(int32_t *p_c_exp, uint64_t *p_c_mant,
-                                  uint64_t *p_r_mant1, uint64_t r_mant0);
-        _part3093_ret = fma_sf64__part3093(&c_exp, &c_mant, &r_mant1, r_mant0);
-        if (_part3093_ret) {
-            return normalize_sf64(r_sign, r_exp, r_mant1, rm, pfflags);
-        }
-    }
-
-    extern void fma_sf64__part3094(int32_t *c_exp, uint64_t c_mant, uint64_t *c_mant1, uint64_t *c_mant0);
-    fma_sf64__part3094(&c_exp, c_mant, &c_mant1, &c_mant0);
-
-
-
-
-
-        void fma_sf64__part3095(int32_t *r_exp, int32_t *c_exp, uint64_t *r_mant1, uint64_t *c_mant1, uint64_t *r_mant0, uint64_t *c_mant0, uint32_t *r_sign, uint32_t *c_sign);
-    fma_sf64__part3095(&r_exp, &c_exp, &r_mant1, &c_mant1, &r_mant0, &c_mant0, &r_sign, &c_sign);
-
-
-    int32_t fma_sf64__part3096(int32_t r_exp, int32_t c_exp);
-    shift = fma_sf64__part3096(r_exp, c_exp);
-
-        void fma_sf64__part3097(int32_t shift, uint64_t *pc_mant0, uint64_t *pc_mant1, uint64_t *pmask);
-    fma_sf64__part3097(shift, &c_mant0, &c_mant1, &mask);
-
-
-
-    void fma_sf64__part3098(uint32_t *r_sign, uint32_t c_sign, uint64_t *r_mant0, uint64_t *r_mant1, uint64_t c_mant0, uint64_t c_mant1, unsigned int rm);
-    fma_sf64__part3098(&r_sign, c_sign, &r_mant0, &r_mant1, c_mant0, c_mant1, rm);
-
-    uint64_t fma_sf64__part3099(uint32_t r_sign, int32_t r_exp, uint64_t r_mant1, uint64_t r_mant0, int rm, uint32_t *pfflags);
-    return fma_sf64__part3099(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);
-
-}
-
-
-
-static uint64_t divrem_u64(uint64_t *pr, uint64_t ah, uint64_t al, uint64_t b)
-{
-    uint64_t divrem_u64__part3101(uint64_t *pr, uint64_t ah, uint64_t al, uint64_t b);
-    return divrem_u64__part3101(pr, ah, al, b);
-
-}
+static uint64_t divrem_u64(uint64_t *pr, uint64_t ah, uint64_t al, uint64_t b);
 uint64_t div_sf64(uint64_t a, uint64_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-        uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint64_t a_mant, b_mant, r_mant, r;
-
-    void div_sf64__part3103(uint64_t a, uint64_t b, uint32_t *a_sign,
-                            uint32_t *b_sign, uint32_t *r_sign,
-                            int32_t *a_exp, int32_t *b_exp,
-                            uint64_t *a_mant, uint64_t *b_mant);
-    div_sf64__part3103(a, b, &a_sign, &b_sign, &r_sign,
-                       &a_exp, &b_exp, &a_mant, &b_mant);
-
-        {
-        uint64_t div_sf64__part3104(uint64_t, uint64_t, uint32_t *, uint32_t, int32_t, int32_t, uint64_t, uint64_t, int *);
-        int part3104_ret;
-        uint64_t part3104_val = div_sf64__part3104(a, b, pfflags, r_sign, a_exp, b_exp, a_mant, b_mant, &part3104_ret);
-        if (part3104_ret) {
-            return part3104_val;
-        }
-    }
-
-
-        {
-        int div_sf64__part3105(int32_t a_exp, uint64_t a_mant, uint32_t r_sign,
-                               int32_t *pb_exp, uint64_t *pb_mant,
-                               uint32_t *pfflags, uint64_t *pret);
-        uint64_t part_ret = 0;
-        if (div_sf64__part3105(a_exp, a_mant, r_sign, &b_exp, &b_mant,
-                               pfflags, &part_ret)) {
-            return part_ret;
-        }
-    }
-
-    uint64_t div_sf64__part3106(int32_t *pa_exp, uint64_t *pa_mant, uint32_t r_sign, int *p_early);
-    {
-        int part3106_early;
-        uint64_t part3106_ret = div_sf64__part3106(&a_exp, &a_mant, r_sign, &part3106_early);
-        if (part3106_early)
-            return part3106_ret;
-    }
-        {
-        uint64_t div_sf64__part3107(int32_t a_exp, int32_t b_exp, uint64_t a_mant, uint64_t b_mant, int32_t *r_exp, uint64_t *r);
-        r_mant = div_sf64__part3107(a_exp, b_exp, a_mant, b_mant, &r_exp, &r);
-    }
-
-    uint64_t div_sf64__part3108(uint64_t r, uint64_t r_mant);
-    r_mant = div_sf64__part3108(r, r_mant);
-
-        uint64_t div_sf64__part3109(uint32_t r_sign, int32_t r_exp, uint64_t r_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return div_sf64__part3109(r_sign, r_exp, r_mant, rm, pfflags);
-}
+              uint32_t *pfflags);
 
 
 
 
 
-static int sqrtrem_u64(uint64_t *pr, uint64_t ah, uint64_t al)
-{
-    uint128_t a, u, s;
-    int l, inexact;
-
-
-        {
-        int sqrtrem_u64__part3111(uint64_t *pr, uint64_t ah, uint64_t al, int *pl);
-        int sqrtrem_u64__early = sqrtrem_u64__part3111(pr, ah, al, &l);
-        if (sqrtrem_u64__early)
-            return 0;
-    }
-
-        void sqrtrem_u64__part3112(uint128_t *pa, uint128_t *pu, uint64_t ah, uint64_t al, int l);
-    sqrtrem_u64__part3112(&a, &u, ah, al, l);
-
-        {
-        void sqrtrem_u64__part3113(uint128_t *ps, uint128_t u, uint128_t a);
-        sqrtrem_u64__part3113(&s, u, a);
-    }
-
-    int sqrtrem_u64__part3114(uint64_t *pr, uint64_t a_hi, uint64_t a_lo,
-                          uint64_t s_hi, uint64_t s_lo);
-    inexact = sqrtrem_u64__part3114(pr, (uint64_t)(a >> 64), (uint64_t)a,
-                                   (uint64_t)(s >> 64), (uint64_t)s);
-    return inexact;
-
-}
+static int sqrtrem_u64(uint64_t *pr, uint64_t ah, uint64_t al);
 uint64_t sqrt_sf64(uint64_t a, RoundingModeEnum rm,
-               uint32_t *pfflags)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-
-    void sqrt_sf64__part3116(uint64_t a, uint32_t *a_sign, int32_t *a_exp, uint64_t *a_mant);
-    sqrt_sf64__part3116(a, &a_sign, &a_exp, &a_mant);
-
-    {
-        int32_t sqrt_sf64__part3117(uint64_t a, uint32_t a_sign, int32_t a_exp,
-                                    uint64_t a_mant, uint32_t *pfflags);
-        int32_t _sqrt_sf64_code = sqrt_sf64__part3117(a, a_sign, a_exp, a_mant, pfflags);
-        if (_sqrt_sf64_code == 1) {
-            return F_QNAN64;
-        } else if (_sqrt_sf64_code == 2) {
-            return a;
-        }
-    }
-    uint64_t sqrt_sf64__part3118(uint64_t a, uint32_t a_sign, int32_t a_exp, uint64_t a_mant, uint32_t *pfflags);
-    if (a_sign) {
-        if (a_exp == 0 && a_mant == 0)
-            return a;
-    neg_error:
-        return sqrt_sf64__part3118(a, a_sign, a_exp, a_mant, pfflags);
-    }
-
-    int sqrt_sf64__part3119(int32_t *pa_exp, uint64_t *pa_mant);
-    if (sqrt_sf64__part3119(&a_exp, &a_mant))
-        return pack_sf64(0, 0, 0);
-
-        int32_t sqrt_sf64__part3120(int32_t a_exp);
-    a_exp = sqrt_sf64__part3120(a_exp);
-
-
-    void sqrt_sf64__part3121(int32_t *a_exp, uint64_t *a_mant);
-    sqrt_sf64__part3121(&a_exp, &a_mant);
-
-        void sqrt_sf64__part3122(int32_t a_exp, uint64_t a_mant, int32_t *a_exp_out, uint64_t *a_mant_out);
-    sqrt_sf64__part3122(a_exp, a_mant, &a_exp, &a_mant);
-
-    void sqrt_sf64__part3123(uint64_t *pa_mant);
-    sqrt_sf64__part3123(&a_mant);
-
-    uint64_t sqrt_sf64__part3124(uint32_t a_sign, int32_t a_exp, uint64_t a_mant, int rm, uint32_t *pfflags);
-return sqrt_sf64__part3124(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+               uint32_t *pfflags);
 
 
 
-uint64_t min_sf64(uint64_t a, uint64_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
+uint64_t min_sf64(uint64_t a, uint64_t b, uint32_t *pfflags);
 
-    extern int min_sf64__part3126(uint64_t a, uint64_t b, uint32_t *pfflags, uint64_t *out);
-    {
-        uint64_t _part3126_val;
-        if (min_sf64__part3126(a, b, pfflags, &_part3126_val))
-            return _part3126_val;
-    }
+uint64_t max_sf64(uint64_t a, uint64_t b, uint32_t *pfflags);
 
-    void min_sf64__part3127(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign);
-    min_sf64__part3127(a, b, &a_sign, &b_sign);
+int eq_quiet_sf64(uint64_t a, uint64_t b, uint32_t *pfflags);
 
+int le_sf64(uint64_t a, uint64_t b, uint32_t *pfflags);
 
-    uint64_t min_sf64__part3128(uint64_t a, uint64_t b, uint32_t a_sign, uint32_t b_sign);
-    return min_sf64__part3128(a, b, a_sign, b_sign);
+int lt_sf64(uint64_t a, uint64_t b, uint32_t *pfflags);
 
-}
-
-uint64_t max_sf64(uint64_t a, uint64_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-        {
-        int max_sf64__part3130(uint64_t a, uint64_t b, uint32_t *pfflags, uint64_t *pret);
-        uint64_t max_sf64__ret;
-        if (max_sf64__part3130(a, b, pfflags, &max_sf64__ret))
-            return max_sf64__ret;
-    }
-
-    void max_sf64__part3131(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign);
-    max_sf64__part3131(a, b, &a_sign, &b_sign);
-
-
-    uint64_t max_sf64__part3132(uint64_t a, uint64_t b, uint32_t a_sign, uint32_t b_sign);
-    return max_sf64__part3132(a, b, a_sign, b_sign);
-
-}
-
-int eq_quiet_sf64(uint64_t a, uint64_t b, uint32_t *pfflags)
-{
-    int eq_quiet_sf64__part3134(uint64_t a, uint64_t b, uint32_t *pfflags);
-    if (eq_quiet_sf64__part3134(a, b, pfflags))
-        return 0;
-
-
-    int eq_quiet_sf64__part3135(uint64_t a, uint64_t b);
-    if (eq_quiet_sf64__part3135(a, b))
-        return 1;
-    int eq_quiet_sf64__part3136(uint64_t a, uint64_t b);
-    return eq_quiet_sf64__part3136(a, b);
-}
-
-int le_sf64(uint64_t a, uint64_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-    int le_sf64__part3138(uint64_t a, uint64_t b, uint32_t *pfflags);
-    if (le_sf64__part3138(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    void le_sf64__part3139(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign);
-    le_sf64__part3139(a, b, &a_sign, &b_sign);
-        {
-        int le_sf64__part3140(uint64_t a, uint64_t b, uint32_t a_sign);
-        return le_sf64__part3140(a, b, a_sign);
-    }
-
-}
-
-int lt_sf64(uint64_t a, uint64_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-    int lt_sf64__part3142(uint64_t a, uint64_t b, uint32_t *pfflags);
-    if (lt_sf64__part3142(a, b, pfflags)) {
-        return 0;
-    }
-
-    void lt_sf64__part3143(uint64_t a, uint64_t b, uint32_t *a_sign, uint32_t *b_sign);
-    lt_sf64__part3143(a, b, &a_sign, &b_sign);
-        int lt_sf64__part3144(uint64_t a, uint64_t b, uint32_t a_sign, uint32_t b_sign);
-    return lt_sf64__part3144(a, b, a_sign, b_sign);
-
-}
-
-uint32_t fclass_sf64(uint64_t a)
-{
-        uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint32_t ret;
-
-    void fclass_sf64__part3146(uint64_t a, uint32_t *a_sign, int32_t *a_exp, uint64_t *a_mant, uint32_t *ret);
-    fclass_sf64__part3146(a, &a_sign, &a_exp, &a_mant, &ret);
-
-    uint32_t fclass_sf64__part3147(uint32_t a_sign, int32_t a_exp, uint64_t a_mant);
-    ret = fclass_sf64__part3147(a_sign, a_exp, a_mant);
-
-        {
-        uint32_t fclass_sf64__part3148(uint32_t ret);
-        return fclass_sf64__part3148(ret);
-    }
-
-}
+uint32_t fclass_sf64(uint64_t a);
 
 
 
 
 
-uint64_t cvt_sf32_sf64(uint32_t a, uint32_t *pfflags)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-
-    void cvt_sf32_sf64__part3150(uint32_t a, uint32_t *pa_sign, int32_t *pa_exp, uint64_t *pa_mant);
-    cvt_sf32_sf64__part3150(a, &a_sign, &a_exp, &a_mant);
-
-    {
-    extern uint64_t cvt_sf32_sf64__part3151(uint32_t a, int32_t a_exp, uint64_t a_mant, uint32_t a_sign, uint32_t *pfflags, int32_t *p_done);
-    int32_t part3151_done = 0;
-    uint64_t part3151_ret = cvt_sf32_sf64__part3151(a, a_exp, a_mant, a_sign, pfflags, &part3151_done);
-    if (part3151_done)
-        return part3151_ret;
-}
-
-    uint64_t cvt_sf32_sf64__part3152(uint32_t a_sign, int32_t *pa_exp, uint64_t *pa_mant, int *pret);
-    {
-        int part3152_ret;
-        uint64_t part3152_val = cvt_sf32_sf64__part3152(a_sign, &a_exp, &a_mant, &part3152_ret);
-        if (part3152_ret)
-            return part3152_val;
-    }
-
-
-        uint64_t cvt_sf32_sf64__part3153(uint32_t a_sign, int32_t a_exp, uint64_t a_mant);
-
-    return cvt_sf32_sf64__part3153(a_sign, a_exp, a_mant);
-}
+uint64_t cvt_sf32_sf64(uint32_t a, uint32_t *pfflags);
 
 uint32_t cvt_sf64_sf32(uint64_t a, RoundingModeEnum rm,
-                                           uint32_t *pfflags)
-{
-    void cvt_sf64_sf32__part3155(uint32_t *pa_sign, int32_t *pa_exp, uint64_t *pa_mant, uint64_t a);
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-
-    cvt_sf64_sf32__part3155(&a_sign, &a_exp, &a_mant, a);
-
-    {
-        int cvt_sf64_sf32__part3156(int32_t a_exp, uint64_t a, uint32_t a_sign, uint64_t a_mant, uint32_t *pfflags, uint32_t *presult);
-        uint32_t part3156_result;
-        if (cvt_sf64_sf32__part3156(a_exp, a, a_sign, a_mant, pfflags, &part3156_result))
-            return part3156_result;
-    }
-        {
-        uint32_t part3157_early;
-        uint32_t part3157_ret;
-        extern uint32_t cvt_sf64_sf32__part3157(uint32_t a_sign, int32_t *pa_exp,
-                                               uint64_t *pa_mant, uint32_t *p_early);
-        part3157_ret = cvt_sf64_sf32__part3157(a_sign, &a_exp, &a_mant, &part3157_early);
-        if (part3157_early)
-            return part3157_ret;
-    }
-
-    uint32_t cvt_sf64_sf32__part3158(uint32_t a_sign, int32_t a_exp, uint64_t a_mant, int rm, uint32_t *pfflags);
-    return cvt_sf64_sf32__part3158(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+                                           uint32_t *pfflags);
 static int32_t internal_cvt_sf64_i32(uint64_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint32_t r, r_max;
-
-    void internal_cvt_sf64_i32__part3361(uint64_t a, uint32_t *a_sign, int32_t *a_exp, uint64_t *a_mant);
-    internal_cvt_sf64_i32__part3361(a, &a_sign, &a_exp, &a_mant);
-    uint32_t internal_cvt_sf64_i32__part3362(int32_t a_exp, uint64_t a_mant, uint32_t a_sign);
-    a_sign = internal_cvt_sf64_i32__part3362(a_exp, a_mant, a_sign);
-
-    void internal_cvt_sf64_i32__part3363(int32_t *a_exp, uint64_t *a_mant);
-    internal_cvt_sf64_i32__part3363(&a_exp, &a_mant);
-
-    void internal_cvt_sf64_i32__part3364(uint64_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf64_i32__part3364(&a_mant, &a_exp);
-
-        uint32_t internal_cvt_sf64_i32__part3365(uint32_t a_sign, int is_unsigned);
-    r_max = internal_cvt_sf64_i32__part3365(a_sign, is_unsigned);
-
-        {
-        int32_t internal_cvt_sf64_i32__part3366(int32_t a_exp, uint64_t a_mant,
-            RoundingModeEnum rm, uint32_t a_sign, uint32_t r_max,
-            uint32_t *pfflags, uint32_t *r_out, uint64_t *a_mant_out);
-        uint32_t _part_r = 0;
-        uint64_t _part_a_mant = a_mant;
-        if (internal_cvt_sf64_i32__part3366(a_exp, a_mant, rm, a_sign, r_max,
-                                           pfflags, &_part_r, &_part_a_mant)) {
-            return r_max;
-        }
-        r = _part_r;
-        a_mant = _part_a_mant;
-    }
-
-    uint32_t internal_cvt_sf64_i32__part3367(uint32_t a_sign, uint32_t r);
-    r = internal_cvt_sf64_i32__part3367(a_sign, r);
-
-        int32_t internal_cvt_sf64_i32__part3368(uint32_t r);
-    return internal_cvt_sf64_i32__part3368(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int32_t cvt_sf64_i32(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        int32_t cvt_sf64_i32__part3370(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf64_i32__part3370(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 uint32_t cvt_sf64_u32(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    uint32_t cvt_sf64_u32__part3372(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf64_u32__part3372(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint64_t internal_cvt_i32_sf64(int32_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint32_t r, mask;
-    int l;
-
-    void internal_cvt_i32_sf64__part3374(int32_t a, BOOL is_unsigned, uint32_t *a_sign, uint32_t *r);
-    internal_cvt_i32_sf64__part3374(a, is_unsigned, &a_sign, &r);
-
-    void internal_cvt_i32_sf64__part3375(uint32_t r, int32_t *a_exp, int *l);
-    internal_cvt_i32_sf64__part3375(r, &a_exp, &l);
-
-    extern void internal_cvt_i32_sf64__part3376(uint32_t *r, int32_t *a_exp, int l);
-    internal_cvt_i32_sf64__part3376(&r, &a_exp, l);
-
-    uint64_t internal_cvt_i32_sf64__part3377(uint32_t a_sign, int32_t a_exp, uint32_t r, uint32_t rm, uint32_t *pfflags);
-    a_mant = r;
-    return internal_cvt_i32_sf64__part3377(a_sign, a_exp, a_mant, rm, pfflags);
-}
+                                                                       BOOL is_unsigned);
 
 uint64_t cvt_i32_sf64(int32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint64_t cvt_i32_sf64__part3379(int32_t a, int rm, uint32_t *pfflags);
-    return cvt_i32_sf64__part3379(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 uint64_t cvt_u32_sf64(uint32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint64_t cvt_u32_sf64__part3381(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_u32_sf64__part3381(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 
 static int64_t internal_cvt_sf64_i64(uint64_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint64_t r, r_max;
-    void internal_cvt_sf64_i64__part3383(uint64_t a, uint32_t *a_sign, int32_t *a_exp, uint64_t *a_mant);
-
-    internal_cvt_sf64_i64__part3383(a, &a_sign, &a_exp, &a_mant);
-
-    uint32_t internal_cvt_sf64_i64__part3384(int32_t a_exp, uint64_t a_mant, uint32_t a_sign);
-    a_sign = internal_cvt_sf64_i64__part3384(a_exp, a_mant, a_sign);
-
-        void internal_cvt_sf64_i64__part3385(int32_t *a_exp, uint64_t *a_mant);
-    internal_cvt_sf64_i64__part3385(&a_exp, &a_mant);
-
-    void internal_cvt_sf64_i64__part3386(uint64_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf64_i64__part3386(&a_mant, &a_exp);
-
-
-    uint64_t internal_cvt_sf64_i64__part3387(int is_unsigned, uint32_t a_sign);
-    r_max = internal_cvt_sf64_i64__part3387(is_unsigned, a_sign);
-        {
-        uint64_t part_r;
-        extern int internal_cvt_sf64_i64__part3388(uint64_t a_mant, int32_t a_exp,
-                                                   uint32_t a_sign, uint32_t rm,
-                                                   uint64_t r_max, uint32_t *pfflags,
-                                                   uint64_t *r_out);
-        if (internal_cvt_sf64_i64__part3388(a_mant, a_exp, a_sign, (uint32_t)rm,
-                                            r_max, pfflags, &part_r))
-            return (int64_t)r_max;
-        r = part_r;
-    }
-
-        uint64_t internal_cvt_sf64_i64__part3389(uint32_t a_sign, uint64_t r);
-    r = internal_cvt_sf64_i64__part3389(a_sign, r);
-
-    int64_t internal_cvt_sf64_i64__part3390(uint64_t r);
-    return internal_cvt_sf64_i64__part3390(r);
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int64_t cvt_sf64_i64(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    int64_t cvt_sf64_i64__part3392(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf64_i64__part3392(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 uint64_t cvt_sf64_u64(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    uint64_t cvt_sf64_u64__part3394(uint64_t a, int rm, uint32_t *pfflags);
-    return cvt_sf64_u64__part3394(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint64_t internal_cvt_i64_sf64(int64_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint64_t r, mask;
-    int l;
-
-    void internal_cvt_i64_sf64__part3396(int64_t a, BOOL is_unsigned, uint32_t *a_sign, uint64_t *r);
-    internal_cvt_i64_sf64__part3396(a, is_unsigned, &a_sign, &r);
-        void internal_cvt_i64_sf64__part3397(uint64_t r, int32_t *a_exp, int *l);
-    internal_cvt_i64_sf64__part3397(r, &a_exp, &l);
-
-        void internal_cvt_i64_sf64__part3398(int l, uint64_t *r, int32_t *a_exp, uint64_t *mask);
-    if (l > 0) {
-        internal_cvt_i64_sf64__part3398(l, &r, &a_exp, &mask);
-    }
-
-        a_mant = r;
-    {
-        extern uint64_t internal_cvt_i64_sf64__part3399(uint32_t a_sign, int32_t a_exp, uint64_t r, RoundingModeEnum rm, uint32_t *pfflags);
-        return internal_cvt_i64_sf64__part3399(a_sign, a_exp, r, rm, pfflags);
-    }
-}
+                                                                       BOOL is_unsigned);
 
 uint64_t cvt_i64_sf64(int64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint64_t cvt_i64_sf64__part3401(int64_t a, int rm, uint32_t *pfflags);
-    return cvt_i64_sf64__part3401(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 uint64_t cvt_u64_sf64(uint64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint64_t cvt_u64_sf64__part3403(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_u64_sf64__part3403(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 
 
 static int128_t internal_cvt_sf64_i128(uint64_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint128_t r, r_max;
-
-    void internal_cvt_sf64_i128__part3405(uint64_t a, uint32_t *a_sign, int32_t *a_exp, uint64_t *a_mant);
-    internal_cvt_sf64_i128__part3405(a, &a_sign, &a_exp, &a_mant);
-
-    extern void internal_cvt_sf64_i128__part3406(int32_t a_exp, uint64_t a_mant, uint32_t *a_sign);
-    internal_cvt_sf64_i128__part3406(a_exp, a_mant, &a_sign);
-
-    void internal_cvt_sf64_i128__part3407(int32_t *a_exp, uint64_t *a_mant);
-    internal_cvt_sf64_i128__part3407(&a_exp, &a_mant);
-
-    void internal_cvt_sf64_i128__part3408(uint64_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf64_i128__part3408(&a_mant, &a_exp);
-
-
-    {
-        uint128_t internal_cvt_sf64_i128__part3409(uint32_t a_sign, BOOL is_unsigned);
-        r_max = internal_cvt_sf64_i128__part3409(a_sign, is_unsigned);
-    }
-    int internal_cvt_sf64_i128__part3410(int32_t a_exp, uint32_t a_sign, unsigned int rm, uint32_t *pfflags, const uint128_t *p_r_max, uint64_t a_mant, uint128_t *p_r);
-if (internal_cvt_sf64_i128__part3410(a_exp, a_sign, (unsigned int)rm, pfflags, &r_max, a_mant, &r))
-    return r_max;
-
-        {
-        extern void internal_cvt_sf64_i128__part3411(uint32_t a_sign, uint128_t *pr);
-        internal_cvt_sf64_i128__part3411(a_sign, &r);
-    }
-
-        int128_t internal_cvt_sf64_i128__part3412(uint128_t r);
-    return internal_cvt_sf64_i128__part3412(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int128_t cvt_sf64_i128(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        int128_t cvt_sf64_i128__part3414(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf64_i128__part3414(a, rm, pfflags);
-
-}
+                                                          uint32_t *pfflags);
 
 uint128_t cvt_sf64_u128(uint64_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        uint128_t cvt_sf64_u128__part3416(uint64_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf64_u128__part3416(a, rm, pfflags);
-
-}
+                                                          uint32_t *pfflags);
 
 
 static uint64_t internal_cvt_i128_sf64(int128_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint64_t a_mant;
-    uint128_t r, mask;
-    int l;
-
-    void internal_cvt_i128_sf64__part3418(int128_t a, BOOL is_unsigned, uint32_t *pa_sign, uint128_t *pr);
-    internal_cvt_i128_sf64__part3418(a, is_unsigned, &a_sign, &r);
-    void internal_cvt_i128_sf64__part3419(uint128_t r, int32_t *pa_exp, int *pl);
-    internal_cvt_i128_sf64__part3419(r, &a_exp, &l);
-
-    void internal_cvt_i128_sf64__part3420(uint128_t *r, int32_t *a_exp, int l);
-    internal_cvt_i128_sf64__part3420(&r, &a_exp, l);
-    uint64_t internal_cvt_i128_sf64__part3421(uint32_t a_sign, int32_t a_exp, uint64_t a_mant, uint32_t rm, uint32_t *pfflags);
-    a_mant = r;
-    return internal_cvt_i128_sf64__part3421(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+                                                                       BOOL is_unsigned);
 
 uint64_t cvt_i128_sf64(int128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint64_t cvt_i128_sf64__part3423(int128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-return cvt_i128_sf64__part3423(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 uint64_t cvt_u128_sf64(uint128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint64_t cvt_u128_sf64__part3425(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_u128_sf64__part3425(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 
 
 
 static const uint128_t F_QNAN128 = (((uint128_t)((1 << 15) - 1) << 112) | ((uint128_t)1 << (112 - 1)));
 
-static inline uint128_t pack_sf128(uint32_t a_sign, uint32_t a_exp, uint128_t a_mant)
-{
-    uint128_t pack_sf128__part3161(uint32_t a_sign, uint32_t a_exp, uint128_t a_mant);
-    return pack_sf128__part3161(a_sign, a_exp, a_mant);
-
-}
+static inline uint128_t pack_sf128(uint32_t a_sign, uint32_t a_exp, uint128_t a_mant);
 
 static inline uint128_t unpack_sf128(uint32_t *pa_sign, int32_t *pa_exp,
-                               uint128_t a)
-{
-    uint128_t unpack_sf128__part3163(uint32_t *pa_sign, int32_t *pa_exp, uint128_t a);
-    return unpack_sf128__part3163(pa_sign, pa_exp, a);
-}
+                               uint128_t a);
 
-static uint128_t rshift_rnd128(uint128_t a, int d)
-{
-    uint128_t mask;
-    uint128_t rshift_rnd128__part3165(uint128_t a, int d);
-    a = rshift_rnd128__part3165(a, d);
-
-    uint128_t rshift_rnd128__part3166(uint128_t a);
-return rshift_rnd128__part3166(a);
-}
+static uint128_t rshift_rnd128(uint128_t a, int d);
 
 
 static uint128_t roundpack_sf128(uint32_t a_sign, int a_exp, uint128_t a_mant,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int diff;
-    uint32_t addend, rnd_bits;
-
-        uint32_t roundpack_sf128__part3168(uint32_t a_sign, int rm);
-    addend = roundpack_sf128__part3168(a_sign, rm);
-
-
-
-        {
-        void roundpack_sf128__part3169(int a_exp, uint128_t a_mant, uint32_t addend,
-                                       uint32_t *pfflags, int *pa_exp,
-                                       uint128_t *pa_mant, uint32_t *prnd_bits);
-        roundpack_sf128__part3169(a_exp, a_mant, addend, pfflags,
-                                  &a_exp, &a_mant, &rnd_bits);
-    }
-
-    void roundpack_sf128__part3170(uint32_t rnd_bits, uint32_t *pfflags);
-    roundpack_sf128__part3170(rnd_bits, pfflags);
-
-        {
-        uint128_t roundpack_sf128__part3171(uint128_t a_mant, uint32_t addend);
-        a_mant = roundpack_sf128__part3171(a_mant, addend);
-    }
-
-
-    void roundpack_sf128__part3172(int rm, uint32_t rnd_bits, uint128_t *a_mant);
-    roundpack_sf128__part3172(rm, rnd_bits, &a_mant);
-
-
-
-        {
-        int roundpack_sf128__part3173(int a_exp, uint128_t a_mant);
-        a_exp = roundpack_sf128__part3173(a_exp, a_mant);
-    }
-
-    void roundpack_sf128__part3174(uint128_t *pa_mant, int *pa_exp, uint32_t addend, uint32_t *pfflags);
-    roundpack_sf128__part3174(&a_mant, &a_exp, addend, pfflags);
-
-        uint128_t roundpack_sf128__part3175(uint32_t a_sign, int a_exp, uint128_t a_mant);
-    return roundpack_sf128__part3175(a_sign, a_exp, a_mant);
-
-}
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
 
 static uint128_t normalize_sf128(uint32_t a_sign, int a_exp, uint128_t a_mant,
-                           RoundingModeEnum rm, uint32_t *pfflags)
-{
-    uint128_t normalize_sf128__part3177(uint32_t a_sign, int a_exp, uint128_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize_sf128__part3177(a_sign, a_exp, a_mant, rm, pfflags);
-}
+                           RoundingModeEnum rm, uint32_t *pfflags);
 
 
 
 static uint128_t normalize2_sf128(uint32_t a_sign, int a_exp, uint128_t a_mant1, uint128_t a_mant0,
-                            RoundingModeEnum rm, uint32_t *pfflags)
-{
-    int l, shift;
-    int normalize2_sf128__part3179(uint128_t a_mant1, uint128_t a_mant0);
-    l = normalize2_sf128__part3179(a_mant1, a_mant0);
+                            RoundingModeEnum rm, uint32_t *pfflags);
 
-    int normalize2_sf128__part3180(int l, int *a_exp);
-    shift = normalize2_sf128__part3180(l, &a_exp);
+BOOL issignan_sf128(uint128_t a);
 
-        {
-        void normalize2_sf128__part3181(int shift, uint128_t *pa_mant1, uint128_t *pa_mant0);
-        normalize2_sf128__part3181(shift, &a_mant1, &a_mant0);
-    }
-
-        uint128_t normalize2_sf128__part3182(uint32_t a_sign, int a_exp, uint128_t a_mant1, RoundingModeEnum rm, uint32_t *pfflags);
-    return normalize2_sf128__part3182(a_sign, a_exp, a_mant1, rm, pfflags);
-
-}
-
-BOOL issignan_sf128(uint128_t a)
-{
-    BOOL issignan_sf128__part3184(uint128_t a);
-    return issignan_sf128__part3184(a);
-
-}
-
-BOOL isnan_sf128(uint128_t a)
-{
-    int isnan_sf128__part3186(uint128_t a);
-    return isnan_sf128__part3186(a);
-
-}
+BOOL isnan_sf128(uint128_t a);
 
 
 uint128_t add_sf128(uint128_t a, uint128_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, a_exp, b_exp;
-    uint128_t tmp, a_mant, b_mant;
-
-
-    extern void add_sf128__part3188(uint128_t *a, uint128_t *b);
-    add_sf128__part3188(&a, &b);
-
-    void add_sf128__part3189(const uint128_t *a_ptr, const uint128_t *b_ptr,
-                         uint32_t *a_sign, uint32_t *b_sign,
-                         uint32_t *a_exp, uint32_t *b_exp,
-                         uint128_t *a_mant, uint128_t *b_mant);
-    add_sf128__part3189(&a, &b, &a_sign, &b_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-        {
-        int add_sf128__part3190(uint128_t a, uint128_t b, uint32_t a_exp,
-                                uint32_t b_exp, uint32_t a_sign, uint32_t b_sign,
-                                uint128_t a_mant, uint32_t *pfflags,
-                                uint128_t *pr);
-        uint128_t add_sf128_part3190_r;
-        if (add_sf128__part3190(a, b, a_exp, b_exp, a_sign, b_sign, a_mant,
-                                pfflags, &add_sf128_part3190_r))
-            return add_sf128_part3190_r;
-    }
-
-    void add_sf128__part3191(uint32_t *a_exp, uint128_t *a_mant);
-    add_sf128__part3191(&a_exp, &a_mant);
-
-    uint32_t add_sf128__part3192(uint32_t b_exp, uint128_t *b_mant);
-    b_exp = add_sf128__part3192(b_exp, &b_mant);
-
-        void add_sf128__part3193(uint128_t *b_mant, uint32_t a_exp, uint32_t b_exp);
-    add_sf128__part3193(&b_mant, a_exp, b_exp);
-
-    void add_sf128__part3194(uint32_t *a_sign, uint32_t b_sign, uint128_t *a_mant, uint128_t b_mant, int rm);
-    add_sf128__part3194(&a_sign, b_sign, &a_mant, b_mant, (int)rm);
-
-    uint128_t add_sf128__part3195(uint32_t a_sign, int a_exp, uint128_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    a_exp += (((128 - 2) - 112) - 3);
-    return add_sf128__part3195(a_sign, a_exp, a_mant, rm, pfflags);
-
-}
+              uint32_t *pfflags);
 
 uint128_t sub_sf128(uint128_t a, uint128_t b, RoundingModeEnum rm,
-                            uint32_t *pfflags)
-{
-    uint128_t sub_sf128__part3197(uint128_t a, uint128_t b, RoundingModeEnum rm, uint32_t *pfflags);
-    return sub_sf128__part3197(a, b, rm, pfflags);
+                            uint32_t *pfflags);
 
-}
-
-static inline uint128_t normalize_subnormal_sf128(int32_t *pa_exp, uint128_t a_mant)
-{
-    uint128_t normalize_subnormal_sf128__part3199(int32_t *pa_exp, uint128_t a_mant);
-    return normalize_subnormal_sf128__part3199(pa_exp, a_mant);
-
-}
-static uint128_t mul_u128(uint128_t *plow, uint128_t a, uint128_t b)
-{
-    uint128_t mul_u128__part3201(uint128_t *plow, uint128_t a, uint128_t b);
-    return mul_u128__part3201(plow, a, b);
-}
+static inline uint128_t normalize_subnormal_sf128(int32_t *pa_exp, uint128_t a_mant);
+static uint128_t mul_u128(uint128_t *plow, uint128_t a, uint128_t b);
 
 
 
 
 
 uint128_t mul_sf128(uint128_t a, uint128_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint128_t a_mant, b_mant, r_mant, r_mant_low;
-
-    void mul_sf128__part3203(uint128_t a, uint128_t b, uint32_t *a_sign, uint32_t *b_sign, uint32_t *r_sign, int32_t *a_exp, int32_t *b_exp, uint128_t *a_mant, uint128_t *b_mant);
-    mul_sf128__part3203(a, b, &a_sign, &b_sign, &r_sign, &a_exp, &b_exp, &a_mant, &b_mant);
-
-        {
-        int mul_sf128__part3204(uint128_t a, uint128_t b, int32_t a_exp, int32_t b_exp, uint128_t a_mant, uint128_t b_mant, uint32_t r_sign, uint32_t *pfflags, uint128_t *pout);
-        uint128_t r_special;
-        if (mul_sf128__part3204(a, b, a_exp, b_exp, a_mant, b_mant, r_sign, pfflags, &r_special)) {
-            return r_special;
-        }
-    }
-
-    {
-    int mul_sf128__part3205(uint32_t r_sign, int32_t *pa_exp,
-                            uint128_t *pa_mant, uint128_t *p_result);
-    uint128_t part3205_result;
-    if (mul_sf128__part3205(r_sign, &a_exp, &a_mant, &part3205_result))
-        return part3205_result;
-}
-
-    {
-    uint128_t mul_sf128_part3206_ret;
-    int32_t mul_sf128_part3206_done;
-    int32_t mul_sf128__part3206(int32_t *pa_exp, uint128_t *pa_mant, uint32_t r_sign, uint128_t *p_ret);
-    mul_sf128_part3206_done = mul_sf128__part3206(&b_exp, &b_mant, r_sign, &mul_sf128_part3206_ret);
-    if (mul_sf128_part3206_done)
-        return mul_sf128_part3206_ret;
-}
-    uint128_t mul_sf128__part3207(uint32_t r_sign, int32_t a_exp, int32_t b_exp, uint128_t a_mant, uint128_t b_mant, RoundingModeEnum rm, uint32_t *pfflags);
-
-    return mul_sf128__part3207(r_sign, a_exp, b_exp, a_mant, b_mant, rm, pfflags);
-
-}
+              uint32_t *pfflags);
 
 
 uint128_t fma_sf128(uint128_t a, uint128_t b, uint128_t c, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, c_sign, r_sign;
-    int32_t a_exp, b_exp, c_exp, r_exp, shift;
-    uint128_t a_mant, b_mant, c_mant, r_mant1, r_mant0, c_mant1, c_mant0, mask;
-
-    void fma_sf128__part3209(uint128_t a, uint128_t b, uint128_t c,
-                             uint32_t *a_sign, uint32_t *b_sign,
-                             uint32_t *c_sign, uint32_t *r_sign,
-                             int32_t *a_exp, int32_t *b_exp, int32_t *c_exp,
-                             uint128_t *a_mant, uint128_t *b_mant,
-                             uint128_t *c_mant);
-
-    fma_sf128__part3209(a, b, c, &a_sign, &b_sign, &c_sign, &r_sign,
-                        &a_exp, &b_exp, &c_exp, &a_mant, &b_mant, &c_mant);
-
-        {
-        uint128_t fma_sf128__part3210(uint128_t a, uint128_t b, uint128_t c,
-                                      uint32_t *pfflags, int32_t *ptaken);
-        int32_t part3210_taken;
-        uint128_t part3210_val;
-
-        part3210_val = fma_sf128__part3210(a, b, c, pfflags, &part3210_taken);
-        if (part3210_taken)
-            return part3210_val;
-    }
-
-        {
-        int32_t fma_sf128__part3211(int32_t *pa_exp, uint128_t *pa_mant);
-        int goto_mul_zero = fma_sf128__part3211(&a_exp, &a_mant);
-        if (goto_mul_zero)
-            goto mul_zero;
-    }
-        {
-        int fma_sf128__part3212(int32_t *pb_exp, uint128_t *pb_mant, int32_t c_exp,
-                                uint128_t *pc_mant, uint32_t c_sign, uint32_t *pr_sign,
-                                uint32_t rm, int mul_zero, uint128_t *pc,
-                                uint128_t *presult);
-        int part_st = 0;
-        uint128_t part_res = 0;
-        int part_via_mul_zero = 0;
-        goto part3212_entry;
-    mul_zero:
-        part_via_mul_zero = 1;
-    part3212_entry:
-        part_st = fma_sf128__part3212(&b_exp, &b_mant, c_exp, &c_mant, c_sign,
-                                      &r_sign, (uint32_t)rm, part_via_mul_zero,
-                                      &c, &part_res);
-        if (part_st != 0)
-            return part_res;
-    }
-
-
-        uint128_t fma_sf128__part3213(int32_t a_exp, int32_t b_exp, uint128_t a_mant, uint128_t b_mant, int32_t *r_exp, uint128_t *r_mant0);
-    r_mant1 = fma_sf128__part3213(a_exp, b_exp, a_mant, b_mant, &r_exp, &r_mant0);
-
-    void fma_sf128__part3214(uint128_t *r_mant1, uint128_t *r_mant0, int32_t *r_exp);
-    fma_sf128__part3214(&r_mant1, &r_mant0, &r_exp);
-
-
-
-    int fma_sf128__part3215(int32_t *pc_exp, uint128_t *pc_mant, uint32_t r_sign,
-                        int32_t r_exp, uint128_t r_mant1, uint128_t r_mant0,
-                        int rm, uint32_t *pfflags, uint128_t *p_result);
-{
-    uint128_t fma_sf128_part3215_val;
-    if (fma_sf128__part3215(&c_exp, &c_mant, r_sign, r_exp, r_mant1, r_mant0,
-                            (int)rm, pfflags, &fma_sf128_part3215_val))
-        return fma_sf128_part3215_val;
-}
-
-        void fma_sf128__part3216(int32_t *c_exp, const uint128_t *c_mant,
-                             uint128_t *c_mant1, uint128_t *c_mant0);
-    fma_sf128__part3216(&c_exp, &c_mant, &c_mant1, &c_mant0);
-
-
-
-
-
-
-        void fma_sf128__part3217(int32_t *r_exp, int32_t *c_exp,
-                             uint128_t *r_mant1, uint128_t *c_mant1,
-                             uint128_t *r_mant0, uint128_t *c_mant0,
-                             uint32_t *r_sign, uint32_t *c_sign);
-    fma_sf128__part3217(&r_exp, &c_exp, &r_mant1, &c_mant1,
-                        &r_mant0, &c_mant0, &r_sign, &c_sign);
-
-
-    int32_t fma_sf128__part3218(int32_t r_exp, int32_t c_exp);
-    shift = fma_sf128__part3218(r_exp, c_exp);
-
-        {
-        void fma_sf128__part3219(int32_t shift, uint128_t *c_mant0, uint128_t *c_mant1, uint128_t *mask);
-        fma_sf128__part3219(shift, &c_mant0, &c_mant1, &mask);
-    }
-
-
-
-
-        {
-        uint32_t fma_sf128__part3220(uint32_t r_sign_in, uint32_t c_sign,
-                                     uint128_t *r_mant0, uint128_t *r_mant1,
-                                     uint128_t c_mant0, uint128_t c_mant1,
-                                     uint32_t rm);
-        r_sign = fma_sf128__part3220(r_sign, c_sign, &r_mant0, &r_mant1,
-                                     c_mant0, c_mant1, (uint32_t)rm);
-    }
-    uint128_t fma_sf128__part3221(uint32_t a_sign, int a_exp, uint128_t a_mant1, uint128_t a_mant0, RoundingModeEnum rm, uint32_t *pfflags);
-    return fma_sf128__part3221(r_sign, r_exp, r_mant1, r_mant0, rm, pfflags);
-
-
-}
-static uint128_t divrem_u128(uint128_t *pr, uint128_t a1, uint128_t a0, uint128_t b)
-{
-    int i, qb, ab;
-
-void divrem_u128__part3223(uint128_t a1, uint128_t b);
-divrem_u128__part3223(a1, b);
-
-    void divrem_u128__part3224(uint128_t *a1, uint128_t *a0, const uint128_t *b);
-    divrem_u128__part3224(&a1, &a0, &b);
-    uint128_t divrem_u128__part3225(uint128_t *pr, uint128_t a1, uint128_t a0);
-    return divrem_u128__part3225(pr, a1, a0);
-}
+              uint32_t *pfflags);
+static uint128_t divrem_u128(uint128_t *pr, uint128_t a1, uint128_t a0, uint128_t b);
 
 
 
 uint128_t div_sf128(uint128_t a, uint128_t b, RoundingModeEnum rm,
-              uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign, r_sign;
-    int32_t a_exp, b_exp, r_exp;
-    uint128_t a_mant, b_mant, r_mant, r;
-
-    void div_sf128__part3227(uint128_t a, uint128_t b,
-                             uint32_t *a_sign, uint32_t *b_sign,
-                             uint32_t *r_sign, int32_t *a_exp, int32_t *b_exp,
-                             uint128_t *a_mant, uint128_t *b_mant);
-    div_sf128__part3227(a, b, &a_sign, &b_sign, &r_sign, &a_exp, &b_exp,
-                        &a_mant, &b_mant);
-
-        {
-        uint128_t _special_r;
-        int div_sf128__part3228(uint128_t a, uint128_t b, int32_t a_exp,
-                                uint128_t a_mant, int32_t b_exp, uint128_t b_mant,
-                                uint32_t r_sign, uint32_t *pfflags,
-                                uint128_t *presult);
-        if (div_sf128__part3228(a, b, a_exp, a_mant, b_exp, b_mant, r_sign,
-                                pfflags, &_special_r))
-            return _special_r;
-    }
-
-
-        {
-        uint128_t part3229_val;
-        extern int div_sf128__part3229(uint32_t r_sign, int32_t a_exp, uint128_t a_mant,
-                                       int32_t *pb_exp, uint128_t *pb_mant,
-                                       uint32_t *pfflags, uint128_t *presult);
-        if (div_sf128__part3229(r_sign, a_exp, a_mant, &b_exp, &b_mant,
-                                pfflags, &part3229_val))
-            return part3229_val;
-    }
-
-        {
-        int div_sf128__part3230(int32_t *a_exp, uint128_t *a_mant, uint32_t r_sign, uint128_t *pret);
-        uint128_t part_ret;
-        if (div_sf128__part3230(&a_exp, &a_mant, r_sign, &part_ret))
-            return part_ret;
-    }
-
-        {
-        void div_sf128__part3231(int32_t *pr_exp, uint128_t *pr_mant, uint128_t *pr_rem,
-                                 int32_t a_exp, int32_t b_exp, uint128_t a_mant,
-                                 uint128_t b_mant);
-        int32_t r_exp__out;
-        uint128_t r_mant__out, r__out;
-        div_sf128__part3231(&r_exp__out, &r_mant__out, &r__out,
-                            a_exp, b_exp, a_mant, b_mant);
-        r_exp = r_exp__out;
-        r_mant = r_mant__out;
-        r = r__out;
-    }
-
-    uint128_t div_sf128__part3232(uint128_t r, uint128_t r_mant);
-    r_mant = div_sf128__part3232(r, r_mant);
-        {
-        extern uint128_t div_sf128__part3233(uint32_t r_sign, int32_t r_exp,
-                                             uint128_t r_mant, RoundingModeEnum rm,
-                                             uint32_t *pfflags);
-        return div_sf128__part3233(r_sign, r_exp, r_mant, rm, pfflags);
-    }
-}
-static int sqrtrem_u128(uint128_t *pr, uint128_t a1, uint128_t a0)
-{
-    int l, inexact;
-    uint128_t u, s, r, q, sq0, sq1;
-
-
-    {
-        int _sqrtrem_early;
-        extern int sqrtrem_u128__part3235(uint128_t a1, uint128_t a0, int *pl, uint128_t *pr);
-        _sqrtrem_early = sqrtrem_u128__part3235(a1, a0, &l, pr);
-        if (_sqrtrem_early)
-            return 0;
-    }
-
-    extern uint128_t sqrtrem_u128__part3236(int l);
-    u = sqrtrem_u128__part3236(l);
-        uint128_t sqrtrem_u128__part3237(uint128_t u, uint128_t a1, uint128_t a0);
-    s = sqrtrem_u128__part3237(u, a1, a0);
-
-        {
-        int sqrtrem_u128__part3238(uint128_t *pr, uint128_t a1, uint128_t a0, uint128_t s);
-        inexact = sqrtrem_u128__part3238(pr, a1, a0, s);
-    }
-    return inexact;
-
-}
+              uint32_t *pfflags);
+static int sqrtrem_u128(uint128_t *pr, uint128_t a1, uint128_t a0);
 
 
 
 uint128_t sqrt_sf128(uint128_t a, RoundingModeEnum rm,
-               uint32_t *pfflags)
-{
-    void sqrt_sf128__part3240(const uint128_t *a, uint32_t *a_sign, int32_t *a_exp, uint128_t *a_mant);
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-
-    sqrt_sf128__part3240(&a, &a_sign, &a_exp, &a_mant);
-
-    {
-        uint128_t res_part3241;
-        int32_t status_part3241;
-        uint128_t sqrt_sf128__part3241(uint128_t a, uint32_t a_sign, int32_t a_exp, uint128_t a_mant, uint32_t *pfflags, int32_t *pstatus);
-        res_part3241 = sqrt_sf128__part3241(a, a_sign, a_exp, a_mant, pfflags, &status_part3241);
-        if (status_part3241 == 1)
-            return res_part3241;
-        if (status_part3241 == 2)
-            goto neg_error;
-    }
-        uint128_t sqrt_sf128__part3242(uint32_t *pfflags);
-    if (a_sign) {
-        if (a_exp == 0 && a_mant == 0)
-            return a;
-    neg_error:
-        return sqrt_sf128__part3242(pfflags);
-    }
-
-    int sqrt_sf128__part3243(int32_t *pa_exp, uint128_t *pa_mant);
-    if (sqrt_sf128__part3243(&a_exp, &a_mant))
-        return pack_sf128(0, 0, 0);
-    int32_t sqrt_sf128__part3244(int32_t a_exp);
-a_exp = sqrt_sf128__part3244(a_exp);
-
-
-    void sqrt_sf128__part3245(int32_t *a_exp, uint128_t *a_mant);
-    sqrt_sf128__part3245(&a_exp, &a_mant);
-
-    void sqrt_sf128__part3246(int32_t *a_exp, uint128_t *a_mant);
-    sqrt_sf128__part3246(&a_exp, &a_mant);
-    void sqrt_sf128__part3247(uint128_t *pa_mant);
-    sqrt_sf128__part3247(&a_mant);
-
-        uint128_t sqrt_sf128__part3248(uint32_t a_sign, int32_t a_exp, uint128_t a_mant, uint32_t rm, uint32_t *pfflags);
-    return sqrt_sf128__part3248(a_sign, a_exp, a_mant, (uint32_t)rm, pfflags);
-}
+               uint32_t *pfflags);
 
 
 
-uint128_t min_sf128(uint128_t a, uint128_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
+uint128_t min_sf128(uint128_t a, uint128_t b, uint32_t *pfflags);
 
-    int min_sf128__part3250(uint128_t a, uint128_t b, uint32_t *pfflags, uint128_t *presult);
-    {
-        uint128_t min_sf128__result;
-        if (min_sf128__part3250(a, b, pfflags, &min_sf128__result))
-            return min_sf128__result;
-    }
+uint128_t max_sf128(uint128_t a, uint128_t b, uint32_t *pfflags);
 
-    void min_sf128__part3251(uint128_t a, uint128_t b, uint32_t *a_sign, uint32_t *b_sign);
-    min_sf128__part3251(a, b, &a_sign, &b_sign);
+int eq_quiet_sf128(uint128_t a, uint128_t b, uint32_t *pfflags);
 
+int le_sf128(uint128_t a, uint128_t b, uint32_t *pfflags);
 
-    {
-    uint32_t min_sf128__part3252(const uint128_t *a, const uint128_t *b, uint32_t a_sign, uint32_t b_sign);
-    uint32_t pick_a = min_sf128__part3252(&a, &b, a_sign, b_sign);
-    if (pick_a)
-        return a;
-    else
-        return b;
-}
+int lt_sf128(uint128_t a, uint128_t b, uint32_t *pfflags);
 
-}
-
-uint128_t max_sf128(uint128_t a, uint128_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-        {
-        int max_sf128__part3254(uint128_t a, uint128_t b, uint32_t *pfflags, uint128_t *pval);
-        uint128_t max_sf128__r;
-        if (max_sf128__part3254(a, b, pfflags, &max_sf128__r))
-            return max_sf128__r;
-    }
-
-    void max_sf128__part3255(uint128_t a, uint128_t b, uint32_t *a_sign, uint32_t *b_sign);
-    max_sf128__part3255(a, b, &a_sign, &b_sign);
-
-
-        {
-        uint128_t max_sf128__part3256(uint128_t a, uint128_t b, uint32_t a_sign, uint32_t b_sign);
-        return max_sf128__part3256(a, b, a_sign, b_sign);
-    }
-
-}
-
-int eq_quiet_sf128(uint128_t a, uint128_t b, uint32_t *pfflags)
-{
-    int eq_quiet_sf128__part3258(uint128_t a, uint128_t b, uint32_t *pfflags);
-    if (eq_quiet_sf128__part3258(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    int eq_quiet_sf128__part3259(uint128_t a, uint128_t b);
-    if (eq_quiet_sf128__part3259(a, b))
-        return 1;
-
-        {
-        int eq_quiet_sf128__part3260(uint128_t a, uint128_t b);
-        return eq_quiet_sf128__part3260(a, b);
-    }
-
-}
-
-int le_sf128(uint128_t a, uint128_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-        int le_sf128__part3262(uint128_t a, uint128_t b, uint32_t *pfflags);
-    if (le_sf128__part3262(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    void le_sf128__part3263(uint128_t a, uint128_t b, uint32_t *a_sign, uint32_t *b_sign);
-    le_sf128__part3263(a, b, &a_sign, &b_sign);
-        {
-        int le_sf128__part3264(uint128_t a, uint128_t b, uint32_t a_sign, uint32_t b_sign);
-        return le_sf128__part3264(a, b, a_sign, b_sign);
-    }
-
-}
-
-int lt_sf128(uint128_t a, uint128_t b, uint32_t *pfflags)
-{
-    uint32_t a_sign, b_sign;
-
-    int lt_sf128__part3266(uint128_t a, uint128_t b, uint32_t *pfflags);
-    if (lt_sf128__part3266(a, b, pfflags)) {
-        return 0;
-    }
-
-
-    void lt_sf128__part3267(uint128_t a, uint128_t b, uint32_t *a_sign, uint32_t *b_sign);
-    lt_sf128__part3267(a, b, &a_sign, &b_sign);
-
-        int lt_sf128__part3268(const uint128_t *pa, const uint128_t *pb, uint32_t a_sign, uint32_t b_sign);
-    return lt_sf128__part3268(&a, &b, a_sign, b_sign);
-
-}
-
-uint32_t fclass_sf128(uint128_t a)
-{
-    void fclass_sf128__part3270(uint128_t a, uint32_t *a_sign, int32_t *a_exp, uint128_t *a_mant);
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint32_t ret;
-
-    fclass_sf128__part3270(a, &a_sign, &a_exp, &a_mant);
-        uint32_t fclass_sf128__part3271(uint32_t a_sign, int32_t a_exp, uint128_t a_mant);
-    ret = fclass_sf128__part3271(a_sign, a_exp, a_mant);
-
-    uint32_t fclass_sf128__part3272(uint32_t ret);
-    return fclass_sf128__part3272(ret);
-}
+uint32_t fclass_sf128(uint128_t a);
 
 
 
 
 
-uint128_t cvt_sf32_sf128(uint32_t a, uint32_t *pfflags)
-{
-    void cvt_sf32_sf128__part3274(uint32_t *pa_sign, int32_t *pa_exp, uint128_t *pa_mant, uint32_t a);
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-
-    cvt_sf32_sf128__part3274(&a_sign, &a_exp, &a_mant, a);
-
-    uint128_t cvt_sf32_sf128__part3275(uint32_t a, uint32_t a_sign, uint128_t a_mant, uint32_t *pfflags);
-    if (a_exp == 0xff) {
-        return cvt_sf32_sf128__part3275(a, a_sign, a_mant, pfflags);
-    }
-    {
-        extern int cvt_sf32_sf128__part3276(uint32_t a_sign, int32_t *pa_exp, uint128_t *pa_mant, uint128_t *p_ret);
-        uint128_t part3276_ret = 0;
-        if (cvt_sf32_sf128__part3276(a_sign, &a_exp, &a_mant, &part3276_ret))
-            return part3276_ret;
-    }
-
-
-        uint128_t cvt_sf32_sf128__part3277(uint32_t a_sign, int32_t a_exp, uint128_t a_mant);
-    return cvt_sf32_sf128__part3277(a_sign, a_exp, a_mant);
-
-}
+uint128_t cvt_sf32_sf128(uint32_t a, uint32_t *pfflags);
 
 uint32_t cvt_sf128_sf32(uint128_t a, RoundingModeEnum rm,
-                                           uint32_t *pfflags)
-{
-    void cvt_sf128_sf32__part3279(const uint128_t *pa, uint32_t *pa_sign, int32_t *pa_exp, uint128_t *pa_mant);
-
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-
-    cvt_sf128_sf32__part3279(&a, &a_sign, &a_exp, &a_mant);
-
-        {
-        uint64_t _r3280;
-        extern uint64_t cvt_sf128_sf32__part3280(uint32_t, int32_t, uint64_t,
-                                                 uint64_t, uint64_t, uint64_t,
-                                                 uint32_t *);
-        _r3280 = cvt_sf128_sf32__part3280(a_sign, a_exp,
-                                          (uint64_t)a_mant, (uint64_t)(a_mant >> 64),
-                                          (uint64_t)a, (uint64_t)(a >> 64), pfflags);
-        if (_r3280 >> 32)
-            return (uint32_t)_r3280;
-    }
-
-        {
-        int part3281_ret;
-        uint32_t part3281_val;
-        int cvt_sf128_sf32__part3281(int32_t *pa_exp, uint128_t *pa_mant,
-                                     uint32_t a_sign, uint32_t *p_ret);
-        part3281_ret = cvt_sf128_sf32__part3281(&a_exp, &a_mant, a_sign,
-                                                &part3281_val);
-        if (part3281_ret)
-            return part3281_val;
-    }
-
-
-    uint32_t cvt_sf128_sf32__part3282(uint32_t a_sign, int32_t a_exp, uint128_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf128_sf32__part3282(a_sign, a_exp, a_mant, rm, pfflags);
-}
+                                           uint32_t *pfflags);
 
 
 
 
 
-uint128_t cvt_sf64_sf128(uint64_t a, uint32_t *pfflags)
-{
-        uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-
-    uint128_t cvt_sf64_sf128__part3284(uint64_t a, uint32_t *pa_sign, int32_t *pa_exp);
-    a_mant = cvt_sf64_sf128__part3284(a, &a_sign, &a_exp);
-
-
-    int cvt_sf64_sf128__part3285(uint32_t a_sign, int32_t a_exp, const uint128_t *a_mant, uint64_t a, uint32_t *pfflags, uint128_t *presult);
-    {
-        uint128_t __part3285_result;
-        int __part3285_taken = cvt_sf64_sf128__part3285(a_sign, a_exp, &a_mant, a, pfflags, &__part3285_result);
-        if (__part3285_taken) {
-            return __part3285_result;
-        }
-    }
-    {
-        int cvt_part_ret;
-        int cvt_sf64_sf128__part3286(uint32_t a_sign, int32_t *pa_exp, uint128_t *pa_mant);
-        cvt_part_ret = cvt_sf64_sf128__part3286(a_sign, &a_exp, &a_mant);
-        if (cvt_part_ret)
-            return a_mant;
-    }
-
-
-        uint128_t cvt_sf64_sf128__part3287(uint32_t a_sign, int32_t a_exp, uint128_t a_mant);
-    return cvt_sf64_sf128__part3287(a_sign, a_exp, a_mant);
-
-}
+uint128_t cvt_sf64_sf128(uint64_t a, uint32_t *pfflags);
 
 uint64_t cvt_sf128_sf64(uint128_t a, RoundingModeEnum rm,
-                                               uint32_t *pfflags)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-
-    void cvt_sf128_sf64__part3289(uint32_t *pa_sign, int32_t *pa_exp,
-                                  uint128_t *pa_mant, const uint128_t *pa);
-    cvt_sf128_sf64__part3289(&a_sign, &a_exp, &a_mant, &a);
-
-    {
-        extern uint64_t cvt_sf128_sf64__part3290(uint128_t a, uint32_t a_sign, int32_t a_exp, uint128_t a_mant, uint32_t *pfflags, int *done);
-        int part3290_done;
-        uint64_t part3290_res = cvt_sf128_sf64__part3290(a, a_sign, a_exp, a_mant, pfflags, &part3290_done);
-        if (part3290_done) {
-            return part3290_res;
-        }
-    }
-        {
-        uint64_t cvt_sf128_sf64__part3291(uint32_t a_sign, int32_t *a_exp, uint128_t *a_mant, uint64_t *ret);
-        uint64_t part3291_ret = 0;
-        if (cvt_sf128_sf64__part3291(a_sign, &a_exp, &a_mant, &part3291_ret))
-            return part3291_ret;
-    }
-
-
-        {
-        uint64_t cvt_sf128_sf64__part3292(uint32_t a_sign, int32_t a_exp, uint128_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-        return cvt_sf128_sf64__part3292(a_sign, a_exp, a_mant, rm, pfflags);
-    }
-
-}
+                                               uint32_t *pfflags);
 
 
 
@@ -5466,314 +3251,73 @@ uint64_t cvt_sf128_sf64(uint128_t a, RoundingModeEnum rm,
 
 
 static int32_t internal_cvt_sf128_i32(uint128_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    void internal_cvt_sf128_i32__part3427(uint128_t a, uint32_t *pa_sign, int32_t *pa_exp, uint128_t *pa_mant);
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint32_t r, r_max;
-
-    internal_cvt_sf128_i32__part3427(a, &a_sign, &a_exp, &a_mant);
-    void internal_cvt_sf128_i32__part3428(int32_t a_exp, uint128_t a_mant, uint32_t *a_sign);
-    internal_cvt_sf128_i32__part3428(a_exp, a_mant, &a_sign);
-        void internal_cvt_sf128_i32__part3429(int32_t *a_exp, uint128_t *a_mant);
-    internal_cvt_sf128_i32__part3429(&a_exp, &a_mant);
-
-    void internal_cvt_sf128_i32__part3430(uint128_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf128_i32__part3430(&a_mant, &a_exp);
-
-        uint32_t internal_cvt_sf128_i32__part3431(uint32_t a_sign, BOOL is_unsigned);
-    r_max = internal_cvt_sf128_i32__part3431(a_sign, is_unsigned);
-
-        {
-        int32_t internal_cvt_sf128_i32__part3432(int32_t a_exp, uint128_t a_mant, uint32_t a_sign, int rm, uint32_t r_max, uint32_t *pfflags, uint32_t *r_out);
-        if (internal_cvt_sf128_i32__part3432(a_exp, a_mant, a_sign, rm, r_max, pfflags, &r))
-            return r_max;
-    }
-
-    uint32_t internal_cvt_sf128_i32__part3433(uint32_t a_sign, uint32_t r);
-    r = internal_cvt_sf128_i32__part3433(a_sign, r);
-
-    int32_t internal_cvt_sf128_i32__part3434(uint32_t r);
-    return internal_cvt_sf128_i32__part3434(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int32_t cvt_sf128_i32(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    extern int32_t cvt_sf128_i32__part3436(uint128_t a, RoundingModeEnum rm,
-                                       uint32_t *pfflags);
-return cvt_sf128_i32__part3436(a, rm, pfflags);
-
-}
+                                                          uint32_t *pfflags);
 
 uint32_t cvt_sf128_u32(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        {
-        uint32_t cvt_sf128_u32__part3438(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-        return cvt_sf128_u32__part3438(a, rm, pfflags);
-    }
-
-}
+                                                          uint32_t *pfflags);
 
 
 static uint128_t internal_cvt_i32_sf128(int32_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint32_t r, mask;
-    int l;
-
-    void internal_cvt_i32_sf128__part3440(int32_t a, BOOL is_unsigned, uint32_t *out_a_sign, uint32_t *out_r);
-    internal_cvt_i32_sf128__part3440(a, is_unsigned, &a_sign, &r);
-
-    void internal_cvt_i32_sf128__part3441(int32_t *a_exp, uint32_t r, int32_t *l);
-    internal_cvt_i32_sf128__part3441(&a_exp, r, &l);
-
-        void internal_cvt_i32_sf128__part3442(int l, uint32_t *r, uint32_t *mask, int32_t *a_exp);
-    internal_cvt_i32_sf128__part3442(l, &r, &mask, &a_exp);
-
-        a_mant = r;
-    {
-        uint128_t internal_cvt_i32_sf128__part3443(uint32_t a_sign, int32_t a_exp, uint128_t a_mant, RoundingModeEnum rm, uint32_t *pfflags);
-        return internal_cvt_i32_sf128__part3443(a_sign, a_exp, a_mant, rm, pfflags);
-    }
-
-}
+                                                                       BOOL is_unsigned);
 
 uint128_t cvt_i32_sf128(int32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint128_t cvt_i32_sf128__part3445(int32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_i32_sf128__part3445(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 uint128_t cvt_u32_sf128(uint32_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint128_t cvt_u32_sf128__part3447(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_u32_sf128__part3447(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 
 static int64_t internal_cvt_sf128_i64(uint128_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    void internal_cvt_sf128_i64__part3449(uint128_t a, uint32_t *a_sign, int32_t *a_exp, uint128_t *a_mant);
-
-uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint64_t r, r_max;
-
-    internal_cvt_sf128_i64__part3449(a, &a_sign, &a_exp, &a_mant);
-    void internal_cvt_sf128_i64__part3450(int32_t a_exp, uint128_t a_mant, uint32_t *a_sign);
-    internal_cvt_sf128_i64__part3450(a_exp, a_mant, &a_sign);
-    void internal_cvt_sf128_i64__part3451(int32_t *pa_exp, uint128_t *pa_mant);
-    internal_cvt_sf128_i64__part3451(&a_exp, &a_mant);
-
-    void internal_cvt_sf128_i64__part3452(uint128_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf128_i64__part3452(&a_mant, &a_exp);
-
-
-    uint64_t internal_cvt_sf128_i64__part3453(uint32_t a_sign, int is_unsigned);
-    r_max = internal_cvt_sf128_i64__part3453(a_sign, is_unsigned);
-
-        {
-        int part3454_ovf;
-        int internal_cvt_sf128_i64__part3454(int32_t a_exp, uint128_t a_mant, uint64_t r_max, RoundingModeEnum rm, uint32_t a_sign, uint32_t *pfflags, uint64_t *pr);
-        part3454_ovf = internal_cvt_sf128_i64__part3454(a_exp, a_mant, r_max, rm, a_sign, pfflags, &r);
-        if (part3454_ovf)
-            return r_max;
-    }
-        {
-        uint64_t internal_cvt_sf128_i64__part3455(uint32_t a_sign, uint64_t r);
-        r = internal_cvt_sf128_i64__part3455(a_sign, r);
-    }
-
-    int64_t internal_cvt_sf128_i64__part3456(uint64_t r, uint32_t a_sign);
-    return internal_cvt_sf128_i64__part3456(r, a_sign);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int64_t cvt_sf128_i64(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    int64_t cvt_sf128_i64__part3458(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf128_i64__part3458(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 uint64_t cvt_sf128_u64(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    uint64_t cvt_sf128_u64__part3460(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf128_u64__part3460(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint128_t internal_cvt_i64_sf128(int64_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint64_t r, mask;
-    int l;
-
-    void internal_cvt_i64_sf128__part3462(int64_t a, int is_unsigned, uint32_t *a_sign, uint64_t *r);
-    internal_cvt_i64_sf128__part3462(a, is_unsigned, &a_sign, &r);
-
-        void internal_cvt_i64_sf128__part3463(uint64_t r, int32_t *a_exp, int *l);
-    internal_cvt_i64_sf128__part3463(r, &a_exp, &l);
-
-    extern void internal_cvt_i64_sf128__part3464(uint64_t *r, int32_t *a_exp, int l);
-    internal_cvt_i64_sf128__part3464(&r, &a_exp, l);
-        uint128_t internal_cvt_i64_sf128__part3465(uint32_t a_sign, int a_exp, uint64_t r, int rm, uint32_t *pfflags);
-    return internal_cvt_i64_sf128__part3465(a_sign, a_exp, r, (int)rm, pfflags);
-
-}
+                                                                       BOOL is_unsigned);
 
 uint128_t cvt_i64_sf128(int64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint128_t cvt_i64_sf128__part3467(int64_t a, int rm, uint32_t *pfflags);
-    return cvt_i64_sf128__part3467(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 uint128_t cvt_u64_sf128(uint64_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint128_t cvt_u64_sf128__part3469(uint64_t a, uint32_t rm, uint32_t *pfflags);
-return cvt_u64_sf128__part3469(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);
 
 
 
 static int128_t internal_cvt_sf128_i128(uint128_t a, RoundingModeEnum rm,
-                                                                         uint32_t *pfflags, BOOL is_unsigned)
-{
-    uint32_t a_sign, addend, rnd_bits;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint128_t r, r_max;
-
-    void internal_cvt_sf128_i128__part3471(uint128_t a, uint32_t *a_sign, int32_t *a_exp, uint128_t *a_mant);
-    internal_cvt_sf128_i128__part3471(a, &a_sign, &a_exp, &a_mant);
-
-    uint32_t internal_cvt_sf128_i128__part3472(int32_t a_exp, uint128_t a_mant, uint32_t a_sign);
-    a_sign = internal_cvt_sf128_i128__part3472(a_exp, a_mant, a_sign);
-
-    void internal_cvt_sf128_i128__part3473(int32_t *a_exp, uint128_t *a_mant);
-    internal_cvt_sf128_i128__part3473(&a_exp, &a_mant);
-
-        void internal_cvt_sf128_i128__part3474(uint128_t *a_mant, int32_t *a_exp);
-    internal_cvt_sf128_i128__part3474(&a_mant, &a_exp);
-
-
-        uint128_t internal_cvt_sf128_i128__part3475(uint32_t a_sign, int is_unsigned);
-    r_max = internal_cvt_sf128_i128__part3475(a_sign, is_unsigned);
-
-        {
-        extern int internal_cvt_sf128_i128__part3476(uint128_t part_a_mant,
-                                                     int32_t part_a_exp,
-                                                     uint128_t part_r_max,
-                                                     uint32_t part_a_sign,
-                                                     int part_rm,
-                                                     uint32_t *part_pfflags,
-                                                     uint128_t *part_pr);
-        uint128_t part_r = 0;
-
-        if (internal_cvt_sf128_i128__part3476(a_mant, a_exp, r_max, a_sign,
-                                              (int)rm, pfflags, &part_r)) {
-            return r_max;
-        }
-        r = part_r;
-    }
-
-    {
-        uint128_t internal_cvt_sf128_i128__part3477(uint32_t a_sign, uint128_t r);
-        r = internal_cvt_sf128_i128__part3477(a_sign, r);
-    }
-
-    int128_t internal_cvt_sf128_i128__part3478(uint128_t r);
-    return internal_cvt_sf128_i128__part3478(r);
-
-}
+                                                                         uint32_t *pfflags, BOOL is_unsigned);
 
 int128_t cvt_sf128_i128(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-        {
-        int128_t cvt_sf128_i128__part3480(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-        return cvt_sf128_i128__part3480(a, rm, pfflags);
-    }
-
-}
+                                                          uint32_t *pfflags);
 
 uint128_t cvt_sf128_u128(uint128_t a, RoundingModeEnum rm,
-                                                          uint32_t *pfflags)
-{
-    extern uint128_t cvt_sf128_u128__part3482(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_sf128_u128__part3482(a, rm, pfflags);
-}
+                                                          uint32_t *pfflags);
 
 
 static uint128_t internal_cvt_i128_sf128(int128_t a,
                                                                        RoundingModeEnum rm,
                                                                        uint32_t *pfflags,
-                                                                       BOOL is_unsigned)
-{
-    uint32_t a_sign;
-    int32_t a_exp;
-    uint128_t a_mant;
-    uint128_t r, mask;
-    int l;
-
-        void internal_cvt_i128_sf128__part3484(BOOL is_unsigned, int128_t a, uint32_t *a_sign, uint128_t *r);
-    internal_cvt_i128_sf128__part3484(is_unsigned, a, &a_sign, &r);
-
-    int internal_cvt_i128_sf128__part3485(uint128_t r, int32_t *pa_exp);
-
-    l = internal_cvt_i128_sf128__part3485(r, &a_exp);
-
-    uint128_t internal_cvt_i128_sf128__part3486(int l, uint128_t r, int32_t *pa_exp);
-    r = internal_cvt_i128_sf128__part3486(l, r, &a_exp);
-
-    uint128_t internal_cvt_i128_sf128__part3487(uint32_t a_sign, int32_t a_exp, uint128_t r, RoundingModeEnum rm, uint32_t *pfflags);
-    a_mant = r;
-    return internal_cvt_i128_sf128__part3487(a_sign, a_exp, r, rm, pfflags);
-
-}
+                                                                       BOOL is_unsigned);
 
 uint128_t cvt_i128_sf128(int128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-    uint128_t cvt_i128_sf128__part3489(int128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_i128_sf128__part3489(a, rm, pfflags);
-}
+                                                       uint32_t *pfflags);
 
 uint128_t cvt_u128_sf128(uint128_t a,
                                                        RoundingModeEnum rm,
-                                                       uint32_t *pfflags)
-{
-        uint128_t cvt_u128_sf128__part3491(uint128_t a, RoundingModeEnum rm, uint32_t *pfflags);
-    return cvt_u128_sf128__part3491(a, rm, pfflags);
-
-}
+                                                       uint32_t *pfflags);

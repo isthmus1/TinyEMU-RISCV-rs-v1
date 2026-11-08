@@ -1,5 +1,195 @@
 //! From `slirp/tcp_subr.c`.
 
+// ── `tcp_init` · slirp/tcp_subr.c:50-56 · chunk 2789 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_init(Slirp *slirp)
+//     {
+//         slirp->tcp_iss = 1;
+//         slirp->tcb.so_next = slirp->tcb.so_prev = &slirp->tcb;
+//         slirp->tcp_last_so = &slirp->tcb;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2789 {
+// Rust rewrite of slirp tcp_init (slirp/tcp_subr.c).
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct timeval {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct ipq {
+    pub frag_link: qlink,
+    pub ip_link: qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: in_addr,
+    pub ipq_dst: in_addr,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct m_hdr {
+    pub mh_next: *mut mbuf,
+    pub mh_prev: *mut mbuf,
+    pub mh_nextpkt: *mut mbuf,
+    pub mh_prevpkt: *mut mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union M_dat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct mbuf {
+    pub m_hdr: m_hdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_dat,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ex_list {
+    pub ex_pty: c_int,
+    pub ex_addr: in_addr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ex_list,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct BOOTPClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct tftp_session {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: in_addr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut mbuf,
+    pub so_ti: *mut c_void, // struct tcpiphdr *
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void, // struct tcpcb *
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Slirp {
+    pub vnetwork_addr: in_addr,
+    pub vnetwork_mask: in_addr,
+    pub vhost_addr: in_addr,
+    pub vdhcp_startaddr: in_addr,
+    pub vnameserver_addr: in_addr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: in_addr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: timeval,
+    pub exec_list: *mut ex_list,
+    pub m_freelist: mbuf,
+    pub m_usedlist: mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: mbuf,
+    pub if_batchq: mbuf,
+    pub next_m: *mut mbuf,
+    pub ipq: ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BOOTPClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: socket,
+    pub tcp_last_so: *mut socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: socket,
+    pub udp_last_so: *mut socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [tftp_session; 3],
+    pub opaque: *mut c_void,
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_init(slirp: *mut Slirp) {
+    unsafe {
+        (*slirp).tcp_iss = 1;
+        let tcb: *mut socket = &mut (*slirp).tcb;
+        (*tcb).so_next = tcb;
+        (*tcb).so_prev = tcb;
+        (*slirp).tcp_last_so = tcb;
+    }
+}
+}
+
 // ── `slirp->tcp_iss = 1; slirp->tcb.so_next = slirp->tcb.so_prev = &slirp->tcb; slirp->tcp_last_so =…` · slirp/tcp_subr.c:53-55 · chunk 2790 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -257,6 +447,173 @@ pub extern "C" fn tcp_init__part2790(slirp: *mut Slirp) {
 }
 }
 
+// ── `tcp_template` · slirp/tcp_subr.c:64-87 · chunk 2791 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_template(struct tcpcb *tp)
+//     {
+//      struct socket *so = tp->t_socket;
+//      register struct tcpiphdr *n = &tp->t_template;
+//     
+//      n->ti_i.ih_mbuf.mptr = 
+//                  ((void *)0)
+//                      ;
+//      n->ti_i.ih_x1 = 0;
+//      n->ti_i.ih_pr = 
+//                IPPROTO_TCP
+//                           ;
+//      n->ti_i.ih_len = htons(sizeof (struct tcpiphdr) - sizeof (struct ip));
+//      n->ti_i.ih_src = so->so_faddr;
+//      n->ti_i.ih_dst = so->so_laddr;
+//      n->ti_t.th_sport = so->so_fport;
+//      n->ti_t.th_dport = so->so_lport;
+//     
+//      n->ti_t.th_seq = 0;
+//      n->ti_t.th_ack = 0;
+//      n->ti_t.th_x2 = 0;
+//      n->ti_t.th_off = 5;
+//      n->ti_t.th_flags = 0;
+//      n->ti_t.th_win = 0;
+//      n->ti_t.th_sum = 0;
+//      n->ti_t.th_urp = 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2791 {
+// Port of slirp's tcp_template(): build the skeletal tcp/ip header template
+// for a connection.
+#![allow(dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C, packed)]
+pub struct MbufPtr {
+    pub mptr: *mut c_void,
+}
+
+// struct ipovly (packed in C)
+#[repr(C, packed)]
+pub struct Ipovly {
+    pub ih_mbuf: MbufPtr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: InAddr,
+    pub ih_dst: InAddr,
+}
+
+// struct tcphdr (th_x2:4 / th_off:4 bitfields share one byte)
+#[repr(C)]
+pub struct Tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    pub th_x2_off: u8,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+#[repr(C)]
+pub struct Tcpiphdr {
+    pub ti_i: Ipovly,
+    pub ti_t: Tcphdr,
+}
+
+// struct ip (packed in C), used only to reproduce the sizeof() arithmetic
+#[repr(C, packed)]
+pub struct Ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+// Prefix of struct socket up to so_lport (only fields read here).
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut c_void,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+}
+
+// struct tcpcb: everything up to t_socket so the offsets line up.
+#[repr(C)]
+pub struct Tcpcb {
+    pub seg_next: *mut Tcpiphdr,
+    pub seg_prev: *mut Tcpiphdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: u16,
+    pub t_force: c_char,
+    pub t_flags: u16,
+    pub t_template: Tcpiphdr,
+    pub t_socket: *mut Socket,
+}
+
+extern "C" {
+    fn htons(x: u16) -> u16;
+}
+
+const IPPROTO_TCP: u8 = 6;
+
+// th_x2 = 0, th_off = 5 packed into the shared bitfield byte.
+#[cfg(target_endian = "little")]
+const TH_X2_OFF_BYTE: u8 = 5u8 << 4;
+#[cfg(target_endian = "big")]
+const TH_X2_OFF_BYTE: u8 = 5u8;
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_template(tp: *mut Tcpcb) {
+    let so = (*tp).t_socket;
+    let n = &mut (*tp).t_template;
+
+    n.ti_i.ih_mbuf.mptr = core::ptr::null_mut();
+    n.ti_i.ih_x1 = 0;
+    n.ti_i.ih_pr = IPPROTO_TCP;
+    n.ti_i.ih_len = htons(
+        (core::mem::size_of::<Tcpiphdr>() - core::mem::size_of::<Ip>()) as u16,
+    );
+    n.ti_i.ih_src = (*so).so_faddr;
+    n.ti_i.ih_dst = (*so).so_laddr;
+    n.ti_t.th_sport = (*so).so_fport;
+    n.ti_t.th_dport = (*so).so_lport;
+
+    n.ti_t.th_seq = 0;
+    n.ti_t.th_ack = 0;
+    n.ti_t.th_x2_off = TH_X2_OFF_BYTE;
+    n.ti_t.th_flags = 0;
+    n.ti_t.th_win = 0;
+    n.ti_t.th_sum = 0;
+    n.ti_t.th_urp = 0;
+}
+}
+
 // ── `struct socket *so = tp->t_socket; register struct tcpiphdr *n = &tp->t_template; n->ti_i.ih_mbu…` · slirp/tcp_subr.c:67-86 · chunk 2792 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -422,6 +779,399 @@ pub unsafe extern "C" fn tcp_template__part2792(n: *mut Tcpiphdr, so: *mut Socke
 
     // n->ti_t.th_urp = 0;
     core::ptr::write_unaligned(core::ptr::addr_of_mut!((*n).ti_t.th_urp), 0u16);
+}
+}
+
+// ── `tcp_respond` · slirp/tcp_subr.c:102-167 · chunk 2793 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
+//                 tcp_seq ack, tcp_seq seq, int flags)
+//     {
+//      register int tlen;
+//      int win = 0;
+//     
+//      ;
+//      ;
+//      ;
+//      ;
+//      ;
+//      ;
+//      ;
+//     
+//      if (tp)
+//       win = ((&tp->t_socket->so_rcv)->sb_datalen - (&tp->t_socket->so_rcv)->sb_cc);
+//             if (m == 
+//                     ((void *)0)
+//                         ) {
+//       if ((m = m_get(tp->t_socket->slirp)) == 
+//                                              ((void *)0)
+//                                                  )
+//        return;
+//       tlen = 0;
+//       m->m_hdr.mh_data += (2 + 14 + 40);
+//       *((struct tcpiphdr *)(m)->m_hdr.mh_data) = *ti;
+//       ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);
+//       flags = 0x10;
+//      } else {
+//     
+//     
+//     
+//     
+//       m->m_hdr.mh_data = (caddr_t)ti;
+//     
+//       m->m_hdr.mh_len = sizeof (struct tcpiphdr);
+//       tlen = 0;
+//     
+//       { uint32_t t; t=ti->ti_i.ih_dst.s_addr; ti->ti_i.ih_dst.s_addr=ti->ti_i.ih_src.s_addr; ti->ti_i.ih_src.s_addr=t; };
+//       { uint16_t t; t=ti->ti_t.th_dport; ti->ti_t.th_dport=ti->ti_t.th_sport; ti->ti_t.th_sport=t; };
+//     
+//      }
+//      ti->ti_i.ih_len = htons((u_short)(sizeof (struct tcphdr) + tlen));
+//      tlen += sizeof (struct tcpiphdr);
+//      m->m_hdr.mh_len = tlen;
+//     
+//             ti->ti_i.ih_mbuf.mptr = 
+//                          ((void *)0)
+//                              ;
+//      ti->ti_i.ih_x1 = 0;
+//      ti->ti_t.th_seq = htonl(seq);
+//      ti->ti_t.th_ack = htonl(ack);
+//      ti->ti_t.th_x2 = 0;
+//      ti->ti_t.th_off = sizeof (struct tcphdr) >> 2;
+//      ti->ti_t.th_flags = flags;
+//      if (tp)
+//       ti->ti_t.th_win = htons((uint16_t) (win >> tp->rcv_scale));
+//      else
+//       ti->ti_t.th_win = htons((uint16_t)win);
+//      ti->ti_t.th_urp = 0;
+//      ti->ti_t.th_sum = 0;
+//      ti->ti_t.th_sum = cksum(m, tlen);
+//      ((struct ip *)ti)->ip_len = tlen;
+//     
+//      if(flags & 0x04)
+//        ((struct ip *)ti)->ip_ttl = 255;
+//      else
+//        ((struct ip *)ti)->ip_ttl = 64;
+//     
+//      (void) ip_output((struct socket *)0, m);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2793 {
+// Rust rewrite of slirp's tcp_respond().
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_short, c_uint, c_ushort, c_void};
+use core::mem::size_of;
+use core::ptr;
+
+// Opaque types.
+pub struct Slirp {
+    _private: [u8; 0],
+}
+
+// struct in_addr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+// struct mbuf_ptr (packed); SIZEOF_CHAR_P dependent.
+#[cfg(target_pointer_width = "64")]
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct MbufPtr {
+    pub mptr: *mut Mbuf,
+}
+
+#[cfg(target_pointer_width = "32")]
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct MbufPtr {
+    pub mptr: *mut Mbuf,
+    pub dummy: u32,
+}
+
+// struct ipovly (packed)
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct Ipovly {
+    pub ih_mbuf: MbufPtr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: InAddr,
+    pub ih_dst: InAddr,
+}
+
+// struct tcphdr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    // bit field storage unit for `u_int th_x2:4, th_off:4;`
+    // (low byte: th_x2 in bits 0..4, th_off in bits 4..8)
+    pub th_x2_off: u32,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+// struct tcpiphdr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Tcpiphdr {
+    pub ti_i: Ipovly,
+    pub ti_t: Tcphdr,
+}
+
+// struct ip (packed)
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct Ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+// struct sbuf
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+// struct socket
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut Tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut Tcpcb,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+// struct tcpcb
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Tcpcb {
+    pub seg_next: *mut Tcpiphdr,
+    pub seg_prev: *mut Tcpiphdr,
+    pub t_state: c_short,
+    pub t_timer: [c_short; 4],
+    pub t_rxtshift: c_short,
+    pub t_rxtcur: c_short,
+    pub t_dupacks: c_short,
+    pub t_maxseg: c_ushort,
+    pub t_force: c_char,
+    pub t_flags: c_ushort,
+    pub t_template: Tcpiphdr,
+    pub t_socket: *mut Socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: c_short,
+    pub t_rtt: c_short,
+    pub t_rtseq: u32,
+    pub t_srtt: c_short,
+    pub t_rttvar: c_short,
+    pub t_rttmin: c_ushort,
+    pub max_sndwnd: u32,
+    pub t_oobflags: c_char,
+    pub t_iobc: c_char,
+    pub t_softerror: c_short,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+// struct m_hdr
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+// union M_dat
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union M_datU {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+// struct mbuf
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: M_datU,
+}
+
+const IF_MAXLINKHDR: usize = 2 + 14 + 40;
+const TH_ACK: c_int = 0x10;
+const TH_RST: c_int = 0x04;
+const MAXTTL: u8 = 255;
+const IPDEFTTL: u8 = 64;
+
+extern "C" {
+    fn m_get(slirp: *mut Slirp) -> *mut Mbuf;
+    fn cksum(m: *mut Mbuf, len: c_int) -> c_int;
+    fn ip_output(so: *mut Socket, m: *mut Mbuf) -> c_int;
+    fn htons(v: u16) -> u16;
+    fn htonl(v: u32) -> u32;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_respond(
+    tp: *mut Tcpcb,
+    ti_in: *mut Tcpiphdr,
+    m_in: *mut Mbuf,
+    ack: u32,
+    seq: u32,
+    flags_in: c_int,
+) {
+    let mut ti: *mut Tcpiphdr = ti_in;
+    let mut m: *mut Mbuf = m_in;
+    let mut flags: c_int = flags_in;
+    let mut tlen: c_int;
+    let mut win: c_int = 0;
+
+    if !tp.is_null() {
+        // sbspace(&tp->t_socket->so_rcv)
+        let so = (*tp).t_socket;
+        let space = (*so).so_rcv.sb_datalen.wrapping_sub((*so).so_rcv.sb_cc);
+        win = space as c_int;
+    }
+
+    if m.is_null() {
+        m = m_get((*(*tp).t_socket).slirp);
+        if m.is_null() {
+            return;
+        }
+        tlen = 0;
+        let data = (*m).m_hdr.mh_data.add(IF_MAXLINKHDR);
+        (*m).m_hdr.mh_data = data;
+        // *mtod(m, struct tcpiphdr *) = *ti;
+        ptr::copy_nonoverlapping(ti as *const u8, data as *mut u8, size_of::<Tcpiphdr>());
+        ti = data as *mut Tcpiphdr;
+        flags = TH_ACK;
+    } else {
+        // ti points into m; make the mbuf point to ti
+        (*m).m_hdr.mh_data = ti as *mut c_char;
+        (*m).m_hdr.mh_len = size_of::<Tcpiphdr>() as c_int;
+        tlen = 0;
+
+        let p_dst = ptr::addr_of_mut!((*ti).ti_i.ih_dst.s_addr);
+        let p_src = ptr::addr_of_mut!((*ti).ti_i.ih_src.s_addr);
+        let t = ptr::read_unaligned(p_dst);
+        ptr::write_unaligned(p_dst, ptr::read_unaligned(p_src));
+        ptr::write_unaligned(p_src, t);
+
+        let t2: u16 = (*ti).ti_t.th_dport;
+        (*ti).ti_t.th_dport = (*ti).ti_t.th_sport;
+        (*ti).ti_t.th_sport = t2;
+    }
+
+    ptr::write_unaligned(
+        ptr::addr_of_mut!((*ti).ti_i.ih_len),
+        htons((size_of::<Tcphdr>() as c_int + tlen) as u16),
+    );
+    tlen += size_of::<Tcpiphdr>() as c_int;
+    (*m).m_hdr.mh_len = tlen;
+
+    ptr::write_unaligned(
+        ptr::addr_of_mut!((*ti).ti_i.ih_mbuf.mptr),
+        ptr::null_mut::<Mbuf>(),
+    );
+    ptr::write_unaligned(ptr::addr_of_mut!((*ti).ti_i.ih_x1), 0u8);
+    (*ti).ti_t.th_seq = htonl(seq);
+    (*ti).ti_t.th_ack = htonl(ack);
+    // ti_x2 = 0; ti_off = sizeof(struct tcphdr) >> 2;
+    let low: u32 = (0u32 & 0xF) | ((((size_of::<Tcphdr>() as u32) >> 2) & 0xF) << 4);
+    let old: u32 = (*ti).ti_t.th_x2_off;
+    (*ti).ti_t.th_x2_off = (old & !0xFFu32) | low;
+    (*ti).ti_t.th_flags = flags as u8;
+    if !tp.is_null() {
+        let scale = (*tp).rcv_scale as u32;
+        let shifted: c_int = win >> (scale & 31);
+        (*ti).ti_t.th_win = htons(shifted as u16);
+    } else {
+        (*ti).ti_t.th_win = htons(win as u16);
+    }
+    (*ti).ti_t.th_urp = 0;
+    (*ti).ti_t.th_sum = 0;
+    (*ti).ti_t.th_sum = cksum(m, tlen) as u16;
+    let ip = ti as *mut Ip;
+    ptr::write_unaligned(ptr::addr_of_mut!((*ip).ip_len), tlen as u16);
+
+    if (flags & TH_RST) != 0 {
+        ptr::write_unaligned(ptr::addr_of_mut!((*ip).ip_ttl), MAXTTL);
+    } else {
+        ptr::write_unaligned(ptr::addr_of_mut!((*ip).ip_ttl), IPDEFTTL);
+    }
+
+    let _ = ip_output(ptr::null_mut::<Socket>(), m);
 }
 }
 
@@ -1160,6 +1910,234 @@ pub extern "C" fn tcp_respond__part2801(m: *mut mbuf) {
 }
 }
 
+// ── `tcp_newtcpcb` · slirp/tcp_subr.c:174-210 · chunk 2802 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     struct tcpcb *
+//     tcp_newtcpcb(struct socket *so)
+//     {
+//      register struct tcpcb *tp;
+//     
+//      tp = (struct tcpcb *)malloc(sizeof(*tp));
+//      if (tp == 
+//               ((void *)0)
+//                   )
+//       return ((struct tcpcb *)0);
+//     
+//      memset((char *) tp, 0, sizeof(struct tcpcb));
+//      tp->seg_next = tp->seg_prev = (struct tcpiphdr*)tp;
+//      tp->t_maxseg = 1460;
+//     
+//      tp->t_flags = 0 ? (0x0020|0x0080) : 0;
+//      tp->t_socket = so;
+//     
+//     
+//     
+//     
+//     
+//     
+//      tp->t_srtt = 0;
+//      tp->t_rttvar = ( 3*2) << 2;
+//      tp->t_rttmin = ( 1*2);
+//     
+//      { (tp->t_rxtcur) = (((0 >> 2) + (( 3*2) << 2)) >> 1); if ((tp->t_rxtcur) < (( 1*2))) (tp->t_rxtcur) = (( 1*2)); else if ((tp->t_rxtcur) > (( 12*2))) (tp->t_rxtcur) = (( 12*2)); }
+//     
+//                                    ;
+//     
+//      tp->snd_cwnd = 65535 << 14;
+//      tp->snd_ssthresh = 65535 << 14;
+//      tp->t_state = 0;
+//     
+//      so->so_tcpcb = tp;
+//     
+//      return (tp);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2802 {
+// Rust rewrite of slirp/tcp_subr.c:tcp_newtcpcb
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    fn memset(s: *mut c_void, c: c_int, n: usize) -> *mut c_void;
+}
+
+// typedef uint32_t in_addr_t;
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct in_addr {
+    pub s_addr: u32,
+}
+
+// struct ipovly { ... } __attribute__((packed));
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct ipovly {
+    pub ih_mbuf_mptr: *mut c_void,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: in_addr,
+    pub ih_dst: in_addr,
+}
+
+// typedef uint32_t tcp_seq;
+// struct tcphdr { ...; u_int th_x2:4, th_off:4; uint8_t th_flags; ... }
+// The 4+4 bitfield occupies one 4-byte allocation unit whose first byte holds
+// the x2/off bits; th_flags lands in the next byte of that unit.
+#[repr(C, align(4))]
+#[derive(Clone, Copy)]
+pub struct tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    pub th_x2_off: u8,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+// struct tcpiphdr { struct ipovly ti_i; struct tcphdr ti_t; };
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct tcpiphdr {
+    pub ti_i: ipovly,
+    pub ti_t: tcphdr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct socket {
+    pub so_next: *mut socket,
+    pub so_prev: *mut socket,
+    pub s: c_int,
+    pub slirp: *mut c_void,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: in_addr,
+    pub so_laddr: in_addr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut tcpcb,
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: sbuf,
+    pub so_snd: sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+pub struct tcpcb {
+    pub seg_next: *mut tcpiphdr,
+    pub seg_prev: *mut tcpiphdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: u16,
+    pub t_force: c_char,
+    pub t_flags: u16,
+    pub t_template: tcpiphdr,
+    pub t_socket: *mut socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: i16,
+    pub t_rtt: i16,
+    pub t_rtseq: u32,
+    pub t_srtt: i16,
+    pub t_rttvar: i16,
+    pub t_rttmin: u16,
+    pub max_sndwnd: u32,
+    pub t_oobflags: c_char,
+    pub t_iobc: c_char,
+    pub t_softerror: i16,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_newtcpcb(so: *mut socket) -> *mut tcpcb {
+    let tp = malloc(core::mem::size_of::<tcpcb>()) as *mut tcpcb;
+    if tp.is_null() {
+        return core::ptr::null_mut::<tcpcb>();
+    }
+
+    memset(tp as *mut c_void, 0, core::mem::size_of::<tcpcb>());
+
+    (*tp).seg_next = tp as *mut tcpiphdr;
+    (*tp).seg_prev = tp as *mut tcpiphdr;
+    (*tp).t_maxseg = 1460;
+
+    // TCP_DO_RFC1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0 -- TCP_DO_RFC1323 is 0.
+    (*tp).t_flags = 0;
+    (*tp).t_socket = so;
+
+    // Srtt is TCPTV_SRTTBASE (0) so we know we have no rtt estimate.
+    (*tp).t_srtt = 0;
+    (*tp).t_rttvar = (3i16 * 2) << 2;
+    (*tp).t_rttmin = (1u16 * 2);
+
+    // TCPT_RANGESET(t_rxtcur,
+    //   ((TCPTV_SRTTBASE >> 2) + (TCPTV_SRTTDFLT << 2)) >> 1,
+    //   TCPTV_MIN, TCPTV_REXMTMAX)
+    {
+        let mut v: i16 = ((0i16 >> 2) + ((3i16 * 2) << 2)) >> 1;
+        if v < (1i16 * 2) {
+            v = 1i16 * 2;
+        } else if v > (12i16 * 2) {
+            v = 12i16 * 2;
+        }
+        (*tp).t_rxtcur = v;
+    }
+
+    (*tp).snd_cwnd = (65535u32) << 14;
+    (*tp).snd_ssthresh = (65535u32) << 14;
+    (*tp).t_state = 0;
+
+    (*so).so_tcpcb = tp;
+
+    tp
+}
+}
+
 // ── `register struct tcpcb *tp; tp = (struct tcpcb *)malloc(sizeof(*tp));` · slirp/tcp_subr.c:177-179 · chunk 2803 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1505,6 +2483,62 @@ pub unsafe extern "C" fn tcp_newtcpcb__part2807(
 }
 }
 
+// ── `tcp_drop` · slirp/tcp_subr.c:217-228 · chunk 2808 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     struct tcpcb *tcp_drop(struct tcpcb *tp, int err)
+//     {
+//      ;
+//      ;
+//      ;
+//     
+//      if (((tp->t_state) >= 3)) {
+//       tp->t_state = 0;
+//       (void) tcp_output(tp);
+//      }
+//      return (tcp_close(tp));
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2808 {
+// Rewrite of slirp's tcp_drop() in Rust.
+// Mirrors only the leading fields of the C struct tcpcb that are accessed here.
+
+use core::ffi::{c_int, c_short};
+
+#[repr(C)]
+pub struct Tcpcb {
+    pub seg_next: *mut core::ffi::c_void,
+    pub seg_prev: *mut core::ffi::c_void,
+    pub t_state: c_short,
+    // remaining fields are not touched by tcp_drop()
+}
+
+// TCPS_CLOSED
+const TCPS_CLOSED: c_short = 0;
+// TCPS_SYN_RECEIVED; TCPS_HAVERCVDSYN(s) is (s) >= TCPS_SYN_RECEIVED
+const TCPS_SYN_RECEIVED: c_short = 3;
+
+extern "C" {
+    fn tcp_output(tp: *mut Tcpcb) -> c_int;
+    fn tcp_close(tp: *mut Tcpcb) -> *mut Tcpcb;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_drop(tp: *mut Tcpcb, err: c_int) -> *mut Tcpcb {
+    let _ = err;
+
+    if tp.is_null() {
+        return tcp_close(tp);
+    }
+
+    if (*tp).t_state >= TCPS_SYN_RECEIVED {
+        (*tp).t_state = TCPS_CLOSED;
+        let _ = tcp_output(tp);
+    }
+    tcp_close(tp)
+}
+}
+
 // ── `; ; ;` · slirp/tcp_subr.c:219-221 · chunk 2809 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1671,6 +2705,362 @@ extern "C" {
 pub extern "C" fn tcp_drop__part2811(tp: *mut tcpcb) -> *mut tcpcb {
     let _ = &mut () as *mut () as *mut c_void; // keep c_void import meaningful
     unsafe { tcp_close(tp) }
+}
+}
+
+// ── `tcp_close` · slirp/tcp_subr.c:236-265 · chunk 2812 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     struct tcpcb *
+//     tcp_close(struct tcpcb *tp)
+//     {
+//      register struct tcpiphdr *t;
+//      struct socket *so = tp->t_socket;
+//      Slirp *slirp = so->slirp;
+//      register struct mbuf *m;
+//     
+//      ;
+//      ;
+//     
+//     
+//      t = ((struct tcpiphdr*)(((char*)((tp)->seg_next)) + sizeof(struct qlink)));
+//      while (!(((struct qlink*)(((char*)(t)) - sizeof(struct qlink))) == (struct qlink*)(tp))) {
+//       t = ((struct tcpiphdr*)(((char*)(((struct qlink*)(((char*)(t)) - sizeof(struct qlink)))->next)) + sizeof(struct qlink)));
+//       m = ((struct tcpiphdr*)(((char*)(((struct qlink*)(((char*)(t)) - sizeof(struct qlink)))->prev)) + sizeof(struct qlink)))->ti_i.ih_mbuf.mptr;
+//       slirp_remque(((struct qlink*)(((char*)(((struct tcpiphdr*)(((char*)(((struct qlink*)(((char*)(t)) - sizeof(struct qlink)))->prev)) + sizeof(struct qlink))))) - sizeof(struct qlink))));
+//       m_free(m);
+//      }
+//      free(tp);
+//             so->so_tcpcb = 
+//                           ((void *)0)
+//                               ;
+//     
+//      if (so == slirp->tcp_last_so)
+//       slirp->tcp_last_so = &slirp->tcb;
+//      close(so->s);
+//      sbfree(&so->so_rcv);
+//      sbfree(&so->so_snd);
+//      sofree(so);
+//      return ((struct tcpcb *)0);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2812 {
+#![allow(non_camel_case_types, non_snake_case, dead_code)]
+
+// Rust port of slirp/tcp_subr.c:tcp_close()
+//
+// struct tcpcb *tcp_close(struct tcpcb *tp)
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_ushort, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+// struct qlink { void *next, *prev; };
+#[repr(C)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+// struct mbuf_ptr { struct mbuf *mptr; } __attribute__((packed));
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct MbufPtr {
+    pub mptr: *mut Mbuf,
+}
+
+// struct ipovly, packed
+#[repr(C, packed)]
+pub struct Ipovly {
+    pub ih_mbuf: MbufPtr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: InAddr,
+    pub ih_dst: InAddr,
+}
+
+// struct tcphdr (the bitfield "u_int th_x2:4, th_off:4" is kept as a
+// full c_uint so the layout matches; no field of it is touched here)
+#[repr(C)]
+pub struct Tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    pub th_x2_off: c_uint,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+// struct tcpiphdr { struct ipovly ti_i; struct tcphdr ti_t; };
+#[repr(C)]
+pub struct Tcpiphdr {
+    pub ti_i: Ipovly,
+    pub ti_t: Tcphdr,
+}
+
+// struct m_hdr
+#[repr(C)]
+pub struct Mhdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+// struct mbuf
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: Mhdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: MDat,
+}
+
+// struct sbuf
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+// struct socket
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut Tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut Tcpcb,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+// struct ipq, packed
+#[repr(C, packed)]
+pub struct Ipq {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+// typedef struct { uint16_t allocated; uint8_t macaddr[6]; } BOOTPClient;
+#[repr(C)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+// struct tftp_session
+#[repr(C)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+// struct ex_list
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+// struct Slirp
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: Ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+    pub opaque: *mut c_void,
+}
+
+// struct tcpcb
+#[repr(C)]
+pub struct Tcpcb {
+    pub seg_next: *mut Tcpiphdr,
+    pub seg_prev: *mut Tcpiphdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: c_ushort,
+    pub t_force: c_char,
+    pub t_flags: c_ushort,
+    pub t_template: Tcpiphdr,
+    pub t_socket: *mut Socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: i16,
+    pub t_rtt: i16,
+    pub t_rtseq: u32,
+    pub t_srtt: i16,
+    pub t_rttvar: i16,
+    pub t_rttmin: c_ushort,
+    pub max_sndwnd: u32,
+    pub t_oobflags: c_char,
+    pub t_iobc: c_char,
+    pub t_softerror: i16,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+extern "C" {
+    fn free(ptr: *mut c_void);
+    fn close(fd: c_int) -> c_int;
+    fn m_free(m: *mut Mbuf);
+    fn sbfree(sb: *mut Sbuf);
+    fn sofree(so: *mut Socket);
+    fn slirp_remque(a: *mut c_void);
+}
+
+// #define tcpiphdr2qlink(T) ((struct qlink*)(((char*)(T)) - sizeof(struct qlink)))
+#[inline]
+unsafe fn tcpiphdr2qlink(t: *mut Tcpiphdr) -> *mut Qlink {
+    (t as *mut u8).sub(core::mem::size_of::<Qlink>()) as *mut Qlink
+}
+
+// #define qlink2tcpiphdr(Q) ((struct tcpiphdr*)(((char*)(Q)) + sizeof(struct qlink)))
+#[inline]
+unsafe fn qlink2tcpiphdr(q: *mut Qlink) -> *mut Tcpiphdr {
+    (q as *mut u8).add(core::mem::size_of::<Qlink>()) as *mut Tcpiphdr
+}
+
+// #define tcpiphdr_next(T) qlink2tcpiphdr(tcpiphdr2qlink(T)->next)
+#[inline]
+unsafe fn tcpiphdr_next(t: *mut Tcpiphdr) -> *mut Tcpiphdr {
+    qlink2tcpiphdr((*tcpiphdr2qlink(t)).next as *mut Qlink)
+}
+
+// #define tcpiphdr_prev(T) qlink2tcpiphdr(tcpiphdr2qlink(T)->prev)
+#[inline]
+unsafe fn tcpiphdr_prev(t: *mut Tcpiphdr) -> *mut Tcpiphdr {
+    qlink2tcpiphdr((*tcpiphdr2qlink(t)).prev as *mut Qlink)
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_close(tp: *mut Tcpcb) -> *mut Tcpcb {
+    unsafe {
+        let so: *mut Socket = (*tp).t_socket;
+        let slirp: *mut Slirp = (*so).slirp;
+
+        // free the reassembly queue, if any
+        let mut t: *mut Tcpiphdr = qlink2tcpiphdr((*tp).seg_next as *mut Qlink);
+        while (tcpiphdr2qlink(t) as *mut c_void) != (tp as *mut c_void) {
+            t = tcpiphdr_next(t);
+            let prev: *mut Tcpiphdr = tcpiphdr_prev(t);
+            let m: *mut Mbuf =
+                core::ptr::read_unaligned(core::ptr::addr_of!((*prev).ti_i.ih_mbuf.mptr));
+            slirp_remque(tcpiphdr2qlink(prev) as *mut c_void);
+            m_free(m);
+        }
+        free(tp as *mut c_void);
+        (*so).so_tcpcb = core::ptr::null_mut();
+        // clobber input socket cache if we're closing the cached connection
+        if so == (*slirp).tcp_last_so {
+            (*slirp).tcp_last_so = core::ptr::addr_of_mut!((*slirp).tcb);
+        }
+        close((*so).s);
+        sbfree(core::ptr::addr_of_mut!((*so).so_rcv));
+        sbfree(core::ptr::addr_of_mut!((*so).so_snd));
+        sofree(so);
+        core::ptr::null_mut()
+    }
 }
 }
 
@@ -2136,6 +3526,90 @@ pub extern "C" fn tcp_close__part2817(so: *mut Socket) -> *mut c_void {
 }
 }
 
+// ── `tcp_sockclosed` · slirp/tcp_subr.c:281-308 · chunk 2818 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_sockclosed(struct tcpcb *tp)
+//     {
+//     
+//      ;
+//      ;
+//     
+//      switch (tp->t_state) {
+//     
+//      case 0:
+//      case 1:
+//      case 2:
+//       tp->t_state = 0;
+//       tp = tcp_close(tp);
+//       break;
+//     
+//      case 3:
+//      case 4:
+//       tp->t_state = 6;
+//       break;
+//     
+//      case 5:
+//       tp->t_state = 8;
+//       break;
+//      }
+//      if (tp)
+//       tcp_output(tp);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2818 {
+// Rewrite of slirp/tcp_subr.c: tcp_sockclosed(struct tcpcb *tp)
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_int, c_short};
+
+// Mirror of the leading fields of the C `struct tcpcb` (slirp/tcp_var.h).
+// Only `t_state` is touched by this function, but the preceding fields keep
+// the layout (and therefore the offset of t_state) identical to the C struct.
+#[repr(C)]
+pub struct tcpcb {
+    pub seg_next: *mut core::ffi::c_void,
+    pub seg_prev: *mut core::ffi::c_void,
+    pub t_state: c_short,
+}
+
+extern "C" {
+    fn tcp_close(tp: *mut tcpcb) -> *mut tcpcb;
+    fn tcp_output(tp: *mut tcpcb) -> c_int;
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_sockclosed(mut tp: *mut tcpcb) {
+    unsafe {
+        if tp.is_null() {
+            return;
+        }
+
+        match (*tp).t_state {
+            0 | 1 | 2 => {
+                // TCPS_CLOSED / TCPS_LISTEN / TCPS_SYN_SENT
+                (*tp).t_state = 0;
+                tp = tcp_close(tp);
+            }
+            3 | 4 => {
+                // TCPS_SYN_RECEIVED / TCPS_ESTABLISHED
+                (*tp).t_state = 6;
+            }
+            5 => {
+                // TCPS_CLOSE_WAIT
+                (*tp).t_state = 8;
+            }
+            _ => {}
+        }
+
+        if !tp.is_null() {
+            tcp_output(tp);
+        }
+    }
+}
+}
+
 // ── `; ;` · slirp/tcp_subr.c:285-286 · chunk 2819 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2235,6 +3709,199 @@ pub extern "C" fn tcp_sockclosed__part2821(tp: *mut c_void) {
         unsafe {
             tcp_output(tp);
         }
+    }
+}
+}
+
+// ── `tcp_fconnect` · slirp/tcp_subr.c:320-366 · chunk 2822 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int tcp_fconnect(struct socket *so)
+//     {
+//       Slirp *slirp = so->slirp;
+//       int ret=0;
+//     
+//       ;
+//       ;
+//     
+//       if( (ret = so->s = os_socket(
+//                                   2
+//                                          ,
+//                                           SOCK_STREAM
+//                                                      ,0)) >= 0) {
+//         int opt, s=so->s;
+//         struct sockaddr_in addr;
+//     
+//         fd_nonblock(s);
+//         opt = 1;
+//         setsockopt(s,
+//                     1
+//                               ,
+//                                2
+//                                            ,(char *)&opt,sizeof(opt ));
+//         opt = 1;
+//         setsockopt(s,
+//                     1
+//                               ,
+//                                10
+//                                            ,(char *)&opt,sizeof(opt ));
+//     
+//         addr.sin_family = 
+//                          2
+//                                 ;
+//         if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
+//             slirp->vnetwork_addr.s_addr) {
+//     
+//           if (so->so_faddr.s_addr == slirp->vnameserver_addr.s_addr) {
+//      if (get_dns_addr(&addr.sin_addr) < 0)
+//        addr.sin_addr = loopback_addr;
+//           } else {
+//      addr.sin_addr = loopback_addr;
+//           }
+//         } else
+//           addr.sin_addr = so->so_faddr;
+//         addr.sin_port = so->so_fport;
+//     
+//        
+//     
+//                                                       ;
+//     
+//         ret = connect(s,(struct sockaddr *)&addr,sizeof (addr));
+//     
+//     
+//     
+//     
+//     
+//         soisfconnecting(so);
+//       }
+//     
+//       return(ret);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2822 {
+// Rust rewrite of slirp's tcp_fconnect().
+use core::ffi::{c_int, c_void};
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+// Only the leading fields of the C `struct Slirp` are needed (and laid out);
+// the remainder is never touched by this function.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct SockaddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: InAddr,
+    pub sin_zero: [u8; 8],
+}
+
+// Leading fields of the C `struct socket` up to `so_fport`; offsets match.
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+}
+
+extern "C" {
+    fn os_socket(domain: c_int, type_: c_int, protocol: c_int) -> c_int;
+    fn fd_nonblock(fd: c_int);
+    fn setsockopt(
+        fd: c_int,
+        level: c_int,
+        optname: c_int,
+        optval: *const c_void,
+        optlen: u32,
+    ) -> c_int;
+    fn connect(fd: c_int, addr: *const SockaddrIn, addrlen: u32) -> c_int;
+    fn get_dns_addr(pdns_addr: *mut InAddr) -> c_int;
+    fn soisfconnecting(so: *mut Socket);
+    static mut loopback_addr: InAddr;
+}
+
+const AF_INET: c_int = 2;
+const SOCK_STREAM: c_int = 1;
+const SOL_SOCKET: c_int = 1;
+const SO_REUSEADDR: c_int = 2;
+const SO_OOBINLINE: c_int = 10;
+
+#[no_mangle]
+pub extern "C" fn tcp_fconnect(so: *mut Socket) -> c_int {
+    unsafe {
+        let slirp: *mut Slirp = (*so).slirp;
+        let mut ret: c_int = 0;
+
+        let opened = os_socket(AF_INET, SOCK_STREAM, 0);
+        (*so).s = opened;
+        ret = opened;
+
+        if ret >= 0 {
+            let s: c_int = (*so).s;
+            let mut addr: SockaddrIn = core::mem::zeroed();
+
+            fd_nonblock(s);
+            let mut opt: c_int = 1;
+            setsockopt(
+                s,
+                SOL_SOCKET,
+                SO_REUSEADDR,
+                &opt as *const c_int as *const c_void,
+                core::mem::size_of::<c_int>() as u32,
+            );
+            opt = 1;
+            setsockopt(
+                s,
+                SOL_SOCKET,
+                SO_OOBINLINE,
+                &opt as *const c_int as *const c_void,
+                core::mem::size_of::<c_int>() as u32,
+            );
+
+            addr.sin_family = AF_INET as u16;
+            let faddr: u32 = (*so).so_faddr.s_addr;
+            if (faddr & (*slirp).vnetwork_mask.s_addr) == (*slirp).vnetwork_addr.s_addr {
+                // It's an alias
+                if faddr == (*slirp).vnameserver_addr.s_addr {
+                    if get_dns_addr(&mut addr.sin_addr) < 0 {
+                        addr.sin_addr = loopback_addr;
+                    }
+                } else {
+                    addr.sin_addr = loopback_addr;
+                }
+            } else {
+                addr.sin_addr = (*so).so_faddr;
+            }
+            addr.sin_port = (*so).so_fport;
+
+            // We don't care what port we get
+            ret = connect(s, &addr as *const SockaddrIn, core::mem::size_of::<SockaddrIn>() as u32);
+
+            // If it's not in progress, it failed, so we just return 0,
+            // without clearing SS_NOFDREF
+            soisfconnecting(so);
+        }
+
+        ret
     }
 }
 }
@@ -2478,6 +4145,462 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn tcp_fconnect__part2825(ret: c_int) -> c_int {
     ret
+}
+}
+
+// ── `tcp_connect` · slirp/tcp_subr.c:380-454 · chunk 2826 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_connect(struct socket *inso)
+//     {
+//      Slirp *slirp = inso->slirp;
+//      struct socket *so;
+//      struct sockaddr_in addr;
+//      socklen_t addrlen = sizeof(struct sockaddr_in);
+//      struct tcpcb *tp;
+//      int s, opt;
+//     
+//      ;
+//      ;
+//     
+//     
+//     
+//     
+//     
+//      if (inso->so_state & 0x200) {
+//     
+//       so = inso;
+//      } else {
+//       if ((so = socreate(slirp)) == 
+//                                    ((void *)0)
+//                                        ) {
+//     
+//        close(accept(inso->s,(struct sockaddr *)&addr,&addrlen));
+//        return;
+//       }
+//       if (tcp_attach(so) < 0) {
+//        free(so);
+//        return;
+//       }
+//       so->so_laddr = inso->so_laddr;
+//       so->so_lport = inso->so_lport;
+//      }
+//     
+//      (void) tcp_mss(((so)->so_tcpcb), 0);
+//     
+//      if ((s = accept(inso->s,(struct sockaddr *)&addr,&addrlen)) < 0) {
+//       tcp_close(((so)->so_tcpcb));
+//       return;
+//      }
+//      fd_nonblock(s);
+//      opt = 1;
+//      setsockopt(s,
+//                  1
+//                            ,
+//                             2
+//                                         ,(char *)&opt,sizeof(int));
+//      opt = 1;
+//      setsockopt(s,
+//                  1
+//                            ,
+//                             10
+//                                         ,(char *)&opt,sizeof(int));
+//      opt = 1;
+//      setsockopt(s,
+//                  IPPROTO_TCP
+//                             ,0x01,(char *)&opt,sizeof(int));
+//     
+//      so->so_fport = addr.sin_port;
+//      so->so_faddr = addr.sin_addr;
+//     
+//      if (so->so_faddr.s_addr == 0 || so->so_faddr.s_addr == loopback_addr.s_addr)
+//         so->so_faddr = slirp->vhost_addr;
+//     
+//     
+//      if (inso->so_state & 0x200) {
+//       close(so->s);
+//       so->so_state = 0x001;
+//     
+//      }
+//      so->s = s;
+//      so->so_state |= 0x2000;
+//     
+//      so->so_iptos = tcp_tos(so);
+//      tp = ((so)->so_tcpcb);
+//     
+//      tcp_template(tp);
+//     
+//      tp->t_state = 2;
+//      tp->t_timer[2] = ( 75*2);
+//      tp->iss = slirp->tcp_iss;
+//      slirp->tcp_iss += (125*1024)/2;
+//      (tp)->snd_una = (tp)->snd_nxt = (tp)->snd_max = (tp)->snd_up = (tp)->iss;
+//      tcp_output(tp);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2826 {
+// Port of slirp/tcp_subr.c:tcp_connect
+#![allow(non_snake_case, non_camel_case_types, non_upper_case_globals, dead_code)]
+
+use core::ffi::{c_char, c_int, c_long, c_void};
+use core::mem::MaybeUninit;
+
+pub type tcp_seq = u32;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SockaddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: InAddr,
+    pub sin_zero: [u8; 8],
+}
+
+// ---- TCP header / pseudo-header (mirrored for correct tcpcb layout) ----
+
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct MbufPtr {
+    pub mptr: *mut Mbuf,
+}
+
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct Ipovly {
+    pub ih_mbuf: MbufPtr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: InAddr,
+    pub ih_dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: tcp_seq,
+    pub th_ack: tcp_seq,
+    pub th_x2_off: u32, // th_x2:4, th_off:4 bitfields
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Tcpiphdr {
+    pub ti_i: Ipovly,
+    pub ti_t: Tcphdr,
+}
+
+// ---- tcpcb (prefix of the C struct that this function touches) ----
+
+#[repr(C)]
+pub struct Tcpcb {
+    pub seg_next: *mut Tcpiphdr,
+    pub seg_prev: *mut Tcpiphdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: u16,
+    pub t_force: c_char,
+    pub t_flags: u16,
+    pub t_template: Tcpiphdr,
+    pub t_socket: *mut Socket,
+    pub snd_una: tcp_seq,
+    pub snd_nxt: tcp_seq,
+    pub snd_up: tcp_seq,
+    pub snd_wl1: tcp_seq,
+    pub snd_wl2: tcp_seq,
+    pub iss: tcp_seq,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: tcp_seq,
+    pub rcv_up: tcp_seq,
+    pub irs: tcp_seq,
+    pub rcv_adv: tcp_seq,
+    pub snd_max: tcp_seq,
+}
+
+// ---- mbuf ----
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub M_dat: MDat,
+}
+
+// ---- sbuf / socket ----
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut Tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut Tcpcb,
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+// ---- misc types embedded in Slirp ----
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+#[derive(Copy, Clone)]
+pub struct Ipqueue {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: Ipqueue,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: tcp_seq,
+    pub tcp_now: u32,
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn socreate(slirp: *mut Slirp) -> *mut Socket;
+    fn free(ptr: *mut c_void);
+    fn close(fd: c_int) -> c_int;
+    fn accept(fd: c_int, addr: *mut SockaddrIn, addrlen: *mut u32) -> c_int;
+    fn setsockopt(
+        fd: c_int,
+        level: c_int,
+        optname: c_int,
+        optval: *const c_void,
+        optlen: u32,
+    ) -> c_int;
+
+    fn tcp_attach(so: *mut Socket) -> c_int;
+    fn tcp_mss(tp: *mut Tcpcb, mss: u32) -> c_int;
+    fn tcp_close(tp: *mut Tcpcb) -> *mut Tcpcb;
+    fn tcp_tos(so: *mut Socket) -> u8;
+    fn tcp_template(tp: *mut Tcpcb);
+    fn tcp_output(tp: *mut Tcpcb) -> c_int;
+    fn fd_nonblock(fd: c_int);
+
+    static loopback_addr: InAddr;
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_connect(inso: *mut Socket) {
+    unsafe {
+        let slirp: *mut Slirp = (*inso).slirp;
+        let mut addr: MaybeUninit<SockaddrIn> = MaybeUninit::uninit();
+        let mut addrlen: u32 = core::mem::size_of::<SockaddrIn>() as u32;
+        let so: *mut Socket;
+        let tp: *mut Tcpcb;
+        let s: c_int;
+        let mut opt: c_int;
+
+        /*
+         * If it's an SS_ACCEPTONCE socket, no need to socreate()
+         * another socket, just use the accept() socket.
+         */
+        if (*inso).so_state & 0x200 != 0 {
+            // SS_FACCEPTONCE: already have a tcpcb
+            so = inso;
+        } else {
+            so = socreate(slirp);
+            if so.is_null() {
+                // If it failed, get rid of the pending connection
+                let fd = accept((*inso).s, addr.as_mut_ptr(), &mut addrlen);
+                close(fd);
+                return;
+            }
+            if tcp_attach(so) < 0 {
+                free(so as *mut c_void); // NOT sofree
+                return;
+            }
+            (*so).so_laddr = (*inso).so_laddr;
+            (*so).so_lport = (*inso).so_lport;
+        }
+
+        tcp_mss((*so).so_tcpcb, 0);
+
+        s = accept((*inso).s, addr.as_mut_ptr(), &mut addrlen);
+        if s < 0 {
+            tcp_close((*so).so_tcpcb); // This will sofree() as well
+            return;
+        }
+        fd_nonblock(s);
+        opt = 1;
+        setsockopt(s, 1 /* SOL_SOCKET */, 2 /* SO_REUSEADDR */, &opt as *const c_int as *const c_void, 4);
+        opt = 1;
+        setsockopt(s, 1 /* SOL_SOCKET */, 10 /* SO_OOBINLINE */, &opt as *const c_int as *const c_void, 4);
+        opt = 1;
+        setsockopt(s, 6 /* IPPROTO_TCP */, 0x01 /* TCP_NODELAY */, &opt as *const c_int as *const c_void, 4);
+
+        let addr = addr.assume_init();
+        (*so).so_fport = addr.sin_port;
+        (*so).so_faddr = addr.sin_addr;
+        // Translate connections from localhost to the real hostname
+        if (*so).so_faddr.s_addr == 0 || (*so).so_faddr.s_addr == loopback_addr.s_addr {
+            (*so).so_faddr = (*slirp).vhost_addr;
+        }
+
+        // Close the accept() socket, set right state
+        if (*inso).so_state & 0x200 != 0 {
+            // If we only accept once, close the accept() socket
+            close((*so).s);
+            // Don't select it yet, even though we have an FD;
+            // if it's not FACCEPTONCE, it's already NOFDREF
+            (*so).so_state = 0x001; // SS_NOFDREF
+        }
+        (*so).s = s;
+        (*so).so_state |= 0x2000; // SS_INCOMING
+
+        (*so).so_iptos = tcp_tos(so);
+        tp = (*so).so_tcpcb;
+
+        tcp_template(tp);
+
+        (*tp).t_state = 2; // TCPS_SYN_SENT
+        (*tp).t_timer[2] = (75 * 2) as i16; // TCPT_KEEP = TCPTV_KEEP_INIT
+        (*tp).iss = (*slirp).tcp_iss;
+        (*slirp).tcp_iss = (*slirp).tcp_iss.wrapping_add((125 * 1024) / 2);
+        let iss = (*tp).iss;
+        (*tp).snd_una = iss;
+        (*tp).snd_nxt = iss;
+        (*tp).snd_max = iss;
+        (*tp).snd_up = iss;
+        tcp_output(tp);
+    }
 }
 }
 
@@ -3303,6 +5426,240 @@ pub extern "C" fn tcp_connect__part2834(
 }
 }
 
+// ── `tcp_attach` · slirp/tcp_subr.c:459-468 · chunk 2835 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int
+//     tcp_attach(struct socket *so)
+//     {
+//      if ((so->so_tcpcb = tcp_newtcpcb(so)) == 
+//                                              ((void *)0)
+//                                                  )
+//         return -1;
+//     
+//      slirp_insque(so, &so->slirp->tcb);
+//     
+//      return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2835 {
+// Port of slirp tcp_attach(struct socket *so)
+
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Timeval {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+// Opaque: only ever used behind a pointer.
+#[repr(C)]
+pub struct Tcpcb {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+pub struct Ipq {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C)]
+pub struct MbufPtr {
+    pub mptr: *mut Mbuf,
+}
+
+#[repr(C, packed)]
+pub struct Ipovly {
+    pub ih_mbuf: MbufPtr,
+    pub ih_x1: u8,
+    pub ih_pr: u8,
+    pub ih_len: u16,
+    pub ih_src: InAddr,
+    pub ih_dst: InAddr,
+}
+
+// tcp.h: th_x2/th_off are a 4+4 bit bitfield in a u_int
+#[repr(C)]
+pub struct Tcphdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    pub th_flags_off: u8,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+#[repr(C)]
+pub struct Tcpiphdr {
+    pub ti_i: Ipovly,
+    pub ti_t: Tcphdr,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MDat,
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: u32,
+    pub sb_datalen: u32,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut Tcpiphdr,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut Tcpcb,
+    pub so_expire: u32,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: Ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+    pub opaque: *mut c_void,
+}
+
+extern "C" {
+    fn tcp_newtcpcb(so: *mut Socket) -> *mut Tcpcb;
+    fn slirp_insque(elem: *mut c_void, list: *mut c_void);
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_attach(so: *mut Socket) -> c_int {
+    unsafe {
+        let tp = tcp_newtcpcb(so);
+        (*so).so_tcpcb = tp;
+        if tp.is_null() {
+            return -1;
+        }
+
+        let tcb = core::ptr::addr_of_mut!((*(*so).slirp).tcb) as *mut c_void;
+        slirp_insque(so as *mut c_void, tcb);
+
+        0
+    }
+}
+}
+
 // ── `if (so->so_tcpcb = tcp_newtcpcb(so)) == ((void *)0)` · slirp/tcp_subr.c:462-463 · chunk 2836 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3380,6 +5737,163 @@ pub extern "C" fn tcp_attach__part2837(so: *mut c_void, tcb: *mut c_void) -> c_i
         slirp_insque(so, tcb);
     }
     0
+}
+}
+
+// ── `tcp_tos` · slirp/tcp_subr.c:494-519 · chunk 2840 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint8_t
+//     tcp_tos(struct socket *so)
+//     {
+//      int i = 0;
+//      struct emu_t *emup;
+//     
+//      while(tcptos[i].tos) {
+//       if ((tcptos[i].fport && (ntohs(so->so_fport) == tcptos[i].fport)) ||
+//           (tcptos[i].lport && (ntohs(so->so_lport) == tcptos[i].lport))) {
+//        so->so_emu = tcptos[i].emu;
+//        return tcptos[i].tos;
+//       }
+//       i++;
+//      }
+//     
+//     
+//      for (emup = tcpemu; emup; emup = emup->next) {
+//       if ((emup->fport && (ntohs(so->so_fport) == emup->fport)) ||
+//           (emup->lport && (ntohs(so->so_lport) == emup->lport))) {
+//        so->so_emu = emup->emu;
+//        return emup->tos;
+//       }
+//      }
+//     
+//      return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2840 {
+// Rust rewrite of slirp's tcp_tos() (slirp/tcp_subr.c).
+// The TOS table `tcptos` and the `tcpemu` list head are static (file-scope) in the
+// C translation unit, so they are mirrored here instead of being extern symbols.
+
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+// Mirror of `struct socket` (offset-exact), only fport/lport/emu are read here.
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut c_void,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+pub struct TosT {
+    pub lport: u16,
+    pub fport: u16,
+    pub tos: u8,
+    pub emu: u8,
+}
+
+#[repr(C)]
+pub struct EmuT {
+    pub lport: u16,
+    pub fport: u16,
+    pub tos: u8,
+    pub emu: u8,
+    pub next: *mut EmuT,
+}
+
+static TCPTOS: [TosT; 13] = [
+    TosT { lport: 0, fport: 20, tos: 0x08, emu: 0 },
+    TosT { lport: 21, fport: 21, tos: 0x10, emu: 0x2 },
+    TosT { lport: 0, fport: 23, tos: 0x10, emu: 0 },
+    TosT { lport: 0, fport: 80, tos: 0x08, emu: 0 },
+    TosT { lport: 0, fport: 513, tos: 0x10, emu: 0x6 | 0x10 },
+    TosT { lport: 0, fport: 514, tos: 0x10, emu: 0x8 | 0x10 },
+    TosT { lport: 0, fport: 544, tos: 0x10, emu: 0x3 },
+    TosT { lport: 0, fport: 543, tos: 0x10, emu: 0 },
+    TosT { lport: 0, fport: 6667, tos: 0x08, emu: 0x4 },
+    TosT { lport: 0, fport: 6668, tos: 0x08, emu: 0x4 },
+    TosT { lport: 0, fport: 7070, tos: 0x10, emu: 0x5 },
+    TosT { lport: 0, fport: 113, tos: 0x10, emu: 0x7 },
+    TosT { lport: 0, fport: 0, tos: 0, emu: 0 },
+];
+
+// static struct emu_t *tcpemu = NULL;  (never assigned anywhere)
+static mut TCPEMU: *mut EmuT = core::ptr::null_mut();
+
+extern "C" {
+    fn ntohs(__netshort: u16) -> u16;
+}
+
+#[no_mangle]
+pub extern "C" fn tcp_tos(so: *mut Socket) -> u8 {
+    if so.is_null() {
+        return 0;
+    }
+    unsafe {
+        let mut i: c_int = 0;
+        let base = TCPTOS.as_ptr();
+        loop {
+            let e = &*base.offset(i as isize);
+            if e.tos == 0 {
+                break;
+            }
+            if (e.fport != 0 && ntohs((*so).so_fport) == e.fport)
+                || (e.lport != 0 && ntohs((*so).so_lport) == e.lport)
+            {
+                (*so).so_emu = e.emu;
+                return e.tos;
+            }
+            i += 1;
+        }
+
+        let mut emup: *mut EmuT = TCPEMU;
+        while !emup.is_null() {
+            let e = &*emup;
+            if (e.fport != 0 && ntohs((*so).so_fport) == e.fport)
+                || (e.lport != 0 && ntohs((*so).so_lport) == e.lport)
+            {
+                (*so).so_emu = e.emu;
+                return e.tos;
+            }
+            emup = e.next;
+        }
+
+        0
+    }
 }
 }
 
@@ -3563,6 +6077,1085 @@ pub extern "C" fn tcp_tos__part2843() -> u8 {
 }
 }
 
+// ── `tcp_emu` · slirp/tcp_subr.c:545-877 · chunk 2844 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int
+//     tcp_emu(struct socket *so, struct mbuf *m)
+//     {
+//      Slirp *slirp = so->slirp;
+//      u_int n1, n2, n3, n4, n5, n6;
+//             char buff[257];
+//      uint32_t laddr;
+//      u_int lport;
+//      char *bptr;
+//     
+//      ;
+//      ;
+//      ;
+//     
+//      switch(so->so_emu) {
+//       int x, i;
+//     
+//       case 0x7:
+//     
+//     
+//     
+//     
+//       {
+//        struct socket *tmpso;
+//        struct sockaddr_in addr;
+//        socklen_t addrlen = sizeof(struct sockaddr_in);
+//        struct sbuf *so_rcv = &so->so_rcv;
+//     
+//        memcpy(so_rcv->sb_wptr, m->m_hdr.mh_data, m->m_hdr.mh_len);
+//        so_rcv->sb_wptr += m->m_hdr.mh_len;
+//        so_rcv->sb_rptr += m->m_hdr.mh_len;
+//        m->m_hdr.mh_data[m->m_hdr.mh_len] = 0;
+//        if (
+//           _Generic (0 ? (
+//           m->m_hdr.mh_data
+//           ) : (void *) 1, const void *: (const char *) (strchr (
+//           m->m_hdr.mh_data
+//           , 
+//           '\r'
+//           )), default: strchr (
+//           m->m_hdr.mh_data
+//           , 
+//           '\r'
+//           )) 
+//                                   || 
+//                                      _Generic (0 ? (
+//                                      m->m_hdr.mh_data
+//                                      ) : (void *) 1, const void *: (const char *) (strchr (
+//                                      m->m_hdr.mh_data
+//                                      , 
+//                                      '\n'
+//                                      )), default: strchr (
+//                                      m->m_hdr.mh_data
+//                                      , 
+//                                      '\n'
+//                                      ))
+//                                                             ) {
+//         if (sscanf(so_rcv->sb_data, "%u%*[ ,]%u", &n1, &n2) == 2) {
+//          ((n1) = htons((uint16_t)(n1)));
+//          ((n2) = htons((uint16_t)(n2)));
+//     
+//          for (tmpso = slirp->tcb.so_next;
+//               tmpso != &slirp->tcb;
+//               tmpso = tmpso->so_next) {
+//           if (tmpso->so_laddr.s_addr == so->so_laddr.s_addr &&
+//               tmpso->so_lport == n2 &&
+//               tmpso->so_faddr.s_addr == so->so_faddr.s_addr &&
+//               tmpso->so_fport == n1) {
+//            if (getsockname(tmpso->s,
+//             (struct sockaddr *)&addr, &addrlen) == 0)
+//               n2 = ntohs(addr.sin_port);
+//            break;
+//           }
+//          }
+//         }
+//                                     so_rcv->sb_cc = snprintf(so_rcv->sb_data,
+//                                                              so_rcv->sb_datalen,
+//                                                              "%d,%d\r\n", n1, n2);
+//         so_rcv->sb_rptr = so_rcv->sb_data;
+//         so_rcv->sb_wptr = so_rcv->sb_data + so_rcv->sb_cc;
+//        }
+//        m_free(m);
+//        return 0;
+//       }
+//     
+//             case 0x2:
+//                     *(m->m_hdr.mh_data+m->m_hdr.mh_len) = 0;
+//       if ((bptr = (char *)
+//                          _Generic (0 ? (
+//                          m->m_hdr.mh_data
+//                          ) : (void *) 1, const void *: (const char *) (strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "ORT"
+//                          )), default: strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "ORT"
+//                          ))
+//                                                  ) != 
+//                                                       ((void *)0)
+//                                                           ) {
+//     
+//     
+//     
+//        x = sscanf(bptr, "ORT %u,%u,%u,%u,%u,%u\r\n%256[^\177]",
+//            &n1, &n2, &n3, &n4, &n5, &n6, buff);
+//        if (x < 6)
+//           return 1;
+//     
+//        laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
+//        lport = htons((n5 << 8) | (n6));
+//     
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0, laddr,
+//                             lport, 0x200)) == 
+//                                                       ((void *)0)
+//                                                           ) {
+//           return 1;
+//        }
+//        n6 = ntohs(so->so_fport);
+//     
+//        n5 = (n6 >> 8) & 0xff;
+//        n6 &= 0xff;
+//     
+//        laddr = ntohl(so->so_faddr.s_addr);
+//     
+//        n1 = ((laddr >> 24) & 0xff);
+//        n2 = ((laddr >> 16) & 0xff);
+//        n3 = ((laddr >> 8) & 0xff);
+//        n4 = (laddr & 0xff);
+//     
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size - m->m_hdr.mh_len,
+//                                                  "ORT %d,%d,%d,%d,%d,%d\r\n%s",
+//                                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
+//        return 1;
+//       } else if ((bptr = (char *)
+//                                 _Generic (0 ? (
+//                                 m->m_hdr.mh_data
+//                                 ) : (void *) 1, const void *: (const char *) (strstr (
+//                                 m->m_hdr.mh_data
+//                                 , 
+//                                 "27 Entering"
+//                                 )), default: strstr (
+//                                 m->m_hdr.mh_data
+//                                 , 
+//                                 "27 Entering"
+//                                 ))
+//                                                                 ) != 
+//                                                                      ((void *)0)
+//                                                                          ) {
+//     
+//     
+//     
+//        x = sscanf(bptr, "27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\177]",
+//            &n1, &n2, &n3, &n4, &n5, &n6, buff);
+//        if (x < 6)
+//           return 1;
+//     
+//        laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
+//        lport = htons((n5 << 8) | (n6));
+//     
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0, laddr,
+//                             lport, 0x200)) == 
+//                                                       ((void *)0)
+//                                                           ) {
+//           return 1;
+//        }
+//        n6 = ntohs(so->so_fport);
+//     
+//        n5 = (n6 >> 8) & 0xff;
+//        n6 &= 0xff;
+//     
+//        laddr = ntohl(so->so_faddr.s_addr);
+//     
+//        n1 = ((laddr >> 24) & 0xff);
+//        n2 = ((laddr >> 16) & 0xff);
+//        n3 = ((laddr >> 8) & 0xff);
+//        n4 = (laddr & 0xff);
+//     
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//        m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size - m->m_hdr.mh_len,
+//                                                  "27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s",
+//                                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
+//     
+//        return 1;
+//       }
+//     
+//       return 1;
+//     
+//       case 0x3:
+//     
+//     
+//     
+//     
+//     
+//     
+//       so->so_emu = 0;
+//       for (lport = 0, i = 0; i < m->m_hdr.mh_len-1; ++i) {
+//        if (m->m_hdr.mh_data[i] < '0' || m->m_hdr.mh_data[i] > '9')
+//         return 1;
+//        lport *= 10;
+//        lport += m->m_hdr.mh_data[i] - '0';
+//       }
+//       if (m->m_hdr.mh_data[m->m_hdr.mh_len-1] == '\0' && lport != 0 &&
+//           (so = tcp_listen(slirp, 
+//                                  ((in_addr_t) 0x00000000)
+//                                            , 0, so->so_laddr.s_addr,
+//                            htons(lport), 0x200)) != 
+//                                                             ((void *)0)
+//                                                                 )
+//                         m->m_hdr.mh_len = snprintf(m->m_hdr.mh_data, m->m_hdr.mh_size, "%d",
+//                                             ntohs(so->so_fport)) + 1;
+//       return 1;
+//     
+//       case 0x4:
+//     
+//     
+//     
+//       *(m->m_hdr.mh_data+m->m_hdr.mh_len) = 0;
+//       if ((bptr = (char *)
+//                          _Generic (0 ? (
+//                          m->m_hdr.mh_data
+//                          ) : (void *) 1, const void *: (const char *) (strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "DCC"
+//                          )), default: strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "DCC"
+//                          ))
+//                                                  ) == 
+//                                                       ((void *)0)
+//                                                           )
+//         return 1;
+//     
+//     
+//       if (sscanf(bptr, "DCC CHAT %256s %u %u", buff, &laddr, &lport) == 3) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC CHAT chat %lu %u%c\n",
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), 1);
+//       } else if (sscanf(bptr, "DCC SEND %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC SEND %s %lu %u %u%c\n", buff,
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), n1, 1);
+//       } else if (sscanf(bptr, "DCC MOVE %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC MOVE %s %lu %u %u%c\n", buff,
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), n1, 1);
+//       }
+//       return 1;
+//     
+//       case 0x5:
+//       bptr = m->m_hdr.mh_data;
+//       while (bptr < m->m_hdr.mh_data + m->m_hdr.mh_len) {
+//        u_short p;
+//        static int ra = 0;
+//        char ra_tbl[4];
+//     
+//        ra_tbl[0] = 0x50;
+//        ra_tbl[1] = 0x4e;
+//        ra_tbl[2] = 0x41;
+//        ra_tbl[3] = 0;
+//     
+//        switch (ra) {
+//         case 0:
+//         case 2:
+//         case 3:
+//         if (*bptr++ != ra_tbl[ra]) {
+//          ra = 0;
+//          continue;
+//         }
+//         break;
+//     
+//         case 1:
+//     
+//     
+//     
+//         if (*bptr == 0x50) {
+//          ra = 1;
+//          bptr++;
+//          continue;
+//         } else if (*bptr++ != ra_tbl[ra]) {
+//          ra = 0;
+//          continue;
+//         }
+//         break;
+//     
+//         case 4:
+//     
+//     
+//     
+//         bptr++;
+//         break;
+//     
+//         case 5:
+//     
+//     
+//     
+//     
+//     
+//         if (*(bptr + 1) == 0x02)
+//            bptr += 8;
+//         else
+//            bptr += 4;
+//         break;
+//     
+//         case 6:
+//     
+//     
+//     
+//         lport = (((u_char*)bptr)[0] << 8)
+//         + ((u_char *)bptr)[1];
+//         if (lport < 6970)
+//            lport += 256;
+//         if (lport < 6970 || lport > 7170)
+//            return 1;
+//     
+//     
+//         for (p = 6970; p < 7071; p++) {
+//          if (udp_listen(slirp, 
+//                               ((in_addr_t) 0x00000000)
+//                                         ,
+//                  htons(p),
+//                  so->so_laddr.s_addr,
+//                  htons(lport),
+//                  0x200)) {
+//           break;
+//          }
+//         }
+//         if (p == 7071)
+//            p = 0;
+//         *(u_char *)bptr++ = (p >> 8) & 0xff;
+//                                     *(u_char *)bptr = p & 0xff;
+//         ra = 0;
+//         return 1;
+//         break;
+//     
+//         default:
+//         ra = 0;
+//        }
+//        ra++;
+//       }
+//       return 1;
+//     
+//       default:
+//     
+//       so->so_emu = 0;
+//       return 1;
+//      }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2844 {
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+
+// Rust port of slirp's tcp_emu() from slirp/tcp_subr.c
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_ulong, c_void};
+use core::sync::atomic::{AtomicI32, Ordering};
+
+const SS_FACCEPTONCE: c_int = 0x200;
+const INADDR_ANY: u32 = 0;
+
+// ---------------------------------------------------------------------------
+// C structure mirrors (only what is reachable from tcp_emu)
+// ---------------------------------------------------------------------------
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct SockAddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: InAddr,
+    pub sin_zero: [u8; 8],
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+// union M_dat { char m_dat_[1]; char *m_ext_; }
+#[repr(C)]
+pub struct MdatUnion {
+    pub m_ext: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MdatUnion,
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut c_void, // struct tcpiphdr *
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void, // struct tcpcb *
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+// struct ipq is packed, no bitfields: raw bytes keep the layout identical
+// (size 44, alignment 1).
+#[repr(C)]
+pub struct Ipq {
+    pub raw: [u8; 44],
+}
+
+#[repr(C)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut c_void, // struct ex_list *
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: Ipq,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+    pub opaque: *mut c_void,
+}
+
+// ---------------------------------------------------------------------------
+// libc / program symbols used
+// ---------------------------------------------------------------------------
+
+extern "C" {
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strstr(haystack: *const c_char, needle: *const c_char) -> *mut c_char;
+    fn snprintf(s: *mut c_char, n: usize, format: *const c_char, ...) -> c_int;
+    fn sscanf(s: *const c_char, format: *const c_char, ...) -> c_int;
+    fn getsockname(fd: c_int, addr: *mut SockAddrIn, addrlen: *mut u32) -> c_int;
+    fn m_free(m: *mut Mbuf);
+    fn tcp_listen(
+        slirp: *mut Slirp,
+        haddr: u32,
+        hport: c_uint,
+        laddr: u32,
+        lport: c_uint,
+        flags: c_int,
+    ) -> *mut Socket;
+    fn udp_listen(
+        slirp: *mut Slirp,
+        haddr: u32,
+        hport: c_uint,
+        laddr: u32,
+        lport: c_uint,
+        flags: c_int,
+    ) -> *mut Socket;
+}
+
+#[inline]
+fn c_htons(x: u16) -> u16 {
+    x.to_be()
+}
+
+#[inline]
+fn c_ntohs(x: u16) -> u16 {
+    u16::from_be(x)
+}
+
+#[inline]
+fn c_htonl(x: u32) -> u32 {
+    x.to_be()
+}
+
+#[inline]
+fn c_ntohl(x: u32) -> u32 {
+    u32::from_be(x)
+}
+
+// file-scope `static int ra` of the REALAUDIO emulation
+static RA: AtomicI32 = AtomicI32::new(0);
+
+#[inline]
+fn cstr(s: &'static [u8]) -> *const c_char {
+    s.as_ptr() as *const c_char
+}
+
+// ---------------------------------------------------------------------------
+// tcp_emu
+// ---------------------------------------------------------------------------
+
+#[no_mangle]
+pub extern "C" fn tcp_emu(so_arg: *mut Socket, m: *mut Mbuf) -> c_int {
+    unsafe { tcp_emu_inner(so_arg, m) }
+}
+
+unsafe fn tcp_emu_inner(so_arg: *mut Socket, m: *mut Mbuf) -> c_int {
+    let mut so: *mut Socket = so_arg;
+    let slirp: *mut Slirp = (*so).slirp;
+    let mut n1: c_uint = 0;
+    let mut n2: c_uint = 0;
+    let mut n3: c_uint = 0;
+    let mut n4: c_uint = 0;
+    let mut n5: c_uint = 0;
+    let mut n6: c_uint = 0;
+    let mut buff: [c_char; 257] = [0; 257];
+    let mut laddr: u32 = 0;
+    let mut lport: c_uint = 0;
+
+    match (*so).so_emu {
+        // ------------------------------------------------------ EMU_IDENT
+        0x7 => {
+            let mut tmpso: *mut Socket;
+            let mut addr = SockAddrIn {
+                sin_family: 0,
+                sin_port: 0,
+                sin_addr: InAddr { s_addr: 0 },
+                sin_zero: [0; 8],
+            };
+            let mut addrlen: u32 = core::mem::size_of::<SockAddrIn>() as u32;
+            let so_rcv: *mut Sbuf = core::ptr::addr_of_mut!((*so).so_rcv);
+            let tcb_head: *mut Socket = core::ptr::addr_of_mut!((*slirp).tcb);
+
+            memcpy(
+                (*so_rcv).sb_wptr as *mut c_void,
+                (*m).m_hdr.mh_data as *const c_void,
+                (*m).m_hdr.mh_len as usize,
+            );
+            (*so_rcv).sb_wptr = (*so_rcv).sb_wptr.offset((*m).m_hdr.mh_len as isize);
+            (*so_rcv).sb_rptr = (*so_rcv).sb_rptr.offset((*m).m_hdr.mh_len as isize);
+            *(*m).m_hdr.mh_data.offset((*m).m_hdr.mh_len as isize) = 0;
+
+            if !strchr((*m).m_hdr.mh_data, 13).is_null()
+                || !strchr((*m).m_hdr.mh_data, 10).is_null()
+            {
+                if sscanf(
+                    (*so_rcv).sb_data,
+                    cstr(b"%u%*[ ,]%u\0"),
+                    &mut n1,
+                    &mut n2,
+                ) == 2
+                {
+                    n1 = c_htons(n1 as u16) as c_uint;
+                    n2 = c_htons(n2 as u16) as c_uint;
+
+                    // n2 is the one on our host
+                    tmpso = (*slirp).tcb.so_next;
+                    while tmpso != tcb_head {
+                        if (*tmpso).so_laddr.s_addr == (*so).so_laddr.s_addr
+                            && (*tmpso).so_lport as c_uint == n2
+                            && (*tmpso).so_faddr.s_addr == (*so).so_faddr.s_addr
+                            && (*tmpso).so_fport as c_uint == n1
+                        {
+                            if getsockname((*tmpso).s, &mut addr, &mut addrlen) == 0 {
+                                n2 = c_ntohs(addr.sin_port) as c_uint;
+                            }
+                            break;
+                        }
+                        tmpso = (*tmpso).so_next;
+                    }
+                }
+                (*so_rcv).sb_cc = snprintf(
+                    (*so_rcv).sb_data,
+                    (*so_rcv).sb_datalen as usize,
+                    cstr(b"%d,%d\r\n\0"),
+                    n1 as c_int,
+                    n2 as c_int,
+                ) as c_uint;
+                (*so_rcv).sb_rptr = (*so_rcv).sb_data;
+                (*so_rcv).sb_wptr = (*so_rcv).sb_data.offset((*so_rcv).sb_cc as isize);
+            }
+            m_free(m);
+            return 0;
+        }
+
+        // -------------------------------------------------------- EMU_FTP
+        0x2 => {
+            *(*m).m_hdr.mh_data.offset((*m).m_hdr.mh_len as isize) = 0; // NUL terminate
+
+            let bptr = strstr((*m).m_hdr.mh_data, cstr(b"ORT\0"));
+            if !bptr.is_null() {
+                // Emulate the PORT command
+                let x = sscanf(
+                    bptr,
+                    cstr(b"ORT %u,%u,%u,%u,%u,%u\r\n%256[^\x7f]\0"),
+                    &mut n1,
+                    &mut n2,
+                    &mut n3,
+                    &mut n4,
+                    &mut n5,
+                    &mut n6,
+                    buff.as_mut_ptr(),
+                );
+                if x < 6 {
+                    return 1;
+                }
+
+                laddr = c_htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | n4);
+                lport = c_htons(((n5 << 8) | n6) as u16) as c_uint;
+
+                so = tcp_listen(slirp, INADDR_ANY, 0, laddr, lport, SS_FACCEPTONCE);
+                if so.is_null() {
+                    return 1;
+                }
+                n6 = c_ntohs((*so).so_fport) as c_uint;
+
+                n5 = (n6 >> 8) & 0xff;
+                n6 &= 0xff;
+
+                laddr = c_ntohl((*so).so_faddr.s_addr);
+
+                n1 = (laddr >> 24) & 0xff;
+                n2 = (laddr >> 16) & 0xff;
+                n3 = (laddr >> 8) & 0xff;
+                n4 = laddr & 0xff;
+
+                (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                let sz: usize = (*m).m_hdr.mh_size.wrapping_sub((*m).m_hdr.mh_len) as usize;
+                let tail: *const c_char = if x == 7 {
+                    buff.as_ptr()
+                } else {
+                    cstr(b"\0")
+                };
+                (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                    bptr,
+                    sz,
+                    cstr(b"ORT %d,%d,%d,%d,%d,%d\r\n%s\0"),
+                    n1 as c_int,
+                    n2 as c_int,
+                    n3 as c_int,
+                    n4 as c_int,
+                    n5 as c_int,
+                    n6 as c_int,
+                    tail,
+                ));
+                return 1;
+            }
+
+            let bptr = strstr((*m).m_hdr.mh_data, cstr(b"27 Entering\0"));
+            if !bptr.is_null() {
+                // Emulate the PASV response
+                let x = sscanf(
+                    bptr,
+                    cstr(b"27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\x7f]\0"),
+                    &mut n1,
+                    &mut n2,
+                    &mut n3,
+                    &mut n4,
+                    &mut n5,
+                    &mut n6,
+                    buff.as_mut_ptr(),
+                );
+                if x < 6 {
+                    return 1;
+                }
+
+                laddr = c_htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | n4);
+                lport = c_htons(((n5 << 8) | n6) as u16) as c_uint;
+
+                so = tcp_listen(slirp, INADDR_ANY, 0, laddr, lport, SS_FACCEPTONCE);
+                if so.is_null() {
+                    return 1;
+                }
+                n6 = c_ntohs((*so).so_fport) as c_uint;
+
+                n5 = (n6 >> 8) & 0xff;
+                n6 &= 0xff;
+
+                laddr = c_ntohl((*so).so_faddr.s_addr);
+
+                n1 = (laddr >> 24) & 0xff;
+                n2 = (laddr >> 16) & 0xff;
+                n3 = (laddr >> 8) & 0xff;
+                n4 = laddr & 0xff;
+
+                (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                let sz: usize = (*m).m_hdr.mh_size.wrapping_sub((*m).m_hdr.mh_len) as usize;
+                let tail: *const c_char = if x == 7 {
+                    buff.as_ptr()
+                } else {
+                    cstr(b"\0")
+                };
+                (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                    bptr,
+                    sz,
+                    cstr(b"27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s\0"),
+                    n1 as c_int,
+                    n2 as c_int,
+                    n3 as c_int,
+                    n4 as c_int,
+                    n5 as c_int,
+                    n6 as c_int,
+                    tail,
+                ));
+
+                return 1;
+            }
+
+            return 1;
+        }
+
+        // -------------------------------------------------------- EMU_KSH
+        0x3 => {
+            (*so).so_emu = 0;
+            lport = 0;
+            let mut i: c_int = 0;
+            while i < (*m).m_hdr.mh_len.wrapping_sub(1) {
+                let c = *(*m).m_hdr.mh_data.offset(i as isize) as c_int;
+                if c < 0x30 || c > 0x39 {
+                    return 1; // invalid number
+                }
+                lport = lport.wrapping_mul(10);
+                lport = lport.wrapping_add((c - 0x30) as c_uint);
+                i += 1;
+            }
+            if *(*m).m_hdr.mh_data.offset((*m).m_hdr.mh_len.wrapping_sub(1) as isize) == 0
+                && lport != 0
+            {
+                // evaluate the listen address before `so` is replaced
+                let laddr_arg: u32 = (*so).so_laddr.s_addr;
+                let newso = tcp_listen(
+                    slirp,
+                    INADDR_ANY,
+                    0,
+                    laddr_arg,
+                    c_htons(lport as u16) as c_uint,
+                    SS_FACCEPTONCE,
+                );
+                so = newso;
+                if !newso.is_null() {
+                    (*m).m_hdr.mh_len = snprintf(
+                        (*m).m_hdr.mh_data,
+                        (*m).m_hdr.mh_size as usize,
+                        cstr(b"%d\0"),
+                        c_ntohs((*so).so_fport) as c_int,
+                    )
+                    .wrapping_add(1);
+                }
+            }
+            return 1;
+        }
+
+        // ------------------------------------------------------- EMU_IRC
+        0x4 => {
+            *(*m).m_hdr.mh_data.offset((*m).m_hdr.mh_len as isize) = 0; // NUL terminate
+
+            let bptr = strstr((*m).m_hdr.mh_data, cstr(b"DCC\0"));
+            if bptr.is_null() {
+                return 1;
+            }
+
+            // The %256s is for the broken mIRC
+            if sscanf(
+                bptr,
+                cstr(b"DCC CHAT %256s %u %u\0"),
+                buff.as_mut_ptr(),
+                &mut laddr,
+                &mut lport,
+            ) == 3
+            {
+                so = tcp_listen(
+                    slirp,
+                    INADDR_ANY,
+                    0,
+                    c_htonl(laddr),
+                    c_htons(lport as u16) as c_uint,
+                    SS_FACCEPTONCE,
+                );
+                if so.is_null() {
+                    return 1;
+                }
+                (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                    bptr,
+                    (*m).m_hdr.mh_size as usize,
+                    cstr(b"DCC CHAT chat %lu %u%c\n\0"),
+                    c_ntohl((*so).so_faddr.s_addr) as c_ulong,
+                    c_ntohs((*so).so_fport) as c_uint,
+                    1 as c_int,
+                ));
+            } else if sscanf(
+                bptr,
+                cstr(b"DCC SEND %256s %u %u %u\0"),
+                buff.as_mut_ptr(),
+                &mut laddr,
+                &mut lport,
+                &mut n1,
+            ) == 4
+            {
+                so = tcp_listen(
+                    slirp,
+                    INADDR_ANY,
+                    0,
+                    c_htonl(laddr),
+                    c_htons(lport as u16) as c_uint,
+                    SS_FACCEPTONCE,
+                );
+                if so.is_null() {
+                    return 1;
+                }
+                (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                    bptr,
+                    (*m).m_hdr.mh_size as usize,
+                    cstr(b"DCC SEND %s %lu %u %u%c\n\0"),
+                    buff.as_ptr(),
+                    c_ntohl((*so).so_faddr.s_addr) as c_ulong,
+                    c_ntohs((*so).so_fport) as c_uint,
+                    n1 as c_uint,
+                    1 as c_int,
+                ));
+            } else if sscanf(
+                bptr,
+                cstr(b"DCC MOVE %256s %u %u %u\0"),
+                buff.as_mut_ptr(),
+                &mut laddr,
+                &mut lport,
+                &mut n1,
+            ) == 4
+            {
+                so = tcp_listen(
+                    slirp,
+                    INADDR_ANY,
+                    0,
+                    c_htonl(laddr),
+                    c_htons(lport as u16) as c_uint,
+                    SS_FACCEPTONCE,
+                );
+                if so.is_null() {
+                    return 1;
+                }
+                (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                    bptr,
+                    (*m).m_hdr.mh_size as usize,
+                    cstr(b"DCC MOVE %s %lu %u %u%c\n\0"),
+                    buff.as_ptr(),
+                    c_ntohl((*so).so_faddr.s_addr) as c_ulong,
+                    c_ntohs((*so).so_fport) as c_uint,
+                    n1 as c_uint,
+                    1 as c_int,
+                ));
+            }
+            return 1;
+        }
+
+        // ------------------------------------------------- EMU_REALAUDIO
+        0x5 => {
+            let mut bptr: *mut c_char = (*m).m_hdr.mh_data;
+            let end: usize = (*m).m_hdr.mh_data as usize + (*m).m_hdr.mh_len as usize;
+            let mut ra: c_int = RA.load(Ordering::Relaxed);
+
+            while (bptr as usize) < end {
+                let mut p: u16 = 0;
+                // ra_tbl = { 0x50, 0x4e, 0x41, 0 }
+                let expect: c_char = match ra {
+                    0 => 0x50,
+                    1 => 0x4e,
+                    2 => 0x41,
+                    3 => 0,
+                    _ => 0,
+                };
+
+                match ra {
+                    0 | 2 | 3 => {
+                        let c = *bptr;
+                        bptr = bptr.offset(1);
+                        if c != expect {
+                            ra = 0;
+                            continue;
+                        }
+                    }
+
+                    1 => {
+                        // We may get 0x50 several times, ignore them
+                        let c = *bptr;
+                        if c == 0x50 {
+                            ra = 1;
+                            bptr = bptr.offset(1);
+                            continue;
+                        }
+                        bptr = bptr.offset(1);
+                        if c != expect {
+                            ra = 0;
+                            continue;
+                        }
+                    }
+
+                    4 => {
+                        // skip version number
+                        bptr = bptr.offset(1);
+                    }
+
+                    5 => {
+                        // difference between versions 1.0 and 2.0
+                        if *bptr.offset(1) == 0x02 {
+                            bptr = bptr.offset(8);
+                        } else {
+                            bptr = bptr.offset(4);
+                        }
+                    }
+
+                    6 => {
+                        // field containing the port number
+                        let b0 = *(bptr as *const u8) as c_uint;
+                        let b1 = *((bptr as *const u8).offset(1)) as c_uint;
+                        lport = (b0 << 8).wrapping_add(b1);
+                        if lport < 6970 {
+                            lport = lport.wrapping_add(256); // don't know why
+                        }
+                        if lport < 6970 || lport > 7170 {
+                            RA.store(ra, Ordering::Relaxed);
+                            return 1; // failed
+                        }
+
+                        // try to get udp port between 6970 - 7170
+                        p = 6970;
+                        while p < 7071 {
+                            let sladdr: u32 = (*so).so_laddr.s_addr;
+                            let res = udp_listen(
+                                slirp,
+                                INADDR_ANY,
+                                c_htons(p) as c_uint,
+                                sladdr,
+                                c_htons(lport as u16) as c_uint,
+                                SS_FACCEPTONCE,
+                            );
+                            if !res.is_null() {
+                                break;
+                            }
+                            p = p.wrapping_add(1);
+                        }
+                        if p == 7071 {
+                            p = 0;
+                        }
+                        *(bptr as *mut u8) = ((p >> 8) & 0xff) as u8;
+                        bptr = bptr.offset(1);
+                        *(bptr as *mut u8) = (p & 0xff) as u8;
+                        RA.store(0, Ordering::Relaxed);
+                        return 1; // port redirected, we're done
+                    }
+
+                    _ => {
+                        ra = 0;
+                    }
+                }
+                ra += 1;
+            }
+            RA.store(ra, Ordering::Relaxed);
+            return 1;
+        }
+
+        // ---------------------------------------------------------- default
+        _ => {
+            // Ooops, not emulated, won't call tcp_emu again
+            (*so).so_emu = 0;
+            return 1;
+        }
+    }
+}
+}
+
 // ── `Slirp *slirp = so->slirp; u_int n1, n2, n3, n4, n5, n6; char buff[257]; uint32_t laddr; u_int l…` · slirp/tcp_subr.c:548-557 · chunk 2845 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3595,6 +7188,1105 @@ pub struct Socket {
 #[no_mangle]
 pub extern "C" fn tcp_emu__part2845(so: *mut Socket) -> *mut c_void {
     unsafe { (*so).slirp }
+}
+}
+
+// ── `switch(so->so_emu) { int x, i; case 0x7: { struct socket *tmpso; struct sockaddr_in addr; sockl…` · slirp/tcp_subr.c:559-876 · chunk 2846 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     switch(so->so_emu) {
+//       int x, i;
+//     
+//       case 0x7:
+//     
+//     
+//     
+//     
+//       {
+//        struct socket *tmpso;
+//        struct sockaddr_in addr;
+//        socklen_t addrlen = sizeof(struct sockaddr_in);
+//        struct sbuf *so_rcv = &so->so_rcv;
+//     
+//        memcpy(so_rcv->sb_wptr, m->m_hdr.mh_data, m->m_hdr.mh_len);
+//        so_rcv->sb_wptr += m->m_hdr.mh_len;
+//        so_rcv->sb_rptr += m->m_hdr.mh_len;
+//        m->m_hdr.mh_data[m->m_hdr.mh_len] = 0;
+//        if (
+//           _Generic (0 ? (
+//           m->m_hdr.mh_data
+//           ) : (void *) 1, const void *: (const char *) (strchr (
+//           m->m_hdr.mh_data
+//           , 
+//           '\r'
+//           )), default: strchr (
+//           m->m_hdr.mh_data
+//           , 
+//           '\r'
+//           )) 
+//                                   || 
+//                                      _Generic (0 ? (
+//                                      m->m_hdr.mh_data
+//                                      ) : (void *) 1, const void *: (const char *) (strchr (
+//                                      m->m_hdr.mh_data
+//                                      , 
+//                                      '\n'
+//                                      )), default: strchr (
+//                                      m->m_hdr.mh_data
+//                                      , 
+//                                      '\n'
+//                                      ))
+//                                                             ) {
+//         if (sscanf(so_rcv->sb_data, "%u%*[ ,]%u", &n1, &n2) == 2) {
+//          ((n1) = htons((uint16_t)(n1)));
+//          ((n2) = htons((uint16_t)(n2)));
+//     
+//          for (tmpso = slirp->tcb.so_next;
+//               tmpso != &slirp->tcb;
+//               tmpso = tmpso->so_next) {
+//           if (tmpso->so_laddr.s_addr == so->so_laddr.s_addr &&
+//               tmpso->so_lport == n2 &&
+//               tmpso->so_faddr.s_addr == so->so_faddr.s_addr &&
+//               tmpso->so_fport == n1) {
+//            if (getsockname(tmpso->s,
+//             (struct sockaddr *)&addr, &addrlen) == 0)
+//               n2 = ntohs(addr.sin_port);
+//            break;
+//           }
+//          }
+//         }
+//                                     so_rcv->sb_cc = snprintf(so_rcv->sb_data,
+//                                                              so_rcv->sb_datalen,
+//                                                              "%d,%d\r\n", n1, n2);
+//         so_rcv->sb_rptr = so_rcv->sb_data;
+//         so_rcv->sb_wptr = so_rcv->sb_data + so_rcv->sb_cc;
+//        }
+//        m_free(m);
+//        return 0;
+//       }
+//     
+//             case 0x2:
+//                     *(m->m_hdr.mh_data+m->m_hdr.mh_len) = 0;
+//       if ((bptr = (char *)
+//                          _Generic (0 ? (
+//                          m->m_hdr.mh_data
+//                          ) : (void *) 1, const void *: (const char *) (strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "ORT"
+//                          )), default: strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "ORT"
+//                          ))
+//                                                  ) != 
+//                                                       ((void *)0)
+//                                                           ) {
+//     
+//     
+//     
+//        x = sscanf(bptr, "ORT %u,%u,%u,%u,%u,%u\r\n%256[^\177]",
+//            &n1, &n2, &n3, &n4, &n5, &n6, buff);
+//        if (x < 6)
+//           return 1;
+//     
+//        laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
+//        lport = htons((n5 << 8) | (n6));
+//     
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0, laddr,
+//                             lport, 0x200)) == 
+//                                                       ((void *)0)
+//                                                           ) {
+//           return 1;
+//        }
+//        n6 = ntohs(so->so_fport);
+//     
+//        n5 = (n6 >> 8) & 0xff;
+//        n6 &= 0xff;
+//     
+//        laddr = ntohl(so->so_faddr.s_addr);
+//     
+//        n1 = ((laddr >> 24) & 0xff);
+//        n2 = ((laddr >> 16) & 0xff);
+//        n3 = ((laddr >> 8) & 0xff);
+//        n4 = (laddr & 0xff);
+//     
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size - m->m_hdr.mh_len,
+//                                                  "ORT %d,%d,%d,%d,%d,%d\r\n%s",
+//                                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
+//        return 1;
+//       } else if ((bptr = (char *)
+//                                 _Generic (0 ? (
+//                                 m->m_hdr.mh_data
+//                                 ) : (void *) 1, const void *: (const char *) (strstr (
+//                                 m->m_hdr.mh_data
+//                                 , 
+//                                 "27 Entering"
+//                                 )), default: strstr (
+//                                 m->m_hdr.mh_data
+//                                 , 
+//                                 "27 Entering"
+//                                 ))
+//                                                                 ) != 
+//                                                                      ((void *)0)
+//                                                                          ) {
+//     
+//     
+//     
+//        x = sscanf(bptr, "27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\177]",
+//            &n1, &n2, &n3, &n4, &n5, &n6, buff);
+//        if (x < 6)
+//           return 1;
+//     
+//        laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
+//        lport = htons((n5 << 8) | (n6));
+//     
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0, laddr,
+//                             lport, 0x200)) == 
+//                                                       ((void *)0)
+//                                                           ) {
+//           return 1;
+//        }
+//        n6 = ntohs(so->so_fport);
+//     
+//        n5 = (n6 >> 8) & 0xff;
+//        n6 &= 0xff;
+//     
+//        laddr = ntohl(so->so_faddr.s_addr);
+//     
+//        n1 = ((laddr >> 24) & 0xff);
+//        n2 = ((laddr >> 16) & 0xff);
+//        n3 = ((laddr >> 8) & 0xff);
+//        n4 = (laddr & 0xff);
+//     
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//        m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size - m->m_hdr.mh_len,
+//                                                  "27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s",
+//                                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
+//     
+//        return 1;
+//       }
+//     
+//       return 1;
+//     
+//       case 0x3:
+//     
+//     
+//     
+//     
+//     
+//     
+//       so->so_emu = 0;
+//       for (lport = 0, i = 0; i < m->m_hdr.mh_len-1; ++i) {
+//        if (m->m_hdr.mh_data[i] < '0' || m->m_hdr.mh_data[i] > '9')
+//         return 1;
+//        lport *= 10;
+//        lport += m->m_hdr.mh_data[i] - '0';
+//       }
+//       if (m->m_hdr.mh_data[m->m_hdr.mh_len-1] == '\0' && lport != 0 &&
+//           (so = tcp_listen(slirp, 
+//                                  ((in_addr_t) 0x00000000)
+//                                            , 0, so->so_laddr.s_addr,
+//                            htons(lport), 0x200)) != 
+//                                                             ((void *)0)
+//                                                                 )
+//                         m->m_hdr.mh_len = snprintf(m->m_hdr.mh_data, m->m_hdr.mh_size, "%d",
+//                                             ntohs(so->so_fport)) + 1;
+//       return 1;
+//     
+//       case 0x4:
+//     
+//     
+//     
+//       *(m->m_hdr.mh_data+m->m_hdr.mh_len) = 0;
+//       if ((bptr = (char *)
+//                          _Generic (0 ? (
+//                          m->m_hdr.mh_data
+//                          ) : (void *) 1, const void *: (const char *) (strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "DCC"
+//                          )), default: strstr (
+//                          m->m_hdr.mh_data
+//                          , 
+//                          "DCC"
+//                          ))
+//                                                  ) == 
+//                                                       ((void *)0)
+//                                                           )
+//         return 1;
+//     
+//     
+//       if (sscanf(bptr, "DCC CHAT %256s %u %u", buff, &laddr, &lport) == 3) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC CHAT chat %lu %u%c\n",
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), 1);
+//       } else if (sscanf(bptr, "DCC SEND %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC SEND %s %lu %u %u%c\n", buff,
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), n1, 1);
+//       } else if (sscanf(bptr, "DCC MOVE %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
+//        if ((so = tcp_listen(slirp, 
+//                                   ((in_addr_t) 0x00000000)
+//                                             , 0,
+//                             htonl(laddr), htons(lport),
+//                             0x200)) == 
+//                                                ((void *)0)
+//                                                    ) {
+//         return 1;
+//        }
+//        m->m_hdr.mh_len = bptr - m->m_hdr.mh_data;
+//                             m->m_hdr.mh_len += snprintf(bptr, m->m_hdr.mh_size,
+//                                                  "DCC MOVE %s %lu %u %u%c\n", buff,
+//                                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+//                                                  ntohs(so->so_fport), n1, 1);
+//       }
+//       return 1;
+//     
+//       case 0x5:
+//       bptr = m->m_hdr.mh_data;
+//       while (bptr < m->m_hdr.mh_data + m->m_hdr.mh_len) {
+//        u_short p;
+//        static int ra = 0;
+//        char ra_tbl[4];
+//     
+//        ra_tbl[0] = 0x50;
+//        ra_tbl[1] = 0x4e;
+//        ra_tbl[2] = 0x41;
+//        ra_tbl[3] = 0;
+//     
+//        switch (ra) {
+//         case 0:
+//         case 2:
+//         case 3:
+//         if (*bptr++ != ra_tbl[ra]) {
+//          ra = 0;
+//          continue;
+//         }
+//         break;
+//     
+//         case 1:
+//     
+//     
+//     
+//         if (*bptr == 0x50) {
+//          ra = 1;
+//          bptr++;
+//          continue;
+//         } else if (*bptr++ != ra_tbl[ra]) {
+//          ra = 0;
+//          continue;
+//         }
+//         break;
+//     
+//         case 4:
+//     
+//     
+//     
+//         bptr++;
+//         break;
+//     
+//         case 5:
+//     
+//     
+//     
+//     
+//     
+//         if (*(bptr + 1) == 0x02)
+//            bptr += 8;
+//         else
+//            bptr += 4;
+//         break;
+//     
+//         case 6:
+//     
+//     
+//     
+//         lport = (((u_char*)bptr)[0] << 8)
+//         + ((u_char *)bptr)[1];
+//         if (lport < 6970)
+//            lport += 256;
+//         if (lport < 6970 || lport > 7170)
+//            return 1;
+//     
+//     
+//         for (p = 6970; p < 7071; p++) {
+//          if (udp_listen(slirp, 
+//                               ((in_addr_t) 0x00000000)
+//                                         ,
+//                  htons(p),
+//                  so->so_laddr.s_addr,
+//                  htons(lport),
+//                  0x200)) {
+//           break;
+//          }
+//         }
+//         if (p == 7071)
+//            p = 0;
+//         *(u_char *)bptr++ = (p >> 8) & 0xff;
+//                                     *(u_char *)bptr = p & 0xff;
+//         ra = 0;
+//         return 1;
+//         break;
+//     
+//         default:
+//         ra = 0;
+//        }
+//        ra++;
+//       }
+//       return 1;
+//     
+//       default:
+//     
+//       so->so_emu = 0;
+//       return 1;
+//      }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2846 {
+// Port of tcp_emu's switch(so->so_emu) block (slirp/tcp_subr.c lines 559-876).
+use core::ffi::{c_char, c_int, c_uint, c_ulong, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct SockaddrIn {
+    pub sin_family: u16,
+    pub sin_port: u16,
+    pub sin_addr: InAddr,
+    pub sin_zero: [u8; 8],
+}
+
+#[repr(C)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut c_void,
+    pub m_dat: [u8; 8],
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut c_void,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+extern "C" {
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strstr(s: *const c_char, needle: *const c_char) -> *mut c_char;
+    fn sscanf(s: *const c_char, format: *const c_char, ...) -> c_int;
+    fn snprintf(s: *mut c_char, n: usize, format: *const c_char, ...) -> c_int;
+    fn getsockname(fd: c_int, addr: *mut SockaddrIn, addrlen: *mut c_uint) -> c_int;
+    fn htons(x: u16) -> u16;
+    fn ntohs(x: u16) -> u16;
+    fn htonl(x: u32) -> u32;
+    fn ntohl(x: u32) -> u32;
+    fn tcp_listen(
+        slirp: *mut c_void,
+        laddr: u32,
+        lport: c_uint,
+        faddr: u32,
+        fport: c_uint,
+        flags: c_int,
+    ) -> *mut Socket;
+    fn udp_listen(
+        slirp: *mut c_void,
+        laddr: u32,
+        lport: c_uint,
+        faddr: u32,
+        fport: c_uint,
+        flags: c_int,
+    ) -> *mut Socket;
+    fn m_free(m: *mut Mbuf);
+}
+
+// char ra_tbl[4] = { 0x50, 0x4e, 0x41, 0 };
+fn ra_tbl_at(idx: c_int) -> c_char {
+    match idx {
+        0 => 0x50u8 as c_char,
+        1 => 0x4eu8 as c_char,
+        2 => 0x41u8 as c_char,
+        _ => 0i8 as c_char,
+    }
+}
+
+// static int ra = 0;   (function-local static in the C original)
+static mut RA: c_int = 0;
+
+#[no_mangle]
+pub extern "C" fn tcp_emu__part2846(
+    so_in: *mut Socket,
+    m: *mut Mbuf,
+    tcb: *mut Socket,
+) -> c_int {
+    let mut n1: c_uint = 0;
+    let mut n2: c_uint = 0;
+    let mut n3: c_uint = 0;
+    let mut n4: c_uint = 0;
+    let mut n5: c_uint = 0;
+    let mut n6: c_uint = 0;
+    let mut buff: [c_char; 257] = [0; 257];
+    let empty_str: [c_char; 1] = [0];
+    let mut laddr: u32 = 0;
+    let mut lport: c_uint = 0;
+    let mut so: *mut Socket = so_in;
+
+    unsafe {
+        let emu = (*so).so_emu as c_int;
+        match emu {
+            0x7 => {
+                let so_rcv: *mut Sbuf = &mut (*so).so_rcv;
+                let data = (*m).m_hdr.mh_data;
+                let len = (*m).m_hdr.mh_len;
+
+                memcpy(
+                    (*so_rcv).sb_wptr as *mut c_void,
+                    data as *const c_void,
+                    len as usize,
+                );
+                (*so_rcv).sb_wptr = (*so_rcv).sb_wptr.add(len as usize);
+                (*so_rcv).sb_rptr = (*so_rcv).sb_rptr.add(len as usize);
+                *data.add(len as usize) = 0;
+
+                if !strchr(data, '\r' as c_int).is_null() || !strchr(data, '\n' as c_int).is_null()
+                {
+                    if sscanf(
+                        (*so_rcv).sb_data,
+                        b"%u%*[ ,]%u\0".as_ptr() as *const c_char,
+                        &mut n1 as *mut c_uint,
+                        &mut n2 as *mut c_uint,
+                    ) == 2
+                    {
+                        n1 = htons(n1 as u16) as c_uint;
+                        n2 = htons(n2 as u16) as c_uint;
+
+                        let mut tmpso: *mut Socket = (*tcb).so_next;
+                        while tmpso != tcb {
+                            if (*tmpso).so_laddr.s_addr == (*so).so_laddr.s_addr
+                                && (*tmpso).so_lport as c_uint == n2
+                                && (*tmpso).so_faddr.s_addr == (*so).so_faddr.s_addr
+                                && (*tmpso).so_fport as c_uint == n1
+                            {
+                                let mut addr = SockaddrIn {
+                                    sin_family: 0,
+                                    sin_port: 0,
+                                    sin_addr: InAddr { s_addr: 0 },
+                                    sin_zero: [0; 8],
+                                };
+                                let mut addrlen: c_uint = 16; // sizeof(struct sockaddr_in)
+                                if getsockname((*tmpso).s, &mut addr, &mut addrlen) == 0 {
+                                    n2 = ntohs(addr.sin_port) as c_uint;
+                                }
+                                break;
+                            }
+                            tmpso = (*tmpso).so_next;
+                        }
+                    }
+                    (*so_rcv).sb_cc = snprintf(
+                        (*so_rcv).sb_data,
+                        (*so_rcv).sb_datalen as usize,
+                        b"%d,%d\r\n\0".as_ptr() as *const c_char,
+                        n1 as c_int,
+                        n2 as c_int,
+                    ) as c_uint;
+                    (*so_rcv).sb_rptr = (*so_rcv).sb_data;
+                    (*so_rcv).sb_wptr = (*so_rcv).sb_data.add((*so_rcv).sb_cc as usize);
+                }
+                m_free(m);
+                return 0;
+            }
+
+            0x2 => {
+                *(*m).m_hdr.mh_data.add((*m).m_hdr.mh_len as usize) = 0;
+                let mut bptr = strstr(
+                    (*m).m_hdr.mh_data,
+                    b"ORT\0".as_ptr() as *const c_char,
+                );
+                if !bptr.is_null() {
+                    let x = sscanf(
+                        bptr,
+                        b"ORT %u,%u,%u,%u,%u,%u\r\n%256[^\x7f]\0".as_ptr() as *const c_char,
+                        &mut n1 as *mut c_uint,
+                        &mut n2 as *mut c_uint,
+                        &mut n3 as *mut c_uint,
+                        &mut n4 as *mut c_uint,
+                        &mut n5 as *mut c_uint,
+                        &mut n6 as *mut c_uint,
+                        buff.as_mut_ptr(),
+                    );
+                    if x < 6 {
+                        return 1;
+                    }
+
+                    laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | n4);
+                    lport = htons(((n5 << 8) | n6) as u16) as c_uint;
+
+                    so = tcp_listen((*so).slirp, 0, 0, laddr, lport, 0x200);
+                    if so.is_null() {
+                        return 1;
+                    }
+                    n6 = ntohs((*so).so_fport) as c_uint;
+
+                    n5 = (n6 >> 8) & 0xff;
+                    n6 &= 0xff;
+
+                    laddr = ntohl((*so).so_faddr.s_addr);
+
+                    n1 = (laddr >> 24) & 0xff;
+                    n2 = (laddr >> 16) & 0xff;
+                    n3 = (laddr >> 8) & 0xff;
+                    n4 = laddr & 0xff;
+
+                    (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                        bptr,
+                        (*m).m_hdr.mh_size.wrapping_sub((*m).m_hdr.mh_len) as usize,
+                        b"ORT %d,%d,%d,%d,%d,%d\r\n%s\0".as_ptr() as *const c_char,
+                        n1 as c_int,
+                        n2 as c_int,
+                        n3 as c_int,
+                        n4 as c_int,
+                        n5 as c_int,
+                        n6 as c_int,
+                        if x == 7 {
+                            buff.as_mut_ptr()
+                        } else {
+                            empty_str.as_ptr() as *mut c_char
+                        },
+                    ));
+                    return 1;
+                } else {
+                    bptr = strstr(
+                        (*m).m_hdr.mh_data,
+                        b"27 Entering\0".as_ptr() as *const c_char,
+                    );
+                    if !bptr.is_null() {
+                        let x = sscanf(
+                            bptr,
+                            b"27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\x7f]\0"
+                                .as_ptr() as *const c_char,
+                            &mut n1 as *mut c_uint,
+                            &mut n2 as *mut c_uint,
+                            &mut n3 as *mut c_uint,
+                            &mut n4 as *mut c_uint,
+                            &mut n5 as *mut c_uint,
+                            &mut n6 as *mut c_uint,
+                            buff.as_mut_ptr(),
+                        );
+                        if x < 6 {
+                            return 1;
+                        }
+
+                        laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | n4);
+                        lport = htons(((n5 << 8) | n6) as u16) as c_uint;
+
+                        so = tcp_listen((*so).slirp, 0, 0, laddr, lport, 0x200);
+                        if so.is_null() {
+                            return 1;
+                        }
+                        n6 = ntohs((*so).so_fport) as c_uint;
+
+                        n5 = (n6 >> 8) & 0xff;
+                        n6 &= 0xff;
+
+                        laddr = ntohl((*so).so_faddr.s_addr);
+
+                        n1 = (laddr >> 24) & 0xff;
+                        n2 = (laddr >> 16) & 0xff;
+                        n3 = (laddr >> 8) & 0xff;
+                        n4 = laddr & 0xff;
+
+                        (*m).m_hdr.mh_len =
+                            (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                        (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                            bptr,
+                            (*m).m_hdr.mh_size.wrapping_sub((*m).m_hdr.mh_len) as usize,
+                            b"27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s\0".as_ptr()
+                                as *const c_char,
+                            n1 as c_int,
+                            n2 as c_int,
+                            n3 as c_int,
+                            n4 as c_int,
+                            n5 as c_int,
+                            n6 as c_int,
+                            if x == 7 {
+                                buff.as_mut_ptr()
+                            } else {
+                                empty_str.as_ptr() as *mut c_char
+                            },
+                        ));
+                        return 1;
+                    }
+                }
+                return 1;
+            }
+
+            0x3 => {
+                (*so).so_emu = 0;
+                lport = 0;
+                let mut i: c_int = 0;
+                while i < (*m).m_hdr.mh_len.wrapping_sub(1) {
+                    let ch = *(*m).m_hdr.mh_data.add(i as usize) as c_int;
+                    if ch < '0' as c_int || ch > '9' as c_int {
+                        return 1;
+                    }
+                    lport = lport.wrapping_mul(10);
+                    lport = lport.wrapping_add(ch.wrapping_sub('0' as c_int) as c_uint);
+                    i += 1;
+                }
+                let last = *(*m)
+                    .m_hdr
+                    .mh_data
+                    .add((*m).m_hdr.mh_len.wrapping_sub(1) as usize) as c_int;
+                if last == 0 && lport != 0 {
+                    so = tcp_listen(
+                        (*so).slirp,
+                        0,
+                        0,
+                        (*so).so_laddr.s_addr,
+                        htons(lport as u16) as c_uint,
+                        0x200,
+                    );
+                    if !so.is_null() {
+                        (*m).m_hdr.mh_len = snprintf(
+                            (*m).m_hdr.mh_data,
+                            (*m).m_hdr.mh_size as usize,
+                            b"%d\0".as_ptr() as *const c_char,
+                            ntohs((*so).so_fport) as c_int,
+                        )
+                        .wrapping_add(1);
+                    }
+                }
+                return 1;
+            }
+
+            0x4 => {
+                *(*m).m_hdr.mh_data.add((*m).m_hdr.mh_len as usize) = 0;
+                let bptr = strstr((*m).m_hdr.mh_data, b"DCC\0".as_ptr() as *const c_char);
+                if bptr.is_null() {
+                    return 1;
+                }
+
+                if sscanf(
+                    bptr,
+                    b"DCC CHAT %256s %u %u\0".as_ptr() as *const c_char,
+                    buff.as_mut_ptr(),
+                    &mut laddr as *mut u32,
+                    &mut lport as *mut c_uint,
+                ) == 3
+                {
+                    so = tcp_listen(
+                        (*so).slirp,
+                        0,
+                        0,
+                        htonl(laddr),
+                        htons(lport as u16) as c_uint,
+                        0x200,
+                    );
+                    if so.is_null() {
+                        return 1;
+                    }
+                    (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                        bptr,
+                        (*m).m_hdr.mh_size as usize,
+                        b"DCC CHAT chat %lu %u%c\n\0".as_ptr() as *const c_char,
+                        ntohl((*so).so_faddr.s_addr) as c_ulong,
+                        ntohs((*so).so_fport) as c_uint,
+                        1 as c_int,
+                    ));
+                } else if sscanf(
+                    bptr,
+                    b"DCC SEND %256s %u %u %u\0".as_ptr() as *const c_char,
+                    buff.as_mut_ptr(),
+                    &mut laddr as *mut u32,
+                    &mut lport as *mut c_uint,
+                    &mut n1 as *mut c_uint,
+                ) == 4
+                {
+                    so = tcp_listen(
+                        (*so).slirp,
+                        0,
+                        0,
+                        htonl(laddr),
+                        htons(lport as u16) as c_uint,
+                        0x200,
+                    );
+                    if so.is_null() {
+                        return 1;
+                    }
+                    (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                        bptr,
+                        (*m).m_hdr.mh_size as usize,
+                        b"DCC SEND %s %lu %u %u%c\n\0".as_ptr() as *const c_char,
+                        buff.as_mut_ptr(),
+                        ntohl((*so).so_faddr.s_addr) as c_ulong,
+                        ntohs((*so).so_fport) as c_uint,
+                        n1 as c_uint,
+                        1 as c_int,
+                    ));
+                } else if sscanf(
+                    bptr,
+                    b"DCC MOVE %256s %u %u %u\0".as_ptr() as *const c_char,
+                    buff.as_mut_ptr(),
+                    &mut laddr as *mut u32,
+                    &mut lport as *mut c_uint,
+                    &mut n1 as *mut c_uint,
+                ) == 4
+                {
+                    so = tcp_listen(
+                        (*so).slirp,
+                        0,
+                        0,
+                        htonl(laddr),
+                        htons(lport as u16) as c_uint,
+                        0x200,
+                    );
+                    if so.is_null() {
+                        return 1;
+                    }
+                    (*m).m_hdr.mh_len = (bptr as isize - (*m).m_hdr.mh_data as isize) as c_int;
+                    (*m).m_hdr.mh_len = (*m).m_hdr.mh_len.wrapping_add(snprintf(
+                        bptr,
+                        (*m).m_hdr.mh_size as usize,
+                        b"DCC MOVE %s %lu %u %u%c\n\0".as_ptr() as *const c_char,
+                        buff.as_mut_ptr(),
+                        ntohl((*so).so_faddr.s_addr) as c_ulong,
+                        ntohs((*so).so_fport) as c_uint,
+                        n1 as c_uint,
+                        1 as c_int,
+                    ));
+                }
+                return 1;
+            }
+
+            0x5 => {
+                let data = (*m).m_hdr.mh_data;
+                let end = data.add((*m).m_hdr.mh_len as usize);
+                let mut bptr = data;
+                while (bptr as usize) < (end as usize) {
+                    let mut p: u16 = 0;
+                    let ra: c_int = RA;
+                    match ra {
+                        0 | 2 | 3 => {
+                            let cur = *bptr;
+                            bptr = bptr.add(1);
+                            if cur != ra_tbl_at(ra) {
+                                RA = 0;
+                                continue;
+                            }
+                        }
+                        1 => {
+                            if *bptr as c_int == 0x50 {
+                                RA = 1;
+                                bptr = bptr.add(1);
+                                continue;
+                            } else {
+                                let cur = *bptr;
+                                bptr = bptr.add(1);
+                                if cur != ra_tbl_at(ra) {
+                                    RA = 0;
+                                    continue;
+                                }
+                            }
+                        }
+                        4 => {
+                            bptr = bptr.add(1);
+                        }
+                        5 => {
+                            if *bptr.add(1) as c_int == 0x02 {
+                                bptr = bptr.add(8);
+                            } else {
+                                bptr = bptr.add(4);
+                            }
+                        }
+                        6 => {
+                            lport = ((*bptr as u8 as c_uint) << 8)
+                                .wrapping_add(*(bptr.add(1)) as u8 as c_uint);
+                            if lport < 6970 {
+                                lport = lport.wrapping_add(256);
+                            }
+                            if lport < 6970 || lport > 7170 {
+                                return 1;
+                            }
+
+                            p = 6970;
+                            loop {
+                                if (p as c_int) >= 7071 {
+                                    break;
+                                }
+                                let res = udp_listen(
+                                    (*so).slirp,
+                                    0,
+                                    htons(p) as c_uint,
+                                    (*so).so_laddr.s_addr,
+                                    htons(lport as u16) as c_uint,
+                                    0x200,
+                                );
+                                if !res.is_null() {
+                                    break;
+                                }
+                                p = p.wrapping_add(1);
+                            }
+                            if p == 7071 {
+                                p = 0;
+                            }
+                            *(bptr as *mut u8) = ((p >> 8) & 0xff) as u8;
+                            bptr = bptr.add(1);
+                            *(bptr as *mut u8) = (p & 0xff) as u8;
+                            RA = 0;
+                            return 1;
+                        }
+                        _ => {
+                            RA = 0;
+                        }
+                    }
+                    RA = RA.wrapping_add(1);
+                }
+                return 1;
+            }
+
+            _ => {
+                (*so).so_emu = 0;
+                return 1;
+            }
+        }
+    }
+}
+}
+
+// ── `tcp_ctl` · slirp/tcp_subr.c:884-915 · chunk 2847 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int tcp_ctl(struct socket *so)
+//     {
+//         Slirp *slirp = so->slirp;
+//         struct sbuf *sb = &so->so_snd;
+//         struct ex_list *ex_ptr;
+//         int do_pty;
+//     
+//         ;
+//         ;
+//     
+//         if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr) {
+//     
+//             for (ex_ptr = slirp->exec_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+//                 if (ex_ptr->ex_fport == so->so_fport &&
+//                     so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
+//                     if (ex_ptr->ex_pty == 3) {
+//                         so->s = -1;
+//                         so->extra = (void *)ex_ptr->ex_exec;
+//                         return 1;
+//                     }
+//                     do_pty = ex_ptr->ex_pty;
+//                     ;
+//                     return fork_exec(so, ex_ptr->ex_exec, do_pty);
+//                 }
+//             }
+//         }
+//         sb->sb_cc =
+//             snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),
+//                      "Error: No application configured.\r\n");
+//         sb->sb_wptr += sb->sb_cc;
+//         return 0;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2847 {
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+
+#[repr(C)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+pub struct SbUf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut c_void,
+    pub so_ti: *mut c_void,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut c_void,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: SbUf,
+    pub so_snd: SbUf,
+    pub extra: *mut c_void,
+}
+
+// Only the prefix of the C `struct Slirp` that is accessible here is mirrored;
+// the fields used below (vhost_addr, exec_list) keep their C offsets.
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+}
+
+extern "C" {
+    fn fork_exec(so: *mut Socket, ex: *const c_char, do_pty: c_int) -> c_int;
+    fn snprintf(s: *mut c_char, maxlen: usize, format: *const c_char, ...) -> c_int;
+}
+
+static NO_APP_FMT: &[u8] = b"Error: No application configured.\r\n\0";
+
+#[no_mangle]
+pub extern "C" fn tcp_ctl(so: *mut Socket) -> c_int {
+    if so.is_null() {
+        return 0;
+    }
+    let slirp = unsafe { (*so).slirp };
+
+    if !slirp.is_null() && unsafe { (*so).so_faddr.s_addr != (*slirp).vhost_addr.s_addr } {
+        let mut ex_ptr: *mut ExList = unsafe { (*slirp).exec_list };
+        while !ex_ptr.is_null() {
+            let ex_pty = unsafe { (*ex_ptr).ex_pty };
+            let ex_exec = unsafe { (*ex_ptr).ex_exec };
+            let ex_next = unsafe { (*ex_ptr).ex_next };
+            if unsafe { (*ex_ptr).ex_fport == (*so).so_fport as c_int }
+                && unsafe { (*so).so_faddr.s_addr == (*ex_ptr).ex_addr.s_addr }
+            {
+                if ex_pty == 3 {
+                    unsafe {
+                        (*so).s = -1;
+                        (*so).extra = ex_exec as *mut c_void;
+                    }
+                    return 1;
+                }
+                let do_pty = ex_pty;
+                return unsafe { fork_exec(so, ex_exec, do_pty) };
+            }
+            ex_ptr = ex_next;
+        }
+    }
+
+    unsafe {
+        let sb: *mut SbUf = core::ptr::addr_of_mut!((*so).so_snd);
+        let wptr = (*sb).sb_wptr;
+        let data = (*sb).sb_data;
+        let used: c_long = wptr as isize as c_long - data as isize as c_long;
+        let avail: c_long = (*sb).sb_datalen as c_long - used;
+        let ret = snprintf(wptr, avail as usize, NO_APP_FMT.as_ptr() as *const c_char);
+        (*sb).sb_cc = ret as c_uint;
+        (*sb).sb_wptr = wptr.add((*sb).sb_cc as usize);
+    }
+
+    0
 }
 }
 

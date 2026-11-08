@@ -1,5 +1,1752 @@
 //! From `softfp_template_icvt.h`.
 
+// ── `internal_cvt_sf32_i32` · softfp_template_icvt.h:38-108 · chunk 3294 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int32_t internal_cvt_sf32_i32(uint32_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint32_t r, r_max;
+//     
+//         a_sign = a >> (32 - 1);
+//         a_exp = (a >> 23) & ((1 << 8) - 1);
+//         a_mant = a & (((uint32_t)1 << 23) - 1);
+//         if (a_exp == ((1 << 8) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint32_t)1 << 23;
+//         }
+//         a_mant <<= ((32 - 2) - 23);
+//         a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;
+//     
+//         if (is_unsigned)
+//             r_max = (uint32_t)a_sign - 1;
+//         else
+//             r_max = ((uint32_t)1 << (32 - 1)) - (uint32_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (32 - 1 - 23)) {
+//                 r = (uint32_t)(a_mant >> ((32 - 2) - 23)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd32(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((32 - 2) - 23) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((32 - 2) - 23)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((32 - 2) - 23) ) - 1);
+//             a_mant = (a_mant + addend) >> ((32 - 2) - 23);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((32 - 2) - 23) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3294 {
+use core::ffi::{c_int, c_uint};
+
+// Port of the static helper rshift_rnd32 (no linker symbol in the C program).
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask: u32 = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask != 0) as u32);
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf32_i32(
+    a: u32,
+    rm: c_uint,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i32 {
+    let mut a_sign: u32;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u32;
+    let r: u32;
+    let r_max: u32;
+
+    a_sign = a >> 31;
+    a_exp = ((a >> 23) & 0xffu32) as i32;
+    a_mant = a & ((1u32 << 23) - 1);
+    if a_exp == 0xff && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= 7; // RND_SIZE
+    a_exp = a_exp - (0xff / 2) - 23;
+
+    if is_unsigned != 0 {
+        r_max = a_sign.wrapping_sub(1);
+    } else {
+        r_max = (1u32 << 31) - (a_sign ^ 1);
+    }
+
+    if a_exp >= 0 {
+        if a_exp <= 8 {
+            r = (a_mant >> 7).wrapping_shl(a_exp as u32);
+            if r <= r_max {
+                if a_sign != 0 {
+                    return r.wrapping_neg() as i32;
+                }
+                return r as i32;
+            }
+        }
+        unsafe {
+            *pfflags |= 1u32 << 4; // FFLAG_INVALID_OP
+        }
+        return r_max as i32;
+    }
+
+    a_mant = rshift_rnd32(a_mant, -a_exp);
+
+    match rm {
+        0 | 4 => {
+            // RM_RNE, RM_RMM
+            addend = 1u32 << 6;
+        }
+        1 => {
+            // RM_RTZ
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP and default
+            if (a_sign ^ (rm & 1)) != 0 {
+                addend = (1u32 << 7) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    rnd_bits = a_mant & ((1u32 << 7) - 1);
+    a_mant = a_mant.wrapping_add(addend) >> 7;
+    // half way: select even result
+    if rm == 0 && rnd_bits == (1u32 << 6) {
+        a_mant &= !1u32;
+    }
+    if a_mant > r_max {
+        unsafe {
+            *pfflags |= 1u32 << 4; // FFLAG_INVALID_OP
+        }
+        return r_max as i32;
+    }
+    r = a_mant;
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1u32; // FFLAG_INEXACT
+        }
+    }
+    let r = if a_sign != 0 { r.wrapping_neg() } else { r };
+    r as i32
+}
+}
+
+// ── `internal_cvt_sf32_i64` · softfp_template_icvt.h:38-108 · chunk 3316 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int64_t internal_cvt_sf32_i64(uint32_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint64_t r, r_max;
+//     
+//         a_sign = a >> (32 - 1);
+//         a_exp = (a >> 23) & ((1 << 8) - 1);
+//         a_mant = a & (((uint32_t)1 << 23) - 1);
+//         if (a_exp == ((1 << 8) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint32_t)1 << 23;
+//         }
+//         a_mant <<= ((32 - 2) - 23);
+//         a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;
+//     
+//         if (is_unsigned)
+//             r_max = (uint64_t)a_sign - 1;
+//         else
+//             r_max = ((uint64_t)1 << (64 - 1)) - (uint64_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (64 - 1 - 23)) {
+//                 r = (uint64_t)(a_mant >> ((32 - 2) - 23)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd32(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((32 - 2) - 23) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((32 - 2) - 23)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((32 - 2) - 23) ) - 1);
+//             a_mant = (a_mant + addend) >> ((32 - 2) - 23);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((32 - 2) - 23) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3316 {
+// Port of static int64_t internal_cvt_sf32_i64(uint32_t a, RoundingModeEnum rm,
+//                                              uint32_t *pfflags, BOOL is_unsigned)
+#![allow(non_snake_case)]
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+
+// static uint32_t rshift_rnd32(uint32_t a, int d) -- inlined, no linker symbol
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask: u32 = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf32_i64(
+    a: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i64 {
+    let mut a_sign: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u32;
+    let mut r: u64 = 0;
+    let r_max: u64;
+
+    a_sign = a >> (32 - 1);
+    a_exp = ((a >> 23) & ((1i32 << 8) - 1) as u32) as i32;
+    a_mant = a & (((1u32) << 23) - 1);
+    if a_exp == (1i32 << 8) - 1 && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= (1u32) << 23;
+    }
+    a_mant <<= (32 - 2) - 23;
+    a_exp = a_exp - ((1i32 << 8) - 1) / 2 - 23;
+
+    if is_unsigned != 0 {
+        r_max = (a_sign as u64).wrapping_sub(1);
+    } else {
+        r_max = ((1u64) << (64 - 1)) - ((a_sign ^ 1) as u64);
+    }
+
+    let mut do_overflow = false;
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - 23) {
+            r = ((a_mant >> ((32 - 2) - 23)) as u64) << (a_exp as u32);
+            if r > r_max {
+                do_overflow = true;
+            }
+        } else {
+            do_overflow = true;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            RM_RNE | RM_RMM => 1u32 << (((32 - 2) - 23) - 1),
+            RM_RTZ => 0,
+            _ => {
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << ((32 - 2) - 23)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        a_mant = (a_mant + addend) >> ((32 - 2) - 23);
+        // half way: select even result
+        if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+            a_mant &= !1u32;
+        }
+        if (a_mant as u64) > r_max {
+            do_overflow = true;
+        } else {
+            r = a_mant as u64;
+            if rnd_bits != 0 {
+                unsafe {
+                    *pfflags |= FFLAG_INEXACT;
+                }
+            }
+        }
+    }
+
+    if do_overflow {
+        unsafe {
+            *pfflags |= FFLAG_INVALID_OP;
+        }
+        return r_max as i64;
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i64
+}
+}
+
+// ── `internal_cvt_sf32_i128` · softfp_template_icvt.h:38-108 · chunk 3338 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int128_t internal_cvt_sf32_i128(uint32_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint128_t r, r_max;
+//     
+//         a_sign = a >> (32 - 1);
+//         a_exp = (a >> 23) & ((1 << 8) - 1);
+//         a_mant = a & (((uint32_t)1 << 23) - 1);
+//         if (a_exp == ((1 << 8) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint32_t)1 << 23;
+//         }
+//         a_mant <<= ((32 - 2) - 23);
+//         a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;
+//     
+//         if (is_unsigned)
+//             r_max = (uint128_t)a_sign - 1;
+//         else
+//             r_max = ((uint128_t)1 << (128 - 1)) - (uint128_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (128 - 1 - 23)) {
+//                 r = (uint128_t)(a_mant >> ((32 - 2) - 23)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd32(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((32 - 2) - 23) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((32 - 2) - 23)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((32 - 2) - 23) ) - 1);
+//             a_mant = (a_mant + addend) >> ((32 - 2) - 23);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((32 - 2) - 23) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3338 {
+// Port of softfp_template_icvt.h internal_cvt_sf32_i128 (static function).
+
+use core::ffi::c_int;
+
+#[inline]
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u32 = (1u32 << d) - 1;
+            a = (a >> d) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf32_i128(
+    a: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i128 {
+    // RM_RNE = 0, RM_RTZ = 1, RM_RDN = 2, RM_RUP = 3, RM_RMM = 4
+    let mut a_sign: u32 = a >> 31;
+    let mut a_exp: i32 = ((a >> 23) & 0xff) as i32;
+    let mut a_mant: u32 = a & 0x007f_ffff;
+
+    if a_exp == 0xff && a_mant != 0 {
+        // NaN is like +infinity
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= 7;
+    a_exp = a_exp - 127 - 23;
+
+    let r_max: u128 = if is_unsigned != 0 {
+        (a_sign as u128).wrapping_sub(1)
+    } else {
+        (1u128 << 127) - ((a_sign ^ 1) as u128)
+    };
+
+    let r: u128;
+    if a_exp >= 0 {
+        if a_exp <= 104 {
+            let v: u128 = ((a_mant >> 7) as u128) << a_exp;
+            if v > r_max {
+                unsafe {
+                    *pfflags |= 1 << 4;
+                }
+                return r_max as i128;
+            }
+            r = v;
+        } else {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max as i128;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 | 4 => 1u32 << 6,
+            1 => 0,
+            _ => {
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    (1u32 << 7) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = a_mant & ((1u32 << 7) - 1);
+        a_mant = a_mant.wrapping_add(addend) >> 7;
+
+        // half way: select even result
+        if rm == 0 && rnd_bits == (1u32 << 6) {
+            a_mant &= !1u32;
+        }
+        if (a_mant as u128) > r_max {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max as i128;
+        }
+        r = a_mant as u128;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 0;
+            }
+        }
+    }
+
+    let r = if a_sign != 0 { r.wrapping_neg() } else { r };
+    r as i128
+}
+}
+
+// ── `internal_cvt_sf64_i32` · softfp_template_icvt.h:38-108 · chunk 3360 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int32_t internal_cvt_sf64_i32(uint64_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint32_t r, r_max;
+//     
+//         a_sign = a >> (64 - 1);
+//         a_exp = (a >> 52) & ((1 << 11) - 1);
+//         a_mant = a & (((uint64_t)1 << 52) - 1);
+//         if (a_exp == ((1 << 11) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint64_t)1 << 52;
+//         }
+//         a_mant <<= ((64 - 2) - 52);
+//         a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+//     
+//         if (is_unsigned)
+//             r_max = (uint32_t)a_sign - 1;
+//         else
+//             r_max = ((uint32_t)1 << (32 - 1)) - (uint32_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (32 - 1 - 52)) {
+//                 r = (uint32_t)(a_mant >> ((64 - 2) - 52)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd64(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((64 - 2) - 52) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((64 - 2) - 52)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((64 - 2) - 52) ) - 1);
+//             a_mant = (a_mant + addend) >> ((64 - 2) - 52);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((64 - 2) - 52) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3360 {
+// Port of internal_cvt_sf64_i32 from softfp_template_icvt.h (ICVT_SIZE=32, F_SIZE=64).
+#![allow(clippy::all)]
+
+use core::ffi::c_int;
+
+type BOOL = c_int;
+type RoundingModeEnum = c_int;
+
+const RM_RNE: RoundingModeEnum = 0;
+const RM_RTZ: RoundingModeEnum = 1;
+const RM_RDN: RoundingModeEnum = 2;
+const RM_RUP: RoundingModeEnum = 3;
+const RM_RMM: RoundingModeEnum = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+#[inline]
+fn rshift_rnd64(mut a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let dd = d as u32;
+            let mask: u64 = (1u64 << dd).wrapping_sub(1);
+            a = (a >> dd) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn internal_cvt_sf64_i32(
+    a: u64,
+    rm: RoundingModeEnum,
+    pfflags: *mut u32,
+    is_unsigned: BOOL,
+) -> i32 {
+    const MANT_SIZE: i32 = 52;
+    const EXP_MASK: i32 = (1 << 11) - 1;
+    const RND_SIZE: i32 = (64 - 2) - 52; // 10
+    const ICVT_SIZE: i32 = 32;
+
+    let mut a_sign: u32;
+    let addend: u32;
+    let rnd_bits: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u64;
+    let mut r: u32 = 0;
+    let r_max: u32;
+
+    a_sign = (a >> (64 - 1)) as u32;
+    let mant_mask: u64 = (1u64 << MANT_SIZE) - 1;
+    a_exp = ((a >> MANT_SIZE) & (EXP_MASK as u64)) as i32;
+    a_mant = a & mant_mask;
+    if a_exp == EXP_MASK && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << MANT_SIZE;
+    }
+    a_mant <<= RND_SIZE;
+    a_exp = a_exp - (EXP_MASK / 2) - MANT_SIZE;
+
+    if is_unsigned != 0 {
+        r_max = a_sign.wrapping_sub(1);
+    } else {
+        r_max = (1u32 << (ICVT_SIZE - 1)) - (a_sign ^ 1);
+    }
+
+    let mut overflow = false;
+    if a_exp >= 0 {
+        if a_exp <= (ICVT_SIZE - 1 - MANT_SIZE) {
+            r = ((a_mant >> RND_SIZE) as u32).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                overflow = true;
+            }
+        } else {
+            overflow = true;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        match rm {
+            RM_RNE | RM_RMM => {
+                addend = 1u32 << (RND_SIZE - 1);
+            }
+            RM_RTZ => {
+                addend = 0;
+            }
+            _ => {
+                // RM_RDN, RM_RUP and anything else
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    addend = (1u32 << RND_SIZE) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        rnd_bits = (a_mant & ((1u64 << RND_SIZE) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> RND_SIZE;
+
+        // half way: select even result
+        if rm == RM_RNE && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+            a_mant &= !1u64;
+        }
+        if a_mant > r_max as u64 {
+            overflow = true;
+        } else {
+            r = a_mant as u32;
+            if rnd_bits != 0 {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if overflow {
+        *pfflags |= FFLAG_INVALID_OP;
+        return r_max as i32;
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+}
+
+// ── `internal_cvt_sf64_i64` · softfp_template_icvt.h:38-108 · chunk 3382 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int64_t internal_cvt_sf64_i64(uint64_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint64_t r, r_max;
+//     
+//         a_sign = a >> (64 - 1);
+//         a_exp = (a >> 52) & ((1 << 11) - 1);
+//         a_mant = a & (((uint64_t)1 << 52) - 1);
+//         if (a_exp == ((1 << 11) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint64_t)1 << 52;
+//         }
+//         a_mant <<= ((64 - 2) - 52);
+//         a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+//     
+//         if (is_unsigned)
+//             r_max = (uint64_t)a_sign - 1;
+//         else
+//             r_max = ((uint64_t)1 << (64 - 1)) - (uint64_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (64 - 1 - 52)) {
+//                 r = (uint64_t)(a_mant >> ((64 - 2) - 52)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd64(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((64 - 2) - 52) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((64 - 2) - 52)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((64 - 2) - 52) ) - 1);
+//             a_mant = (a_mant + addend) >> ((64 - 2) - 52);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((64 - 2) - 52) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3382 {
+use core::ffi::{c_int, c_uint};
+
+// Mirrors static uint64_t rshift_rnd64(uint64_t a, int d)
+#[inline]
+fn rshift_rnd64(a: u64, d: c_int) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let sh = d as u32;
+            let mask = (1u64 << sh).wrapping_sub(1);
+            a = (a >> sh) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf64_i64(
+    a: u64,
+    rm: c_uint,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i64 {
+    const RND_SIZE: u32 = (64 - 2) - 52; // 10
+
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1i64 << 11) - 1) as u64) as i32;
+    let mut a_mant: u64 = a & (((1u64) << 52) - 1);
+
+    if a_exp == ((1i64 << 11) - 1) as i32 && a_mant != 0 {
+        /* NaN is like +infinity */
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= (1u64) << 52;
+    }
+    a_mant = a_mant.wrapping_shl(RND_SIZE);
+    a_exp = a_exp - (((1i64 << 11) - 1) / 2) as i32 - 52;
+
+    let r_max: u64 = if is_unsigned != 0 {
+        (a_sign as u64).wrapping_sub(1)
+    } else {
+        ((1u64) << (64 - 1)) - (a_sign ^ 1) as u64
+    };
+
+    let r: u64;
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - 52) as i32 {
+            r = (a_mant >> RND_SIZE).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                unsafe {
+                    *pfflags |= 1 << 4;
+                }
+                return r_max as i64;
+            }
+        } else {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max as i64;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 /* RM_RNE */ | 4 /* RM_RMM */ => 1u32 << (RND_SIZE - 1),
+            1 /* RM_RTZ */ => 0,
+            _ /* RM_RDN (2), RM_RUP (3), default */ => {
+                if (a_sign ^ (rm & 1)) != 0 {
+                    (1u32 << RND_SIZE) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u64 << RND_SIZE) - 1)) as u32;
+        a_mant = (a_mant + addend as u64) >> RND_SIZE;
+        /* half way: select even result */
+        if rm == 0 /* RM_RNE */ && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+            a_mant &= !(1u64);
+        }
+        if a_mant > r_max {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max as i64;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 0;
+            }
+        }
+    }
+
+    let mut r = r;
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i64
+}
+}
+
+// ── `internal_cvt_sf64_i128` · softfp_template_icvt.h:38-108 · chunk 3404 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int128_t internal_cvt_sf64_i128(uint64_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint128_t r, r_max;
+//     
+//         a_sign = a >> (64 - 1);
+//         a_exp = (a >> 52) & ((1 << 11) - 1);
+//         a_mant = a & (((uint64_t)1 << 52) - 1);
+//         if (a_exp == ((1 << 11) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint64_t)1 << 52;
+//         }
+//         a_mant <<= ((64 - 2) - 52);
+//         a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+//     
+//         if (is_unsigned)
+//             r_max = (uint128_t)a_sign - 1;
+//         else
+//             r_max = ((uint128_t)1 << (128 - 1)) - (uint128_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (128 - 1 - 52)) {
+//                 r = (uint128_t)(a_mant >> ((64 - 2) - 52)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd64(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((64 - 2) - 52) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((64 - 2) - 52)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((64 - 2) - 52) ) - 1);
+//             a_mant = (a_mant + addend) >> ((64 - 2) - 52);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((64 - 2) - 52) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3404 {
+// Port of softfp_template_icvt.h internal_cvt_sf64_i128 (ICVT_SIZE=128, F_SIZE=64).
+
+const RM_RNE: i32 = 0;
+const RM_RTZ: i32 = 1;
+const RM_RMM: i32 = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+#[inline]
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            (a != 0) as u64
+        } else {
+            let sh = d as u32;
+            let mask = (1u64 << sh) - 1;
+            (a >> sh) | ((a & mask) != 0) as u64
+        }
+    } else {
+        a
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf64_i128(
+    a: u64,
+    rm: i32,
+    pfflags: *mut u32,
+    is_unsigned: i32,
+) -> i128 {
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1u64 << 11) - 1)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1i32 << 11) - 1) && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant <<= (64 - 2) - 52;
+    a_exp = a_exp - (((1i32 << 11) - 1) / 2) - 52;
+
+    let r_max: u128 = if is_unsigned != 0 {
+        (a_sign as u128).wrapping_sub(1)
+    } else {
+        (1u128 << (128 - 1)) - ((a_sign ^ 1) as u128)
+    };
+
+    let mut r: u128 = 0;
+    let mut overflow: bool = false;
+
+    if a_exp >= 0 {
+        if a_exp <= (128 - 1 - 52) {
+            r = ((a_mant >> ((64 - 2) - 52)) as u128) << (a_exp as u32);
+            if r > r_max {
+                overflow = true;
+            }
+        } else {
+            overflow = true;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            RM_RNE | RM_RMM => 1u32 << (((64 - 2) - 52) - 1),
+            RM_RTZ => 0,
+            _ => {
+                // RM_RDN, RM_RUP (and default)
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << ((64 - 2) - 52)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+        // half way: select even result
+        if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if (a_mant as u128) > r_max {
+            overflow = true;
+        } else {
+            r = a_mant as u128;
+            if rnd_bits != 0 {
+                unsafe {
+                    *pfflags |= FFLAG_INEXACT;
+                }
+            }
+        }
+    }
+
+    if overflow {
+        unsafe {
+            *pfflags |= FFLAG_INVALID_OP;
+        }
+        return r_max as i128;
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i128
+}
+}
+
+// ── `internal_cvt_sf128_i32` · softfp_template_icvt.h:38-108 · chunk 3426 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int32_t internal_cvt_sf128_i32(uint128_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint32_t r, r_max;
+//     
+//         a_sign = a >> (128 - 1);
+//         a_exp = (a >> 112) & ((1 << 15) - 1);
+//         a_mant = a & (((uint128_t)1 << 112) - 1);
+//         if (a_exp == ((1 << 15) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint128_t)1 << 112;
+//         }
+//         a_mant <<= ((128 - 2) - 112);
+//         a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;
+//     
+//         if (is_unsigned)
+//             r_max = (uint32_t)a_sign - 1;
+//         else
+//             r_max = ((uint32_t)1 << (32 - 1)) - (uint32_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (32 - 1 - 112)) {
+//                 r = (uint32_t)(a_mant >> ((128 - 2) - 112)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd128(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((128 - 2) - 112) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((128 - 2) - 112)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((128 - 2) - 112) ) - 1);
+//             a_mant = (a_mant + addend) >> ((128 - 2) - 112);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((128 - 2) - 112) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3426 {
+// Port of:
+// static int32_t internal_cvt_sf128_i32(uint128_t a, RoundingModeEnum rm,
+//                                       uint32_t *pfflags, BOOL is_unsigned)
+// sfloat128 (binary128): F_SIZE=128, MANT_SIZE=112, EXP_MASK=(1<<15)-1,
+// RND_SIZE=(128-2)-112=14.
+
+use core::ffi::c_int;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+
+const EXP_MASK: i32 = (1 << 15) - 1; // 0x7fff / 32767
+const MANT_SIZE: i32 = 112;
+const RND_SIZE: u32 = 14;
+
+// Equivalent of the static helper rshift_rnd128() from the C translation unit.
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    if d <= 0 {
+        return a;
+    }
+    if d >= 128 {
+        return (a != 0) as u128;
+    }
+    let mask: u128 = (1u128 << (d as u32)) - 1;
+    (a >> (d as u32)) | ((a & mask) != 0) as u128
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf128_i32(
+    a: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i32 {
+    let mut a_sign: u32 = (a >> (128 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> MANT_SIZE) & (EXP_MASK as u128)) as i32;
+    let mut a_mant: u128 = a & ((1u128 << MANT_SIZE) - 1);
+
+    if a_exp == EXP_MASK && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << MANT_SIZE;
+    }
+    a_mant <<= RND_SIZE;
+    a_exp = a_exp - (EXP_MASK / 2) - MANT_SIZE;
+
+    let r_max: u32;
+    if is_unsigned != 0 {
+        r_max = a_sign.wrapping_sub(1);
+    } else {
+        r_max = (1u32 << (32 - 1)).wrapping_sub(a_sign ^ 1);
+    }
+
+    let mut r: u32;
+    if a_exp >= 0 {
+        if a_exp <= (32 - 1 - MANT_SIZE) {
+            r = ((a_mant >> RND_SIZE) as u32).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                // overflow:
+                unsafe {
+                    *pfflags |= FFLAG_INVALID_OP;
+                }
+                return r_max as i32;
+            }
+        } else {
+            // overflow:
+            unsafe {
+                *pfflags |= FFLAG_INVALID_OP;
+            }
+            return r_max as i32;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        let addend: u32;
+        match rm {
+            0 | 4 => {
+                // RM_RNE | RM_RMM
+                addend = 1u32 << (RND_SIZE - 1);
+            }
+            1 => {
+                // RM_RTZ
+                addend = 0;
+            }
+            _ => {
+                // RM_RDN(2), RM_RUP(3), default
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    addend = (1u32 << RND_SIZE) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        let rnd_bits: u32 = (a_mant & (((1u128 << RND_SIZE) - 1) as u128)) as u32;
+        a_mant = (a_mant + (addend as u128)) >> RND_SIZE;
+        // half way: select even result
+        if rm == 0 && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+            a_mant &= !(1u128);
+        }
+        if a_mant > (r_max as u128) {
+            // overflow:
+            unsafe {
+                *pfflags |= FFLAG_INVALID_OP;
+            }
+            return r_max as i32;
+        }
+        r = a_mant as u32;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+}
+
+// ── `internal_cvt_sf128_i64` · softfp_template_icvt.h:38-108 · chunk 3448 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int64_t internal_cvt_sf128_i64(uint128_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint64_t r, r_max;
+//     
+//         a_sign = a >> (128 - 1);
+//         a_exp = (a >> 112) & ((1 << 15) - 1);
+//         a_mant = a & (((uint128_t)1 << 112) - 1);
+//         if (a_exp == ((1 << 15) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint128_t)1 << 112;
+//         }
+//         a_mant <<= ((128 - 2) - 112);
+//         a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;
+//     
+//         if (is_unsigned)
+//             r_max = (uint64_t)a_sign - 1;
+//         else
+//             r_max = ((uint64_t)1 << (64 - 1)) - (uint64_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (64 - 1 - 112)) {
+//                 r = (uint64_t)(a_mant >> ((128 - 2) - 112)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd128(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((128 - 2) - 112) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((128 - 2) - 112)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((128 - 2) - 112) ) - 1);
+//             a_mant = (a_mant + addend) >> ((128 - 2) - 112);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((128 - 2) - 112) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3448 {
+// Port of softfp_template_icvt.h: internal_cvt_sf128_i64 (ICVT_SIZE=64, F_SIZE=128)
+// F_SIZE = 128, MANT_SIZE = 112, RND_SIZE = (128 - 2) - 112 = 14
+// EXP_MASK = (1 << 15) - 1 = 0x7fff
+// FFLAG_INVALID_OP = (1 << 4), FFLAG_INEXACT = (1 << 0)
+// RoundingModeEnum: RM_RNE=0, RM_RTZ=1, RM_RDN=2, RM_RUP=3, RM_RMM=4
+
+#![allow(non_snake_case)]
+
+use core::ffi::c_int;
+
+const F_SIZE: u32 = 128;
+const MANT_SIZE: u32 = 112;
+const RND_SIZE: u32 = (F_SIZE - 2) - MANT_SIZE; // 14
+const EXP_MASK: i32 = (1i32 << 15) - 1; // 0x7fff
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+const FFLAG_INEXACT: u32 = 1 << 0;
+
+// static uint128_t rshift_rnd128(uint128_t a, int d)
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask: u128 = (1u128 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn internal_cvt_sf128_i64(
+    a: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i64 {
+    let mut a_sign: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u128;
+    let mut r: u64 = 0;
+    let r_max: u64;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+
+    a_sign = (a >> (F_SIZE - 1)) as u32;
+    a_exp = ((a >> MANT_SIZE) as i32) & EXP_MASK;
+    a_mant = a & ((1u128 << MANT_SIZE) - 1);
+    if a_exp == EXP_MASK && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << MANT_SIZE;
+    }
+    a_mant <<= RND_SIZE;
+    a_exp = a_exp - (EXP_MASK / 2) - (MANT_SIZE as i32);
+
+    if is_unsigned != 0 {
+        r_max = (a_sign as u64).wrapping_sub(1);
+    } else {
+        r_max = (1u64 << (64 - 1)) - ((a_sign ^ 1) as u64);
+    }
+
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - (MANT_SIZE as i32)) {
+            r = ((a_mant >> RND_SIZE) as u64).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                // overflow:
+                *pfflags |= FFLAG_INVALID_OP;
+                return r_max as i64;
+            }
+        } else {
+            // overflow:
+            *pfflags |= FFLAG_INVALID_OP;
+            return r_max as i64;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        match rm {
+            RM_RNE | RM_RMM => {
+                addend = 1u32 << (RND_SIZE - 1);
+            }
+            RM_RTZ => {
+                addend = 0;
+            }
+            _ => {
+                // RM_RDN, RM_RUP and anything else
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    addend = (1u32 << RND_SIZE) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        rnd_bits = (a_mant & ((1u128 << RND_SIZE) - 1)) as u32;
+        a_mant = (a_mant + (addend as u128)) >> RND_SIZE;
+
+        // half way: select even result
+        if rm == RM_RNE && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+            a_mant &= !1u128;
+        }
+        if a_mant > (r_max as u128) {
+            *pfflags |= FFLAG_INVALID_OP;
+            return r_max as i64;
+        }
+        r = a_mant as u64;
+        if rnd_bits != 0 {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i64
+}
+}
+
+// ── `internal_cvt_sf128_i128` · softfp_template_icvt.h:38-108 · chunk 3470 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static int128_t internal_cvt_sf128_i128(uint128_t a, RoundingModeEnum rm,
+//                                                                              uint32_t *pfflags, BOOL is_unsigned)
+//     {
+//         uint32_t a_sign, addend, rnd_bits;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint128_t r, r_max;
+//     
+//         a_sign = a >> (128 - 1);
+//         a_exp = (a >> 112) & ((1 << 15) - 1);
+//         a_mant = a & (((uint128_t)1 << 112) - 1);
+//         if (a_exp == ((1 << 15) - 1) && a_mant != 0)
+//             a_sign = 0;
+//         if (a_exp == 0) {
+//             a_exp = 1;
+//         } else {
+//             a_mant |= (uint128_t)1 << 112;
+//         }
+//         a_mant <<= ((128 - 2) - 112);
+//         a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;
+//     
+//         if (is_unsigned)
+//             r_max = (uint128_t)a_sign - 1;
+//         else
+//             r_max = ((uint128_t)1 << (128 - 1)) - (uint128_t)(a_sign ^ 1);
+//         if (a_exp >= 0) {
+//             if (a_exp <= (128 - 1 - 112)) {
+//                 r = (uint128_t)(a_mant >> ((128 - 2) - 112)) << a_exp;
+//                 if (r > r_max)
+//                     goto overflow;
+//             } else {
+//             overflow:
+//                 *pfflags |= (1 << 4);
+//                 return r_max;
+//             }
+//         } else {
+//             a_mant = rshift_rnd128(a_mant, -a_exp);
+//     
+//             switch(rm) {
+//             case RM_RNE:
+//             case RM_RMM:
+//                 addend = (1 << (((128 - 2) - 112) - 1));
+//                 break;
+//             case RM_RTZ:
+//                 addend = 0;
+//                 break;
+//             default:
+//             case RM_RDN:
+//             case RM_RUP:
+//                 if (a_sign ^ (rm & 1))
+//                     addend = (1 << ((128 - 2) - 112)) - 1;
+//                 else
+//                     addend = 0;
+//                 break;
+//             }
+//     
+//             rnd_bits = a_mant & ((1 << ((128 - 2) - 112) ) - 1);
+//             a_mant = (a_mant + addend) >> ((128 - 2) - 112);
+//     
+//             if (rm == RM_RNE && rnd_bits == (1 << (((128 - 2) - 112) - 1)))
+//                 a_mant &= ~1;
+//             if (a_mant > r_max)
+//                 goto overflow;
+//             r = a_mant;
+//             if (rnd_bits != 0)
+//                 *pfflags |= (1 << 0);
+//         }
+//         if (a_sign)
+//             r = -r;
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3470 {
+// Port of static int128_t internal_cvt_sf128_i128(uint128_t a, RoundingModeEnum rm,
+//                                                uint32_t *pfflags, BOOL is_unsigned)
+// softfp_template_icvt.h, ICVT_SIZE == 128, F_SIZE == 128
+
+use core::ffi::c_int;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID_OP: u32 = 1 << 4;
+
+// RM_RNE = 0, RM_RTZ = 1, RM_RDN = 2, RM_RUP = 3, RM_RMM = 4
+
+// static uint128_t rshift_rnd128(uint128_t a, int d)
+#[inline]
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    if d != 0 {
+        if d >= 128 {
+            (a != 0) as u128
+        } else {
+            let mask: u128 = (1u128 << d) - 1;
+            (a >> d) | ((a & mask) != 0) as u128
+        }
+    } else {
+        a
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_sf128_i128(
+    a: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i128 {
+    let mut a_sign: u32;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u128;
+    let mut r: u128 = 0;
+    let mut r_max: u128;
+
+    a_sign = (a >> 127) as u32;
+    a_exp = ((a >> 112) & 0x7fff) as i32;
+    a_mant = a & ((1u128 << 112) - 1);
+    if a_exp == 0x7fff && a_mant != 0 {
+        a_sign = 0; // NaN is like +infinity
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= 14;
+    a_exp = a_exp - 16383 - 112;
+
+    if is_unsigned != 0 {
+        r_max = (a_sign as u128).wrapping_sub(1);
+    } else {
+        r_max = (1u128 << 127).wrapping_sub((a_sign ^ 1) as u128);
+    }
+    if a_exp >= 0 {
+        if a_exp <= 15 {
+            let rr: u128 = (a_mant >> 14) << (a_exp as u32);
+            if rr > r_max {
+                unsafe {
+                    *pfflags |= FFLAG_INVALID_OP;
+                }
+                return r_max as i128;
+            }
+            r = rr;
+        } else {
+            unsafe {
+                *pfflags |= FFLAG_INVALID_OP;
+            }
+            return r_max as i128;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        match rm {
+            0 | 4 => {
+                // RM_RNE, RM_RMM
+                addend = 1u32 << 13;
+            }
+            1 => {
+                // RM_RTZ
+                addend = 0;
+            }
+            _ => {
+                // default: RM_RDN, RM_RUP
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    addend = (1u32 << 14) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        rnd_bits = (a_mant & ((1u128 << 14) - 1)) as u32;
+        a_mant = (a_mant + addend as u128) >> 14;
+        // half way: select even result
+        if rm == 0 && rnd_bits == (1u32 << 13) {
+            a_mant &= !1u128;
+        }
+        if a_mant > r_max {
+            unsafe {
+                *pfflags |= FFLAG_INVALID_OP;
+            }
+            return r_max as i128;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i128
+}
+}
+
 // ── `uint32_t a_sign, addend, rnd_bits; int32_t a_exp; uint32_t a_mant; uint32_t r, r_max; a_sign =…` · softfp_template_icvt.h:41-48 · chunk 3295 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -2778,6 +4525,1137 @@ pub extern "C" fn internal_cvt_sf128_i128__part3478(r: u128) -> i128 {
 }
 }
 
+// ── `cvt_sf32_i32` · softfp_template_icvt.h:110-115 · chunk 3303 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int32_t cvt_sf32_i32(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i32(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3303 {
+// Port of cvt_sf32_i32 (softfp_template_icvt.h): wrapper around the static
+// internal_cvt_sf32_i32() with is_unsigned = 0, logic inlined here.
+
+use core::ffi::c_int;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint32_t rshift_rnd32(uint32_t a, int d)
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else if d > 0 {
+            let mask: u32 = (1u32 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf32_i32(a: u32, rm: c_int, pfflags: *mut u32) -> i32 {
+    unsafe {
+        let mut a_sign: u32 = a >> (32 - 1);
+        let mut a_exp: i32 = ((a >> 23) & ((1 << 8) - 1)) as i32;
+        let mut a_mant: u32 = a & ((1u32 << 23) - 1);
+
+        if a_exp == (1 << 8) - 1 && a_mant != 0 {
+            a_sign = 0;
+        }
+        if a_exp == 0 {
+            a_exp = 1;
+        } else {
+            a_mant |= 1u32 << 23;
+        }
+        a_mant <<= (32 - 2) - 23;
+        a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;
+
+        // is_unsigned == 0
+        let r_max: u32 = (1u32 << (32 - 1)) - (a_sign ^ 1);
+
+        let mut r: u32 = 0;
+        let mut overflow = false;
+
+        if a_exp >= 0 {
+            if a_exp <= (32 - 1 - 23) {
+                r = (a_mant >> ((32 - 2) - 23)) << a_exp;
+                if r > r_max {
+                    overflow = true;
+                }
+            } else {
+                overflow = true;
+            }
+        } else {
+            let d: i32 = (-a_exp) as i32;
+            a_mant = rshift_rnd32(a_mant, d);
+
+            let addend: u32 = match rm {
+                0 | 4 => 1u32 << (((32 - 2) - 23) - 1), // RM_RNE, RM_RMM
+                1 => 0,                                 // RM_RTZ
+                _ => {
+                    // RM_RDN, RM_RUP, default
+                    if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                        (1u32 << ((32 - 2) - 23)) - 1
+                    } else {
+                        0
+                    }
+                }
+            };
+
+            let rnd_bits: u32 = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+            a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+            if rm == 0 && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+                a_mant &= !1u32;
+            }
+            if a_mant > r_max {
+                overflow = true;
+            } else {
+                r = a_mant;
+                if rnd_bits != 0 {
+                    *pfflags |= FFLAG_INEXACT;
+                }
+            }
+        }
+
+        if overflow {
+            *pfflags |= FFLAG_INVALID;
+            return r_max as i32;
+        }
+
+        if a_sign != 0 {
+            r = r.wrapping_neg();
+        }
+        r as i32
+    }
+}
+}
+
+// ── `cvt_sf32_i64` · softfp_template_icvt.h:110-115 · chunk 3325 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int64_t cvt_sf32_i64(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i64(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3325 {
+// Port of softfloat's cvt_sf32_i64 (softfp_template_icvt.h), including the
+// static helper internal_cvt_sf32_i64 with is_unsigned = FALSE.
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values
+const RM_RNE: c_int = 0;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint32_t rshift_rnd32(uint32_t a, int d)
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    if d != 0 {
+        if d >= 32 {
+            (a != 0) as u32
+        } else {
+            let mask: u32 = (1u32 << d) - 1;
+            (a >> d) | ((a & mask) != 0) as u32
+        }
+    } else {
+        a
+    }
+}
+
+fn internal_cvt_sf32_i64(a: u32, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> i64 {
+    let mut a_sign: u32;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u32;
+    let mut r: u64;
+    let r_max: u64;
+
+    unsafe {
+        a_sign = a >> (32 - 1);
+        a_exp = ((a >> 23) & ((1i32 << 8) - 1) as u32) as i32;
+        a_mant = a & (((1u32 << 23) - 1) as u32);
+        if a_exp == (1 << 8) - 1 && a_mant != 0 {
+            a_sign = 0;
+        }
+        if a_exp == 0 {
+            a_exp = 1;
+        } else {
+            a_mant |= 1u32 << 23;
+        }
+        a_mant = a_mant.wrapping_shl((32 - 2) - 23);
+        a_exp = a_exp - ((1 << 8) - 1) / 2 - 23;
+
+        if is_unsigned {
+            r_max = (a_sign as u64).wrapping_sub(1);
+        } else {
+            r_max = ((1u64) << (64 - 1)) - (a_sign ^ 1) as u64;
+        }
+
+        let mut overflow = false;
+        let mut r_out: u64 = 0;
+
+        if a_exp >= 0 {
+            if a_exp <= (64 - 1 - 23) {
+                let v: u64 = ((a_mant >> ((32 - 2) - 23)) as u64).wrapping_shl(a_exp as u32);
+                if v > r_max {
+                    overflow = true;
+                } else {
+                    r_out = v;
+                }
+            } else {
+                overflow = true;
+            }
+        } else {
+            a_mant = rshift_rnd32(a_mant, -a_exp);
+
+            match rm {
+                RM_RNE | RM_RMM => {
+                    addend = 1u32 << (((32 - 2) - 23) - 1);
+                }
+                1 => {
+                    // RM_RTZ
+                    addend = 0;
+                }
+                _ => {
+                    // RM_RDN, RM_RUP, default
+                    if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                        addend = (1u32 << ((32 - 2) - 23)) - 1;
+                    } else {
+                        addend = 0;
+                    }
+                }
+            }
+
+            rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+            a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+            if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+                a_mant &= !1u32;
+            }
+            if (a_mant as u64) > r_max {
+                overflow = true;
+            } else {
+                r_out = a_mant as u64;
+                if rnd_bits != 0 {
+                    *pfflags |= FFLAG_INEXACT;
+                }
+            }
+        }
+
+        if overflow {
+            *pfflags |= FFLAG_INVALID;
+            return r_max as i64;
+        }
+
+        r = r_out;
+        if a_sign != 0 {
+            r = (-(r as i64)) as u64;
+        }
+        r as i64
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf32_i64(a: u32, rm: c_int, pfflags: *mut u32) -> i64 {
+    internal_cvt_sf32_i64(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_sf32_i128` · softfp_template_icvt.h:110-115 · chunk 3347 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int128_t cvt_sf32_i128(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i128(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3347 {
+// Port of: int128_t cvt_sf32_i128(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags)
+// Inlines the static helper internal_cvt_sf32_i128(a, rm, pfflags, FALSE).
+
+use core::ffi::{c_int, c_uint};
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint32_t rshift_rnd32(uint32_t a, int d)
+fn rshift_rnd32(a: u32, d: c_int) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u32 = (1u32 << d) - 1;
+            a = (a >> d) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_sf32_i128(
+    a: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> i128 {
+    let mut a_sign: u32;
+    let mut a_exp: c_int;
+    let mut a_mant: u32;
+    let mut r: u128;
+    let mut r_max: u128;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+
+    let is_unsigned: bool = false;
+
+    a_sign = a >> (32 - 1);
+    a_exp = ((a >> 23) & ((1u32 << 8) - 1)) as c_int;
+    a_mant = a & ((1u32 << 23) - 1);
+    if a_exp == (1 << 8) - 1 && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= (32 - 2) - 23;
+    a_exp = a_exp - ((1 << 8) - 1) / 2 - 23;
+
+    if is_unsigned {
+        r_max = (a_sign as u128).wrapping_sub(1);
+    } else {
+        r_max = (1u128 << (128 - 1)) - (a_sign ^ 1) as u128;
+    }
+    if a_exp >= 0 {
+        if a_exp <= (128 - 1 - 23) {
+            r = ((a_mant >> ((32 - 2) - 23)) as u128).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                *pfflags |= FFLAG_INVALID;
+                return r_max as i128;
+            }
+        } else {
+            *pfflags |= FFLAG_INVALID;
+            return r_max as i128;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        match rm {
+            RM_RNE | RM_RMM => {
+                addend = 1u32 << (((32 - 2) - 23) - 1);
+            }
+            RM_RTZ => {
+                addend = 0;
+            }
+            _ => {
+                // RM_RDN, RM_RUP and default
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    addend = (1u32 << ((32 - 2) - 23)) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+            a_mant &= !1u32;
+        }
+        if (a_mant as u128) > r_max {
+            *pfflags |= FFLAG_INVALID;
+            return r_max as i128;
+        }
+        r = a_mant as u128;
+        if rnd_bits != 0 {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i128
+}
+
+// keep c_uint referenced (enum underlying type helper) without warnings
+#[allow(dead_code)]
+fn _unused(_x: c_uint) {}
+}
+
+// ── `cvt_sf64_i32` · softfp_template_icvt.h:110-115 · chunk 3369 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int32_t cvt_sf64_i32(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i32(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3369 {
+// Port of softfp_template_icvt.h: cvt_sf64_i32
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+fn rshift_rnd64(mut a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u64 = (1u64 << d) - 1;
+            let sticky: u64 = if (a & mask) != 0 { 1 } else { 0 };
+            a = (a >> d) | sticky;
+        }
+    }
+    a
+}
+
+fn internal_cvt_sf64_i32(a: u64, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> i32 {
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1i64 << 11) - 1) as u64) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant <<= (64 - 2) - 52;
+    a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+
+    let r_max: u32;
+    if is_unsigned {
+        r_max = a_sign.wrapping_sub(1);
+    } else {
+        r_max = (1u32 << (32 - 1)) - (a_sign ^ 1);
+    }
+
+    let mut r: u32 = 0;
+    let mut overflow: bool = false;
+
+    if a_exp >= 0 {
+        if a_exp <= (32 - 1 - 52) {
+            // dead branch in practice (32 - 1 - 52 < 0), kept for fidelity
+            let t: u32 = ((a_mant >> ((64 - 2) - 52)) as u32).wrapping_shl(a_exp as u32);
+            if t > r_max {
+                overflow = true;
+            } else {
+                r = t;
+            }
+        } else {
+            overflow = true;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            RM_RNE | RM_RMM => 1u32 << (((64 - 2) - 52) - 1),
+            RM_RTZ => 0,
+            _ => {
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    (1u32 << ((64 - 2) - 52)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & (((1u64 << ((64 - 2) - 52)) as u64) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if a_mant > r_max as u64 {
+            overflow = true;
+        } else {
+            r = a_mant as u32;
+            if rnd_bits != 0 {
+                unsafe {
+                    *pfflags |= FFLAG_INEXACT;
+                }
+            }
+        }
+    }
+
+    if overflow {
+        unsafe {
+            *pfflags |= FFLAG_INVALID;
+        }
+        return r_max as i32;
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf64_i32(a: u64, rm: c_int, pfflags: *mut u32) -> i32 {
+    internal_cvt_sf64_i32(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_sf64_i64` · softfp_template_icvt.h:110-115 · chunk 3391 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int64_t cvt_sf64_i64(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i64(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3391 {
+// Port of softfp_template_icvt.h: cvt_sf64_i64 (double -> int64 conversion)
+// The C body forwards to the file-static internal_cvt_sf64_i64(); since that
+// helper has no linker symbol, its logic is reproduced here as a private fn.
+
+use core::ffi::{c_int};
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            (a != 0) as u64
+        } else {
+            let mask = (1u64 << d) - 1;
+            (a >> d) | ((a & mask) != 0) as u64
+        }
+    } else {
+        a
+    }
+}
+
+fn internal_cvt_sf64_i64(a: u64, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> i64 {
+    // RoundingModeEnum: RM_RNE=0, RM_RTZ=1, RM_RDN=2, RM_RUP=3, RM_RMM=4
+    const FFLAG_INEXACT: u32 = 1 << 0;
+    const FFLAG_INVALID: u32 = 1 << 4;
+
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1u64 << 11) - 1)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant <<= (64 - 2) - 52;
+    a_exp = a_exp - ((1 << 11) - 1) / 2 - 52;
+
+    let r_max: u64 = if is_unsigned {
+        (a_sign as u64).wrapping_sub(1)
+    } else {
+        (1u64 << (64 - 1)).wrapping_sub((a_sign ^ 1) as u64)
+    };
+
+    let mut r: u64;
+
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - 52) {
+            r = (a_mant >> ((64 - 2) - 52)) << a_exp;
+            if r > r_max {
+                unsafe {
+                    *pfflags |= FFLAG_INVALID;
+                }
+                return r_max as i64;
+            }
+        } else {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 | 4 => 1u32 << (((64 - 2) - 52) - 1),
+            1 => 0,
+            _ => {
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << ((64 - 2) - 52)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+        if rm == 0 && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if a_mant > r_max {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i64
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf64_i64(a: u64, rm: c_int, pfflags: *mut u32) -> i64 {
+    internal_cvt_sf64_i64(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_sf64_i128` · softfp_template_icvt.h:110-115 · chunk 3413 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int128_t cvt_sf64_i128(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i128(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3413 {
+// Port of softfp_template_icvt.h: cvt_sf64_i128 (uint64_t -> int128_t)
+// The C helper `internal_cvt_sf64_i128` is `static` (no linker symbol), so its
+// logic is reproduced here as a private Rust function.
+
+#![allow(non_camel_case_types)]
+
+use core::ffi::c_uint;
+
+pub type RoundingModeEnum = c_uint;
+
+const RM_RNE: RoundingModeEnum = 0;
+const RM_RTZ: RoundingModeEnum = 1;
+const RM_RMM: RoundingModeEnum = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let mask: u64 = (1u64 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+// static int128_t internal_cvt_sf64_i128(uint64_t a, RoundingModeEnum rm,
+//                                        uint32_t *pfflags, BOOL is_unsigned)
+fn internal_cvt_sf64_i128(
+    a: u64,
+    rm: RoundingModeEnum,
+    pfflags: *mut u32,
+    is_unsigned: bool,
+) -> i128 {
+    let mut a_sign: u32 = (a >> 63) as u32;
+    let mut a_exp: i32 = ((a >> 52) & (((1u64 << 11) - 1) as u64)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1i32 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant = a_mant.wrapping_shl(10);
+    a_exp = a_exp - (((1i32 << 11) - 1) / 2) - 52;
+
+    let r_max: u128 = if is_unsigned {
+        (a_sign as u128).wrapping_sub(1)
+    } else {
+        (1u128 << 127) - ((a_sign ^ 1) as u128)
+    };
+
+    let mut r: u128;
+
+    if a_exp >= 0 {
+        if a_exp <= (128 - 1 - 52) {
+            r = ((a_mant >> 10) as u128) << (a_exp as u32);
+            if r > r_max {
+                // overflow:
+                unsafe {
+                    *pfflags |= FFLAG_INVALID;
+                }
+                return r_max as i128;
+            }
+        } else {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i128;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32;
+        match rm {
+            RM_RNE | RM_RMM => {
+                addend = 1u32 << (((64 - 2) - 52) - 1);
+            }
+            RM_RTZ => {
+                addend = 0;
+            }
+            _ => {
+                // RM_RDN, RM_RUP and any other value
+                if (a_sign ^ (rm & 1)) != 0 {
+                    addend = (1u32 << ((64 - 2) - 52)) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        let rnd_bits: u32 = (a_mant & (((1u64 << ((64 - 2) - 52)) - 1) as u64)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if (a_mant as u128) > r_max {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i128;
+        }
+        r = a_mant as u128;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i128
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf64_i128(a: u64, rm: RoundingModeEnum, pfflags: *mut u32) -> i128 {
+    internal_cvt_sf64_i128(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_sf128_i32` · softfp_template_icvt.h:110-115 · chunk 3435 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int32_t cvt_sf128_i32(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i32(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3435 {
+// Port of cvt_sf128_i32 (softfp_template_icvt.h) plus the static helper
+// internal_cvt_sf128_i32 which has no linker symbol.
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint128_t rshift_rnd128(uint128_t a, int d)
+#[inline]
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    if d == 0 {
+        return a;
+    }
+    if d >= 128 {
+        return if a != 0 { 1 } else { 0 };
+    }
+    if d < 0 {
+        // C would be undefined here; no caller does this.
+        return a;
+    }
+    let dd = d as u32;
+    let mask = (1u128 << dd).wrapping_sub(1);
+    (a >> dd) | if (a & mask) != 0 { 1 } else { 0 }
+}
+
+fn internal_cvt_sf128_i32(a: u128, rm: u32, pfflags: *mut u32, is_unsigned: bool) -> i32 {
+    let mut a_sign: u32 = (a >> 127) as u32;
+    let mut a_exp: i32 = ((a >> 112) & 0x7fff) as i32;
+    let mut a_mant: u128 = a & ((1u128 << 112) - 1);
+
+    if a_exp == 0x7fff && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= 14;
+    a_exp = a_exp - 0x3fff - 112;
+
+    let r_max: u32 = if is_unsigned {
+        a_sign.wrapping_sub(1)
+    } else {
+        (1u32 << 31).wrapping_sub(a_sign ^ 1)
+    };
+
+    let mut r: u32;
+
+    if a_exp >= 0 {
+        if a_exp <= (32 - 1 - 112) {
+            r = ((a_mant >> 14) as u32).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                unsafe {
+                    *pfflags |= FFLAG_INVALID;
+                }
+                return r_max as i32;
+            }
+        } else {
+            // overflow:
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i32;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 | 4 => 1 << 13, // RM_RNE, RM_RMM
+            1 => 0,           // RM_RTZ
+            _ => {
+                // RM_RDN, RM_RUP and default
+                if (a_sign ^ (rm & 1)) != 0 {
+                    (1 << 14) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & 0x3fff) as u32;
+        a_mant = (a_mant + addend as u128) >> 14;
+
+        if rm == 0 && rnd_bits == (1 << 13) {
+            a_mant &= !1u128;
+        }
+        if a_mant > r_max as u128 {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i32;
+        }
+        r = a_mant as u32;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_i32(a: u128, rm: u32, pfflags: *mut u32) -> i32 {
+    internal_cvt_sf128_i32(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_sf128_i64` · softfp_template_icvt.h:110-115 · chunk 3457 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int64_t cvt_sf128_i64(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i64(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3457 {
+// Port of cvt_sf128_i64 (softfp_template_icvt.h lines 110-115).
+// The C function forwards to the file-static internal_cvt_sf128_i64 with
+// is_unsigned = FALSE; that static helper has no linker symbol, so its logic
+// (specialised for the 128-bit float -> 64-bit signed integer case) is
+// reproduced here.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// static uint128_t rshift_rnd128(uint128_t a, int d)
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let du = d as u32;
+            let mask: u128 = (1u128 << du) - 1;
+            a = (a >> du) | (((a & mask) != 0) as u128);
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_i64(a: u128, rm: c_int, pfflags: *mut u32) -> i64 {
+    // internal_cvt_sf128_i64(a, rm, pfflags, FALSE)
+    let mut a_sign: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u128;
+    let r_max: u64;
+
+    a_sign = (a >> 127) as u32;
+    a_exp = ((a >> 112) & 0x7fff) as i32;
+    a_mant = a & ((1u128 << 112) - 1);
+    if a_exp == 0x7fff && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= 14; // (128 - 2) - 112
+    a_exp = a_exp - 16383 - 112; // ((1 << 15) - 1) / 2 == 16383
+
+    // is_unsigned == FALSE
+    r_max = (1u64 << 63) - ((a_sign ^ 1) as u64);
+
+    let mut r: u64;
+
+    if a_exp >= 0 {
+        // The non-overflow branch requires a_exp <= (64 - 1 - 112) == -49,
+        // which can never hold while a_exp >= 0, so this is always overflow.
+        if a_exp <= (64 - 1 - 112) {
+            r = ((a_mant >> 14) as u64) << a_exp;
+            if r > r_max {
+                unsafe {
+                    *pfflags |= FFLAG_INVALID;
+                }
+                return r_max as i64;
+            }
+        } else {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        let addend: u128 = match rm {
+            RM_RNE | RM_RMM => 1u128 << (14 - 1),
+            RM_RTZ => 0,
+            _ => {
+                // RM_RDN, RM_RUP and anything else
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u128 << 14) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u128 << 14) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend) >> 14;
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (14 - 1)) {
+            a_mant &= !1u128;
+        }
+        if a_mant > (r_max as u128) {
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+        r = a_mant as u64;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = 0u64.wrapping_sub(r);
+    }
+    r as i64
+}
+}
+
+// ── `cvt_sf128_i128` · softfp_template_icvt.h:110-115 · chunk 3479 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     int128_t cvt_sf128_i128(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i128(a, rm,
+//                                                                         pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3479 {
+// Port of cvt_sf128_i128 (softfp_template_icvt.h), with the static helper
+// internal_cvt_sf128_i128 (is_unsigned == FALSE) and rshift_rnd128 inlined.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    if d != 0 {
+        if d >= 128 {
+            if a != 0 {
+                1
+            } else {
+                0
+            }
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            (a >> (d as u32)) | (((a & mask) != 0) as u128)
+        }
+    } else {
+        a
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_i128(a: u128, rm: c_int, pfflags: *mut u32) -> i128 {
+    unsafe {
+        let mut a_sign: u32 = (a >> 127) as u32;
+        let mut a_exp: i32 = ((a >> 112) & 0x7fff) as i32;
+        let mut a_mant: u128 = a & ((1u128 << 112) - 1);
+
+        if a_exp == 0x7fff && a_mant != 0 {
+            a_sign = 0;
+        }
+        if a_exp == 0 {
+            a_exp = 1;
+        } else {
+            a_mant |= 1u128 << 112;
+        }
+        a_mant <<= 14;
+        a_exp = a_exp - 16383 - 112;
+
+        // is_unsigned == FALSE
+        let r_max: u128 = (1u128 << 127) - ((a_sign ^ 1) as u128);
+
+        let mut r: u128;
+
+        if a_exp >= 0 {
+            if a_exp <= 15 {
+                r = (a_mant >> 14).wrapping_shl(a_exp as u32);
+                if r > r_max {
+                    *pfflags |= 1 << 4;
+                    return r_max as i128;
+                }
+            } else {
+                *pfflags |= 1 << 4;
+                return r_max as i128;
+            }
+        } else {
+            a_mant = rshift_rnd128(a_mant, a_exp.wrapping_neg());
+
+            let addend: u32 = match rm {
+                RM_RNE | RM_RMM => 1 << 13,
+                RM_RTZ => 0,
+                _ => {
+                    // default: RM_RDN, RM_RUP
+                    if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                        (1 << 14) - 1
+                    } else {
+                        0
+                    }
+                }
+            };
+
+            let rnd_bits: u32 = (a_mant & ((1u128 << 14) - 1)) as u32;
+            a_mant = (a_mant + (addend as u128)) >> 14;
+
+            if rm == RM_RNE && rnd_bits == (1 << 13) {
+                a_mant &= !1u128;
+            }
+            if a_mant > r_max {
+                *pfflags |= 1 << 4;
+                return r_max as i128;
+            }
+            r = a_mant;
+            if rnd_bits != 0 {
+                *pfflags |= 1 << 0;
+            }
+        }
+
+        if a_sign != 0 {
+            r = r.wrapping_neg();
+        }
+        r as i128
+    }
+}
+}
+
 // ── `return internal_cvt_sf32_i32(a, rm, pfflags, FALSE);` · softfp_template_icvt.h:113-114 · chunk 3304 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -3820,6 +6698,1097 @@ pub extern "C" fn cvt_sf128_i128__part3480(a: u128, rm: c_int, pfflags: *mut u32
         r = r.wrapping_neg();
     }
     r as i128
+}
+}
+
+// ── `cvt_sf32_u32` · softfp_template_icvt.h:117-122 · chunk 3305 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_sf32_u32(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i32 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3305 {
+// Port of cvt_sf32_u32 (softfp_template_icvt.h), together with the static
+// helpers it uses (internal_cvt_sf32_i32 with is_unsigned = TRUE and
+// rshift_rnd32), which have no linker symbols of their own.
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values (C enum -> int).
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+
+#[inline]
+fn rshift_rnd32(mut a: u32, d: i32) -> u32 {
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u32 = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+unsafe fn internal_cvt_sf32_i32(
+    a: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: bool,
+) -> i32 {
+    let mut a_sign: u32 = a >> (32 - 1);
+    let mut a_exp: i32 = ((a >> 23) & ((1i32 << 8) - 1).unsigned_abs()) as i32;
+    let mut a_mant: u32 = a & ((1u32 << 23) - 1);
+
+    if a_exp == ((1 << 8) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= (32 - 2) - 23;
+    a_exp = a_exp - (((1 << 8) - 1) / 2) - 23;
+
+    let r_max: u32 = if is_unsigned {
+        a_sign.wrapping_sub(1)
+    } else {
+        (1u32 << (32 - 1)).wrapping_sub(a_sign ^ 1)
+    };
+
+    let mut r: u32;
+    if a_exp >= 0 {
+        if a_exp <= (32 - 1 - 23) {
+            r = (a_mant >> ((32 - 2) - 23)) << (a_exp as u32);
+            if r > r_max {
+                // overflow:
+                *pfflags |= 1 << 4;
+                return r_max as i32;
+            }
+        } else {
+            // overflow:
+            *pfflags |= 1 << 4;
+            return r_max as i32;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        let addend: u32 = if rm == RM_RNE || rm == 4 {
+            // RM_RNE, RM_RMM
+            1u32 << (((32 - 2) - 23) - 1)
+        } else if rm == RM_RTZ {
+            0
+        } else {
+            // default: RM_RDN, RM_RUP
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << ((32 - 2) - 23)) - 1
+            } else {
+                0
+            }
+        };
+
+        let rnd_bits: u32 = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+            a_mant &= !1u32;
+        }
+        if a_mant > r_max {
+            // overflow:
+            *pfflags |= 1 << 4;
+            return r_max as i32;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            *pfflags |= 1 << 0;
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_sf32_u32(a: u32, rm: c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_sf32_i32(a, rm, pfflags, true) as u32
+}
+}
+
+// ── `cvt_sf32_u64` · softfp_template_icvt.h:117-122 · chunk 3327 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_sf32_u64(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i64 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3327 {
+// Port of softfloat-style helper:
+//   uint64_t cvt_sf32_u64(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags)
+// which simply forwards to the static internal_cvt_sf32_i64(a, rm, pfflags, TRUE).
+
+use core::ffi::{c_int, c_uint};
+
+// static uint32_t rshift_rnd32(uint32_t a, int d)
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u32 = (1u32 << (d as u32)).wrapping_sub(1);
+            a = (a >> (d as u32)) | if (a & mask) != 0 { 1 } else { 0 };
+        }
+    }
+    a
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf32_u64(a: c_uint, rm: c_int, pfflags: *mut c_uint) -> u64 {
+    let a: u32 = a;
+    let mut a_sign: u32 = a >> 31;
+    let mut a_exp: i32 = ((a >> 23) & 0xff) as i32;
+    let mut a_mant: u32 = a & 0x007f_ffff;
+
+    if a_exp == 0xff && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= 7; // (32 - 2) - 23
+    a_exp = a_exp - 127 - 23; // ((1 << 8) - 1) / 2 == 127
+
+    // is_unsigned == TRUE
+    let r_max: u64 = (a_sign as u64).wrapping_sub(1);
+
+    let mut r: u64;
+
+    if a_exp >= 0 {
+        if a_exp <= 40 {
+            r = ((a_mant >> 7) as u64) << (a_exp as u32);
+            if r > r_max {
+                // overflow:
+                unsafe {
+                    *pfflags |= 1u32 << 4;
+                }
+                return r_max;
+            }
+        } else {
+            unsafe {
+                *pfflags |= 1u32 << 4;
+            }
+            return r_max;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 | 4 => 1u32 << 6, // RM_RNE, RM_RMM
+            1 => 0,             // RM_RTZ
+            _ => {
+                // RM_RDN, RM_RUP, default
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << 7) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = a_mant & ((1u32 << 7) - 1);
+        a_mant = a_mant.wrapping_add(addend) >> 7;
+
+        if rm == 0 && rnd_bits == (1u32 << 6) {
+            a_mant &= !1u32;
+        }
+        if (a_mant as u64) > r_max {
+            unsafe {
+                *pfflags |= 1u32 << 4;
+            }
+            return r_max;
+        }
+        r = a_mant as u64;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1u32 << 0;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+}
+
+// ── `cvt_sf32_u128` · softfp_template_icvt.h:117-122 · chunk 3349 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_sf32_u128(uint32_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf32_i128 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3349 {
+// Port of uint128_t cvt_sf32_u128(uint32_t a, RoundingModeEnum rm, uint32_t *pfflags)
+// which forwards to the static internal_cvt_sf32_i128(a, rm, pfflags, TRUE).
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn rshift_rnd32(mut a: u32, d: i32) -> u32 {
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+unsafe fn internal_cvt_sf32_i128(
+    a: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: bool,
+) -> u128 {
+    let mut a_sign: u32 = a >> (32 - 1);
+    let mut a_exp: i32 = ((a >> 23) & ((1u32 << 8) - 1)) as i32;
+    let mut a_mant: u32 = a & ((1u32 << 23) - 1);
+
+    if a_exp == ((1i32 << 8) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u32 << 23;
+    }
+    a_mant <<= (32 - 2) - 23;
+    a_exp = a_exp - ((1i32 << 8) - 1) / 2 - 23;
+
+    let r_max: u128;
+    if is_unsigned {
+        r_max = (a_sign as u128).wrapping_sub(1);
+    } else {
+        r_max = (1u128 << (128 - 1)) - ((a_sign ^ 1) as u128);
+    }
+
+    let mut r: u128;
+
+    if a_exp >= 0 {
+        if a_exp <= 128 - 1 - 23 {
+            r = ((a_mant >> ((32 - 2) - 23)) as u128) << (a_exp as u32);
+            if r > r_max {
+                *pfflags |= 1 << 4;
+                return r_max;
+            }
+        } else {
+            *pfflags |= 1 << 4;
+            return r_max;
+        }
+    } else {
+        a_mant = rshift_rnd32(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            RM_RNE | RM_RMM => 1u32 << (((32 - 2) - 23) - 1),
+            RM_RTZ => 0,
+            _ => {
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    (1u32 << ((32 - 2) - 23)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+            a_mant &= !1u32;
+        }
+        if (a_mant as u128) > r_max {
+            *pfflags |= 1 << 4;
+            return r_max;
+        }
+        r = a_mant as u128;
+        if rnd_bits != 0 {
+            *pfflags |= 1 << 0;
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_sf32_u128(a: u32, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_sf32_i128(a, rm, pfflags, true)
+}
+}
+
+// ── `cvt_sf64_u32` · softfp_template_icvt.h:117-122 · chunk 3371 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_sf64_u32(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i32 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3371 {
+// Port of cvt_sf64_u32 (softfp_template_icvt.h lines 117-122).
+// The static helper internal_cvt_sf64_i32 (lines 4891-4961 of the preprocessed
+// translation unit) has no linker symbol, so its logic is inlined here.
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+#[inline]
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            (a != 0) as u64
+        } else {
+            let mask = (1u64 << (d as u32)) - 1;
+            (a >> (d as u32)) | ((a & mask) != 0) as u64
+        }
+    } else {
+        a
+    }
+}
+
+// static int32_t internal_cvt_sf64_i32(uint64_t a, RoundingModeEnum rm,
+//                                      uint32_t *pfflags, BOOL is_unsigned)
+#[inline]
+unsafe fn internal_cvt_sf64_i32(
+    a: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> i32 {
+    // 64 - 2 - 52 == 10 for sfloat64 -> 32 bit integer conversions
+    let mut a_sign: u32 = (a >> 63) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1u64 << 11) - 1)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant <<= (64 - 2) - 52;
+    a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+
+    let r_max: u32 = if is_unsigned != 0 {
+        (a_sign as u32).wrapping_sub(1)
+    } else {
+        (1u32 << (32 - 1)) - (a_sign ^ 1)
+    };
+
+    let mut r: u32;
+
+    if a_exp >= 0 {
+        if a_exp <= (32 - 1 - 52) {
+            r = ((a_mant >> ((64 - 2) - 52)) as u32).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                *pfflags |= 1 << 4;
+                return r_max as i32;
+            }
+        } else {
+            *pfflags |= 1 << 4;
+            return r_max as i32;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            RM_RNE | RM_RMM => 1u32 << (((64 - 2) - 52) - 1),
+            RM_RTZ => 0,
+            _ => {
+                // RM_RDN, RM_RUP and the C default case
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << ((64 - 2) - 52)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & (((1u64 << ((64 - 2) - 52)) - 1) as u64)) as u32;
+        a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if a_mant > (r_max as u64) {
+            *pfflags |= 1 << 4;
+            return r_max as i32;
+        }
+        r = a_mant as u32;
+        if rnd_bits != 0 {
+            *pfflags |= 1 << 0;
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i32
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_sf64_u32(a: u64, rm: c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_sf64_i32(a, rm, pfflags, 1) as u32
+}
+}
+
+// ── `cvt_sf64_u64` · softfp_template_icvt.h:117-122 · chunk 3393 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_sf64_u64(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i64 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3393 {
+// Port of `cvt_sf64_u64` (softfp_template_icvt.h) and of the static helper
+// `internal_cvt_sf64_i64` it forwards to, specialized for is_unsigned = TRUE.
+
+use core::ffi::c_int;
+
+// F_SIZE = 64, ICVT_SIZE = 64
+const MANT_SHIFT: i32 = (64 - 2) - 52; // 10
+const MANT_BITS: u32 = 52;
+
+#[inline]
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u64 = (1u64 << d) - 1;
+            a = (a >> d) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+fn internal_cvt_sf64_i64(a: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> MANT_BITS) & ((1u64 << 11) - 1)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << MANT_BITS) - 1);
+
+    if a_exp == ((1i32 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << MANT_BITS;
+    }
+    a_mant <<= MANT_SHIFT as u32;
+    a_exp = a_exp - (((1i32 << 11) - 1) / 2) - 52;
+
+    // is_unsigned == TRUE
+    let r_max: u64 = (a_sign as u64).wrapping_sub(1);
+
+    let mut r: u64;
+
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - 52) {
+            r = (a_mant >> MANT_SHIFT as u32) << (a_exp as u32);
+            if r > r_max {
+                // overflow:
+                unsafe {
+                    *pfflags |= 1 << 4;
+                }
+                return r_max;
+            }
+        } else {
+            // overflow:
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            // RM_RNE, RM_RMM
+            0 | 4 => 1u32 << (MANT_SHIFT - 1),
+            // RM_RTZ
+            1 => 0,
+            // default: RM_RDN, RM_RUP
+            _ => {
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    (1u32 << MANT_SHIFT) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u64 << MANT_SHIFT) - 1)) as u32;
+        a_mant = (a_mant.wrapping_add(addend as u64)) >> (MANT_SHIFT as u32);
+
+        if rm == 0 && rnd_bits == (1u32 << (MANT_SHIFT - 1)) {
+            a_mant &= !1u64;
+        }
+        if a_mant > r_max {
+            // overflow:
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 0;
+            }
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf64_u64(a: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    internal_cvt_sf64_i64(a, rm, pfflags)
+}
+}
+
+// ── `cvt_sf64_u128` · softfp_template_icvt.h:117-122 · chunk 3415 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_sf64_u128(uint64_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf64_i128 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3415 {
+// Port of softfp_template_icvt.h cvt_sf64_u128, which is a thin wrapper around
+// the static helper internal_cvt_sf64_i128(a, rm, pfflags, TRUE).  The helper has
+// no linker symbol, so its logic (with is_unsigned = TRUE) is inlined here.
+
+use core::ffi::c_int;
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+fn rshift_rnd64(mut a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask = (1u64 << d) - 1;
+            a = (a >> d) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+// static int128_t internal_cvt_sf64_i128(..., BOOL is_unsigned) with is_unsigned == TRUE
+unsafe fn internal_cvt_sf64_i128_u(a: u64, rm: c_int, pfflags: *mut u32) -> u128 {
+    // F_SIZE = 64, so F_NBITS = 11 and F_MANT_SIZE = 52.
+    let mut a_sign: u32 = (a >> (64 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 52) & ((1 << 11) - 1)) as i32;
+    let mut a_mant: u64 = a & ((1u64 << 52) - 1);
+
+    if a_exp == ((1 << 11) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u64 << 52;
+    }
+    a_mant <<= (64 - 2) - 52;
+    a_exp = a_exp - (((1 << 11) - 1) / 2) - 52;
+
+    // is_unsigned == TRUE
+    let r_max: u128 = (a_sign as u128).wrapping_sub(1);
+
+    let mut r: u128;
+    if a_exp >= 0 {
+        if a_exp <= (128 - 1 - 52) {
+            r = ((a_mant >> ((64 - 2) - 52)) as u128) << (a_exp as u32);
+            if r > r_max {
+                // goto overflow
+                unsafe { *pfflags |= 1 << 4 };
+                return r_max;
+            }
+        } else {
+            // overflow:
+            unsafe { *pfflags |= 1 << 4 };
+            return r_max;
+        }
+    } else {
+        a_mant = rshift_rnd64(a_mant, -a_exp);
+
+        let addend: u64 = match rm {
+            0 | 4 => 1u64 << (((64 - 2) - 52) - 1), // RM_RNE, RM_RMM
+            1 => 0,                                 // RM_RTZ
+            _ => {
+                // default: RM_RDN, RM_RUP
+                if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                    (1u64 << ((64 - 2) - 52)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+        a_mant = a_mant.wrapping_add(addend) >> ((64 - 2) - 52);
+
+        if rm == 0 && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+            a_mant &= !1u64;
+        }
+        if (a_mant as u128) > r_max {
+            // goto overflow
+            unsafe { *pfflags |= 1 << 4 };
+            return r_max;
+        }
+        r = a_mant as u128;
+        if rnd_bits != 0 {
+            unsafe { *pfflags |= 1 << 0 };
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_sf64_u128(a: u64, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_sf64_i128_u(a, rm, pfflags)
+}
+}
+
+// ── `cvt_sf128_u32` · softfp_template_icvt.h:117-122 · chunk 3437 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_sf128_u32(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i32 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3437 {
+// Port of softfp_template_icvt.h: cvt_sf128_u32().
+//
+// The C version forwards to the file-static helper
+// internal_cvt_sf128_i32(a, rm, pfflags, TRUE).  A static C function has no
+// linker symbol, so the helper logic is reproduced here with is_unsigned = TRUE.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+// SOFTFLOAT_EXP_BITS = 15, SOFTFLOAT_FRAC_BITS = 112 for sf128.
+const EXP_MAX: i32 = (1 << 15) - 1; // 0x7fff
+const EXP_BIAS: i32 = ((1 << 15) - 1) / 2; // 16383
+const FRAC_BITS: i32 = 112;
+const GUARD: i32 = (128 - 2) - 112; // 14, number of extra low bits
+
+// static uint128_t rshift_rnd128(uint128_t a, int d)
+#[inline]
+fn rshift_rnd128(a: u128, d: c_int) -> u128 {
+    if d != 0 {
+        if d >= 128 {
+            (a != 0) as u128
+        } else {
+            let mask = (1u128 << d) - 1;
+            (a >> d) | (((a & mask) != 0) as u128)
+        }
+    } else {
+        a
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_u32(a: u128, rm: c_int, pfflags: *mut u32) -> u32 {
+    let mut a_sign: u32 = (a >> (128 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 112) & ((1u128 << 15) - 1)) as i32;
+    let mut a_mant: u128 = a & ((1u128 << 112) - 1);
+
+    if a_exp == EXP_MAX && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= GUARD as u32;
+    a_exp = a_exp - EXP_BIAS - 112;
+
+    // is_unsigned == TRUE
+    let r_max: u32 = a_sign.wrapping_sub(1);
+
+    if a_exp >= 0 {
+        // The C code only stays on the non-overflow path when
+        // a_exp <= (32 - 1 - 112) == -81, which cannot happen here, so control
+        // always reaches the `overflow` label.
+        unsafe {
+            *pfflags |= FFLAG_INVALID;
+        }
+        return r_max;
+    }
+
+    a_mant = rshift_rnd128(a_mant, -a_exp);
+
+    let addend: u32 = match rm {
+        RM_RNE | RM_RMM => 1u32 << (GUARD - 1),
+        RM_RTZ => 0,
+        _ => {
+            // RM_RDN / RM_RUP and anything else
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                (1u32 << GUARD) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let rnd_bits: u32 = (a_mant & ((1u128 << GUARD) - 1)) as u32;
+    a_mant = a_mant.wrapping_add(addend as u128) >> GUARD;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (GUARD - 1)) {
+        a_mant &= !1u128;
+    }
+    if a_mant > r_max as u128 {
+        unsafe {
+            *pfflags |= FFLAG_INVALID;
+        }
+        return r_max;
+    }
+    let mut r: u32 = a_mant as u32;
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+}
+
+// ── `cvt_sf128_u64` · softfp_template_icvt.h:117-122 · chunk 3459 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_sf128_u64(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i64 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3459 {
+// Port of cvt_sf128_u64 (softfp_template_icvt.h).
+// The C wrapper only calls the static helper internal_cvt_sf128_i64 with
+// is_unsigned = TRUE, so that helper (and its static helper rshift_rnd128)
+// are inlined here as private Rust functions.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+const TRUE: c_int = 1;
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_INVALID: u32 = 1 << 4;
+
+fn rshift_rnd128(a: u128, d: c_int) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let shift = d as u32;
+            let mask: u128 = (1u128 << shift) - 1;
+            a = (a >> shift) | ((a & mask != 0) as u128);
+        }
+    }
+    a
+}
+
+fn internal_cvt_sf128_i64(a: u128, rm: c_int, pfflags: *mut u32, is_unsigned: c_int) -> i64 {
+    let mut a_sign: u32;
+    let mut a_exp: i32;
+    let mut a_mant: u128;
+    let mut r: u64;
+    let r_max: u64;
+    let mut addend: u32;
+    let mut rnd_bits: u32;
+
+    a_sign = (a >> (128 - 1)) as u32;
+    a_exp = ((a >> 112) & ((1i32 << 15) - 1) as u128) as i32;
+    a_mant = a & ((1u128 << 112) - 1);
+    if a_exp == (1 << 15) - 1 && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= (128 - 2) - 112;
+    a_exp = a_exp - (((1i32 << 15) - 1) / 2) - 112;
+
+    if is_unsigned != 0 {
+        r_max = (a_sign as u64).wrapping_sub(1);
+    } else {
+        r_max = (1u64 << (64 - 1)) - ((a_sign ^ 1) as u64);
+    }
+
+    if a_exp >= 0 {
+        if a_exp <= (64 - 1 - 112) {
+            r = ((a_mant >> ((128 - 2) - 112)) as u64).wrapping_shl(a_exp as u32);
+            if (r as u128) > (r_max as u128) {
+                // overflow:
+                unsafe {
+                    *pfflags |= FFLAG_INVALID;
+                }
+                return r_max as i64;
+            }
+        } else {
+            // overflow:
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        match rm {
+            RM_RNE | RM_RMM => {
+                addend = 1u32 << (((128 - 2) - 112) - 1);
+            }
+            RM_RTZ => {
+                addend = 0;
+            }
+            _ => {
+                if (a_sign as i32 ^ (rm & 1)) != 0 {
+                    addend = (1u32 << ((128 - 2) - 112)) - 1;
+                } else {
+                    addend = 0;
+                }
+            }
+        }
+
+        rnd_bits = (a_mant & ((1u128 << ((128 - 2) - 112)) - 1)) as u32;
+        a_mant = (a_mant + addend as u128) >> ((128 - 2) - 112);
+
+        if rm == RM_RNE && rnd_bits == (1u32 << (((128 - 2) - 112) - 1)) {
+            a_mant &= !1u128;
+        }
+        if a_mant > r_max as u128 {
+            // overflow:
+            unsafe {
+                *pfflags |= FFLAG_INVALID;
+            }
+            return r_max as i64;
+        }
+        r = a_mant as u64;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_INEXACT;
+            }
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r as i64
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_u64(a: u128, rm: c_int, pfflags: *mut u32) -> u64 {
+    internal_cvt_sf128_i64(a, rm, pfflags, TRUE) as u64
+}
+}
+
+// ── `cvt_sf128_u128` · softfp_template_icvt.h:117-122 · chunk 3481 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_sf128_u128(uint128_t a, RoundingModeEnum rm,
+//                                                               uint32_t *pfflags)
+//     {
+//         return internal_cvt_sf128_i128 (a, rm,
+//                                                                          pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3481 {
+// Port of softfp_template_icvt.h: cvt_sf128_u128
+// The C version calls the file-static helper internal_cvt_sf128_i128 with
+// is_unsigned = TRUE, plus the file-static helper rshift_rnd128.
+// Both statics are inlined here as private Rust functions.
+//
+// RoundingModeEnum (C enum, int-sized):
+//   RM_RNE = 0, RM_RTZ = 1, RM_RDN = 2, RM_RUP = 3, RM_RMM = 4
+// FFLAG_INEXACT = (1 << 0), FFLAG_INVALID = (1 << 4)
+
+use core::ffi::c_int;
+
+// d >= 0 here (called with -a_exp where a_exp < 0)
+fn rshift_rnd128(a: u128, d: c_int) -> u128 {
+    let mut r = a;
+    if d != 0 {
+        if d >= 128 {
+            r = if a != 0 { 1 } else { 0 };
+        } else {
+            let sh = d as u32;
+            let mask: u128 = (1u128 << sh) - 1;
+            r = (a >> sh) | if (a & mask) != 0 { 1 } else { 0 };
+        }
+    }
+    r
+}
+
+fn internal_cvt_sf128_i128(a: u128, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> u128 {
+    let mut a_sign: u32 = (a >> (128 - 1)) as u32;
+    let mut a_exp: i32 = ((a >> 112) & ((1u128 << 15) - 1)) as i32;
+    let mut a_mant: u128 = a & ((1u128 << 112) - 1);
+
+    if a_exp == ((1 << 15) - 1) && a_mant != 0 {
+        a_sign = 0;
+    }
+    if a_exp == 0 {
+        a_exp = 1;
+    } else {
+        a_mant |= 1u128 << 112;
+    }
+    a_mant <<= (128 - 2) - 112;
+    a_exp = a_exp - (((1 << 15) - 1) / 2) - 112;
+
+    let r_max: u128 = if is_unsigned {
+        (a_sign as u128).wrapping_sub(1)
+    } else {
+        (1u128 << (128 - 1)).wrapping_sub((a_sign ^ 1) as u128)
+    };
+
+    let mut r: u128;
+
+    if a_exp >= 0 {
+        if a_exp <= (128 - 1 - 112) {
+            r = (a_mant >> ((128 - 2) - 112)).wrapping_shl(a_exp as u32);
+            if r > r_max {
+                unsafe {
+                    *pfflags |= 1 << 4;
+                }
+                return r_max;
+            }
+        } else {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max;
+        }
+    } else {
+        a_mant = rshift_rnd128(a_mant, -a_exp);
+
+        let addend: u32 = match rm {
+            0 | 4 => 1 << (((128 - 2) - 112) - 1),
+            1 => 0,
+            _ => {
+                // RM_RDN, RM_RUP and the C default label share this code
+                if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                    (1u32 << ((128 - 2) - 112)) - 1
+                } else {
+                    0
+                }
+            }
+        };
+
+        let rnd_bits: u32 = (a_mant & ((1u128 << ((128 - 2) - 112)) - 1)) as u32;
+        a_mant = (a_mant.wrapping_add(addend as u128)) >> ((128 - 2) - 112);
+
+        if rm == 0 && rnd_bits == (1u32 << (((128 - 2) - 112) - 1)) {
+            a_mant &= !1u128;
+        }
+        if a_mant > r_max {
+            unsafe {
+                *pfflags |= 1 << 4;
+            }
+            return r_max;
+        }
+        r = a_mant;
+        if rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 0;
+            }
+        }
+    }
+    if a_sign != 0 {
+        r = r.wrapping_neg();
+    }
+    r
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_sf128_u128(a: u128, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_sf128_i128(a, rm, pfflags, true)
 }
 }
 
@@ -4907,6 +8876,1856 @@ pub extern "C" fn cvt_sf128_u128__part3482(a: u128, rm: c_int, pfflags: *mut u32
     }
     r
 }
+}
+
+// ── `internal_cvt_i32_sf32` · softfp_template_icvt.h:125-153 · chunk 3307 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t internal_cvt_i32_sf32(int32_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint32_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint32_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 8) - 1) / 2) + 32 - 2;
+//     
+//         l = 32 - clz32(r) - (32 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint32_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3307 {
+// Port of static uint32_t internal_cvt_i32_sf32(int32_t a, RoundingModeEnum rm,
+//                                              uint32_t *pfflags, BOOL is_unsigned)
+// plus the static helpers it needs (clz32, normalize_sf32, roundpack_sf32,
+// rshift_rnd32, pack_sf32) which have no linker symbols in the C program.
+
+#![allow(non_snake_case, non_upper_case_globals, dead_code)]
+
+use core::ffi::c_int;
+
+type BOOL = c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask: u32 = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: i32, a_mant: u32) -> u32 {
+    ((a_sign as u32) << 31) | ((a_exp as u32) << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+fn roundpack_sf32(
+    a_sign: u32,
+    a_exp: i32,
+    a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let diff: i32;
+    let addend: u32;
+    let mut rnd_bits: u32;
+    let mut a_exp = a_exp;
+    let mut a_mant = a_mant;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (((32 - 2) - 23) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP and the default case
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = (1u32 << ((32 - 2) - 23)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal: BOOL = if a_exp < 0
+            || a_mant.wrapping_add(addend) < (1u32 << (32 - 1))
+        {
+            1
+        } else {
+            0
+        };
+        diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal != 0 && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf32(a_sign, a_exp, a_mant)
+}
+
+fn normalize_sf32(a_sign: u32, a_exp: i32, a_mant: u32, rm: c_int, pfflags: *mut u32) -> u32 {
+    let mut a_exp = a_exp;
+    let mut a_mant = a_mant;
+    let shift: i32 = clz32(a_mant) - (32 - 1 - (32 - 2));
+    a_exp = a_exp.wrapping_sub(shift);
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i32_sf32(
+    a: i32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: BOOL,
+) -> u32 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u32;
+    let mut r: u32;
+    let mut mask: u32;
+    let l: i32;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    a_exp = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    l = 32 - clz32(r) - (32 - 1);
+    if l > 0 {
+        mask = r & ((1u32.wrapping_shl(l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u32;
+        a_exp += l;
+    }
+    a_mant = r;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `internal_cvt_i64_sf32` · softfp_template_icvt.h:125-153 · chunk 3329 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t internal_cvt_i64_sf32(int64_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint64_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint64_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 8) - 1) / 2) + 32 - 2;
+//     
+//         l = 64 - clz64(r) - (32 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint64_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3329 {
+// Rust port of the static C function `internal_cvt_i64_sf32` from
+// softfp_template_icvt.h (F_SIZE = 32, ICVT_SIZE = 64).
+//
+// The C helpers normalize_sf32 / roundpack_sf32 / rshift_rnd32 / clz32 /
+// pack_sf32 are `static` in the C translation unit (no linker symbols), so
+// their logic is reimplemented here as private Rust functions with identical
+// semantics.
+
+use core::ffi::c_int;
+
+const EXP_MASK: u32 = (1u32 << 8) - 1; // 255
+const MANT_MASK: u32 = (1u32 << 23) - 1; // 0x007f_ffff
+const MANT_SIZE: u32 = 23;
+const RND_SIZE: u32 = (32 - 2) - MANT_SIZE; // 7
+
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_UNDERFLOW: u32 = 1 << 1;
+const FFLAG_OVERFLOW: u32 = 1 << 2;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << (32 - 1)) | (a_exp << MANT_SIZE) | (a_mant & MANT_MASK)
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask: u32 = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+fn roundpack_sf32(
+    a_sign: u32,
+    a_exp: c_int,
+    a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp;
+    let mut a_mant = a_mant;
+    let addend: u32;
+    let mut rnd_bits: u32;
+    let mut diff: c_int;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (RND_SIZE - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP (and any other value)
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = (1u32 << RND_SIZE) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    // potentially subnormal
+    if a_exp <= 0 {
+        // Note: the underflow flag is set if the rounded result is
+        // subnormal and inexact.
+        let is_subnormal: bool = a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << 31);
+        diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << RND_SIZE) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_UNDERFLOW;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << RND_SIZE) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> RND_SIZE;
+    // half way: select even result
+    if rm == RM_RNE && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+        a_mant &= !1u32;
+    }
+    a_exp += (a_mant >> (MANT_SIZE + 1)) as c_int;
+    if a_mant <= MANT_MASK {
+        // denormalized or zero
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK as c_int {
+        // overflow
+        if addend == 0 {
+            a_exp = (EXP_MASK as c_int) - 1;
+            a_mant = MANT_MASK;
+        } else {
+            // infinity
+            a_exp = EXP_MASK as c_int;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= FFLAG_OVERFLOW | FFLAG_INEXACT;
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(
+    a_sign: u32,
+    a_exp: c_int,
+    a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let shift: c_int = clz32(a_mant) - (32 - 1 - (32 - 2));
+    // The C code asserts shift >= 0; this always holds for a 32-bit mantissa.
+    let a_exp = if shift >= 0 {
+        a_exp - shift
+    } else {
+        a_exp
+    };
+    let a_mant = if shift >= 0 {
+        a_mant.wrapping_shl(shift as u32)
+    } else {
+        a_mant
+    };
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i64_sf32(
+    a: i64,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u32 {
+    let a_sign: u32;
+    let mut a_exp: c_int;
+    let a_mant: u32;
+    let mut r: u64;
+    let mask: u64;
+    let l: c_int;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    a_exp = ((1 << 8) - 1) / 2 + 32 - 2;
+
+    // need to reduce range before generic float normalization
+    l = 64 - clz64(r) - (32 - 1);
+    if l > 0 {
+        mask = r & ((1u64 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | (if (r & mask) != 0 { 1 } else { 0 });
+        a_exp += l;
+    }
+    a_mant = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `internal_cvt_i128_sf32` · softfp_template_icvt.h:125-153 · chunk 3351 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint32_t internal_cvt_i128_sf32(int128_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint32_t a_mant;
+//         uint128_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint128_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 8) - 1) / 2) + 32 - 2;
+//     
+//         l = 128 - clz128(r) - (32 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint128_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3351 {
+// Port of internal_cvt_i128_sf32 (softfp_template_icvt.h, ICVT_SIZE=128, F_SIZE=32).
+// The helpers clz128/clz32, pack_sf32, roundpack_sf32 and normalize_sf32 are
+// `static` in the C translation unit, so they have no linker symbol and are
+// mirrored here as private Rust functions.
+
+use core::ffi::c_int;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let sh = d as u32;
+            let mask = (1u32 << sh).wrapping_sub(1);
+            a = (a >> sh) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << 31) | (a_exp << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+// FFLAG bits
+const FFLAG_OVERFLOW: u32 = 1 << 2;
+const FFLAG_UNDERFLOW: u32 = 1 << 1;
+const FFLAG_INEXACT: u32 = 1 << 0;
+
+fn roundpack_sf32(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    // RND_SIZE = (32 - 2) - 23 = 7
+    let addend: u32 = match rm {
+        0 | 4 => 1u32 << (7 - 1), // RM_RNE, RM_RMM
+        1 => 0,                   // RM_RTZ
+        _ => {
+            // RM_RDN, RM_RUP (and anything else)
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << 7) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let mut rnd_bits: u32;
+
+    if a_exp <= 0 {
+        let is_subnormal =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << 31);
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << 7) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_UNDERFLOW;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << 7) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> 7;
+
+    // half way: select even result
+    if rm == 0 && rnd_bits == (1u32 << (7 - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= FFLAG_OVERFLOW | FFLAG_INEXACT;
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    // shift = clz(a_mant) - (F_SIZE - 1 - IMANT_SIZE) = clz32(a_mant) - 1
+    let shift: i32 = clz32(a_mant) - (32 - 1 - (32 - 2));
+    // C has assert(shift >= 0) here; use wrapping shifts so a (never expected)
+    // negative shift cannot panic across the FFI boundary.
+    a_exp -= shift;
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i128_sf32(
+    a: i128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u32 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u32;
+    let mut r: u128;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+    a_exp = ((1 << 8) - 1) / 2 + 32 - 2;
+
+    // need to reduce range before generic float normalization
+    let l: i32 = 128 - clz128(r) - (32 - 1);
+    if l > 0 {
+        let sh = l as u32;
+        let mask: u128 = r & (1u128.wrapping_shl(sh)).wrapping_sub(1);
+        r = (r >> sh) | ((r & mask) != 0) as u128;
+        a_exp += l;
+    }
+    a_mant = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `internal_cvt_i32_sf64` · softfp_template_icvt.h:125-153 · chunk 3373 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint64_t internal_cvt_i32_sf64(int32_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint32_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint32_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+//     
+//         l = 32 - clz32(r) - (64 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint32_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3373 {
+// Rust port of softfp_template_icvt.h:internal_cvt_i32_sf64 (ICVT_SIZE=32, F_SIZE=64).
+// normalize_sf64 / roundpack_sf64 / pack_sf64 / rshift_rnd64 are `static` in the C
+// translation unit (no linker symbol), so their logic is reimplemented here.
+
+#![allow(clippy::all)]
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+
+// static inline int clz32(uint32_t a)
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+// static inline int clz64(uint64_t a)
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+// static uint64_t rshift_rnd64(uint64_t a, int d)
+fn rshift_rnd64(a_in: u64, d: i32) -> u64 {
+    let mut a = a_in;
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else if d > 0 {
+            let mask = (1u64.wrapping_shl(d as u32)).wrapping_sub(1);
+            let sticky = if (a & mask) != 0 { 1u64 } else { 0 };
+            a = a.wrapping_shr(d as u32) | sticky;
+        }
+    }
+    a
+}
+
+// static inline uint64_t pack_sf64(uint32_t a_sign, uint32_t a_exp, uint64_t a_mant)
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    (a_sign as u64).wrapping_shl(64 - 1)
+        | (a_exp as u64).wrapping_shl(52)
+        | (a_mant & ((1u64 << 52) - 1))
+}
+
+// static uint64_t roundpack_sf64(uint32_t a_sign, int a_exp, uint64_t a_mant,
+//                                RoundingModeEnum rm, uint32_t *pfflags)
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let mut rnd_bits: u32;
+
+    let addend: u32 = if rm == RM_RNE || rm == 4 {
+        // RM_RMM == 4
+        1u32 << ((64 - 2) - 52 - 1) // 1 << 9
+    } else if rm == RM_RTZ {
+        0
+    } else {
+        // default, RM_RDN, RM_RUP
+        if (a_sign ^ ((rm as u32) & 1)) != 0 {
+            (1u32 << ((64 - 2) - 52)) - 1 // (1 << 10) - 1
+        } else {
+            0
+        }
+    };
+
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0
+            || a_mant.wrapping_add(addend as u64) < (1u64 << (64 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant as u32) & ((1u32 << ((64 - 2) - 52)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant as u32) & ((1u32 << ((64 - 2) - 52)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u64).wrapping_shr((64 - 2) - 52);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (52 + 1)) as i32);
+    if a_mant <= ((1u64 << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = (1u64 << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+// static uint64_t normalize_sf64(uint32_t a_sign, int a_exp, uint64_t a_mant,
+//                                RoundingModeEnum rm, uint32_t *pfflags)
+fn normalize_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let shift: i32 = clz64(a_mant_in) - (64 - 1 - (64 - 2)); // clz64(a_mant) - 1
+    // the C code asserts shift >= 0
+    let sh: u32 = if shift < 0 { 0 } else { shift as u32 };
+    let a_exp: i32 = a_exp_in.wrapping_sub(shift);
+    let a_mant: u64 = a_mant_in.wrapping_shl(sh);
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i32_sf64(
+    a: i32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u64 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u64;
+    let mut r: u32;
+    let mut mask: u32;
+    let l: i32;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = 0u32.wrapping_sub(a as u32);
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+
+    // need to reduce range before generic float normalization
+    l = 32 - clz32(r) - (64 - 1);
+    if l > 0 {
+        let lu: u32 = l as u32;
+        mask = r & (1u32.wrapping_shl(lu)).wrapping_sub(1);
+        let sticky: u32 = if (r & mask) != 0 { 1 } else { 0 };
+        r = r.wrapping_shr(lu) | sticky;
+        a_exp = a_exp.wrapping_add(l);
+    }
+    a_mant = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `internal_cvt_i64_sf64` · softfp_template_icvt.h:125-153 · chunk 3395 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint64_t internal_cvt_i64_sf64(int64_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint64_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint64_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+//     
+//         l = 64 - clz64(r) - (64 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint64_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3395 {
+// Port of internal_cvt_i64_sf64 from softfp_template_icvt.h, together with the
+// static helpers it needs (clz64, pack_sf64, rshift_rnd64, roundpack_sf64,
+// normalize_sf64) which have no linker symbols in the C program.
+
+use core::ffi::{c_int, c_uint};
+
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (64 - 1))
+        | ((a_exp as u64) << 52)
+        | (a_mant & (((1u64) << 52) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask = ((1u64) << d) - 1;
+            a = (a >> d) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+unsafe fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let mut rnd_bits: u32;
+
+    let addend: u32 = match rm {
+        0 | 4 => (1u32) << (((64 - 2) - 52) - 1), // RM_RNE, RM_RMM
+        1 => 0,                                   // RM_RTZ
+        _ => {
+            // default: RM_RDN, RM_RUP and anything else
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                ((1u32) << ((64 - 2) - 52)) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend as u64) < ((1u64) << (64 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & (((1u64) << ((64 - 2) - 52)) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            *pfflags |= 1 << 1;
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & (((1u64) << ((64 - 2) - 52)) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        *pfflags |= 1 << 0;
+    }
+    a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+    if rm == 0 && rnd_bits == ((1u32) << (((64 - 2) - 52) - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp += (a_mant >> (52 + 1)) as i32;
+    if a_mant <= (((1u64) << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = ((1u64) << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        *pfflags |= (1 << 2) | (1 << 0);
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+unsafe fn normalize_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let shift: i32 = clz64(a_mant_in) - (64 - 1 - (64 - 2));
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    a_exp -= shift;
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i64_sf64(
+    a: i64,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u64 {
+    let a_sign: u32;
+    let mut r: u64;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+
+    let mut a_exp: i32 = (((1 << 11) - 1) / 2) + 64 - 2;
+
+    let l: i32 = 64 - clz64(r) - (64 - 1);
+    if l > 0 {
+        let mask: u64 = r & (((1u64) << l) - 1);
+        r = (r >> l) | (if (r & mask) != 0 { 1 } else { 0 });
+        a_exp += l;
+    }
+    let a_mant: u64 = r;
+
+    unsafe { normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags) }
+}
+
+// keep the unused-import checker quiet about c_uint if it ever moves
+#[allow(dead_code)]
+type _UnusedCUint = c_uint;
+}
+
+// ── `internal_cvt_i128_sf64` · softfp_template_icvt.h:125-153 · chunk 3417 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint64_t internal_cvt_i128_sf64(int128_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint64_t a_mant;
+//         uint128_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint128_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+//     
+//         l = 128 - clz128(r) - (64 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint128_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3417 {
+// Port of the static C helper internal_cvt_i128_sf64 (softfp_template_icvt.h).
+// All static helpers it needs (clz128, clz64, pack_sf64, rshift_rnd64,
+// roundpack_sf64, normalize_sf64) have no linker symbol, so their logic is
+// reproduced here as private Rust functions.
+
+use core::ffi::{c_int, c_uint};
+
+#[inline]
+fn clz64(a: u64) -> c_int {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as c_int
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> c_int {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as c_int
+    }
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << 63) | ((a_exp as u64) << 52) | (a_mant & ((1u64 << 52) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: c_int) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let du = d as u32;
+            let mask = (1u64 << du) - 1;
+            a = (a >> du) | if (a & mask) != 0 { 1 } else { 0 };
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: c_int,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+
+    match rm {
+        0 | 4 => {
+            // RM_RNE, RM_RMM
+            addend = 1u32 << 9;
+        }
+        1 => {
+            // RM_RTZ
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP, default
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = (1u32 << 10) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal: c_int = if a_exp < 0
+            || a_mant.wrapping_add(addend as u64) < (1u64 << 63)
+        {
+            1
+        } else {
+            0
+        };
+        let diff = 1i32.wrapping_sub(a_exp);
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & ((1u64 << 10) - 1)) as u32;
+        if is_subnormal != 0 && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u64 << 10) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u64) >> 10;
+
+    if rm == 0 && rnd_bits == (1u32 << 9) {
+        a_mant &= !1u64;
+    }
+
+    a_exp += (a_mant >> 53) as c_int;
+    if a_mant <= ((1u64 << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = (1u64 << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(
+    a_sign: u32,
+    a_exp_in: c_int,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let shift = clz64(a_mant) - 1;
+    // The C code asserts shift >= 0 here; it always holds for its callers.
+    a_exp -= shift;
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i128_sf64(
+    a: i128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u64 {
+    let a_sign: u32;
+    let mut a_exp: c_int;
+    let a_mant: u64;
+    let mut r: u128;
+    let l: c_int;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+    a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+
+    l = 128 - clz128(r) - (64 - 1);
+    if l > 0 {
+        let lu = l as u32;
+        let mask: u128 = r & ((1u128 << lu) - 1);
+        r = (r >> lu) | if (r & mask) != 0 { 1 } else { 0 };
+        a_exp += l;
+    }
+    a_mant = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// Keep the unused-import lint quiet for c_uint without affecting semantics.
+#[allow(dead_code)]
+fn _unused_c_uint(_x: c_uint) {}
+}
+
+// ── `internal_cvt_i32_sf128` · softfp_template_icvt.h:125-153 · chunk 3439 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint128_t internal_cvt_i32_sf128(int32_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint32_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint32_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 15) - 1) / 2) + 128 - 2;
+//     
+//         l = 32 - clz32(r) - (128 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint32_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3439 {
+use core::ffi::{c_int, c_uint};
+
+// RoundingModeEnum values (see original.c typedef enum)
+const RM_RNE: c_uint = 0;
+const RM_RTZ: c_uint = 1;
+const RM_RDN: c_uint = 2;
+const RM_RUP: c_uint = 3;
+const RM_RMM: c_uint = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << 127)
+        | ((a_exp as u128) << 112)
+        | (a_mant & ((1u128 << 112) - 1))
+}
+
+// port of static rshift_rnd128 (no linker symbol in C)
+fn rshift_rnd128(a_in: u128, d: i32) -> u128 {
+    let mut a = a_in;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+// port of static roundpack_sf128 (no linker symbol in C)
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_uint,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let addend: u32;
+    let rnd_bits: u32;
+
+    if rm == RM_RNE || rm == RM_RMM {
+        addend = 1u32 << 13;
+    } else if rm == RM_RTZ {
+        addend = 0;
+    } else {
+        // default: RM_RDN, RM_RUP (and anything else)
+        if (a_sign ^ (rm & 1)) != 0 {
+            addend = (1u32 << 14) - 1;
+        } else {
+            addend = 0;
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || (a_mant + (addend as u128)) < (1u128 << 127);
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & ((1u128 << 14) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u128 << 14) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = (a_mant + (addend as u128)) >> 14;
+
+    if rm == RM_RNE && rnd_bits == (1 << 13) {
+        a_mant &= !1u128;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> 113) as i32);
+    if a_mant <= (1u128 << 112) - 1 {
+        // underflow
+        a_exp = 0;
+    } else if a_exp >= ((1 << 15) - 1) {
+        // overflow
+        if addend == 0 {
+            a_exp = ((1 << 15) - 1) - 1;
+            a_mant = (1u128 << 112) - 1;
+        } else {
+            a_exp = (1 << 15) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+// port of static normalize_sf128 (no linker symbol in C)
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_uint,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let shift: i32 = clz128(a_mant) - 1;
+
+    a_exp = a_exp.wrapping_sub(shift);
+    if shift > 0 {
+        if shift < 128 {
+            a_mant <<= shift as u32;
+        } else {
+            a_mant = 0;
+        }
+    }
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i32_sf128(
+    a: i32,
+    rm: c_uint,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u128 {
+    let a_sign: u32;
+    let mut r: u32;
+    let mut a_exp: i32;
+    let a_mant: u128;
+    let mut l: i32;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    a_exp = ((1i32 << 15) - 1) / 2 + 128 - 2;
+
+    // need to reduce range before generic float normalization
+    l = 32 - clz32(r) - (128 - 1);
+    if l > 0 {
+        let mask: u32 = r & ((1u32 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u32;
+        a_exp += l;
+    }
+    a_mant = r as u128;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `internal_cvt_i64_sf128` · softfp_template_icvt.h:125-153 · chunk 3461 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint128_t internal_cvt_i64_sf128(int64_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint64_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint64_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 15) - 1) / 2) + 128 - 2;
+//     
+//         l = 64 - clz64(r) - (128 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint64_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3461 {
+// Rust port of the file-static C function internal_cvt_i64_sf128
+// (softfp_template_icvt.h).  The helpers it calls (clz64 / clz128 /
+// pack_sf128 / rshift_rnd128 / roundpack_sf128 / normalize_sf128) are
+// `static` in C, so they have no linker symbol and are re-implemented here
+// as private Rust functions with identical semantics.
+
+use core::ffi::c_int;
+
+const MANT_BITS: u32 = 112; // 128 - 2 - 14
+const RND_BITS: u32 = (128 - 2) - 112; // 14
+const EXP_MASK: i32 = (1 << 15) - 1; // 32767
+
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        let ah = (a >> 64) as u64;
+        let al = a as u64;
+        if ah != 0 {
+            ah.leading_zeros() as i32
+        } else {
+            al.leading_zeros() as i32 + 64
+        }
+    }
+}
+
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (128 - 1))
+        | ((a_exp as u128) << MANT_BITS)
+        | (a_mant & ((1u128 << MANT_BITS) - 1))
+}
+
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+unsafe fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+
+    let addend: u32 = match rm {
+        0 | 4 => 1u32 << (RND_BITS - 1), // RM_RNE, RM_RMM
+        1 => 0,                          // RM_RTZ
+        _ => {
+            // RM_RDN, RM_RUP and anything else
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << RND_BITS) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let mut rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || (a_mant + (addend as u128)) < (1u128 << (128 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & ((1u128 << RND_BITS) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            *pfflags |= 1u32 << 1;
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u128 << RND_BITS) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        *pfflags |= 1u32 << 0;
+    }
+    a_mant = (a_mant + (addend as u128)) >> RND_BITS;
+
+    if rm == 0 && rnd_bits == (1u32 << (RND_BITS - 1)) {
+        a_mant &= !1u128;
+    }
+
+    a_exp += (a_mant >> (MANT_BITS + 1)) as i32;
+    if a_mant <= (1u128 << MANT_BITS) - 1 {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = (1u128 << MANT_BITS) - 1;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        *pfflags |= (1u32 << 2) | (1u32 << 0);
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+unsafe fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    // shift = clz128(a_mant) - (128 - 1 - (128 - 2)); it is always >= 0
+    // for the inputs produced below, matching the C assertion.
+    let shift = clz128(a_mant) - (128 - 1 - (128 - 2));
+    a_exp -= shift;
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i64_sf128(
+    a: i64,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u128 {
+    let a_sign: u32;
+    let mut r: u64;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    let mut a_exp: i32 = (((1 << 15) - 1) / 2) + 128 - 2;
+
+    // need to reduce range before generic float normalization
+    let l: i32 = 64 - clz64(r) - (128 - 1);
+    if l > 0 {
+        let mask: u64 = r & ((1u64.wrapping_shl(l as u32)) - 1);
+        r = r.wrapping_shr(l as u32) | (if (r & mask) != 0 { 1 } else { 0 });
+        a_exp += l;
+    }
+    let a_mant: u128 = r as u128;
+    unsafe { normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags) }
+}
+}
+
+// ── `internal_cvt_i128_sf128` · softfp_template_icvt.h:125-153 · chunk 3483 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static uint128_t internal_cvt_i128_sf128(int128_t a,
+//                                                                            RoundingModeEnum rm,
+//                                                                            uint32_t *pfflags,
+//                                                                            BOOL is_unsigned)
+//     {
+//         uint32_t a_sign;
+//         int32_t a_exp;
+//         uint128_t a_mant;
+//         uint128_t r, mask;
+//         int l;
+//     
+//         if (!is_unsigned && a < 0) {
+//             a_sign = 1;
+//             r = -(uint128_t)a;
+//         } else {
+//             a_sign = 0;
+//             r = a;
+//         }
+//         a_exp = (((1 << 15) - 1) / 2) + 128 - 2;
+//     
+//         l = 128 - clz128(r) - (128 - 1);
+//         if (l > 0) {
+//             mask = r & (((uint128_t)1 << l) - 1);
+//             r = (r >> l) | ((r & mask) != 0);
+//             a_exp += l;
+//         }
+//         a_mant = r;
+//         return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3483 {
+// Port of softfp_template_icvt.h: internal_cvt_i128_sf128 (128-bit int -> binary128)
+// The helpers clz128 / rshift_rnd128 / pack_sf128 / roundpack_sf128 / normalize_sf128 are
+// `static` in the C translation unit, so they are re-implemented here as private fns.
+#![allow(dead_code)]
+
+use core::ffi::{c_int, c_uint};
+
+const F_SIZE: i32 = 128; // 128
+const EXP_MASK: i32 = (1 << 15) - 1; // 32767
+const MANT_MASK: u128 = (1u128 << 112) - 1;
+const MANT_RND_BITS: u128 = (1u128 << ((128 - 2) - 112)) - 1; // 14 bits
+const ROUND_ADDEND: u32 = 1u32 << (((128 - 2) - 112) - 1); // 1 << 13
+const RM_RNE: c_int = 0;
+
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask = (1u128 << d) - 1;
+            a = (a >> d) | (((a & mask) != 0) as u128);
+        }
+    }
+    a
+}
+
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (128 - 1)) | ((a_exp as u128) << 112) | (a_mant & MANT_MASK)
+}
+
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+
+    match rm {
+        // RM_RNE
+        0 => addend = ROUND_ADDEND,
+        // RM_RMM
+        4 => addend = ROUND_ADDEND,
+        // RM_RTZ
+        1 => addend = 0,
+        // RM_RDN, RM_RUP, default
+        _ => {
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = ROUND_ADDEND - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0
+            || a_mant.wrapping_add(addend as u128) < (1u128 << (128 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & MANT_RND_BITS) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & MANT_RND_BITS) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> ((128 - 2) - 112);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((128 - 2) - 112) - 1)) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp += (a_mant >> (112 + 1)) as i32;
+    if a_mant <= MANT_MASK {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = MANT_MASK;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let shift: i32 = clz128(a_mant) - (128 - 1 - (128 - 2));
+    // C asserts shift >= 0; keep the operation panic-free regardless.
+    if shift < 0 {
+        return roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags);
+    }
+    a_exp -= shift;
+    if (shift as u32) < 128 {
+        a_mant <<= shift as u32;
+    } else {
+        a_mant = 0;
+    }
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn internal_cvt_i128_sf128(
+    a: i128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u128 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u128;
+    let mut r: u128;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+    a_exp = (EXP_MASK / 2) + F_SIZE - 2;
+    // need to reduce range before generic float normalization
+    let l: i32 = 128 - clz128(r) - (F_SIZE - 1);
+    if l > 0 {
+        let mask: u128 = r & ((1u128 << l) - 1);
+        r = (r >> l) | (((r & mask) != 0) as u128);
+        a_exp += l;
+    }
+    a_mant = r;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// keep the c_uint import used without warnings in case of future edits
+#[allow(unused_imports)]
+use core::ffi::c_ulong as _unused_c_ulong;
+const _: fn() = || {
+    let _x: c_uint = 0;
+};
 }
 
 // ── `if (!is_unsigned && a < 0) … else` · softfp_template_icvt.h:136-142 · chunk 3308 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
@@ -7198,6 +13017,1600 @@ fn normalize_sf128(a_sign: u32, a_exp_in: i32, a_mant_in: u128, rm: i32, pfflags
 }
 }
 
+// ── `cvt_i32_sf32` · softfp_template_icvt.h:155-160 · chunk 3312 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_i32_sf32(int32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf32(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3312 {
+// Port of softfp_template_icvt.h: cvt_i32_sf32 (F_SIZE=32, ICVT_SIZE=32).
+// internal_cvt_i32_sf32 and its helpers (normalize_sf32, roundpack_sf32,
+// rshift_rnd32, clz32, pack_sf32) are `static` in the C translation unit and
+// therefore have no linker symbol: their logic is reproduced here.
+
+#![allow(clippy::all)]
+
+const RM_RNE: i32 = 0;
+const RM_RTZ: i32 = 1;
+const RM_RMM: i32 = 4;
+
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << 31) | (a_exp << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+fn rshift_rnd32(a_in: u32, d: i32) -> u32 {
+    let mut a = a_in;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask = ((1u32) << (d as u32)) - 1;
+            a = (a >> (d as u32)) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+fn roundpack_sf32(a_sign: u32, a_exp_in: i32, a_mant_in: u32, rm: i32, pfflags: *mut u32) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (((32 - 2) - 23) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN (2) and RM_RUP (3)
+            if a_sign ^ ((rm & 1) as u32) != 0 {
+                addend = (1u32 << ((32 - 2) - 23)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << (32 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(a_sign: u32, a_exp_in: i32, a_mant_in: u32, rm: i32, pfflags: *mut u32) -> u32 {
+    // shift = clz32(a_mant) - (32 - 1 - (32 - 2)); C asserts shift >= 0.
+    let shift = clz32(a_mant_in) - (32 - 1 - (32 - 2));
+    let a_exp = a_exp_in.wrapping_sub(shift);
+    let a_mant = a_mant_in.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// Equivalent of internal_cvt_i32_sf32(a, rm, pfflags, FALSE).
+fn internal_cvt_i32_sf32(a: i32, rm: i32, pfflags: *mut u32) -> u32 {
+    let is_unsigned: i32 = 0; // FALSE
+    let a_sign: u32;
+    let mut r: u32;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    let mut a_exp: i32 = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    // l = 32 - clz32(r) - (32 - 1)
+    let l = 1 - clz32(r);
+    if l > 0 {
+        let mask = r & ((1u32 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | (if (r & mask) != 0 { 1 } else { 0 });
+        a_exp += l;
+    }
+    let a_mant = r;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i32_sf32(a: i32, rm: core::ffi::c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_i32_sf32(a, rm as i32, pfflags)
+}
+}
+
+// ── `cvt_i64_sf32` · softfp_template_icvt.h:155-160 · chunk 3334 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_i64_sf32(int64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf32(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3334 {
+// Port of cvt_i64_sf32 (i64 -> binary32) plus the static helper chain
+// internal_cvt_i64_sf32 / normalize_sf32 / roundpack_sf32 / rshift_rnd32,
+// which have internal linkage in the C original.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << (32 - 1)) | (a_exp << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+fn rshift_rnd32(a_in: u32, d: i32) -> u32 {
+    let mut a = a_in;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask = (1u32 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+fn roundpack_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+
+    if rm == RM_RNE || rm == RM_RMM {
+        addend = 1u32 << (((32 - 2) - 23) - 1);
+    } else if rm == 1 {
+        // RM_RTZ
+        addend = 0;
+    } else if (a_sign ^ ((rm as u32) & 1)) != 0 {
+        addend = (1u32 << ((32 - 2) - 23)) - 1;
+    } else {
+        addend = 0;
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << (32 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (23 + 1)) as i32);
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1i32 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1i32 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1i32 << 8) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let shift = clz32(a_mant) - (32 - 1 - (32 - 2));
+    // shift >= 0 is guaranteed (clz32 <= 32)
+    a_exp = a_exp.wrapping_sub(shift);
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i64_sf32(a: i64, rm: c_int, pfflags: *mut u32) -> u32 {
+    // is_unsigned == FALSE for this entry point
+    let a_sign: u32;
+    let mut r: u64;
+
+    if a < 0 {
+        a_sign = 1;
+        r = a.wrapping_neg() as u64;
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+
+    let mut a_exp: i32 = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    let l: i32 = 64 - clz64(r) - (32 - 1);
+    if l > 0 {
+        let mask = r & ((1u64 << l) - 1);
+        r = (r >> l) | ((r & mask) != 0) as u64;
+        a_exp = a_exp.wrapping_add(l);
+    }
+    let a_mant = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i64_sf32(a: i64, rm: c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_i64_sf32(a, rm, pfflags)
+}
+}
+
+// ── `cvt_i128_sf32` · softfp_template_icvt.h:155-160 · chunk 3356 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_i128_sf32(int128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf32(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3356 {
+// Port of cvt_i128_sf32 (softfp_template_icvt.h lines 155-160).
+//
+// The C body is:
+//     return internal_cvt_i128_sf32(a, rm, pfflags, FALSE);
+// internal_cvt_i128_sf32, normalize_sf32, roundpack_sf32, pack_sf32,
+// rshift_rnd32 and clz32 are all `static` (or static inline) in the C
+// translation unit, so they have no linker symbol and their logic is
+// reproduced here as private Rust functions.
+
+#![allow(non_camel_case_types)]
+
+use core::ffi::c_uint;
+
+// RoundingModeEnum (C enum, non-negative values -> unsigned int)
+const RM_RNE: c_uint = 0;
+const RM_RTZ: c_uint = 1;
+const RM_RDN: c_uint = 2;
+const RM_RUP: c_uint = 3;
+const RM_RMM: c_uint = 4;
+
+// BOOL / FALSE / TRUE
+const FALSE: i32 = 0;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    a.leading_zeros() as i32
+}
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    a.leading_zeros() as i32
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << (32 - 1)) | (a_exp << 23) | (a_mant & (((1u32) << 23) - 1))
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    if d != 0 {
+        if d >= 32 {
+            (a != 0) as u32
+        } else if d < 0 {
+            // Not reachable from the caller (d >= 1 there); mirrors the
+            // "no shift" behaviour rather than performing an invalid shift.
+            a
+        } else {
+            let dd = d as u32;
+            let mask = (1u32 << dd) - 1;
+            (a >> dd) | ((a & mask) != 0) as u32
+        }
+    } else {
+        a
+    }
+}
+
+fn roundpack_sf32(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u32,
+    rm: c_uint,
+    pfflags: *mut u32,
+) -> u32 {
+    let addend: u32;
+    let rnd_bits: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (((32 - 2) - 23) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // default: RM_RDN, RM_RUP and anything else
+            if a_sign ^ (rm & 1) != 0 {
+                addend = (1u32 << ((32 - 2) - 23)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << (32 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1u32 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1u32 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= (((1u32) << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = ((1u32) << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1u32 << 2) | (1u32 << 0);
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(
+    a_sign: u32,
+    a_exp: i32,
+    a_mant: u32,
+    rm: c_uint,
+    pfflags: *mut u32,
+) -> u32 {
+    let shift: i32 = clz32(a_mant) - (32 - 1 - (32 - 2));
+    // C asserts shift >= 0 here.
+    let a_exp = a_exp - shift;
+    let a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// Port of static internal_cvt_i128_sf32(a, rm, pfflags, FALSE)
+fn internal_cvt_i128_sf32(
+    a: i128,
+    rm: c_uint,
+    pfflags: *mut u32,
+    is_unsigned: i32,
+) -> u32 {
+    let a_sign: u32;
+    let mut r: u128;
+
+    if is_unsigned == FALSE && a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+    let mut a_exp: i32 = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    // need to reduce range before generic float normalization
+    let l: i32 = 128 - clz128(r) - (32 - 1);
+    if l > 0 {
+        let lu = l as u32;
+        let mask: u128 = r & (1u128.wrapping_shl(lu) - 1);
+        r = (r >> lu) | ((r & mask) != 0) as u128;
+        a_exp += l;
+    }
+    let a_mant: u32 = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i128_sf32(a: i128, rm: c_uint, pfflags: *mut u32) -> u32 {
+    internal_cvt_i128_sf32(a, rm, pfflags, FALSE)
+}
+}
+
+// ── `cvt_i32_sf64` · softfp_template_icvt.h:155-160 · chunk 3378 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_i32_sf64(int32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf64(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3378 {
+// Port of cvt_i32_sf64 (softfp_template_icvt.h) with its static helpers
+// (internal_cvt_i32_sf64, normalize_sf64, roundpack_sf64, pack_sf64, clz*) inlined.
+
+use core::ffi::c_int;
+
+type RoundingModeEnum = c_int;
+
+const RM_RNE: RoundingModeEnum = 0;
+const RM_RTZ: RoundingModeEnum = 1;
+const RM_RDN: RoundingModeEnum = 2;
+const RM_RUP: RoundingModeEnum = 3;
+const RM_RMM: RoundingModeEnum = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << 63) | ((a_exp as u64) << 52) | (a_mant & ((1u64 << 52) - 1))
+}
+
+fn rshift_rnd64(mut a: u64, d: i32) -> u64 {
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let mask = (1u64 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u64,
+    rm: RoundingModeEnum,
+    pfflags: *mut u32,
+) -> u64 {
+    let addend: u32;
+    let rnd_bits: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (((64 - 2) - 52) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // default: RM_RDN, RM_RUP
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = (1u32 << ((64 - 2) - 52)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal = a_exp < 0
+            || (a_mant.wrapping_add(addend as u64)) < (1u64 << (64 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (52 + 1)) as i32);
+    if a_mant <= ((1u64 << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = (1u64 << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u64,
+    rm: RoundingModeEnum,
+    pfflags: *mut u32,
+) -> u64 {
+    let shift = clz64(a_mant) - (64 - 1 - (64 - 2));
+    // assert(shift >= 0) holds for all inputs reaching here.
+    a_exp = a_exp.wrapping_sub(shift);
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i32_sf64(
+    a: i32,
+    rm: RoundingModeEnum,
+    pfflags: *mut u32,
+    is_unsigned: i32,
+) -> u64 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let mut r: u32;
+    let mut l: i32;
+    let a_mant: u64;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    a_exp = (((1 << 11) - 1) / 2) + 64 - 2;
+
+    l = 32 - clz32(r) - (64 - 1);
+    if l > 0 {
+        let mask: u32 = r & ((1u32.wrapping_shl(l as u32)).wrapping_sub(1));
+        r = (r >> l) | ((r & mask) != 0) as u32;
+        a_exp = a_exp.wrapping_add(l);
+    }
+    a_mant = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i32_sf64(a: i32, rm: RoundingModeEnum, pfflags: *mut u32) -> u64 {
+    internal_cvt_i32_sf64(a, rm, pfflags, 0)
+}
+}
+
+// ── `cvt_i64_sf64` · softfp_template_icvt.h:155-160 · chunk 3400 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_i64_sf64(int64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf64(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3400 {
+// Port of cvt_i64_sf64 (softfp_template_icvt.h / softfp_template.h, 64-bit int -> sf64).
+// The C helpers internal_cvt_i64_sf64, normalize_sf64, roundpack_sf64, pack_sf64,
+// rshift_rnd64 and clz64 are all `static` in the translation unit, so their logic
+// is reproduced here.
+
+const RM_RNE: i32 = 0;
+const RM_RTZ: i32 = 1;
+const RM_RDN: i32 = 2;
+const RM_RUP: i32 = 3;
+const RM_RMM: i32 = 4;
+
+// FFLAG_INEXACT / FFLAG_UNDERFLOW / FFLAG_OVERFLOW
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_UNDERFLOW: u32 = 1 << 1;
+const FFLAG_OVERFLOW: u32 = 1 << 2;
+
+const EXP_MASK: i32 = (1 << 11) - 1; // 2047
+const MANT_DIG: i32 = (64 - 2) - 52; // 10 (RND_size)
+const MANT_MASK64: u64 = (1u64 << 52) - 1;
+
+fn clz64(a: u64) -> i32 {
+    a.leading_zeros() as i32
+}
+
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (64 - 1)) | ((a_exp as u64) << 52) | (a_mant & MANT_MASK64)
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let mask = (1u64 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: i32,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+    let rnd_mask: u64 = (1u64 << MANT_DIG) - 1;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (MANT_DIG - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = (1u32 << MANT_DIG) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal = a_exp < 0 || a_mant.wrapping_add(addend as u64) < (1u64 << (64 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & rnd_mask) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_UNDERFLOW;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & rnd_mask) as u32;
+    }
+
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u64) >> MANT_DIG;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (MANT_DIG - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (52 + 1)) as i32);
+    if a_mant <= MANT_MASK64 {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = MANT_MASK64;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= FFLAG_OVERFLOW | FFLAG_INEXACT;
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(a_sign: u32, a_exp_in: i32, a_mant_in: u64, rm: i32, pfflags: *mut u32) -> u64 {
+    let shift = clz64(a_mant_in) - (64 - 1 - (64 - 2));
+    if shift < 0 {
+        // the C code asserts shift >= 0; abort instead of unwinding across FFI
+        std::process::abort();
+    }
+    let a_exp = a_exp_in.wrapping_sub(shift);
+    let a_mant = if shift < 64 { a_mant_in << shift } else { 0 };
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i64_sf64(a: i64, rm: i32, pfflags: *mut u32) -> u64 {
+    // internal_cvt_i64_sf64(a, rm, pfflags, FALSE)
+    let a_sign: u32;
+    let mut r: u64;
+
+    if a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    let mut a_exp: i32 = (EXP_MASK / 2) + 64 - 2;
+
+    let l: i32 = 64 - clz64(r) - (64 - 1);
+    if l > 0 {
+        let mask = r & ((1u64 << l) - 1);
+        r = (r >> l) | ((r & mask) != 0) as u64;
+        a_exp += l;
+    }
+    normalize_sf64(a_sign, a_exp, r, rm, pfflags)
+}
+}
+
+// ── `cvt_i128_sf64` · softfp_template_icvt.h:155-160 · chunk 3422 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_i128_sf64(int128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf64(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3422 {
+// Port of softfp_template_icvt.h: cvt_i128_sf64(int128_t, RoundingModeEnum, uint32_t *)
+// and the static helpers it depends on (internal_cvt_i128_sf64, normalize_sf64,
+// roundpack_sf64, rshift_rnd64, pack_sf64, clz128).
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    a.leading_zeros() as i32
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (64 - 1))
+        | ((a_exp as u64) << 52)
+        | (a_mant & (((1u64) << 52) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 || d < 0 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let du = d as u32;
+            let mask = ((1u64) << du) - 1;
+            a = (a >> du) | (if (a & mask) != 0 { 1 } else { 0 });
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(a_sign: u32, a_exp_in: i32, a_mant_in: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    let addend: u32;
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = (1i32 << (((64 - 2) - 52) - 1)) as u32;
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP and any other value
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = ((1i32 << ((64 - 2) - 52)) - 1) as u32;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let addend64 = addend as u64;
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let rnd_bits: u64;
+
+    if a_exp <= 0 {
+        let is_subnormal =
+            a_exp < 0 || a_mant.wrapping_add(addend64) < ((1u64) << (64 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = a_mant & (((1u64) << ((64 - 2) - 52)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & (((1u64) << ((64 - 2) - 52)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend64) >> ((64 - 2) - 52);
+
+    if rm == RM_RNE && rnd_bits == ((1u64) << (((64 - 2) - 52) - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (52 + 1)) as i32);
+    if a_mant <= (((1u64) << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = ((1u64) << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(a_sign: u32, a_exp: i32, a_mant: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    let shift = (a_mant.leading_zeros() as i32) - (64 - 1 - (64 - 2));
+    // C version asserts shift >= 0 (always true for the reachable inputs).
+    let a_exp = a_exp - shift;
+    let mut a_mant = a_mant;
+    if shift >= 0 && shift < 64 {
+        a_mant <<= shift as u32;
+    }
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i128_sf64(a: i128, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> u64 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let mut r: u128;
+
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = 0u128.wrapping_sub(a as u128);
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+
+    a_exp = (((1i32 << 11) - 1) / 2) + 64 - 2;
+
+    let l: i32 = 128 - clz128(r) - (64 - 1);
+    if l > 0 {
+        let lu = l as u32;
+        let mask = r & (((1u128) << lu) - 1);
+        r = (r >> lu) | (if (r & mask) != 0 { 1u128 } else { 0u128 });
+        a_exp += l;
+    }
+
+    let a_mant = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i128_sf64(a: i128, rm: c_int, pfflags: *mut u32) -> u64 {
+    internal_cvt_i128_sf64(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_i32_sf128` · softfp_template_icvt.h:155-160 · chunk 3444 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_i32_sf128(int32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf128(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3444 {
+// Port of cvt_i32_sf128 (softfp_template_icvt.h, ICVT_SIZE=32, F_SIZE=128).
+// The C implementation delegates to the static helper internal_cvt_i32_sf128,
+// which in turn uses the static helpers normalize_sf128 / roundpack_sf128 /
+// pack_sf128 / rshift_rnd128 / clz32 / clz128.  None of those have linker
+// symbols, so the whole chain is reproduced here as private Rust functions.
+
+use core::ffi::c_int;
+
+// ---- format constants for sf128 (F_SIZE = 128) ----------------------------
+const EXP_MASK: i32 = (1 << 15) - 1; // 32767
+const F_SIZE: i32 = 128;
+const F_MANT_MASK: u128 = (1u128 << 112) - 1; // 2^112 - 1
+const RND_MASK: u128 = (1u128 << ((128 - 2) - 112)) - 1; // 2^14 - 1
+const ICVT_A_EXP_INIT: i32 = (EXP_MASK / 2) + F_SIZE - 2;
+
+// RoundingModeEnum values
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+// ---- static inline int clz32(uint32_t a) ---------------------------------
+fn clz32(a: u32) -> i32 {
+    let r;
+    if a == 0 {
+        r = 32;
+    } else {
+        r = a.leading_zeros() as i32;
+    }
+    r
+}
+
+// ---- static inline int clz128(uint128_t a) -------------------------------
+fn clz128(a: u128) -> i32 {
+    let r;
+    if a == 0 {
+        r = 128;
+    } else {
+        let ah: u64 = (a >> 64) as u64;
+        let al: u64 = a as u64;
+        if ah != 0 {
+            r = ah.leading_zeros() as i32;
+        } else {
+            r = al.leading_zeros() as i32 + 64;
+        }
+    }
+    r
+}
+
+// ---- static inline uint128_t pack_sf128(...) -----------------------------
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (128 - 1))
+        | ((a_exp as u128) << 112)
+        | (a_mant & F_MANT_MASK)
+}
+
+// ---- static uint128_t rshift_rnd128(uint128_t a, int d) ------------------
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    if d <= 0 {
+        a
+    } else if d >= 128 {
+        if a != 0 {
+            1
+        } else {
+            0
+        }
+    } else {
+        let du = d as u32;
+        let mask: u128 = (1u128 << du) - 1;
+        (a >> du) | if (a & mask) != 0 { 1 } else { 0 }
+    }
+}
+
+// ---- static uint128_t roundpack_sf128(...) -------------------------------
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+
+    let addend: u32 = match rm {
+        RM_RNE | RM_RMM => 1u32 << (((128 - 2) - 112) - 1),
+        RM_RTZ => 0,
+        _ => {
+            // default: RM_RDN, RM_RUP (and anything else)
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << ((128 - 2) - 112)) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0
+            || a_mant.wrapping_add(addend as u128) < (1u128 << (128 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & RND_MASK) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & RND_MASK) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> ((128 - 2) - 112);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((128 - 2) - 112) - 1)) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp += (a_mant >> (112 + 1)) as i32;
+    if a_mant <= F_MANT_MASK {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = F_MANT_MASK;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+// ---- static uint128_t normalize_sf128(...) -------------------------------
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let shift: i32 = clz128(a_mant) - (128 - 1 - (128 - 2));
+    // The C version asserts shift >= 0; for this conversion path a_mant always
+    // has a zero top bit, so shift can never be negative.
+    if shift > 0 {
+        a_exp -= shift;
+        a_mant <<= shift as u32;
+    }
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// ---- static uint128_t internal_cvt_i32_sf128(...) ------------------------
+fn internal_cvt_i32_sf128(
+    a: i32,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: bool,
+) -> u128 {
+    let a_sign: u32;
+    let mut r: u32;
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    let mut a_exp: i32 = ICVT_A_EXP_INIT;
+
+    // need to reduce range before generic float normalization
+    let l: i32 = 32 - clz32(r) - (F_SIZE - 1);
+    if l > 0 {
+        let lu = l as u32;
+        let mask: u32 = r & 1u32.wrapping_shl(lu).wrapping_sub(1);
+        r = r.wrapping_shr(lu) | if (r & mask) != 0 { 1 } else { 0 };
+        a_exp += l;
+    }
+    let a_mant: u128 = r as u128;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// ---- uint128_t cvt_i32_sf128(int32_t a, RoundingModeEnum rm, uint32_t *pfflags)
+#[no_mangle]
+pub extern "C" fn cvt_i32_sf128(a: i32, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_i32_sf128(a, rm, pfflags, false)
+}
+}
+
+// ── `cvt_i64_sf128` · softfp_template_icvt.h:155-160 · chunk 3466 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_i64_sf128(int64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf128(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3466 {
+// Rust port of cvt_i64_sf128 (softfp_template_icvt.h), together with the
+// private helpers it needs (internal_cvt_i64_sf128, normalize_sf128,
+// roundpack_sf128, rshift_rnd128, clz128, clz64, pack_sf128), which are all
+// `static` in the C translation unit and therefore have no linker symbol.
+#![allow(dead_code)]
+#![allow(non_camel_case_types)]
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values.
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+const F_SIZE: i32 = 128;
+const EXP_MASK: i32 = (1 << 15) - 1;
+// (F_SIZE - 2) - 112
+const RND_SHIFT: u32 = 14;
+
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (F_SIZE as u32 - 1))
+        | ((a_exp as u128) << 112)
+        | (a_mant & ((1u128 << 112) - 1))
+}
+
+fn set_flags(pfflags: *mut u32, f: u32) {
+    if !pfflags.is_null() {
+        unsafe {
+            *pfflags |= f;
+        }
+    }
+}
+
+fn roundpack_sf128(a_sign: u32, a_exp: i32, a_mant: u128, rm: c_int, pfflags: *mut u32) -> u128 {
+    let mut a_exp = a_exp;
+    let mut a_mant = a_mant;
+    let addend: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (RND_SHIFT - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // default: RM_RDN, RM_RUP
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = (1u32 << RND_SHIFT) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u128;
+    if a_exp <= 0 {
+        let is_subnormal =
+            a_exp < 0 || a_mant.wrapping_add(addend as u128) < (1u128 << (F_SIZE as u32 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = a_mant & ((1u128 << RND_SHIFT) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            set_flags(pfflags, 1 << 1);
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u128 << RND_SHIFT) - 1);
+    }
+    if rnd_bits != 0 {
+        set_flags(pfflags, 1 << 0);
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> RND_SHIFT;
+
+    if rm == RM_RNE && rnd_bits == (1u128 << (RND_SHIFT - 1)) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp += (a_mant >> 113) as i32;
+    if a_mant <= ((1u128 << 112) - 1) {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = (1u128 << 112) - 1;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        set_flags(pfflags, (1 << 2) | (1 << 0));
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf128(a_sign: u32, a_exp: i32, a_mant: u128, rm: c_int, pfflags: *mut u32) -> u128 {
+    // C version asserts shift >= 0; clz128() is always >= 0 and a_mant == 0
+    // yields 128, so shift is always non-negative for the reachable inputs.
+    let shift = clz128(a_mant) - (F_SIZE - 1 - (F_SIZE - 2));
+    let shift = if shift < 0 { 0 } else { shift };
+    let a_exp = a_exp - shift;
+    let a_mant = a_mant << (shift as u32);
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i64_sf128(a: i64, rm: c_int, pfflags: *mut u32, is_unsigned: c_int) -> u128 {
+    let a_sign: u32;
+    let mut r: u64;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    let mut a_exp: i32 = (EXP_MASK / 2) + F_SIZE - 2;
+
+    let l: i32 = 64 - clz64(r) - (F_SIZE - 1);
+    if l > 0 {
+        let mask = r & ((1u64 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u64;
+        a_exp += l;
+    }
+    let a_mant = r as u128;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i64_sf128(a: i64, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_i64_sf128(a, rm, pfflags, 0)
+}
+}
+
+// ── `cvt_i128_sf128` · softfp_template_icvt.h:155-160 · chunk 3488 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_i128_sf128(int128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf128(a, rm, pfflags, FALSE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3488 {
+// Port of softfp_template_icvt.h cvt_i128_sf128() for ICVT_SIZE == 128,
+// F_SIZE == 128 (binary128).  The static helpers it uses
+// (internal_cvt_i128_sf128, normalize_sf128, roundpack_sf128,
+// rshift_rnd128, pack_sf128, clz128) have no linker symbols, so their logic
+// is reproduced here as private Rust functions.
+
+extern "C" {
+    fn abort() -> !;
+}
+
+// RoundingModeEnum values (see softfp.h).
+const RM_RNE: u32 = 0;
+const RM_RTZ: u32 = 1;
+const RM_RDN: u32 = 2;
+const RM_RUP: u32 = 3;
+const RM_RMM: u32 = 4;
+
+// FFLAG bits used below: (1 << 0) inexact, (1 << 1) underflow, (1 << 2) overflow.
+const FFLAG_INEXACT: u32 = 1 << 0;
+const FFLAG_UNDERFLOW: u32 = 1 << 1;
+const FFLAG_OVERFLOW: u32 = 1 << 2;
+
+const F_SIZE: i32 = 128;
+const MANT_SIZE: i32 = 112;
+const RND_SIZE: i32 = (F_SIZE - 2) - MANT_SIZE; // 14
+const EXP_MASK: i32 = (1 << 15) - 1; // 32767
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn rshift_rnd128(mut a: u128, d: i32) -> u128 {
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask: u128 = (1u128 << d) - 1;
+            a = (a >> d) | ((a & mask != 0) as u128);
+        }
+    }
+    a
+}
+
+#[inline]
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (F_SIZE as u32 - 1))
+        | ((a_exp as u128) << (MANT_SIZE as u32))
+        | (a_mant & ((1u128 << (MANT_SIZE as u32)) - 1))
+}
+
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: u32,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let addend: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (RND_SIZE - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP and default
+            if (a_sign ^ (rm & 1)) != 0 {
+                addend = (1u32 << RND_SIZE) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend as u128) < (1u128 << (F_SIZE as u32 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & ((1u128 << RND_SIZE) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= FFLAG_UNDERFLOW;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u128 << RND_SIZE) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= FFLAG_INEXACT;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> RND_SIZE;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp += (a_mant >> (MANT_SIZE as u32 + 1)) as i32;
+    if a_mant <= ((1u128 << (MANT_SIZE as u32)) - 1) {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = (1u128 << (MANT_SIZE as u32)) - 1;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= FFLAG_OVERFLOW | FFLAG_INEXACT;
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: u32,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+
+    let shift: i32 = clz128(a_mant) - (F_SIZE - 1 - (F_SIZE - 2));
+    // assert(shift >= 0)
+    if shift < 0 {
+        unsafe {
+            abort();
+        }
+    }
+    a_exp -= shift;
+    a_mant <<= shift as u32;
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// internal_cvt_i128_sf128(a, rm, pfflags, FALSE)
+fn internal_cvt_i128_sf128(a: i128, rm: u32, pfflags: *mut u32) -> u128 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u128;
+    let mut r: u128;
+
+    if a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+    a_exp = (EXP_MASK / 2) + F_SIZE - 2;
+    // need to reduce range before generic float normalization
+    let l: i32 = 128 - clz128(r) - (F_SIZE - 1);
+    if l > 0 {
+        let mask: u128 = r & ((1u128 << l) - 1);
+        r = (r >> l) | ((r & mask != 0) as u128);
+        a_exp += l;
+    }
+    a_mant = r;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_i128_sf128(a: i128, rm: u32, pfflags: *mut u32) -> u128 {
+    internal_cvt_i128_sf128(a, rm, pfflags)
+}
+}
+
 // ── `return internal_cvt_i32_sf32(a, rm, pfflags, FALSE);` · softfp_template_icvt.h:159-159 · chunk 3313 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -8667,6 +16080,1578 @@ pub extern "C" fn cvt_i128_sf128__part3489(a: i128, rm: i32, pfflags: *mut u32) 
     }
     let a_mant = r;
     normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `cvt_u32_sf32` · softfp_template_icvt.h:162-167 · chunk 3314 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_u32_sf32(uint32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf32(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3314 {
+use core::ffi::c_int;
+
+// RoundingModeEnum values (C enum, passed as an int)
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign.wrapping_shl(31)) | (a_exp.wrapping_shl(23)) | (a_mant & 0x7FFFFF)
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask: u32 = (1u32 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+fn roundpack_sf32(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let addend: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => addend = 1u32 << 6,
+        RM_RTZ => addend = 0,
+        _ => {
+            // RM_RDN / RM_RUP (and default)
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = (1u32 << 7) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u32;
+
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << 31);
+        let diff: i32 = 1i32.wrapping_sub(a_exp);
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << 7) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << 7) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> 7;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << 6) {
+        a_mant &= !1u32;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> 24) as i32);
+    if a_mant <= 0x7FFFFF {
+        a_exp = 0;
+    } else if a_exp >= 255 {
+        if addend == 0 {
+            a_exp = 255 - 1;
+            a_mant = 0x7FFFFF;
+        } else {
+            a_exp = 255;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf32(
+    a_sign: u32,
+    mut a_exp: i32,
+    mut a_mant: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let shift: i32 = clz32(a_mant) - 1;
+    // shift >= 0 is guaranteed by the caller
+    a_exp = a_exp.wrapping_sub(shift);
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// Port of the static C helper internal_cvt_i32_sf32(a, rm, pfflags, TRUE)
+fn internal_cvt_u32_sf32(a: u32, rm: c_int, pfflags: *mut u32) -> u32 {
+    // is_unsigned == TRUE, so the input is never treated as negative
+    let a_sign: u32 = 0;
+    let mut r: u32 = a;
+    let mut a_exp: i32 = 157; // (EXP_MASK / 2) + F_SIZE - 2
+
+    // need to reduce range before generic float normalization
+    let l: i32 = 32 - clz32(r) - 31;
+    if l > 0 {
+        let mask: u32 = r & ((1u32 << l) - 1);
+        r = (r >> l) | ((r & mask) != 0) as u32;
+        a_exp += l;
+    }
+    let a_mant: u32 = r;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u32_sf32(a: u32, rm: c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_u32_sf32(a, rm, pfflags)
+}
+}
+
+// ── `cvt_u64_sf32` · softfp_template_icvt.h:162-167 · chunk 3336 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_u64_sf32(uint64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf32(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3336 {
+// Rust rewrite of cvt_u64_sf32 (softfp_template_icvt.h) with the static
+// helpers it depends on ported as private Rust functions.
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << (32 - 1)) | (a_exp << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = if a != 0 { 1 } else { 0 };
+        } else {
+            let mask = (1u32 << d) - 1;
+            a = (a >> d) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+unsafe fn roundpack_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+
+    let addend: u32;
+    match rm {
+        RM_RNE | 4 => {
+            // RM_RNE, RM_RMM
+            addend = 1u32 << (((32 - 2) - 23) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // RM_RDN, RM_RUP and anything else
+            if (a_sign ^ ((rm & 1) as u32)) != 0 {
+                addend = (1u32 << ((32 - 2) - 23)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0 || a_mant.wrapping_add(addend) < (1u32 << (32 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            *pfflags |= 1u32 << 1;
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        *pfflags |= 1u32 << 0;
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        *pfflags |= (1u32 << 2) | (1u32 << 0);
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+unsafe fn normalize_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let shift: i32 = clz32(a_mant) - (32 - 1 - (32 - 2));
+    a_exp -= shift;
+    a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+unsafe fn internal_cvt_i64_sf32(
+    a: i64,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: c_int,
+) -> u32 {
+    let a_sign: u32;
+    let mut a_exp: i32;
+    let a_mant: u32;
+    let mut r: u64;
+
+    if is_unsigned == 0 && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    a_exp = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    let l: i32 = 64 - clz64(r) - (32 - 1);
+    if l > 0 {
+        let mask: u64 = r & ((1u64 << l) - 1);
+        r = (r >> l) | ((r & mask) != 0) as u64;
+        a_exp += l;
+    }
+    a_mant = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_u64_sf32(a: u64, rm: c_int, pfflags: *mut u32) -> u32 {
+    internal_cvt_i64_sf32(a as i64, rm, pfflags, 1)
+}
+}
+
+// ── `cvt_u128_sf32` · softfp_template_icvt.h:162-167 · chunk 3358 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint32_t cvt_u128_sf32(uint128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf32(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3358 {
+// Port of cvt_u128_sf32 (softfp_template_icvt.h) plus the static helpers it
+// depends on (internal_cvt_i128_sf32, normalize_sf32, roundpack_sf32,
+// rshift_rnd32, clz32, clz128, pack_sf32) which have no linker symbols.
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf32(a_sign: u32, a_exp: u32, a_mant: u32) -> u32 {
+    (a_sign << (32 - 1)) | (a_exp << 23) | (a_mant & ((1u32 << 23) - 1))
+}
+
+fn rshift_rnd32(a: u32, d: i32) -> u32 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 32 {
+            a = (a != 0) as u32;
+        } else {
+            let mask = (1u32 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u32;
+        }
+    }
+    a
+}
+
+unsafe fn roundpack_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+
+    if rm == RM_RNE || rm == RM_RMM {
+        addend = 1u32 << (((32 - 2) - 23) - 1);
+    } else if rm == RM_RTZ {
+        addend = 0;
+    } else {
+        // default, RM_RDN, RM_RUP
+        if (a_sign ^ ((rm as u32) & 1)) != 0 {
+            addend = (1u32 << ((32 - 2) - 23)) - 1;
+        } else {
+            addend = 0;
+        }
+    }
+
+    if a_exp <= 0 {
+        let is_subnormal = a_exp < 0
+            || a_mant.wrapping_add(addend) < (1u32 << (32 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd32(a_mant, diff);
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            *pfflags |= 1 << 1;
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & ((1u32 << ((32 - 2) - 23)) - 1);
+    }
+    if rnd_bits != 0 {
+        *pfflags |= 1 << 0;
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((32 - 2) - 23);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((32 - 2) - 23) - 1)) {
+        a_mant &= !1u32;
+    }
+
+    a_exp += (a_mant >> (23 + 1)) as i32;
+    if a_mant <= ((1u32 << 23) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 8) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 8) - 1) - 1;
+            a_mant = (1u32 << 23) - 1;
+        } else {
+            a_exp = (1 << 8) - 1;
+            a_mant = 0;
+        }
+        *pfflags |= (1 << 2) | (1 << 0);
+    }
+    pack_sf32(a_sign, a_exp as u32, a_mant)
+}
+
+unsafe fn normalize_sf32(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u32,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u32 {
+    let shift = clz32(a_mant_in) - (32 - 1 - (32 - 2));
+    let a_exp = a_exp_in - shift;
+    let a_mant = a_mant_in.wrapping_shl(shift as u32);
+    roundpack_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cvt_u128_sf32(a: u128, rm: c_int, pfflags: *mut u32) -> u32 {
+    // internal_cvt_i128_sf32(a, rm, pfflags, TRUE)
+    let a_sign: u32 = 0;
+    let mut r: u128 = a;
+    let mut a_exp: i32 = (((1 << 8) - 1) / 2) + 32 - 2;
+
+    let l: i32 = 128 - clz128(r) - (32 - 1);
+    if l > 0 {
+        let lut = l as u32;
+        let mask: u128 = r & ((1u128 << lut) - 1);
+        r = (r >> lut) | ((r & mask) != 0) as u128;
+        a_exp += l;
+    }
+    let a_mant: u32 = r as u32;
+    normalize_sf32(a_sign, a_exp, a_mant, rm, pfflags)
+}
+}
+
+// ── `cvt_u32_sf64` · softfp_template_icvt.h:162-167 · chunk 3380 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_u32_sf64(uint32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf64(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3380 {
+// Port of softfp_template_icvt.h: cvt_u32_sf64 (uint32_t -> sfloat64)
+// which forwards to internal_cvt_i32_sf64(..., TRUE).
+//
+// The helpers normalize_sf64 / roundpack_sf64 / rshift_rnd64 / pack_sf64 /
+// clz32 / clz64 are `static` in the C translation unit, so they have no
+// linker symbol and are reproduced here as private Rust functions.
+
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values (C enum, int-sized).
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RMM: c_int = 4;
+
+// sfloat64 layout parameters
+const F_SIZE: i32 = 64;
+const F_MANT: i32 = 52;
+const F_EXP_BITS: i32 = 11;
+
+#[inline]
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn or_flags(pfflags: *mut u32, v: u32) {
+    unsafe {
+        if !pfflags.is_null() {
+            *pfflags |= v;
+        }
+    }
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (F_SIZE as u32 - 1))
+        | ((a_exp as u64) << (F_MANT as u32))
+        | (a_mant & ((1u64 << (F_MANT as u32)) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let du = d as u32;
+            let mask: u64 = (1u64 << du) - 1;
+            a = (a >> du) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u64;
+
+    // shift = (F_SIZE - 2) - F_MANT
+    let shift: u32 = (F_SIZE - 2 - F_MANT) as u32;
+    let rnd_mask: u64 = (1u64 << shift) - 1;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u64 << (shift - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // default: RM_RDN, RM_RUP (and anything else)
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = (1u64 << shift) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let mut rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend) < (1u64 << (F_SIZE as u32 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & rnd_mask) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            or_flags(pfflags, 1 << 1);
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & rnd_mask) as u32;
+    }
+    if rnd_bits != 0 {
+        or_flags(pfflags, 1 << 0);
+    }
+    a_mant = a_mant.wrapping_add(addend) >> shift;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (shift - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (F_MANT as u32 + 1)) as i32);
+    if a_mant <= ((1u64 << (F_MANT as u32)) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << F_EXP_BITS) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << F_EXP_BITS) - 1) - 1;
+            a_mant = (1u64 << (F_MANT as u32)) - 1;
+        } else {
+            a_exp = (1 << F_EXP_BITS) - 1;
+            a_mant = 0;
+        }
+        or_flags(pfflags, (1 << 2) | (1 << 0));
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(
+    a_sign: u32,
+    a_exp: i32,
+    a_mant: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let shift: i32 = clz64(a_mant) - (F_SIZE - 1 - (F_SIZE - 2));
+    // upstream asserts shift >= 0 here (always true for its callers)
+    let a_exp = a_exp.wrapping_sub(shift);
+    let a_mant = if shift >= 0 && shift < 64 {
+        a_mant << (shift as u32)
+    } else if shift >= 64 {
+        0
+    } else {
+        // negative shift is undefined behavior upstream; keep it total
+        a_mant
+    };
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i32_sf64(a: i32, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> u64 {
+    let a_sign: u32;
+    let mut r: u32;
+
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = (a as u32).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u32;
+    }
+    let mut a_exp: i32 = (((1 << F_EXP_BITS) - 1) / 2) + F_SIZE - 2;
+
+    let l: i32 = 32 - clz32(r) - (F_SIZE - 1);
+    if l > 0 {
+        let lu = l as u32;
+        if lu < 32 {
+            let mask: u32 = r & ((1u32 << lu) - 1);
+            r = (r >> lu) | ((r & mask) != 0) as u32;
+        } else {
+            r = (r != 0) as u32;
+        }
+        a_exp += l;
+    }
+    let a_mant: u64 = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u32_sf64(a: u32, rm: c_int, pfflags: *mut u32) -> u64 {
+    internal_cvt_i32_sf64(a as i32, rm, pfflags, true)
+}
+}
+
+// ── `cvt_u64_sf64` · softfp_template_icvt.h:162-167 · chunk 3402 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_u64_sf64(uint64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf64(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3402 {
+// Port of cvt_u64_sf64 from softfp_template_icvt.h
+// (uint64 -> binary64 software float conversion, unsigned source path).
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values (C enum, int-sized)
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (64 - 1))
+        | ((a_exp as u64) << 52)
+        | (a_mant & (((1u64) << 52) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let mask: u64 = ((1u64) << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u64 = a_mant_in;
+    let addend: u64;
+
+    if rm == RM_RNE || rm == RM_RMM {
+        addend = (1u64) << (((64 - 2) - 52) - 1);
+    } else if rm == RM_RTZ {
+        addend = 0;
+    } else {
+        // default: RM_RDN, RM_RUP and anything else
+        if (a_sign ^ ((rm as u32) & 1)) != 0 {
+            addend = ((1u64) << ((64 - 2) - 52)) - 1;
+        } else {
+            addend = 0;
+        }
+    }
+
+    let mut rnd_bits: u64;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend) < ((1u64) << (64 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = a_mant & (((1u64) << ((64 - 2) - 52)) - 1);
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1u32 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = a_mant & (((1u64) << ((64 - 2) - 52)) - 1);
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1u32 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend) >> ((64 - 2) - 52);
+
+    if rm == RM_RNE && rnd_bits == ((1u64) << (((64 - 2) - 52) - 1)) {
+        a_mant &= !(1u64);
+    }
+
+    a_exp += (a_mant >> (52 + 1)) as i32;
+    if a_mant <= (((1u64) << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1 << 11) - 1) {
+        if addend == 0 {
+            a_exp = ((1 << 11) - 1) - 1;
+            a_mant = ((1u64) << 52) - 1;
+        } else {
+            a_exp = (1 << 11) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1u32 << 2) | (1u32 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(a_sign: u32, a_exp: i32, a_mant: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    let shift: i32 = clz64(a_mant) - (64 - 1 - (64 - 2));
+    // assert(shift >= 0) holds because a_mant != 0 here in all call paths used
+    let a_exp = a_exp - shift;
+    let a_mant = a_mant.wrapping_shl(shift as u32);
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i64_sf64(a: i64, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> u64 {
+    let a_sign: u32;
+    let mut r: u64;
+
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    let mut a_exp: i32 = (((1 << 11) - 1) / 2) + 64 - 2;
+
+    let l: i32 = 64 - clz64(r) - (64 - 1);
+    if l > 0 {
+        let mask: u64 = r & (((1u64) << (l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u64;
+        a_exp += l;
+    }
+    let a_mant: u64 = r;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u64_sf64(a: u64, rm: c_int, pfflags: *mut u32) -> u64 {
+    internal_cvt_i64_sf64(a as i64, rm, pfflags, true)
+}
+}
+
+// ── `cvt_u128_sf64` · softfp_template_icvt.h:162-167 · chunk 3424 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint64_t cvt_u128_sf64(uint128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf64(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3424 {
+// Port of softfp_template_icvt.h: cvt_u128_sf64 (uint128 -> binary64).
+// internal_cvt_i128_sf64, normalize_sf64, roundpack_sf64, rshift_rnd64,
+// pack_sf64 and clz64/clz128 are all `static` in the C translation unit, so
+// their logic is reproduced here as private Rust functions.
+
+use core::ffi::c_int;
+
+// RoundingModeEnum values.
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+const F_SIZE: i32 = 64;
+const EXP_MASK: i32 = (1 << 11) - 1;
+
+#[inline]
+fn clz64(a: u64) -> i32 {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf64(a_sign: u32, a_exp: u32, a_mant: u64) -> u64 {
+    ((a_sign as u64) << (64 - 1))
+        | ((a_exp as u64) << 52)
+        | (a_mant & ((1u64 << 52) - 1))
+}
+
+fn rshift_rnd64(a: u64, d: i32) -> u64 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 64 {
+            a = (a != 0) as u64;
+        } else {
+            let mask = (1u64 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u64;
+        }
+    }
+    a
+}
+
+fn roundpack_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    let addend: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = 1u32 << (((64 - 2) - 52) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        _ => {
+            // default: RM_RDN, RM_RUP
+            if (a_sign as c_int) ^ (rm & 1) != 0 {
+                addend = (1u32 << ((64 - 2) - 52)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool =
+            a_exp < 0 || a_mant.wrapping_add(addend as u64) < (1u64 << (64 - 1));
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd64(a_mant, diff);
+        rnd_bits = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & ((1u64 << ((64 - 2) - 52)) - 1)) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u64) >> ((64 - 2) - 52);
+
+    if rm == RM_RNE && rnd_bits == (1u32 << (((64 - 2) - 52) - 1)) {
+        a_mant &= !1u64;
+    }
+
+    a_exp = a_exp.wrapping_add((a_mant >> (52 + 1)) as i32);
+    if a_mant <= ((1u64 << 52) - 1) {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = (1u64 << 52) - 1;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    pack_sf64(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf64(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u64,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u64 {
+    let mut a_exp = a_exp_in;
+    let mut a_mant = a_mant_in;
+    // shift = clz64(a_mant) - (64 - 1 - (64 - 2));  C asserts shift >= 0.
+    let shift: i32 = clz64(a_mant) - (F_SIZE - 1 - (F_SIZE - 2));
+    if shift >= 0 {
+        a_exp = a_exp.wrapping_sub(shift);
+        a_mant = a_mant.wrapping_shl(shift as u32);
+    }
+    roundpack_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// internal_cvt_i128_sf64(a, rm, pfflags, TRUE)
+unsafe fn internal_cvt_i128_sf64(
+    a: i128,
+    rm: c_int,
+    pfflags: *mut u32,
+    is_unsigned: bool,
+) -> u64 {
+    let a_sign: u32;
+    let mut r: u128;
+
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = (a as u128).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u128;
+    }
+
+    let mut a_exp: i32 = (EXP_MASK / 2) + F_SIZE - 2;
+
+    // ICVT_SIZE == 128
+    let l: i32 = 128 - clz128(r) - (F_SIZE - 1);
+    if l > 0 {
+        let lu = l as u32;
+        let mask: u128 = r & ((1u128 << lu) - 1);
+        r = (r >> lu) | ((r & mask) != 0) as u128;
+        a_exp = a_exp.wrapping_add(l);
+    }
+    let a_mant: u64 = r as u64;
+    normalize_sf64(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u128_sf64(a: u128, rm: c_int, pfflags: *mut u32) -> u64 {
+    unsafe { internal_cvt_i128_sf64(a as i128, rm, pfflags, true) }
+}
+}
+
+// ── `cvt_u32_sf128` · softfp_template_icvt.h:162-167 · chunk 3446 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_u32_sf128(uint32_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i32_sf128(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3446 {
+// Port of softfp_template_icvt.h: cvt_u32_sf128
+//   return internal_cvt_i32_sf128(a, rm, pfflags, TRUE);
+// internal_cvt_i32_sf128 (with is_unsigned == TRUE), normalize_sf128,
+// roundpack_sf128, rshift_rnd128, clz128 and clz32 are `static` in C, so their
+// logic is reproduced here as private Rust functions.
+
+#![allow(non_snake_case)]
+
+use core::ffi::c_int;
+
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+#[allow(dead_code)]
+const RM_RDN: c_int = 2;
+#[allow(dead_code)]
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+// F_SIZE = 128, M_SIZE = 112 -> (128 - 2) - 112 == 14
+const RND_MASK: u32 = (1u32 << 14) - 1;
+
+fn clz32(a: u32) -> i32 {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+
+    // addend selection
+    let addend: u32 = match rm {
+        RM_RNE | RM_RMM => 1u32 << 13,
+        RM_RTZ => 0,
+        _ => {
+            // default: RM_RDN, RM_RUP (and anything unexpected)
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << 14) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let rnd_bits: u32;
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0 || (a_mant + addend as u128) < (1u128 << 127);
+        let diff: i32 = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & RND_MASK as u128) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & RND_MASK as u128) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0;
+        }
+    }
+    a_mant = (a_mant + addend as u128) >> 14;
+
+    if rm == RM_RNE && rnd_bits == (1u32 << 13) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp += (a_mant >> 113) as i32;
+    if a_mant <= ((1u128 << 112) - 1) {
+        a_exp = 0;
+    } else if a_exp >= ((1i32 << 15) - 1) {
+        if addend == 0 {
+            a_exp = ((1i32 << 15) - 1) - 1;
+            a_mant = (1u128 << 112) - 1;
+        } else {
+            a_exp = (1i32 << 15) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0);
+        }
+    }
+    ((a_sign as u128) << 127)
+        | (((a_exp as u32) as u128) << 112)
+        | (a_mant & ((1u128 << 112) - 1))
+}
+
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: i32,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let shift: i32 = clz128(a_mant_in) - (128 - 1 - (128 - 2));
+    let mut a_exp: i32 = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    a_exp -= shift;
+    if shift >= 0 {
+        a_mant = a_mant.wrapping_shl((shift as u32) & 127);
+    }
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+// internal_cvt_i32_sf128(a, rm, pfflags, TRUE)
+fn internal_cvt_i32_sf128(a: u32, rm: c_int, pfflags: *mut u32) -> u128 {
+    // is_unsigned == TRUE, so the sign branch of the C code is never taken:
+    // a_sign = 0, r = a.
+    let a_sign: u32 = 0;
+    let mut r: u32 = a;
+
+    let mut a_exp: i32 = ((1i32 << 15) - 1) / 2 + 128 - 2;
+
+    let l: i32 = 32 - clz32(r) - (128 - 1);
+    if l > 0 && l < 32 {
+        let mask: u32 = r & ((1u32 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u32;
+        a_exp += l;
+    }
+    let a_mant: u128 = r as u128;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u32_sf128(a: u32, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_i32_sf128(a, rm, pfflags)
+}
+}
+
+// ── `cvt_u64_sf128` · softfp_template_icvt.h:162-167 · chunk 3468 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_u64_sf128(uint64_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i64_sf128(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3468 {
+// Port of cvt_u64_sf128 (softfp_template_icvt.h) plus the static helper chain it
+// calls: internal_cvt_i64_sf128 -> normalize_sf128 -> roundpack_sf128
+//   -> pack_sf128 / rshift_rnd128 / clz128.
+#![allow(non_snake_case)]
+#![allow(clippy::all)]
+
+use core::ffi::{c_int};
+
+// RoundingModeEnum values (plain C enum, ABI = int)
+const RM_RNE: c_int = 0;
+const RM_RTZ: c_int = 1;
+const RM_RDN: c_int = 2;
+const RM_RUP: c_int = 3;
+const RM_RMM: c_int = 4;
+
+// ---- constants from the preprocessed C ----
+// F_SIZE = 128, EXP_MASK = (1 << 15) - 1, F_MANT_SIZE = 112
+const F_MANT_SIZE: u32 = 112;
+const EXP_MASK: c_int = (1 << 15) - 1;
+
+#[inline]
+fn clz64(a: u64) -> c_int {
+    if a == 0 {
+        64
+    } else {
+        a.leading_zeros() as c_int
+    }
+}
+
+#[inline]
+fn clz128(a: u128) -> c_int {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as c_int
+    }
+}
+
+#[inline]
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (128 - 1))
+        | ((a_exp as u128) << 112)
+        | (a_mant & (((1u128) << 112) - 1))
+}
+
+fn rshift_rnd128(a: u128, d: c_int) -> u128 {
+    let mut a = a;
+    if d > 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let du = d as u32;
+            let mask: u128 = ((1u128) << du) - 1;
+            a = (a >> du) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp_in: c_int,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let mut a_exp: c_int = a_exp_in;
+    let mut a_mant: u128 = a_mant_in;
+    let addend: u32;
+    let mut rnd_bits: u32;
+
+    match rm {
+        RM_RNE | RM_RMM => {
+            addend = (1u32) << (((128 - 2) - F_MANT_SIZE) - 1);
+        }
+        RM_RTZ => {
+            addend = 0;
+        }
+        // default: RM_RDN, RM_RUP
+        _ => {
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                addend = ((1u32) << ((128 - 2) - F_MANT_SIZE)) - 1;
+            } else {
+                addend = 0;
+            }
+        }
+    }
+
+    let rnd_mask: u128 = (((1u128) << ((128 - 2) - F_MANT_SIZE)) - 1);
+
+    if a_exp <= 0 {
+        let is_subnormal: bool = a_exp < 0 || (a_mant.wrapping_add(addend as u128)) < ((1u128) << (128 - 1));
+        let diff: c_int = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & rnd_mask) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= (1 << 1) as u32;
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & rnd_mask) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= (1 << 0) as u32;
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> ((128 - 2) - F_MANT_SIZE);
+
+    if rm == RM_RNE && rnd_bits == ((1u32) << (((128 - 2) - F_MANT_SIZE) - 1)) {
+        a_mant &= !(1u128);
+    }
+
+    a_exp = a_exp.wrapping_add(((a_mant >> (112 + 1)) as u32) as c_int);
+    if a_mant <= (((1u128) << 112) - 1) {
+        a_exp = 0;
+    } else if a_exp >= EXP_MASK {
+        if addend == 0 {
+            a_exp = EXP_MASK - 1;
+            a_mant = ((1u128) << 112) - 1;
+        } else {
+            a_exp = EXP_MASK;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= ((1 << 2) | (1 << 0)) as u32;
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp_in: c_int,
+    a_mant_in: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    let shift: c_int = clz128(a_mant_in).wrapping_sub((128 - 1 - (128 - 2)) as c_int);
+    // C asserts shift >= 0 here; it is always satisfied on this path.
+    let a_exp: c_int = a_exp_in.wrapping_sub(shift);
+    let a_mant: u128 = if shift >= 0 && shift < 128 {
+        a_mant_in << (shift as u32)
+    } else {
+        0
+    };
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+fn internal_cvt_i64_sf128(a: i64, rm: c_int, pfflags: *mut u32, is_unsigned: bool) -> u128 {
+    let a_sign: u32;
+    let r: u64;
+    let mut a_exp: c_int;
+    let mut a_mant: u128;
+
+    if !is_unsigned && a < 0 {
+        a_sign = 1;
+        r = (a as u64).wrapping_neg();
+    } else {
+        a_sign = 0;
+        r = a as u64;
+    }
+    a_exp = (EXP_MASK / 2) + 128 - 2;
+
+    let l: c_int = 64 - clz64(r) - (128 - 1);
+    if l > 0 {
+        // C: mask = r & (((uint64_t)1 << l) - 1);
+        let mask: u64 = if l < 64 { r & (((1u64) << (l as u32)) - 1) } else { r };
+        let shifted: u64 = if l < 64 { r >> (l as u32) } else { 0 };
+        let sticky: bool = (r & mask) != 0;
+        let nr: u64 = shifted | (sticky as u64);
+        a_mant = nr as u128;
+        a_exp += l;
+        return normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags);
+    }
+    a_mant = r as u128;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u64_sf128(a: u64, rm: c_int, pfflags: *mut u32) -> u128 {
+    internal_cvt_i64_sf128(a as i64, rm, pfflags, true)
+}
+}
+
+// ── `cvt_u128_sf128` · softfp_template_icvt.h:162-167 · chunk 3490 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     uint128_t cvt_u128_sf128(uint128_t a,
+//                                                            RoundingModeEnum rm,
+//                                                            uint32_t *pfflags)
+//     {
+//         return internal_cvt_i128_sf128(a, rm, pfflags, TRUE);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk3490 {
+//! Port of `cvt_u128_sf128` from softfp_template_icvt.h (128-bit integer to
+//! binary128 conversion, unsigned path).  The static helpers it depends on
+//! (`internal_cvt_i128_sf128`, `normalize_sf128`, `roundpack_sf128`,
+//! `rshift_rnd128`, `clz128`, `pack_sf128`) have no linker symbols, so their
+//! logic is reproduced here as private Rust functions.
+
+use core::ffi::{c_int, c_uint};
+
+const MANT_MASK: u128 = (1u128 << 112) - 1;
+const RND_SIZE: i32 = (128 - 2) - 112; // 14
+
+#[inline]
+fn clz128(a: u128) -> i32 {
+    if a == 0 {
+        128
+    } else {
+        a.leading_zeros() as i32
+    }
+}
+
+#[inline]
+fn pack_sf128(a_sign: u32, a_exp: u32, a_mant: u128) -> u128 {
+    ((a_sign as u128) << (128 - 1)) | ((a_exp as u128) << 112) | (a_mant & MANT_MASK)
+}
+
+#[inline]
+fn rshift_rnd128(a: u128, d: i32) -> u128 {
+    let mut a = a;
+    if d != 0 {
+        if d >= 128 {
+            a = (a != 0) as u128;
+        } else {
+            let mask = (1u128 << (d as u32)) - 1;
+            a = (a >> (d as u32)) | ((a & mask) != 0) as u128;
+        }
+    }
+    a
+}
+
+fn roundpack_sf128(
+    a_sign: u32,
+    a_exp: i32,
+    a_mant: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    // RND_SIZE == 14 for binary128.
+    let addend: u32 = match rm {
+        0 /* RM_RNE */ | 4 /* RM_RMM */ => 1u32 << (RND_SIZE - 1),
+        1 /* RM_RTZ */ => 0,
+        _ /* RM_RDN, RM_RUP, default */ => {
+            if (a_sign ^ ((rm as u32) & 1)) != 0 {
+                (1u32 << RND_SIZE) - 1
+            } else {
+                0
+            }
+        }
+    };
+
+    let mut a_exp = a_exp;
+    let mut a_mant = a_mant;
+    let rnd_mask: u128 = (1u128 << RND_SIZE) - 1;
+    let rnd_bits: u32;
+
+    // potentially subnormal
+    if a_exp <= 0 {
+        let is_subnormal =
+            a_exp < 0 || a_mant.wrapping_add(addend as u128) < (1u128 << (128 - 1));
+        let diff = 1 - a_exp;
+        a_mant = rshift_rnd128(a_mant, diff);
+        rnd_bits = (a_mant & rnd_mask) as u32;
+        if is_subnormal && rnd_bits != 0 {
+            unsafe {
+                *pfflags |= 1 << 1; // FFLAG_UNDERFLOW
+            }
+        }
+        a_exp = 1;
+    } else {
+        rnd_bits = (a_mant & rnd_mask) as u32;
+    }
+    if rnd_bits != 0 {
+        unsafe {
+            *pfflags |= 1 << 0; // FFLAG_INEXACT
+        }
+    }
+    a_mant = a_mant.wrapping_add(addend as u128) >> (RND_SIZE as u32);
+    // half way: select even result
+    if rm == 0 /* RM_RNE */ && rnd_bits == (1u32 << (RND_SIZE - 1)) {
+        a_mant &= !1u128;
+    }
+    a_exp += (a_mant >> (112 + 1)) as i32;
+    if a_mant <= MANT_MASK {
+        // denormalized or zero
+        a_exp = 0;
+    } else if a_exp >= ((1 << 15) - 1) {
+        // overflow
+        if addend == 0 {
+            a_exp = ((1 << 15) - 1) - 1;
+            a_mant = MANT_MASK;
+        } else {
+            // infinity
+            a_exp = (1 << 15) - 1;
+            a_mant = 0;
+        }
+        unsafe {
+            *pfflags |= (1 << 2) | (1 << 0); // FFLAG_OVERFLOW | FFLAG_INEXACT
+        }
+    }
+    pack_sf128(a_sign, a_exp as u32, a_mant)
+}
+
+fn normalize_sf128(
+    a_sign: u32,
+    a_exp: i32,
+    a_mant: u128,
+    rm: c_int,
+    pfflags: *mut u32,
+) -> u128 {
+    // shift = clz128(a_mant) - (128 - 1 - (128 - 2)); the C code asserts
+    // shift >= 0; keep the shift panic-free in case that invariant is broken.
+    let shift = clz128(a_mant) - (128 - 1 - (128 - 2));
+    let sh: u32 = if shift < 0 { 0 } else { shift as u32 };
+    let a_exp = a_exp - shift;
+    let a_mant = a_mant.wrapping_shl(sh);
+    roundpack_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+/// `internal_cvt_i128_sf128(a, rm, pfflags, TRUE)`
+fn internal_cvt_i128_sf128_unsigned(a: u128, rm: c_int, pfflags: *mut u32) -> u128 {
+    // is_unsigned == TRUE, so the sign/magnitude path is never taken.
+    let a_sign: u32 = 0;
+    let mut r: u128 = a;
+
+    let mut a_exp: i32 = (((1 << 15) - 1) / 2) + 128 - 2;
+    // need to reduce range before generic float normalization
+    let l: i32 = 128 - clz128(r) - (128 - 1);
+    if l > 0 {
+        let mask = r & ((1u128 << (l as u32)) - 1);
+        r = (r >> (l as u32)) | ((r & mask) != 0) as u128;
+        a_exp += l;
+    }
+    let a_mant = r;
+    normalize_sf128(a_sign, a_exp, a_mant, rm, pfflags)
+}
+
+#[no_mangle]
+pub extern "C" fn cvt_u128_sf128(a: u128, rm: c_int, pfflags: *mut c_uint) -> u128 {
+    internal_cvt_i128_sf128_unsigned(a, rm, pfflags)
 }
 }
 

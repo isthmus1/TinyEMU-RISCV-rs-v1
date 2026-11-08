@@ -8417,51 +8417,12 @@ int tcp_emu(struct socket *, struct mbuf *);
 int tcp_ctl(struct socket *);
 struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 void
-m_init(Slirp *slirp)
-{
-    void m_init__part2411(struct mbuf *freelist, struct mbuf *usedlist);
-    m_init__part2411(&slirp->m_freelist, &slirp->m_usedlist);
-
-}
+m_init(Slirp *slirp);
 struct mbuf *
-m_get(Slirp *slirp)
-{
- int m_get__part2413(void);
-
- register struct mbuf *m;
- int flags = m_get__part2413();
-
-
- struct mbuf *m_get__part2414(int *flags, struct mbuf *freelist, int *mbuf_alloced, Slirp *slirp);
- struct mbuf *m_get__new = m_get__part2414(&flags, &slirp->m_freelist, &slirp->mbuf_alloced, slirp);
- m = m_get__new;
- if (m_get__new == ((void *)0)) goto end_error;
-
-
-
- void m_get__part2415(struct mbuf *m, int flags, struct mbuf *usedlist);
- m_get__part2415(m, flags, &slirp->m_usedlist);
-
-end_error:
- void m_get__part2416(void);
- m_get__part2416();
- struct mbuf *m_get__part2417(struct mbuf *m);
- return m_get__part2417(m);
-}
+m_get(Slirp *slirp);
 
 void
-m_free(struct mbuf *m)
-{
-
-  void m_free__part2419(struct mbuf *m);
-  m_free__part2419(m);
-
-    if(m) {
-void m_free__part2420(struct mbuf *m);
-m_free__part2420(m);
-  }
-
-}
+m_free(struct mbuf *m);
 
 
 
@@ -8469,70 +8430,24 @@ m_free__part2420(m);
 
 
 void
-m_cat(struct mbuf *m, struct mbuf *n)
-{
-
-
-
- void m_cat__part2422(struct mbuf *m, struct mbuf *n);
-m_cat__part2422(m, n);
-
-
-  void m_cat__part2423(struct mbuf *m, struct mbuf *n);
- m_cat__part2423(m, n);
-
-}
+m_cat(struct mbuf *m, struct mbuf *n);
 
 
 
 void
-m_inc(struct mbuf *m, int size)
-{
- int datasize;
-
-
-        int m_inc__part2425(struct mbuf *m, int size);
-        if (m_inc__part2425(m, size)) return;
-
-
-        void m_inc__part2426(struct mbuf *m, int size);
-	m_inc__part2426(m, size);
-
-         void m_inc__part2427(int *mh_size, int size);
- m_inc__part2427(&m->m_hdr.mh_size, size);
-
-
-}
+m_inc(struct mbuf *m, int size);
 
 
 
 void
-m_adj(struct mbuf *m, int len)
-{
-  int m_adj__part2429(struct mbuf *m);
- if (m_adj__part2429(m))
-  return;
-
- void m_adj__part2430(struct mbuf *m, int len);
- m_adj__part2430(m, len);
-}
+m_adj(struct mbuf *m, int len);
 
 
 
 
 
 int
-m_copy(struct mbuf *n, struct mbuf *m, int off, int len)
-{
- int m_copy__part2432(struct mbuf *n, int len);
- if (m_copy__part2432(n, len))
-  return -1;
-
-
-  int m_copy__part2433(struct mbuf *n, struct mbuf *m, int off, int len);
- return m_copy__part2433(n, m, off, len);
-
-}
+m_copy(struct mbuf *n, struct mbuf *m, int off, int len);
 
 
 
@@ -8541,19 +8456,4 @@ m_copy(struct mbuf *n, struct mbuf *m, int off, int len)
 
 
 struct mbuf *
-dtom(Slirp *slirp, void *dat)
-{
- struct mbuf *dtom__part2435(void);
- struct mbuf *m = dtom__part2435();
-
-
-  struct mbuf *dtom__part2436(struct mbuf *head, void *dat);
- m = dtom__part2436(&slirp->m_usedlist, dat);
- if (m != (struct mbuf *)0)
-   return m;
-
-
-  struct mbuf *dtom__part2437(void);
-
- return dtom__part2437();
-}
+dtom(Slirp *slirp, void *dat);

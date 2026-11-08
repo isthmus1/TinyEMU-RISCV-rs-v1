@@ -1,5 +1,93 @@
 //! From `build_filelist.c`.
 
+// ── `print_str` · build_filelist.c:46-73 · chunk 357 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void print_str(FILE *f, const char *str)
+//     {
+//         const char *s;
+//         int c;
+//         s = str;
+//         while (*s != '\0') {
+//             if (*s <= ' ' || *s > '~')
+//                 goto use_quote;
+//             s++;
+//         }
+//         fputs(str, f);
+//         return;
+//      use_quote:
+//         s = str;
+//         fputc('"', f);
+//         while (*s != '\0') {
+//             c = *(uint8_t *)s;
+//             if (c < ' ' || c == 127) {
+//                 fprintf(f, "\\x%02x", c);
+//             } else if (c == '\\' || c == '\"') {
+//                 fprintf(f, "\\%c", c);
+//             } else {
+//                 fputc(c, f);
+//             }
+//             s++;
+//         }
+//         fputc('"', f);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk357 {
+use core::ffi::{c_char, c_int};
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+extern "C" {
+    fn fputs(s: *const c_char, stream: *mut FILE) -> c_int;
+    fn fputc(c: c_int, stream: *mut FILE) -> c_int;
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn print_str(f: *mut FILE, string: *const c_char) {
+    let mut s: *const c_char = string;
+
+    // First pass: check whether the string needs quoting.
+    loop {
+        let ch = *s;
+        if ch == 0 {
+            fputs(string, f);
+            return;
+        }
+        // char is signed on this target: compare like C does.
+        let cv = ch as i8;
+        if cv <= b' ' as i8 || cv > b'~' as i8 {
+            break;
+        }
+        s = s.add(1);
+    }
+
+    // Quoted form.
+    s = string;
+    fputc(b'"' as c_int, f);
+    loop {
+        let ch = *s;
+        if ch == 0 {
+            break;
+        }
+        // c = *(uint8_t *)s;
+        let c: u32 = ch as u8 as u32;
+        if (c as c_int) < b' ' as c_int || c == 127 {
+            fprintf(f, b"\\x%02x\0".as_ptr() as *const c_char, c as c_int);
+        } else if c == b'\\' as u32 || c == b'"' as u32 {
+            fprintf(f, b"\\%c\0".as_ptr() as *const c_char, c as c_int);
+        } else {
+            fputc(c as c_int, f);
+        }
+        s = s.add(1);
+    }
+    fputc(b'"' as c_int, f);
+}
+}
+
 // ── `const char *s; int c; s = str;` · build_filelist.c:48-50 · chunk 358 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -176,6 +264,85 @@ pub extern "C" fn print_str__part364(f: *mut std::os::raw::c_void) {
 }
 }
 
+// ── `copy_file` · build_filelist.c:77-102 · chunk 365 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void copy_file(const char *src_filename, const char *dst_filename)
+//     {
+//         uint8_t *buf;
+//         FILE *fi, *fo;
+//         int len;
+//     
+//         buf = malloc((1024 * 1024));
+//         fi = fopen(src_filename, "rb");
+//         if (!fi) {
+//             perror(src_filename);
+//             exit(1);
+//         }
+//         fo = fopen(dst_filename, "wb");
+//         if (!fo) {
+//             perror(dst_filename);
+//             exit(1);
+//         }
+//         for(;;) {
+//             len = fread(buf, 1, (1024 * 1024), fi);
+//             if (len == 0)
+//                 break;
+//             fwrite(buf, 1, len, fo);
+//         }
+//         fclose(fo);
+//         fclose(fi);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk365 {
+// Port of static void copy_file(const char *src_filename, const char *dst_filename)
+use core::ffi::{c_char, c_int, c_void};
+
+type File = c_void;
+
+extern "C" {
+    fn malloc(size: usize) -> *mut c_void;
+    #[link_name = "fopen64"]
+    fn fopen(filename: *const c_char, modes: *const c_char) -> *mut File;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut File) -> usize;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut File) -> usize;
+    fn fclose(stream: *mut File) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+}
+
+const COPY_BUF_LEN: usize = 1024 * 1024;
+
+#[no_mangle]
+pub unsafe extern "C" fn copy_file(src_filename: *const c_char, dst_filename: *const c_char) {
+    let buf: *mut u8;
+    let mut fi: *mut File;
+    let mut fo: *mut File;
+    let mut len: c_int;
+
+    buf = malloc(COPY_BUF_LEN) as *mut u8;
+    fi = fopen(src_filename, b"rb\0".as_ptr() as *const c_char);
+    if fi.is_null() {
+        perror(src_filename);
+        exit(1);
+    }
+    fo = fopen(dst_filename, b"wb\0".as_ptr() as *const c_char);
+    if fo.is_null() {
+        perror(dst_filename);
+        exit(1);
+    }
+    loop {
+        len = fread(buf as *mut c_void, 1, COPY_BUF_LEN, fi) as c_int;
+        if len == 0 {
+            break;
+        }
+        fwrite(buf as *const c_void, 1, len as usize, fo);
+    }
+    fclose(fo);
+    fclose(fi);
+}
+}
+
 // ── `uint8_t *buf; FILE *fi, *fo; int len; buf = malloc((1024 * 1024)); fi = fopen(src_filename, "rb…` · build_filelist.c:79-84 · chunk 366 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -345,6 +512,73 @@ pub extern "C" fn copy_file__part371(fo: *mut c_void, fi: *mut c_void) {
 }
 }
 
+// ── `add_file_size` · build_filelist.c:112-119 · chunk 374 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void add_file_size(ScanState *s, uint64_t size)
+//     {
+//         s->fs_size += block_align(size, (1 << 12));
+//         if (s->fs_size > s->fs_max_size) {
+//             fprintf(
+//                    stderr
+//                          , "Filesystem Quota exceeded (%" 
+//                                                           "l" "d" 
+//                                                                  " bytes)\n", s->fs_max_size);
+//             exit(1);
+//         }
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk374 {
+// Rust rewrite of the static C helper add_file_size (build_filelist.c).
+#![allow(non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Mirrors `typedef struct { ... } ScanState;` from the C translation unit.
+#[repr(C)]
+pub struct ScanState {
+    pub files_path: *mut c_char,
+    pub next_inode_num: u64,
+    pub fs_size: u64,
+    pub fs_max_size: u64,
+    pub f: *mut c_void, // FILE *
+}
+
+extern "C" {
+    // int fprintf(FILE *__restrict stream, const char *__restrict format, ...);
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    // extern FILE *stderr;
+    static mut stderr: *mut c_void;
+    // void exit(int status) __attribute__((__noreturn__));
+    fn exit(status: c_int) -> !;
+}
+
+// static inline uint64_t block_align(uint64_t val, uint64_t align)
+// {
+//     return (val + align - 1) & ~(align - 1);
+// }
+#[inline]
+fn block_align(val: u64, align: u64) -> u64 {
+    val.wrapping_add(align).wrapping_sub(1) & !(align.wrapping_sub(1))
+}
+
+#[no_mangle]
+pub extern "C" fn add_file_size(s: *mut ScanState, size: u64) {
+    unsafe {
+        let st = &mut *s;
+        st.fs_size = st.fs_size.wrapping_add(block_align(size, 1u64 << 12));
+        if st.fs_size > st.fs_max_size {
+            fprintf(
+                stderr,
+                b"Filesystem Quota exceeded (%ld bytes)\n\0".as_ptr() as *const c_char,
+                st.fs_max_size,
+            );
+            exit(1);
+        }
+    }
+}
+}
+
 // ── `s->fs_size += block_align(size, (1 << 12));` · build_filelist.c:114-114 · chunk 375 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -396,6 +630,373 @@ pub extern "C" fn add_file_size__part376(fs_size: c_ulong, fs_max_size: c_ulong)
     } else {
         0
     }
+}
+}
+
+// ── `scan_dir` · build_filelist.c:121-211 · chunk 377 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void scan_dir(ScanState *s, const char *path)
+//     {
+//         FILE *f = s->f;
+//         DIR *dirp;
+//         struct dirent *de;
+//         const char *name;
+//         struct stat st;
+//         char *path1;
+//         uint32_t mode, v;
+//     
+//         dirp = opendir(path);
+//         if (!dirp) {
+//             perror(path);
+//             exit(1);
+//         }
+//         for(;;) {
+//             de = readdir(dirp);
+//             if (!de)
+//                 break;
+//             name = de->d_name;
+//             if (!strcmp(name, ".") || !strcmp(name, ".."))
+//                 continue;
+//             path1 = compose_path(path, name);
+//             if (lstat(path1, &st) < 0) {
+//                 perror(path1);
+//                 exit(1);
+//             }
+//     
+//             mode = st.st_mode & 0xffff;
+//             fprintf(f, "%06o %u %u",
+//                     mode,
+//                     (int)st.st_uid,
+//                     (int)st.st_gid);
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0020000)) 
+//                              || 
+//                                 ((((
+//                                 mode
+//                                 )) & 0170000) == (0060000))
+//                                              ) {
+//                 fprintf(f, " %u %u",
+//                         (int)
+//                             gnu_dev_major (
+//                             st.st_rdev
+//                             )
+//                                              ,
+//                         (int)
+//                             gnu_dev_minor (
+//                             st.st_rdev
+//                             )
+//                                              );
+//             }
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0100000))
+//                             ) {
+//                 fprintf(f, " %" 
+//                                "l" "u"
+//                                      , st.st_size);
+//             }
+//     
+//     
+//     
+//     
+//     
+//             fprintf(f, " %u", (int)st.st_mtim.tv_sec);
+//             v = st.st_mtim.tv_nsec;
+//     
+//             if (v != 0) {
+//                 fprintf(f, ".");
+//                 while (v != 0) {
+//                     fprintf(f, "%u", v / 100000000);
+//                     v = (v % 100000000) * 10;
+//                 }
+//             }
+//     
+//             fprintf(f, " ");
+//             print_str(f, name);
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0120000))
+//                             ) {
+//                 char buf[1024];
+//                 int len;
+//                 len = readlink(path1, buf, sizeof(buf) - 1);
+//                 if (len < 0) {
+//                     perror("readlink");
+//                     exit(1);
+//                 }
+//                 buf[len] = '\0';
+//                 fprintf(f, " ");
+//                 print_str(f, buf);
+//             } else if (
+//                       ((((
+//                       mode
+//                       )) & 0170000) == (0100000)) 
+//                                     && st.st_size > 0) {
+//                 char buf1[32], *fname;
+//                 FSFileID file_id;
+//                 file_id = s->next_inode_num++;
+//                 fprintf(f, " %" 
+//                                "l" "x"
+//                                      , file_id);
+//                 file_id_to_filename(buf1, file_id);
+//                 fname = compose_path(s->files_path, buf1);
+//                 copy_file(path1, fname);
+//                 add_file_size(s, st.st_size);
+//             }
+//     
+//             fprintf(f, "\n");
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0040000))
+//                             ) {
+//                 scan_dir(s, path1);
+//             }
+//             free(path1);
+//         }
+//     
+//         closedir(dirp);
+//         fprintf(f, ".\n");
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk377 {
+// Rust rewrite of scan_dir() from build_filelist.c
+#![allow(static_mut_refs)]
+#![allow(non_camel_case_types)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_ulong, c_void};
+
+// Opaque C types.
+pub type FILE = c_void;
+pub type DIR = c_void;
+
+#[repr(C)]
+pub struct ScanState {
+    files_path: *mut c_char,
+    next_inode_num: u64,
+    fs_size: u64,
+    fs_max_size: u64,
+    f: *mut FILE,
+}
+
+#[repr(C)]
+struct Timespec {
+    tv_sec: c_long,
+    tv_nsec: c_long,
+}
+
+// struct stat as seen by the (Linux, 64-bit) C code (lstat64 layout).
+#[repr(C)]
+struct Stat {
+    st_dev: u64,
+    st_ino: u64,
+    st_nlink: u64,
+    st_mode: u32,
+    st_uid: u32,
+    st_gid: u32,
+    __pad0: c_int,
+    st_rdev: u64,
+    st_size: i64,
+    st_blksize: i64,
+    st_blocks: i64,
+    st_atim: Timespec,
+    st_mtim: Timespec,
+    st_ctim: Timespec,
+    __glibc_reserved: [i64; 3],
+}
+
+// struct dirent (dirent64 layout).
+#[repr(C)]
+struct Dirent {
+    d_ino: u64,
+    d_off: i64,
+    d_reclen: u16,
+    d_type: u8,
+    d_name: [c_char; 256],
+}
+
+extern "C" {
+    fn opendir(name: *const c_char) -> *mut DIR;
+    #[link_name = "readdir64"]
+    fn readdir(dirp: *mut DIR) -> *mut Dirent;
+    fn closedir(dirp: *mut DIR) -> c_int;
+    #[link_name = "lstat64"]
+    fn lstat(path: *const c_char, buf: *mut Stat) -> c_int;
+    fn readlink(path: *const c_char, buf: *mut c_char, len: usize) -> c_long;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int);
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> c_int;
+    fn free(ptr: *mut c_void);
+    fn malloc(size: usize) -> *mut c_void;
+    fn fopen(filename: *const c_char, modes: *const c_char) -> *mut FILE;
+    fn fclose(stream: *mut FILE) -> c_int;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut FILE) -> usize;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut FILE) -> usize;
+
+    fn gnu_dev_major(dev: u64) -> c_uint;
+    fn gnu_dev_minor(dev: u64) -> c_uint;
+
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn print_str(f: *mut FILE, s: *const c_char);
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+
+    static mut stderr: *mut FILE;
+}
+
+// Private port of the C "static void copy_file(...)" (no linker symbol).
+unsafe fn copy_file_impl(src_filename: *const c_char, dst_filename: *const c_char) {
+    let copy_buf_len: usize = 1024 * 1024;
+    let buf = malloc(copy_buf_len);
+    let fi = fopen(src_filename, b"rb\0".as_ptr() as *const c_char);
+    if fi.is_null() {
+        perror(src_filename);
+        exit(1);
+        return;
+    }
+    let fo = fopen(dst_filename, b"wb\0".as_ptr() as *const c_char);
+    if fo.is_null() {
+        perror(dst_filename);
+        exit(1);
+        return;
+    }
+    loop {
+        let len = fread(buf, 1, copy_buf_len, fi) as c_int;
+        if len == 0 {
+            break;
+        }
+        fwrite(buf, 1, len as usize, fo);
+    }
+    fclose(fo);
+    fclose(fi);
+}
+
+// Private port of the C "static void add_file_size(...)".
+unsafe fn add_file_size_impl(s: *mut ScanState, size: u64) {
+    let align: u64 = 1u64 << 12;
+    let aligned = size.wrapping_add(align - 1) & !(align - 1);
+    (*s).fs_size = (*s).fs_size.wrapping_add(aligned);
+    if (*s).fs_size > (*s).fs_max_size {
+        fprintf(
+            stderr,
+            b"Filesystem Quota exceeded (%ld bytes)\n\0".as_ptr() as *const c_char,
+            (*s).fs_max_size as c_long,
+        );
+        exit(1);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scan_dir(s: *mut ScanState, path: *const c_char) {
+    let f: *mut FILE = (*s).f;
+    let mut st: Stat = core::mem::zeroed();
+    let mut mode: u32;
+    let mut v: u32;
+
+    let dirp = opendir(path);
+    if dirp.is_null() {
+        perror(path);
+        exit(1);
+        return;
+    }
+    loop {
+        let de = readdir(dirp);
+        if de.is_null() {
+            break;
+        }
+        let name = core::ptr::addr_of!((*de).d_name) as *const c_char;
+        if strcmp(name, b".\0".as_ptr() as *const c_char) == 0
+            || strcmp(name, b"..\0".as_ptr() as *const c_char) == 0
+        {
+            continue;
+        }
+        let path1 = compose_path(path, name);
+        if lstat(path1, &mut st) < 0 {
+            perror(path1);
+            exit(1);
+        }
+
+        mode = st.st_mode & 0xffff;
+        fprintf(
+            f,
+            b"%06o %u %u\0".as_ptr() as *const c_char,
+            mode as c_uint,
+            st.st_uid as c_int,
+            st.st_gid as c_int,
+        );
+        if (mode & 0o170000) == 0o020000 || (mode & 0o170000) == 0o060000 {
+            fprintf(
+                f,
+                b" %u %u\0".as_ptr() as *const c_char,
+                gnu_dev_major(st.st_rdev) as c_int,
+                gnu_dev_minor(st.st_rdev) as c_int,
+            );
+        }
+        if (mode & 0o170000) == 0o100000 {
+            fprintf(
+                f,
+                b" %lu\0".as_ptr() as *const c_char,
+                st.st_size as c_long,
+            );
+        }
+
+        // modification time (at most ms resolution)
+        fprintf(
+            f,
+            b" %u\0".as_ptr() as *const c_char,
+            st.st_mtim.tv_sec as c_int,
+        );
+        v = st.st_mtim.tv_nsec as u32;
+
+        if v != 0 {
+            fprintf(f, b".\0".as_ptr() as *const c_char);
+            while v != 0 {
+                fprintf(f, b"%u\0".as_ptr() as *const c_char, v / 100000000);
+                v = (v % 100000000).wrapping_mul(10);
+            }
+        }
+
+        fprintf(f, b" \0".as_ptr() as *const c_char);
+        print_str(f, name);
+        if (mode & 0o170000) == 0o120000 {
+            let mut buf = [0 as c_char; 1024];
+            let len = readlink(path1, buf.as_mut_ptr(), 1024 - 1) as c_int;
+            if len < 0 {
+                perror(b"readlink\0".as_ptr() as *const c_char);
+                exit(1);
+            }
+            *buf.as_mut_ptr().offset(len as isize) = 0;
+            fprintf(f, b" \0".as_ptr() as *const c_char);
+            print_str(f, buf.as_ptr());
+        } else if (mode & 0o170000) == 0o100000 && st.st_size > 0 {
+            let mut buf1 = [0 as c_char; 32];
+            let file_id: u64 = (*s).next_inode_num;
+            (*s).next_inode_num = (*s).next_inode_num.wrapping_add(1);
+            fprintf(
+                f,
+                b" %lx\0".as_ptr() as *const c_char,
+                file_id as c_ulong,
+            );
+            file_id_to_filename(buf1.as_mut_ptr(), file_id);
+            let fname = compose_path((*s).files_path, buf1.as_ptr());
+            copy_file_impl(path1, fname);
+            add_file_size_impl(s, st.st_size as u64);
+        }
+
+        fprintf(f, b"\n\0".as_ptr() as *const c_char);
+        if (mode & 0o170000) == 0o040000 {
+            scan_dir(s, path1);
+        }
+        free(path1 as *mut c_void);
+    }
+
+    closedir(dirp);
+    fprintf(f, b".\n\0".as_ptr() as *const c_char);
 }
 }
 

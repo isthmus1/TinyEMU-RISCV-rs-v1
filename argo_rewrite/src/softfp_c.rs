@@ -1,5 +1,32 @@
 //! From `softfp.c`.
 
+// ── `clz32` · softfp.c:32-41 · chunk 2915 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static inline int clz32(uint32_t a)
+//     {
+//         int r;
+//         if (a == 0) {
+//             r = 32;
+//         } else {
+//             r = __builtin_clz(a);
+//         }
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2915 {
+use core::ffi::c_int;
+
+#[no_mangle]
+pub extern "C" fn clz32(a: u32) -> c_int {
+    if a == 0 {
+        32
+    } else {
+        a.leading_zeros() as c_int
+    }
+}
+}
+
 // ── `if (a == 0) … else` · softfp.c:35-39 · chunk 2916 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -31,6 +58,40 @@ pub mod chunk2917 {
 // Returns the given value; the caller's `clz32` hands over its computed result `r`.
 #[no_mangle]
 pub extern "C" fn clz32__part2917(r: core::ffi::c_int) -> core::ffi::c_int {
+    r
+}
+}
+
+// ── `clz64` · softfp.c:43-53 · chunk 2918 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static inline int clz64(uint64_t a)
+//     {
+//         int r;
+//         if (a == 0) {
+//             r = 64;
+//         } else
+//         {
+//             r = __builtin_clzll(a);
+//         }
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2918 {
+// Port of `static inline int clz64(uint64_t a)` from softfp.c.
+// Counts leading zero bits of a 64-bit value; returns 64 for an input of 0.
+
+use core::ffi::c_int;
+
+#[no_mangle]
+pub extern "C" fn clz64(a: u64) -> c_int {
+    let r: c_int;
+    if a == 0 {
+        r = 64;
+    } else {
+        // Equivalent of __builtin_clzll(a); a is known nonzero here.
+        r = a.leading_zeros() as c_int;
+    }
     r
 }
 }
@@ -71,6 +132,43 @@ use core::ffi::c_int;
 #[no_mangle]
 pub extern "C" fn clz64__part2920(r: c_int) -> c_int {
     r
+}
+}
+
+// ── `clz128` · softfp.c:56-72 · chunk 2921 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static inline int clz128(uint128_t a)
+//     {
+//         int r;
+//         if (a == 0) {
+//             r = 128;
+//         } else
+//         {
+//             uint64_t ah, al;
+//             ah = a >> 64;
+//             al = a;
+//             if (ah != 0)
+//                 r = __builtin_clzll(ah);
+//             else
+//                 r = __builtin_clzll(al) + 64;
+//         }
+//         return r;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2921 {
+// Port of static inline int clz128(uint128_t a) from softfp.c.
+// uint128_t is `unsigned __int128`, which maps to Rust's u128 with the same ABI.
+
+#[no_mangle]
+pub extern "C" fn clz128(a: u128) -> core::ffi::c_int {
+    // C: if (a == 0) r = 128; else count leading zeros of the 128-bit value
+    // (high half first, then low half + 64), which is exactly leading_zeros().
+    if a == 0 {
+        128 as core::ffi::c_int
+    } else {
+        a.leading_zeros() as core::ffi::c_int
+    }
 }
 }
 

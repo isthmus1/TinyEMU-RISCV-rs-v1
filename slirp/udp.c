@@ -8486,185 +8486,20 @@ udp_init(Slirp *slirp)
 
 
 void
-udp_input(register struct mbuf *m, int iphlen)
-{
-  Slirp *udp_input__part2871(struct mbuf *m);
- Slirp *slirp;
- register struct ip *ip;
- register struct udphdr *uh;
- int len;
- struct ip save_ip;
- struct socket *so;
-
- slirp = udp_input__part2871(m);
-
-
-
-
-
-
-
-
-  void udp_input__part2872(struct mbuf *m, int *iphlen);
- udp_input__part2872(m, &iphlen);
-
-
-
-
-
-  void udp_input__part2873(struct mbuf *m, int iphlen, struct ip **ipp,
-                          struct udphdr **uhpp, int *lenp);
- {
-  struct ip *__ip_tmp;
-  struct udphdr *__uh_tmp;
-  int __len_tmp;
-  udp_input__part2873(m, iphlen, &__ip_tmp, &__uh_tmp, &__len_tmp);
-  ip = __ip_tmp;
-  uh = __uh_tmp;
-  len = __len_tmp;
- }
-
-
- int udp_input__part2874(struct mbuf *, struct ip *, int);
- if (udp_input__part2874(m, ip, len)) {
-  goto bad;
- }
-
-
-
-
-
-
- void udp_input__part2875(struct ip *ip, int iphlen, struct ip *save_ip);
- udp_input__part2875(ip, iphlen, &save_ip);
-
-
-
-
-
-  {
-  int udp_input__part2876_rc;
-  int udp_input__part2876(struct mbuf *m, char *ip, const struct udphdr *uh, int len);
-  udp_input__part2876_rc = udp_input__part2876(m, (char *)ip, uh, len);
-  if (udp_input__part2876_rc) {
-   goto bad;
-  }
- }
-
-
-
-
-
-                int udp_input__part2877(void *m, struct udphdr *uh);
-        if (udp_input__part2877(m, uh)) {
-            goto bad;
-        }
-
-
-        int udp_input__part2878(struct Slirp *slirp);
-        if (udp_input__part2878(slirp)) {
-            goto bad;
-        }
-
- struct socket *udp_input__part2879(Slirp *slirp);
- so = udp_input__part2879(slirp);
- {
-  void udp_input__part2880(struct socket **, struct udphdr *, struct ip *,
-                           struct socket *, struct socket *, struct socket **);
-  udp_input__part2880(&so, uh, ip, slirp->udb.so_next, &slirp->udb,
-                      &slirp->udp_last_so);
-}
-
-
- int udp_input__part2881(struct socket **p_so, Slirp *slirp,
-                        struct ip *ip, struct udphdr *uh);
-if (udp_input__part2881(&so, slirp, ip, uh) < 0) {
-  goto bad;
-}
-
-
-        int udp_input__part2882(struct socket *so, struct ip *ip, struct udphdr *uh, struct mbuf *m, int iphlen);
- iphlen = udp_input__part2882(so, ip, uh, m, iphlen);
-
-
-
-
-
- void udp_input__part2883(struct socket *so, struct mbuf *m, int iphlen,
-                         struct ip *ip, struct ip *save_ip);
- udp_input__part2883(so, m, iphlen, ip, &save_ip);
-
-  void udp_input__part2884(struct mbuf *m, int iphlen, struct ip *ip, const struct ip *save_ip, struct socket *so);
- udp_input__part2884(m, iphlen, ip, &save_ip, so);
-
- return;
-
-void udp_input__part2885(struct mbuf *m);
-bad:
- udp_input__part2885(m);
-
- void udp_input__part2886(void);
- udp_input__part2886();
- return;
-
-}
+udp_input(register struct mbuf *m, int iphlen);
 
 int udp_output2(struct socket *so, struct mbuf *m,
                 struct sockaddr_in *saddr, struct sockaddr_in *daddr,
-                int iptos)
-{
- struct udpiphdr *udp_output2__part2888(struct mbuf *m, struct sockaddr_in *saddr, struct sockaddr_in *daddr);
- register struct udpiphdr *ui;
- int error = 0;
-
- ui = udp_output2__part2888(m, saddr, daddr);
-
- void udp_output2__part2889(struct mbuf *m, struct udpiphdr *ui);
- udp_output2__part2889(m, ui);
-
-  { int udp_output2__part2890(struct udpiphdr *ui, struct mbuf *m, int iptos);
- error = udp_output2__part2890(ui, m, iptos);
-
- return (error); }
-
-}
+                int iptos);
 
 int udp_output(struct socket *so, struct mbuf *m,
-               struct sockaddr_in *addr)
-
-{
-    void udp_output__part2892(struct socket *so, struct sockaddr_in *addr, Slirp **slirp_out, struct sockaddr_in *saddr_out);
-    Slirp *slirp;
-    struct sockaddr_in saddr, daddr;
-
-    udp_output__part2892(so, addr, &slirp, &saddr);
-
-    void udp_output__part2893(struct socket *so, struct sockaddr_in *saddr, struct sockaddr_in *addr);
-    udp_output__part2893(so, &saddr, addr);
-
-        int udp_output__part2894(struct socket *so, struct mbuf *m,
-                             struct sockaddr_in *saddr, struct sockaddr_in *daddr);
-    return udp_output__part2894(so, m, &saddr, &daddr);
-
-}
+               struct sockaddr_in *addr);
 
 int
-udp_attach(struct socket *so)
-{
-  void udp_attach__part2896(struct socket *so, void *udb);
-  udp_attach__part2896(so, &so->slirp->udb);
-  int udp_attach__part2897(struct socket *so);
-  return udp_attach__part2897(so);
-
-}
+udp_attach(struct socket *so);
 
 void
-udp_detach(struct socket *so)
-{
- void udp_detach__part2899(struct socket *so);
- udp_detach__part2899(so);
-
-}
+udp_detach(struct socket *so);
 
 static const struct tos_t udptos[] = {
  {0, 53, 0x10, 0},
@@ -8672,71 +8507,8 @@ static const struct tos_t udptos[] = {
 };
 
 static uint8_t
-udp_tos(struct socket *so)
-{
- int i = 0;
-
-  uint8_t udp_tos__part2902(struct socket *so, int i);
- {
-  uint8_t rtos = udp_tos__part2902(so, i);
-  if (rtos) {
-   return rtos;
-  }
- }
-
-
- uint8_t udp_tos__part2903(void);
- return udp_tos__part2903();
-}
+udp_tos(struct socket *so);
 
 struct socket *
 udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
-           u_int lport, int flags)
-{
-  struct sockaddr_in addr;
- struct socket *so;
- socklen_t addrlen = sizeof(struct sockaddr_in), opt = 1;
-
- struct socket *udp_listen__part2905(Slirp *slirp);
- so = udp_listen__part2905(slirp);
-
- int udp_listen__part2906(struct socket *so);
-if (udp_listen__part2906(so)) {
-     return 
-           ((void *)0)
-               ;
- }
-
- void udp_listen__part2907(struct socket *so, void *udb,
-                          struct sockaddr_in *addr, uint32_t haddr,
-                          u_int hport);
- udp_listen__part2907(so, (void *)&slirp->udb, &addr, haddr, hport);
-
-
-  int udp_listen__part2908(int s, const void *addr, socklen_t addrlen);
- if (udp_listen__part2908(so->s, (const void *)&addr, addrlen) < 0) {
-  udp_detach(so);
-  return 
-        ((void *)0)
-            ;
- }
-
- uint16_t udp_listen__part2909(int s, struct sockaddr_in *addr, socklen_t *addrlen, const unsigned int *opt);
- so->so_fport = udp_listen__part2909(so->s, &addr, &addrlen, &opt);
-
-  {
-  void udp_listen__part2910(uint32_t addr_sin_addr_s_addr, const struct in_addr *vhost_addr, struct in_addr *so_faddr_out);
-  udp_listen__part2910(addr.sin_addr.s_addr, &slirp->vhost_addr, &so->so_faddr);
- }
-
- void udp_listen__part2911(struct socket *so, u_int lport, uint32_t laddr);
- udp_listen__part2911(so, lport, laddr);
- void udp_listen__part2912(struct socket *so, int flags);
- udp_listen__part2912(so, flags);
-
-
- struct socket *udp_listen__part2913(struct socket *so, int flags);
-
- return udp_listen__part2913(so, flags);
-
-}
+           u_int lport, int flags);

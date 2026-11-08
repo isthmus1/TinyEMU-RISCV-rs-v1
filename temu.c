@@ -13050,115 +13050,23 @@ static struct termios oldtty;
 static int old_fd0_flags;
 static STDIODevice *global_stdio_device;
 
-static void term_exit(void)
-{
-    void term_exit__part3511(const void *tty, int fd0_flags);
-    term_exit__part3511(&oldtty, old_fd0_flags);
+static void term_exit(void);
 
-}
+static void term_init(BOOL allow_ctrlc);
 
-static void term_init(BOOL allow_ctrlc)
-{
-        struct termios tty;
+static void console_write(void *opaque, const uint8_t *buf, int len);
 
-    void term_init__part3513(struct termios *tty, struct termios *oldtty_out, int *old_fd0_flags_out);
-    term_init__part3513(&tty, &oldtty, &old_fd0_flags);
+static int console_read(void *opaque, uint8_t *buf, int len);
 
-    void term_init__part3514(tcflag_t *c_lflag, int allow_ctrlc);
-    term_init__part3514(&tty.c_lflag, allow_ctrlc);
-
-        void term_init__part3515(struct termios *tty, void (*term_exit_fn)(void));
-    term_init__part3515(&tty, term_exit);
-
-}
-
-static void console_write(void *opaque, const uint8_t *buf, int len)
-{
-    void console_write__part3517(const uint8_t *buf, int len);
-    console_write__part3517(buf, len);
-
-}
-
-static int console_read(void *opaque, uint8_t *buf, int len)
-{
-    STDIODevice *s = opaque;
-    int ret, i, j;
-    uint8_t ch;
-
-        int console_read__part3519(int len);
-    if (console_read__part3519(len))
-        return 0;
-
-
-        int console_read__part3520(int stdin_fd, uint8_t *buf, int len);
-    ret = console_read__part3520(s->stdin_fd, buf, len);
-        int console_read__part3521(int ret);
-    if (console_read__part3521(ret))
-        return 0;
-
-    void console_read__part3522(int ret);
-    console_read__part3522(ret);
-
-
-    void console_read__part3523(int *j);
-console_read__part3523(&j);
-
-    int console_read__part3524(void *opaque, uint8_t *buf, int ret);
-    (void)i;
-    (void)ch;
-    j = console_read__part3524(opaque, buf, ret);
-        { int console_read__part3525(int j); return console_read__part3525(j); }
-
-}
-
-static void term_resize_handler(int sig)
-{
-    void term_resize_handler__part3527(STDIODevice *dev);
-    term_resize_handler__part3527(global_stdio_device);
-}
+static void term_resize_handler(int sig);
 
 
 
 
-static void console_get_size(STDIODevice *s, int *pw, int *ph)
-{
-        struct winsize ws;
-    int width, height;
-    void console_get_size__part3529(int *pw, int *ph);
-    console_get_size__part3529(&width, &height);
-
-    void console_get_size__part3530(int stdin_fd, struct winsize *ws, int *width, int *height);
-    console_get_size__part3530(s->stdin_fd, &ws, &width, &height);
-
-    void console_get_size__part3531(int *pw, int *ph, int width, int height);
-    console_get_size__part3531(pw, ph, width, height);
-
-}
+static void console_get_size(STDIODevice *s, int *pw, int *ph);
 
 
-CharacterDevice *console_init(BOOL allow_ctrlc)
-{
-    CharacterDevice *console_init__part3533(int allow_ctrlc,
-                                        void (*term_init_fp)(int),
-                                        int (*fcntl_fp)(int, int, ...),
-                                        void (*term_resize_handler_fp)(int),
-                                        int (*sigemptyset_fp)(sigset_t *),
-                                        int (*sigaction_fp)(int, const struct sigaction *, struct sigaction *),
-                                        STDIODevice **global_stdio_device_ptr,
-                                        void (*console_write_fp)(void *, const uint8_t *, int),
-                                        int (*console_read_fp)(void *, uint8_t *, int));
-
-    return console_init__part3533(allow_ctrlc,
-                                  term_init,
-                                  fcntl,
-                                  term_resize_handler,
-                                  sigemptyset,
-                                  sigaction,
-                                  &global_stdio_device,
-                                  console_write,
-                                  console_read);
-
-}
+CharacterDevice *console_init(BOOL allow_ctrlc);
 
 
 
@@ -13222,41 +13130,7 @@ static int bf_write_async(BlockDevice *bs,
 }
 
 static BlockDevice *block_device_init(const char *filename,
-                                      BlockDeviceModeEnum mode)
-{
-    BlockDevice *bs;
-    BlockDeviceFile *bf;
-    int64_t file_size;
-    FILE *f;
-    const char *mode_str;
-
-    const char *block_device_init__part3548(BlockDeviceModeEnum mode);
-    mode_str = block_device_init__part3548(mode);
-
-    FILE *block_device_init__part3549(const char *filename, const char *mode_str);
-f = block_device_init__part3549(filename, mode_str);
-
-        void block_device_init__part3550(const char *filename, void *f);
-    block_device_init__part3550(filename, f);
-
-    void block_device_init__part3551(FILE *f, BlockDeviceModeEnum mode,
-                                BlockDevice **bs_out, BlockDeviceFile **bf_out,
-                                int64_t *file_size_out);
-    block_device_init__part3551(f, mode, &bs, &bf, &file_size);
-
-
-        void block_device_init__part3552(BlockDeviceFile *bf, BlockDeviceModeEnum mode);
-    block_device_init__part3552(bf, mode);
-
-
-        BlockDevice *block_device_init__part3553(BlockDevice *bs, void *bf,
-                                             int64_t (*get_sector_count)(BlockDevice *),
-                                             int (*read_async)(BlockDevice *, uint64_t, uint8_t *, int, BlockDeviceCompletionFunc *, void *),
-                                             int (*write_async)(BlockDevice *, uint64_t, const uint8_t *, int, BlockDeviceCompletionFunc *, void *));
-    return block_device_init__part3553(bs, bf, bf_get_sector_count,
-                                       bf_read_async, bf_write_async);
-
-}
+                                      BlockDeviceModeEnum mode);
 
 
 
@@ -13266,225 +13140,41 @@ typedef struct {
 } TunState;
 
 static void tun_write_packet(EthernetDevice *net,
-                             const uint8_t *buf, int len)
-{
-    void tun_write_packet__part3557(EthernetDevice *net, const uint8_t *buf, int len);
-    tun_write_packet__part3557(net, buf, len);
-
-}
+                             const uint8_t *buf, int len);
 
 static void tun_select_fill(EthernetDevice *net, int *pfd_max,
                             fd_set *rfds, fd_set *wfds, fd_set *efds,
-                            int *pdelay)
-{
-        TunState *tun_select_fill__part3559(EthernetDevice *net, int *pnet_fd);
-    int net_fd;
-    TunState *s = tun_select_fill__part3559(net, &net_fd);
-
-    if (s->select_filled) {
-        extern void tun_select_fill__part3560(int net_fd, fd_set *rfds, int *pfd_max);
-        tun_select_fill__part3560(net_fd, rfds, pfd_max);
-    }
-}
+                            int *pdelay);
 
 static void tun_select_poll(EthernetDevice *net,
                             fd_set *rfds, fd_set *wfds, fd_set *efds,
-                            int select_ret)
-{
-    TunState *s = net->opaque;
-    int net_fd = s->fd;
-    uint8_t buf[2048];
-    int ret;
-
-        {
-        int tun_select_poll__part3562(int select_ret);
-        if (tun_select_poll__part3562(select_ret))
-            return;
-    }
-
-    void tun_select_poll__part3563(EthernetDevice *net, fd_set *rfds, int select_filled, int net_fd, uint8_t *buf, size_t buf_len, int *ret);
-tun_select_poll__part3563(net, rfds, s->select_filled, net_fd, buf, sizeof(buf), &ret);
-
-}
-static EthernetDevice *tun_open(const char *ifname)
-{
-    struct ifreq ifr;
-    int fd, ret;
-    EthernetDevice *net;
-    TunState *s;
-
-    int tun_open__part3565(void);
-    fd = tun_open__part3565();
-
-    extern int tun_open__part3566(int fd);
-    if (tun_open__part3566(fd)) {
-        return 
-              ((void *)0)
-                  ;
-    }
-
-        int tun_open__part3567(int fd, const char *ifname, void *ifr,
-                           unsigned long ifr_size, int name_size,
-                           unsigned long request);
-    ret = tun_open__part3567(fd, ifname, (void *)&ifr,
-                             (unsigned long)sizeof(ifr),
-                             (int)sizeof(ifr.
-                                        ifr_ifrn.ifrn_name),
-                             (unsigned long)((((1U) << (((0 +8)+8)+14)) | ((('T')) << (0 +8)) | (((202)) << 0) | ((((sizeof(int)))) << ((0 +8)+8)))));
-
-    int tun_open__part3568(int fd, int ret);
-    if (tun_open__part3568(fd, ret)) {
-        return 
-              ((void *)0)
-                  ;
-    }
-
-    EthernetDevice *tun_open__part3569(int fd);
-    return tun_open__part3569(fd);
-
-}
+                            int select_ret);
+static EthernetDevice *tun_open(const char *ifname);
 static Slirp *slirp_state;
 
 static void slirp_write_packet(EthernetDevice *net,
-                               const uint8_t *buf, int len)
-{
-    void slirp_write_packet__part3572(EthernetDevice *net, const uint8_t *buf, int len);
-    slirp_write_packet__part3572(net, buf, len);
+                               const uint8_t *buf, int len);
 
-}
+int slirp_can_output(void *opaque);
 
-int slirp_can_output(void *opaque)
-{
-    int slirp_can_output__part3574(void *opaque);
-    return slirp_can_output__part3574(opaque);
-
-}
-
-void slirp_output(void *opaque, const uint8_t *pkt, int pkt_len)
-{
-    void slirp_output__part3576(void *opaque, const uint8_t *pkt, int pkt_len);
-    slirp_output__part3576(opaque, pkt, pkt_len);
-    return;
-}
+void slirp_output(void *opaque, const uint8_t *pkt, int pkt_len);
 
 static void slirp_select_fill1(EthernetDevice *net, int *pfd_max,
                                fd_set *rfds, fd_set *wfds, fd_set *efds,
-                               int *pdelay)
-{
-    void slirp_select_fill1__part3578(EthernetDevice *net, int *pfd_max,
-                                  fd_set *rfds, fd_set *wfds, fd_set *efds);
-    slirp_select_fill1__part3578(net, pfd_max, rfds, wfds, efds);
-
-}
+                               int *pdelay);
 
 static void slirp_select_poll1(EthernetDevice *net,
                                fd_set *rfds, fd_set *wfds, fd_set *efds,
-                               int select_ret)
-{
-    void slirp_select_poll1__part3580(EthernetDevice *net,
-                                  fd_set *rfds, fd_set *wfds, fd_set *efds,
-                                  int select_ret);
-    slirp_select_poll1__part3580(net, rfds, wfds, efds, select_ret);
+                               int select_ret);
 
-}
-
-static EthernetDevice *slirp_open(void)
-{
-    EthernetDevice *net;
-    struct in_addr net_addr = { .s_addr = htonl(0x0a000200) };
-    struct in_addr mask = { .s_addr = htonl(0xffffff00) };
-    struct in_addr host = { .s_addr = htonl(0x0a000202) };
-    struct in_addr dhcp = { .s_addr = htonl(0x0a00020f) };
-    struct in_addr dns = { .s_addr = htonl(0x0a000203) };
-    const char *bootfile = 
-                          ((void *)0)
-                              ;
-    const char *vhostname = 
-                           ((void *)0)
-                               ;
-    int restricted = 0;
-
-        {
-        int slirp_open__part3582(void *slirp_state);
-        if (slirp_open__part3582((void *)slirp_state)) {
-            return ((void *)0);
-        }
-    }
-
-        EthernetDevice *slirp_open__part3583(void **slirp_state_ptr, int restricted,
-                                        struct in_addr net_addr, struct in_addr mask,
-                                        struct in_addr host, struct in_addr dhcp,
-                                        struct in_addr dns, const char *vhostname,
-                                        const char *bootfile);
-
-    net = slirp_open__part3583((void **)&slirp_state, restricted, net_addr, mask,
-                               host, dhcp, dns, vhostname, bootfile);
-
-    return net;
-
-}
+static EthernetDevice *slirp_open(void);
 
 
 
 
 
 
-void virt_machine_run(VirtMachine *m)
-{
-    fd_set rfds, wfds, efds;
-    int fd_max, ret, delay;
-    struct timeval tv;
-
-    int stdin_fd;
-
-    int virt_machine_run__part3585(VirtMachine *m);
-
-    delay = virt_machine_run__part3585(m);
-
-
-
-    
-   void virt_machine_run__part3586(fd_set *set);
-virt_machine_run__part3586(&rfds);
-
-    
-   void virt_machine_run__part3587(fd_set *arr);
-    virt_machine_run__part3587(&wfds);
-
-    
-   void virt_machine_run__part3588(fd_set *arr);
-    virt_machine_run__part3588(&efds);
-
-    void virt_machine_run__part3589(int *fd_max);
-    virt_machine_run__part3589(&fd_max);
-
-    if (m->console_dev && virtio_console_can_write_data(m->console_dev)) {
-        void virt_machine_run__part3590(VirtMachine *m, int *stdin_fd, int *fd_max, fd_set *rfds);
-        virt_machine_run__part3590(m, &stdin_fd, &fd_max, &rfds);
-    }
-
-    void virt_machine_run__part3591(VirtMachine *m, int *pfd_max, fd_set *rfds, fd_set *wfds, fd_set *efds, int *pdelay);
-    if (m->net) {
-        virt_machine_run__part3591(m, &fd_max, &rfds, &wfds, &efds, &delay);
-    }
-
-    int virt_machine_run__part3592(int *fd_max, fd_set *rfds, fd_set *wfds, fd_set *efds, int *delay, struct timeval *tv);
-    ret = virt_machine_run__part3592(&fd_max, &rfds, &wfds, &efds, &delay, &tv);
-
-    void virt_machine_run__part3593(VirtMachine *m, fd_set *rfds, fd_set *wfds, fd_set *efds, int ret);
-    if (m->net) {
-        virt_machine_run__part3593(m, &rfds, &wfds, &efds, ret);
-    }
-
-    void virt_machine_run__part3594(VirtMachine *m, int ret, fd_set *rfds, const int *stdin_fd);
-    virt_machine_run__part3594(m, ret, &rfds, &stdin_fd);
-
-
-
-        void virt_machine_run__part3595(VirtMachine *m);
-    virt_machine_run__part3595(m);
-
-}
+void virt_machine_run(VirtMachine *m);
 
 
 
@@ -13526,19 +13216,9 @@ void help(void)
 
 static BOOL net_completed;
 
-static void net_start_cb(void *arg)
-{
-    void net_start_cb__part3601(BOOL *net_completed);
-    net_start_cb__part3601(&net_completed);
+static void net_start_cb(void *arg);
 
-}
-
-static BOOL net_poll_cb(void *arg)
-{
-    BOOL net_poll_cb__part3603(BOOL net_completed);
-return net_poll_cb__part3603(net_completed);
-
-}
+static BOOL net_poll_cb(void *arg);
 
 
 
@@ -13604,29 +13284,11 @@ if (cmdline) {
         { extern void main__part3613(VirtMachineParams *p, const char *build_preload_file); main__part3613(p, build_preload_file); }
 
 
-    for(i = 0; i < p->eth_count; i++) {
-
-        if (!strcmp(p->tab_eth[i].driver, "user")) {
-            p->tab_eth[i].net = slirp_open();
-            if (!p->tab_eth[i].net)
-                exit(1);
-        } else
-
-
-        if (!strcmp(p->tab_eth[i].driver, "tap")) {
-            p->tab_eth[i].net = tun_open(p->tab_eth[i].ifname);
-            if (!p->tab_eth[i].net)
-                exit(1);
-        } else
-
         {
-            fprintf(
-                   stderr
-                         , "Unsupported network driver '%s'\n",
-                    p->tab_eth[i].driver);
-            exit(1);
-        }
+        int main__part3614(VirtMachineParams *p);
+        main__part3614(p);
     }
+
 
 
     void main__part3615(VirtMachineParams *p, BOOL allow_ctrlc);

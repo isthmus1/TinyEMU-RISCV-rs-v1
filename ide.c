@@ -3116,364 +3116,64 @@ static void ide_sector_read_cb(void *opaque, int ret);
 static void ide_sector_read_cb_end(IDEState *s);
 static void ide_sector_write_cb2(void *opaque, int ret);
 
-static void padstr(char *str, const char *src, int len)
-{
-    int i, v;
-    void padstr__part1168(char *str, const char *src, int len);
-padstr__part1168(str, src, len);
-
-}
+static void padstr(char *str, const char *src, int len);
 
 
-static void stw(uint16_t *buf, int v)
-{
-    void stw__part1170(uint16_t *buf, int v);
-stw__part1170(buf, v);
+static void stw(uint16_t *buf, int v);
 
-}
+static void ide_identify(IDEState *s);
 
-static void ide_identify(IDEState *s)
-{
-        uint16_t *tab;
+static void ide_set_signature(IDEState *s);
 
-    void ide_identify__part1172(IDEState *s, uint16_t *tab);
+static void ide_abort_command(IDEState *s);
 
-    tab = (uint16_t *)s->io_buffer;
-    ide_identify__part1172(s, tab);
-
-    void ide_identify__part1173(uint16_t *tab, int mult_sectors);
-    ide_identify__part1173(tab, s->mult_sectors);
-
-    void ide_identify__part1174(uint16_t *tab, int64_t nb_sectors);
-    ide_identify__part1174(tab, s->nb_sectors);
-}
-
-static void ide_set_signature(IDEState *s)
-{
-    void ide_set_signature__part1176(IDEState *s);
-    ide_set_signature__part1176(s);
-
-}
-
-static void ide_abort_command(IDEState *s)
-{
-    void ide_abort_command__part1178(IDEState *s);
-    ide_abort_command__part1178(s);
-
-}
-
-static void ide_set_irq(IDEState *s)
-{
-    IDEIFState *ide_if = s->ide_if;
-    void ide_set_irq__part1180(IDEIFState *ide_if);
-    if (!(ide_if->cmd & 0x02)) {
-        ide_set_irq__part1180(ide_if);
-    }
-
-}
+static void ide_set_irq(IDEState *s);
 
 
 static void ide_transfer_start(IDEState *s, int size,
-                               EndTransferFunc *end_transfer_func)
-{
-    void ide_transfer_start__part1182(IDEState *s, int size,
-                                  EndTransferFunc *end_transfer_func);
-    ide_transfer_start__part1182(s, size, end_transfer_func);
+                               EndTransferFunc *end_transfer_func);
 
-}
+static void ide_transfer_stop(IDEState *s);
 
-static void ide_transfer_stop(IDEState *s)
-{
-        void ide_transfer_stop__part1184(IDEState *s, EndTransferFunc *end_transfer_func);
-    ide_transfer_stop__part1184(s, ide_transfer_stop);
-}
+static int64_t ide_get_sector(IDEState *s);
 
-static int64_t ide_get_sector(IDEState *s)
-{
-    int64_t sector_num;
-        void ide_get_sector__part1186(IDEState *s, int64_t *out);
-    ide_get_sector__part1186(s, &sector_num);
+static void ide_set_sector(IDEState *s, int64_t sector_num);
 
-    int64_t ide_get_sector__part1187(int64_t sector_num);
-    return ide_get_sector__part1187(sector_num);
+static void ide_sector_read(IDEState *s);
 
-}
+static void ide_sector_read_cb(void *opaque, int ret);
 
-static void ide_set_sector(IDEState *s, int64_t sector_num)
-{
-    unsigned int cyl, r;
-        void ide_set_sector__part1189(IDEState *s, int64_t sector_num);
-    ide_set_sector__part1189(s, sector_num);
+static void ide_sector_read_cb_end(IDEState *s);
 
-}
+static void ide_sector_write_cb1(IDEState *s);
 
-static void ide_sector_read(IDEState *s)
-{
-        int64_t sector_num;
-    int ret, n;
+static void ide_sector_write_cb2(void *opaque, int ret);
 
-    int64_t ide_sector_read__part1191(IDEState *s, int *n_out);
-    sector_num = ide_sector_read__part1191(s, &n);
+static void ide_sector_write(IDEState *s);
 
-    int ide_sector_read__part1192(int n);
-    n = ide_sector_read__part1192(n);
+static void ide_identify_cb(IDEState *s);
 
-        void ide_sector_read__part1193(IDEState *s, int *n);
-    ide_sector_read__part1193(s, &n);
-
-
-
-
-    int ide_sector_read__part1194(IDEState *s, int64_t sector_num, int n, BlockDeviceCompletionFunc *cb);
-    ret = ide_sector_read__part1194(s, sector_num, n, ide_sector_read_cb);
-    void ide_sector_read__part1195(IDEState *s, int ret, void (*cb)(void *, int));
-
-    ide_sector_read__part1195(s, ret, ide_sector_read_cb);
-
-}
-
-static void ide_sector_read_cb(void *opaque, int ret)
-{
-    int ide_sector_read_cb__part1197(void *opaque);
-    IDEState *s = opaque;
-    int n;
-    EndTransferFunc *func;
-
-    n = ide_sector_read_cb__part1197(opaque);
-
-    void *ide_sector_read_cb__part1198(uint16_t nsector, void *end_transfer_func, void *sector_read_func);
-    func = (EndTransferFunc *)ide_sector_read_cb__part1198(s->nsector, (void *)ide_sector_read_cb_end, (void *)ide_sector_read);
-
-        void ide_sector_read_cb__part1199(IDEState *s, int n, EndTransferFunc *func);
-    ide_sector_read_cb__part1199(s, n, func);
-
-}
-
-static void ide_sector_read_cb_end(IDEState *s)
-{
-
-    void ide_sector_read_cb_end__part1201(IDEState *s);
-    ide_sector_read_cb_end__part1201(s);
-}
-
-static void ide_sector_write_cb1(IDEState *s)
-{
-    int ide_sector_write_cb1__part1203(IDEState *s,
-                                   EndTransferFunc *stop_func,
-                                   BlockDeviceCompletionFunc *write_cb);
-    int ret;
-
-    ret = ide_sector_write_cb1__part1203(s, ide_transfer_stop,
-                                         ide_sector_write_cb2);
-
-    void ide_sector_write_cb1__part1204(IDEState *s, int ret,
-                                    void (*cb2)(void *, int));
-        ide_sector_write_cb1__part1204(s, ret, ide_sector_write_cb2);
-
-}
-
-static void ide_sector_write_cb2(void *opaque, int ret)
-{
-    int ide_sector_write_cb2__part1206(IDEState *s);
-    IDEState *s = opaque;
-    int n;
-
-    n = ide_sector_write_cb2__part1206(s);
-
-    void ide_sector_write_cb2__part1207(IDEState *s, int n, void (*write_cb1)(IDEState *));
-    ide_sector_write_cb2__part1207(s, n, ide_sector_write_cb1);
-        void ide_sector_write_cb2__part1208(IDEState *s);
-    ide_sector_write_cb2__part1208(s);
-
-}
-
-static void ide_sector_write(IDEState *s)
-{
-    int ide_sector_write__part1210(uint16_t nsector);
-    int n;
-    n = ide_sector_write__part1210(s->nsector);
-
-    int ide_sector_write__part1211(int n);
-    n = ide_sector_write__part1211(n);
-    int ide_sector_write__part1212(int n, int req_nb_sectors);
-    n = ide_sector_write__part1212(n, s->req_nb_sectors);
-
-        void ide_sector_write__part1213(IDEState *s, int n, EndTransferFunc *cb);
-
-    ide_sector_write__part1213(s, n, ide_sector_write_cb1);
-
-}
-
-static void ide_identify_cb(IDEState *s)
-{
-    void ide_identify_cb__part1215(IDEState *s);
-    ide_identify_cb__part1215(s);
-    s->end_transfer_func = ide_transfer_stop;
-}
-
-static void ide_exec_cmd(IDEState *s, int val)
-{
-
-
-
-        void ide_exec_cmd__part1217(IDEState *s, int val);
-    ide_exec_cmd__part1217(s, val);
-}
+static void ide_exec_cmd(IDEState *s, int val);
 
 static void ide_ioport_write(void *opaque, uint32_t offset,
-                             uint32_t val, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s = s1->cur_drive;
-    int addr = offset + 1;
+                             uint32_t val, int size_log2);
 
+static uint32_t ide_ioport_read(void *opaque, uint32_t offset, int size_log2);
 
-
-
-    void ide_ioport_write__part1219(IDEIFState *s1, IDEState *s, int addr, uint32_t val);
-    ide_ioport_write__part1219(s1, s, addr, val);
-}
-
-static uint32_t ide_ioport_read(void *opaque, uint32_t offset, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s = s1->cur_drive;
-    int ret, addr = offset + 1;
-
-        int ide_ioport_read__part1221(IDEState *s, IRQSignal *irq, int addr);
-    ret = ide_ioport_read__part1221(s, s1->irq, addr);
-
-
-
-
-    uint32_t ide_ioport_read__part1222(int ret);
-    return ide_ioport_read__part1222(ret);
-
-}
-
-static uint32_t ide_status_read(void *opaque, uint32_t offset, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s = s1->cur_drive;
-    int ret;
-
-        {
-        int ide_status_read__part1224(IDEState *s);
-        ret = ide_status_read__part1224(s);
-    }
-
-
-
-
-    uint32_t ide_status_read__part1225(int ret);
-return ide_status_read__part1225(ret);
-}
+static uint32_t ide_status_read(void *opaque, uint32_t offset, int size_log2);
 
 static void ide_cmd_write(void *opaque, uint32_t offset,
-                          uint32_t val, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s;
-    int i;
-
-
-
-
-        void ide_cmd_write__part1227(IDEIFState *s1, uint32_t val);
-    ide_cmd_write__part1227(s1, val);
-
-    void ide_cmd_write__part1228(IDEIFState *s1, uint32_t val);
-ide_cmd_write__part1228(s1, val);
-
-}
+                          uint32_t val, int size_log2);
 
 static void ide_data_writew(void *opaque, uint32_t offset,
-                            uint32_t val, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s = s1->cur_drive;
-    int p;
-    uint8_t *tab;
+                            uint32_t val, int size_log2);
 
-    int ide_data_writew__part1230(IDEState *s);
-    if (ide_data_writew__part1230(s))
-        return;
-        int ide_data_writew__part1231(IDEState *s, uint32_t val);
-    p = ide_data_writew__part1231(s, val);
+static uint32_t ide_data_readw(void *opaque, uint32_t offset, int size_log2);
 
-    void ide_data_writew__part1232(int p, IDEState *s);
-    if (p >= s->data_end)
-        ide_data_writew__part1232(p, s);
-
-}
-
-static uint32_t ide_data_readw(void *opaque, uint32_t offset, int size_log2)
-{
-    IDEIFState *s1 = opaque;
-    IDEState *s = s1->cur_drive;
-    int p, ret;
-    uint8_t *tab;
-
-    uint32_t ide_data_readw__part1234(IDEIFState *s1);
-    ret = (int)ide_data_readw__part1234(s1);
-
-        uint32_t ide_data_readw__part1235(int ret);
-    return ide_data_readw__part1235(ret);
-
-}
-
-static IDEState *ide_drive_init(IDEIFState *ide_if, BlockDevice *bs)
-{
-        IDEState *s;
-    uint32_t cylinders;
-    uint64_t nb_sectors;
-
-    IDEState *ide_drive_init__part1237(IDEIFState *ide_if, BlockDevice *bs,
-                                       uint32_t *out_cylinders,
-                                       uint64_t *out_nb_sectors);
-    s = ide_drive_init__part1237(ide_if, bs, &cylinders, &nb_sectors);
-
-    void ide_drive_init__part1238(uint32_t *cylinders);
-    ide_drive_init__part1238(&cylinders);
-
-    IDEState *ide_drive_init__part1239(IDEState *s, uint32_t cylinders, uint64_t nb_sectors);
-    return ide_drive_init__part1239(s, cylinders, nb_sectors);
-}
+static IDEState *ide_drive_init(IDEIFState *ide_if, BlockDevice *bs);
 
 IDEIFState *ide_init(PhysMemoryMap *port_map, uint32_t addr, uint32_t addr2,
-                     IRQSignal *irq, BlockDevice **tab_bs)
-{
-        int i;
-    IDEIFState *s;
-
-    IDEIFState *ide_init__part1241(PhysMemoryMap *port_map, uint32_t addr,
-                                   IRQSignal *irq, DeviceReadFunc *data_readw,
-                                   DeviceWriteFunc *data_writew,
-                                   DeviceReadFunc *ioport_read,
-                                   DeviceWriteFunc *ioport_write);
-
-    s = ide_init__part1241(port_map, addr, irq, ide_data_readw, ide_data_writew,
-                           ide_ioport_read, ide_ioport_write);
-
-    void ide_init__part1242(PhysMemoryMap *port_map, uint32_t addr2, void *opaque,
-                        DeviceReadFunc *read_func, DeviceWriteFunc *write_func);
-    ide_init__part1242(port_map, addr2, s, ide_status_read, ide_cmd_write);
+                     IRQSignal *irq, BlockDevice **tab_bs);
 
 
-        {
-        void ide_init__part1243(IDEIFState *s, BlockDevice **tab_bs);
-        ide_init__part1243(s, tab_bs);
-    }
-
-        IDEIFState *ide_init__part1244(IDEIFState *s);
-    return ide_init__part1244(s);
-
-}
-
-
-PCIDevice *piix3_ide_init(PCIBus *pci_bus, int devfn)
-{
-        PCIDevice *piix3_ide_init__part1246(PCIBus *pci_bus, int devfn);
-    return piix3_ide_init__part1246(pci_bus, devfn);
-
-}
+PCIDevice *piix3_ide_init(PCIBus *pci_bus, int devfn);

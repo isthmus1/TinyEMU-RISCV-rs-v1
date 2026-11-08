@@ -8477,105 +8477,7 @@ static void tcp_xmit_timer(register struct tcpcb *tp, int rtt);
 
 static int
 tcp_reass(register struct tcpcb *tp, register struct tcpiphdr *ti,
-          struct mbuf *m)
-{
- register struct tcpiphdr *q;
- struct socket *so = tp->t_socket;
- int flags;
-
-
-
-
-
-        int tcp_reass__part2661(void *ti);
-        if (tcp_reass__part2661((void *)ti))
-  goto present;
-
-
-
-
-
-  {
-  struct tcpiphdr *tcp_reass__part2662(struct tcpcb *tp, struct tcpiphdr *ti);
-  q = tcp_reass__part2662(tp, ti);
- }
-
-
-
-
-
-
-
- extern int tcp_reass__part2663(void *tp, struct tcpiphdr *ti,
-                               struct mbuf *m, struct tcpiphdr **q_out);
- {
-  int tcp_reass__part2663_st;
-  struct tcpiphdr *tcp_reass__part2663_q;
-  tcp_reass__part2663_st = tcp_reass__part2663(tp, ti, m,
-                                               &tcp_reass__part2663_q);
-  q = tcp_reass__part2663_q;
-  if (tcp_reass__part2663_st)
-   goto present;
- }
-
-  {
-  void tcp_reass__part2664(struct tcpiphdr *ti, struct mbuf *m);
-  tcp_reass__part2664(ti, m);
- }
-
-
-
-
-
-
-  {
-  struct tcpiphdr *q_2665 = q;
-  struct mbuf *m_2665 = m;
-  void tcp_reass__part2665(void *, struct tcpiphdr *, struct tcpiphdr **, struct mbuf **);
-  tcp_reass__part2665(tp, ti, &q_2665, &m_2665);
-  q = q_2665;
-  m = m_2665;
- }
-
-
-
-
-
- void tcp_reass__part2666(void *ti, void *q);
- tcp_reass__part2666((void *)(ti), (void *)(q));
-
-
- int tcp_reass__part2667(struct tcpcb *tp);
-present:
-
-
-
-
- if (tcp_reass__part2667(tp))
-  return (0);
-
-  struct tcpiphdr *tcp_reass__part2668(struct tcpcb *tp);
- ti = (struct tcpiphdr *)tcp_reass__part2668(tp);
-
- int tcp_reass__part2669(struct tcpiphdr *ti, void *tp, uint32_t rcv_nxt);
- if (tcp_reass__part2669(ti, tp, tp->rcv_nxt))
-  return (0);
-   {
-    extern int tcp_reass__part2670(struct tcpcb *, struct tcpiphdr *);
-    if (tcp_reass__part2670(tp, ti))
-      return (0);
-  }
-
-  {
-  int tcp_reass__part2671(struct tcpiphdr *, struct mbuf *, struct socket *,
-                          uint32_t *, int *, uint8_t *, struct tcpiphdr *);
-  flags = tcp_reass__part2671(ti, m, so, &tp->rcv_nxt, &so->so_state,
-                              &so->so_emu, (struct tcpiphdr *)tp);
- }
-
- int tcp_reass__part2672(int flags);
- return (tcp_reass__part2672(flags));
-}
+          struct mbuf *m);
 
 
 
@@ -8759,177 +8661,29 @@ if (tcp_input__part2689(so))
  tcp_input__part2697(&tp->rcv_wnd, so->so_rcv.sb_datalen, so->so_rcv.sb_cc, tp->rcv_adv, tp->rcv_nxt);
 
 
- switch (tp->t_state) {
- case 1: {
-
-   if (tiflags & 0x04)
-     goto drop;
-   if (tiflags & 0x10)
-     goto dropwithreset;
-   if ((tiflags & 0x02) == 0)
-     goto drop;
-   if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
-       slirp->vnetwork_addr.s_addr) {
-     if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr &&
-  so->so_faddr.s_addr != slirp->vnameserver_addr.s_addr) {
-
-  for (ex_ptr = slirp->exec_list; ex_ptr;
-       ex_ptr = ex_ptr->ex_next) {
-    if(ex_ptr->ex_fport == so->so_fport &&
-       so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
-      so->so_state |= 0x080;
-      break;
-    }
-  }
-  if (so->so_state & 0x080) {
-      goto cont_input;
-  }
-     }
-
-   }
-
-   if (so->so_emu & 0x10) {
-     so->so_emu &= ~0x10;
-     goto cont_input;
-   }
-
-   if((tcp_fconnect(so) == -1) && (
-                                  (*__errno_location ()) 
-                                        != 
-                                           115
-                                                      ) && (
-                                                            (*__errno_location ()) 
-                                                                  != 
-                                                                     11
-                                                                                )) {
-     u_char code=0;
-    
-                          ;
-     if(
-       (*__errno_location ()) 
-             == 
-                111
-                            ) {
-
-       tcp_respond(tp, ti, m, ti->ti_t.th_seq+1, (tcp_seq)0,
-     0x04|0x10);
-     } else {
-       if(
-         (*__errno_location ()) 
-               == 
-                  113
-                              ) code=1;
-       ((ti->ti_t.th_seq) = htonl((ti->ti_t.th_seq)));
-       ((ti->ti_t.th_ack) = htonl((ti->ti_t.th_ack)));
-       ((ti->ti_t.th_win) = htons((uint16_t)(ti->ti_t.th_win)));
-       ((ti->ti_t.th_urp) = htons((uint16_t)(ti->ti_t.th_urp)));
-       m->m_hdr.mh_data -= sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
-       m->m_hdr.mh_len += sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
-       *ip=save_ip;
-       icmp_error(m, 3,code, 0,strerror(
-                                                  (*__errno_location ())
-                                                       ));
-     }
-            tcp_close(tp);
-     m_free(m);
-   } else {
-
-
-
-
-
-
-     so->so_m = m;
-     so->so_ti = ti;
-     tp->t_timer[2] = ( 75*2);
-     tp->t_state = 3;
-   }
-   return;
-
+  {
+  int tcp_input__part2698(struct mbuf *m, int iphlen, struct socket *inso,
+                          struct tcpiphdr *ti, struct tcpcb *tp, struct socket *so,
+                          Slirp *slirp, int tiflags, u_long tiwin, struct ip *sav,
+                          caddr_t optp, int optlen, int off, int iss,
+                          struct ex_list *ex_ptr);
+  int tcp_input__res2908;
  cont_conn:
-
-
-
-   if (so->so_state & 0x001) {
-     tp = tcp_close(tp);
-     goto dropwithreset;
-   }
- cont_input:
-   tcp_template(tp);
-
-   if (optp)
-     tcp_dooptions(tp, (u_char *)optp, optlen, ti);
-
-   if (iss)
-     tp->iss = iss;
-   else
-     tp->iss = slirp->tcp_iss;
-   slirp->tcp_iss += (125*1024)/2;
-   tp->irs = ti->ti_t.th_seq;
-   (tp)->snd_una = (tp)->snd_nxt = (tp)->snd_max = (tp)->snd_up = (tp)->iss;
-   (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1;
-   tp->t_flags |= 0x0001;
-   tp->t_state = 3;
-   tp->t_timer[2] = ( 75*2);
-   goto trimthenstep6;
+  tcp_input__res2908 = tcp_input__part2698(m, iphlen, inso, ti, tp, so, slirp,
+                                           tiflags, tiwin, &save_ip, optp,
+                                           optlen, off, iss, ex_ptr);
+  if (tcp_input__res2908 == 1)
+    return;
+  if (tcp_input__res2908 == 2)
+    goto drop;
+  if (tcp_input__res2908 == 3)
+    goto dropwithreset;
+  if (tcp_input__res2908 == 4) {
+    tp = tcp_close(tp);
+    goto dropwithreset;
+  }
  }
- case 2:
-  if ((tiflags & 0x10) &&
-      (((int)((ti->ti_t.th_ack)-(tp->iss)) <= 0) ||
-       ((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0)))
-   goto dropwithreset;
 
-  if (tiflags & 0x04) {
-                        if (tiflags & 0x10) {
-                                tcp_drop(tp, 0);
-                        }
-   goto drop;
-  }
-
-  if ((tiflags & 0x02) == 0)
-   goto drop;
-  if (tiflags & 0x10) {
-   tp->snd_una = ti->ti_t.th_ack;
-   if (((int)((tp->snd_nxt)-(tp->snd_una)) < 0))
-    tp->snd_nxt = tp->snd_una;
-  }
-
-  tp->t_timer[0] = 0;
-  tp->irs = ti->ti_t.th_seq;
-  (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1;
-  tp->t_flags |= 0x0001;
-  if (tiflags & 0x10 && ((int)((tp->snd_una)-(tp->iss)) > 0)) {
-   soisfconnected(so);
-   tp->t_state = 4;
-
-   (void) tcp_reass(tp, (struct tcpiphdr *)0,
-    (struct mbuf *)0);
-
-
-
-
-   if (tp->t_rtt)
-    tcp_xmit_timer(tp, tp->t_rtt);
-  } else
-   tp->t_state = 3;
-
-trimthenstep6:
-
-
-
-
-
-  ti->ti_t.th_seq++;
-  if (ti->ti_i.ih_len > tp->rcv_wnd) {
-   todrop = ti->ti_i.ih_len - tp->rcv_wnd;
-   m_adj(m, -todrop);
-   ti->ti_i.ih_len = tp->rcv_wnd;
-   tiflags &= ~0x01;
-  }
-  tp->snd_wl1 = ti->ti_t.th_seq - 1;
-  tp->rcv_up = ti->ti_t.th_seq;
-  goto step6;
- }
 
 
 
@@ -9006,205 +8760,20 @@ trimthenstep6:
 
 
 
- switch (tp->t_state) {
+ 	{
+		extern int tcp_input__part2707(struct tcpcb *, struct socket *,
+		    struct tcpiphdr *, u_long, int *, int *, int *);
+
+		ret = tcp_input__part2707(tp, so, ti, tiwin, &needoutput,
+		    &acked, &ourfinisacked);
+		if (ret == 1)
+			goto dropwithreset;
+		if (ret == 2)
+			goto drop;
+		if (ret == 3)
+			goto dropafterack;
+	}
 
-
-
-
-
- case 3:
-
-  if (((int)((tp->snd_una)-(ti->ti_t.th_ack)) > 0) ||
-      ((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0))
-   goto dropwithreset;
-  tp->t_state = 4;
-
-
-
-
-
-
-
-  tp->snd_una=ti->ti_t.th_ack;
-  if (so->so_state & 0x080) {
-
-    ret = tcp_ctl(so);
-    if (ret == 1) {
-      soisfconnected(so);
-      so->so_state &= ~0x080;
-    } else if (ret == 2) {
-      so->so_state &= 0xf000;
-      so->so_state |= 0x001;
-    } else {
-      needoutput = 1;
-      tp->t_state = 6;
-    }
-  } else {
-    soisfconnected(so);
-  }
-
-  (void) tcp_reass(tp, (struct tcpiphdr *)0, (struct mbuf *)0);
-  tp->snd_wl1 = ti->ti_t.th_seq - 1;
-
-  goto synrx_to_est;
- case 4:
- case 6:
- case 9:
- case 5:
- case 7:
- case 8:
- case 10:
-
-  if (((int)((ti->ti_t.th_ack)-(tp->snd_una)) <= 0)) {
-   if (ti->ti_i.ih_len == 0 && tiwin == tp->snd_wnd) {
-    
-                               ;
-    if (tp->t_timer[0] == 0 ||
-        ti->ti_t.th_ack != tp->snd_una)
-     tp->t_dupacks = 0;
-    else if (++tp->t_dupacks == 3) {
-     tcp_seq onxt = tp->snd_nxt;
-     u_int win =
-         ((tp->snd_wnd) < (tp->snd_cwnd) ? (tp->snd_wnd) : (tp->snd_cwnd)) / 2 /
-      tp->t_maxseg;
-
-     if (win < 2)
-      win = 2;
-     tp->snd_ssthresh = win * tp->t_maxseg;
-     tp->t_timer[0] = 0;
-     tp->t_rtt = 0;
-     tp->snd_nxt = ti->ti_t.th_ack;
-     tp->snd_cwnd = tp->t_maxseg;
-     (void) tcp_output(tp);
-     tp->snd_cwnd = tp->snd_ssthresh +
-            tp->t_maxseg * tp->t_dupacks;
-     if (((int)((onxt)-(tp->snd_nxt)) > 0))
-      tp->snd_nxt = onxt;
-     goto drop;
-    } else if (tp->t_dupacks > 3) {
-     tp->snd_cwnd += tp->t_maxseg;
-     (void) tcp_output(tp);
-     goto drop;
-    }
-   } else
-    tp->t_dupacks = 0;
-   break;
-  }
- synrx_to_est:
-
-
-
-
-  if (tp->t_dupacks > 3 &&
-      tp->snd_cwnd > tp->snd_ssthresh)
-   tp->snd_cwnd = tp->snd_ssthresh;
-  tp->t_dupacks = 0;
-  if (((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0)) {
-   goto dropafterack;
-  }
-  acked = ti->ti_t.th_ack - tp->snd_una;
-  if (tp->t_rtt && ((int)((ti->ti_t.th_ack)-(tp->t_rtseq)) > 0))
-   tcp_xmit_timer(tp,tp->t_rtt);
-
-
-
-
-
-
-
-  if (ti->ti_t.th_ack == tp->snd_max) {
-   tp->t_timer[0] = 0;
-   needoutput = 1;
-  } else if (tp->t_timer[1] == 0)
-   tp->t_timer[0] = tp->t_rxtcur;
-
-
-
-
-
-
-
-  {
-    register u_int cw = tp->snd_cwnd;
-    register u_int incr = tp->t_maxseg;
-
-    if (cw > tp->snd_ssthresh)
-      incr = incr * incr / cw;
-    tp->snd_cwnd = ((cw + incr) < (65535<<tp->snd_scale) ? (cw + incr) : (65535<<tp->snd_scale));
-  }
-  if (acked > so->so_snd.sb_cc) {
-   tp->snd_wnd -= so->so_snd.sb_cc;
-   sbdrop(&so->so_snd, (int )so->so_snd.sb_cc);
-   ourfinisacked = 1;
-  } else {
-   sbdrop(&so->so_snd, acked);
-   tp->snd_wnd -= acked;
-   ourfinisacked = 0;
-  }
-  tp->snd_una = ti->ti_t.th_ack;
-  if (((int)((tp->snd_nxt)-(tp->snd_una)) < 0))
-   tp->snd_nxt = tp->snd_una;
-
-  switch (tp->t_state) {
-
-
-
-
-
-
-  case 6:
-   if (ourfinisacked) {
-
-
-
-
-
-
-
-    if (so->so_state & 0x008) {
-     tp->t_timer[3] = (8 * ( 75*2));
-    }
-    tp->t_state = 9;
-   }
-   break;
-
-
-
-
-
-
-
-  case 7:
-   if (ourfinisacked) {
-    tp->t_state = 10;
-    tcp_canceltimers(tp);
-    tp->t_timer[3] = 2 * ( 5*2);
-   }
-   break;
-
-
-
-
-
-
-
-  case 8:
-   if (ourfinisacked) {
-                                tcp_close(tp);
-    goto drop;
-   }
-   break;
-
-
-
-
-
-
-  case 10:
-   tp->t_timer[3] = 2 * ( 5*2);
-   goto dropafterack;
-  }
- }
 
 step6:
  {
@@ -9226,13 +8795,13 @@ step6:
  }
 
 dodata:
- if ((ti->ti_i.ih_len || (tiflags&0x01)) &&
-     ((tp->t_state) >= 10) == 0) {
-  { if ((ti)->ti_t.th_seq == (tp)->rcv_nxt && ((tp)->seg_next == (struct tcpiphdr*)(tp)) && (tp)->t_state == 4) { tp->t_flags |= 0x0002; (tp)->rcv_nxt += (ti)->ti_i.ih_len; tiflags = (ti)->ti_t.th_flags & 0x01; if (so->so_emu) { if (tcp_emu((so),(m))) sbappend(so, (m)); } else sbappend((so), (m)); } else { (tiflags) = tcp_reass((tp), (ti), (m)); tp->t_flags |= 0x0001; } };
- } else {
-  m_free(m);
-  tiflags &= ~0x01;
+ {
+  extern int tcp_input__part2710(struct tcpcb *tp, struct tcpiphdr *ti,
+                                 struct mbuf *m, struct socket *so,
+                                 int tiflags);
+  tiflags = tcp_input__part2710(tp, ti, m, so, tiflags);
  }
+
 
 
 
@@ -9301,74 +8870,8 @@ drop:
 }
 
 static void
-tcp_dooptions(struct tcpcb *tp, u_char *cp, int cnt, struct tcpiphdr *ti)
-{
-  uint16_t mss;
- int opt, optlen;
- extern void tcp_dooptions__part2722(uint16_t *mss, int *opt, int *optlen);
- tcp_dooptions__part2722(&mss, &opt, &optlen);
- ;
- ;
-
-
- extern void tcp_dooptions__part2723(struct tcpcb *tp, u_char *cp, int cnt, struct tcpiphdr *ti);
- tcp_dooptions__part2723(tp, cp, cnt, ti);
- (void) mss;
- (void) opt;
- (void) optlen;
-
-}
+tcp_dooptions(struct tcpcb *tp, u_char *cp, int cnt, struct tcpiphdr *ti);
 static void
-tcp_xmit_timer(register struct tcpcb *tp, int rtt)
-{
-  short tcp_xmit_timer__part2725(void);
- register short delta = tcp_xmit_timer__part2725();
- ;
- ;
- ;
-
-
-  {
-  void tcp_xmit_timer__part2726(short *, short *, int);
-  tcp_xmit_timer__part2726(&tp->t_srtt, &tp->t_rttvar, rtt);
- }
-
- void tcp_xmit_timer__part2727(short *t_rtt, short *t_rxtshift);
- tcp_xmit_timer__part2727(&tp->t_rtt, &tp->t_rxtshift);
-  { void tcp_xmit_timer__part2728(struct tcpcb *tp); tcp_xmit_timer__part2728(tp); }
-
-                                         void tcp_xmit_timer__part2729(short *);
- tcp_xmit_timer__part2729(&tp->t_softerror);
-}
+tcp_xmit_timer(register struct tcpcb *tp, int rtt);
 int
-tcp_mss(struct tcpcb *tp, u_int offer)
-{
- struct socket *so = tp->t_socket;
- int mss;
-
- int tcp_mss__part2731(struct tcpcb *tp);
-
- ;
-
- ;
-
- ;
-
- mss = tcp_mss__part2731(tp);
-
- int tcp_mss__part2732(int mss, u_int offer);
- if (offer)
-  mss = tcp_mss__part2732(mss, offer);
-
-  int tcp_mss__part2733(int mss);
- mss = tcp_mss__part2733(mss);
-
- void tcp_mss__part2734(struct tcpcb *tp, int mss, u_int offer);
-tcp_mss__part2734(tp, mss, offer);
-
-
-  int tcp_mss__part2735(struct tcpcb *tp, int mss);
-
- return tcp_mss__part2735(tp, mss);
-
-}
+tcp_mss(struct tcpcb *tp, u_int offer);

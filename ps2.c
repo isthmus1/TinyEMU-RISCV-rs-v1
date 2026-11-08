@@ -2902,25 +2902,7 @@ struct PS2MouseState {
     uint8_t mouse_buttons;
 };
 
-void ps2_queue(void *opaque, int b)
-{
-    PS2State *s = (PS2State *)opaque;
-    PS2Queue *q = &s->queue;
-
-    int ps2_queue__part1618(int count);
-
-    if (ps2_queue__part1618(q->count))
-        return;
-
-    void ps2_queue__part1619(PS2Queue *q, int b);
-    ps2_queue__part1619(q, b);
-
-    void ps2_queue__part1620(PS2Queue *q);
-    ps2_queue__part1620(q);
-
-    void ps2_queue__part1621(PS2State *s);
-    ps2_queue__part1621(s);
-}
+void ps2_queue(void *opaque, int b);
 
 
 
@@ -2934,147 +2916,29 @@ static const uint8_t linux_input_to_keycode_set1[127 - 96 + 1] = {
 
 
 
-void ps2_put_keycode(PS2KbdState *s, BOOL is_down, int keycode)
-{
-        {
-        int ps2_put_keycode__part1624(PS2KbdState *s, int keycode, int *out_keycode);
-        int part1624_keycode = keycode;
-        if (ps2_put_keycode__part1624(s, keycode, &part1624_keycode))
-            return;
-        keycode = part1624_keycode;
-    }
+void ps2_put_keycode(PS2KbdState *s, BOOL is_down, int keycode);
 
-    void ps2_put_keycode__part1625(PS2KbdState *s, BOOL is_down, int keycode);
-    ps2_put_keycode__part1625(s, is_down, keycode);
-}
+uint32_t ps2_read_data(void *opaque);
 
-uint32_t ps2_read_data(void *opaque)
-{
-    void ps2_read_data__part1627(void *opaque, PS2State **s_out, PS2Queue **q_out);
-    PS2State *s;
-    PS2Queue *q;
-    int val, index;
+static void ps2_reset_keyboard(PS2KbdState *s);
 
-    ps2_read_data__part1627(opaque, &s, &q);
-
-        {
-        int ps2_read_data__part1628(void *opaque);
-        val = ps2_read_data__part1628(s);
-    }
-
-    uint32_t ps2_read_data__part1629(int val);
-    return ps2_read_data__part1629(val);
-}
-
-static void ps2_reset_keyboard(PS2KbdState *s)
-{
-    void ps2_reset_keyboard__part1631(PS2KbdState *s);
-    ps2_reset_keyboard__part1631(s);
-
-}
-
-void ps2_write_keyboard(void *opaque, int val)
-{
-    PS2KbdState *s = (PS2KbdState *)opaque;
-
-    void ps2_write_keyboard__part1633(PS2KbdState *opaque, int val);
-    ps2_write_keyboard__part1633(s, val);
-
-}
+void ps2_write_keyboard(void *opaque, int val);
 
 
 
 
 
-void ps2_keyboard_set_translation(void *opaque, int mode)
-{
-    void ps2_keyboard_set_translation__part1635(void *opaque, int mode);
-    ps2_keyboard_set_translation__part1635(opaque, mode);
-}
+void ps2_keyboard_set_translation(void *opaque, int mode);
 
-static void ps2_mouse_send_packet(PS2MouseState *s)
-{
-    unsigned int b;
-    int dx1, dy1, dz1;
-
-    void ps2_mouse_send_packet__part1637(PS2MouseState *s, int *dx1, int *dy1, int *dz1);
-    ps2_mouse_send_packet__part1637(s, &dx1, &dy1, &dz1);
-
-
-    void ps2_mouse_send_packet__part1638(int *dx1);
-    ps2_mouse_send_packet__part1638(&dx1);
-
-    void ps2_mouse_send_packet__part1639(int *dy1);
-    ps2_mouse_send_packet__part1639(&dy1);
-        unsigned int ps2_mouse_send_packet__part1640(void *common, unsigned int mouse_buttons, int dx1, int dy1);
-    b = ps2_mouse_send_packet__part1640(&s->common, s->mouse_buttons, dx1, dy1);
-
-
-    void ps2_mouse_send_packet__part1641(PS2MouseState *s, int *dz1);
-    ps2_mouse_send_packet__part1641(s, &dz1);
-
-
-
-    void ps2_mouse_send_packet__part1642(int *pdx, int *pdy, int *pdz, int dx1, int dy1, int dz1);
-    ps2_mouse_send_packet__part1642(&s->mouse_dx, &s->mouse_dy, &s->mouse_dz, dx1, dy1, dz1);
-
-}
+static void ps2_mouse_send_packet(PS2MouseState *s);
 
 void ps2_mouse_event(PS2MouseState *s,
-                     int dx, int dy, int dz, int buttons_state)
-{
+                     int dx, int dy, int dz, int buttons_state);
 
-    int ps2_mouse_event__part1644(PS2MouseState *s);
-    if (ps2_mouse_event__part1644(s))
-        return;
+void ps2_write_mouse(void *opaque, int val);
 
-    void ps2_mouse_event__part1645(PS2MouseState *s, int dx, int dy, int dz);
-    ps2_mouse_event__part1645(s, dx, dy, dz);
+static void ps2_reset(void *opaque);
 
+PS2KbdState *ps2_kbd_init(void (*update_irq)(void *, int), void *update_arg);
 
-        int ps2_mouse_event__part1646(PS2MouseState *s, int buttons_state);
-    if (ps2_mouse_event__part1646(s, buttons_state))
-        return;
-
-    void ps2_mouse_event__part1647(PS2MouseState *s, int buttons_state);
-    ps2_mouse_event__part1647(s, buttons_state);
-
-
-        void ps2_mouse_event__part1648(PS2MouseState *s);
-    ps2_mouse_event__part1648(s);
-
-}
-
-void ps2_write_mouse(void *opaque, int val)
-{
-    PS2MouseState *s = (PS2MouseState *)opaque;
-
-
-
-        {
-        int ps2_write_mouse__part1650(void *opaque, int val);
-        if (ps2_write_mouse__part1650(s, val))
-            return;
-    }
-
-}
-
-static void ps2_reset(void *opaque)
-{
-    void ps2_reset__part1652(void *opaque);
-    ps2_reset__part1652(opaque);
-}
-
-PS2KbdState *ps2_kbd_init(void (*update_irq)(void *, int), void *update_arg)
-{
-    PS2KbdState *ps2_kbd_init__part1654(void (*update_irq)(void *, int), void *update_arg);
-    PS2KbdState *s = ps2_kbd_init__part1654(update_irq, update_arg);
-    return s;
-
-}
-
-PS2MouseState *ps2_mouse_init(void (*update_irq)(void *, int), void *update_arg)
-{
-    PS2MouseState *ps2_mouse_init__part1656(void (*update_irq)(void *, int), void *update_arg);
-    return ps2_mouse_init__part1656(update_irq, update_arg);
-}
+PS2MouseState *ps2_mouse_init(void (*update_irq)(void *, int), void *update_arg);

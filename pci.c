@@ -2891,331 +2891,63 @@ struct PCIBus {
     IRQSignal irq[4];
 };
 
-static int bus_map_irq(PCIDevice *d, int irq_num)
-{
-        int bus_map_irq__part1479(PCIDevice *d, int irq_num);
-    return bus_map_irq__part1479(d, irq_num);
+static int bus_map_irq(PCIDevice *d, int irq_num);
 
-}
+static void pci_device_set_irq(void *opaque, int irq_num, int level);
 
-static void pci_device_set_irq(void *opaque, int irq_num, int level)
-{
-        void pci_device_set_irq__part1481(void *opaque, int irq_num, PCIBus **pb, uint32_t *pmask, int *pirq_num);
-    PCIDevice *d = opaque;
-    PCIBus *b;
-    uint32_t mask;
-    int i, irq_level;
-
-    pci_device_set_irq__part1481(opaque, irq_num, &b, &mask, &irq_num);
-
-        void pci_device_set_irq__part1482(PCIBus *b, int irq_num, uint8_t devfn, uint32_t mask);
-    pci_device_set_irq__part1482(b, irq_num, d->devfn, mask);
-
-
-
-    void pci_device_set_irq__part1483(uint32_t *mask);
-pci_device_set_irq__part1483(&mask);
-
-    void pci_device_set_irq__part1484(PCIBus *b, int irq_num, uint32_t *mask);
-    pci_device_set_irq__part1484(b, irq_num, &mask);
-
-    void pci_device_set_irq__part1485(PCIBus *b, int irq_num, uint32_t mask);
-    pci_device_set_irq__part1485(b, irq_num, mask);
-
-}
-
-static int devfn_alloc(PCIBus *b)
-{
-    int devfn;
-    {
-        int devfn_alloc__part1487(PCIBus *b);
-        devfn = devfn_alloc__part1487(b);
-    }
-    int devfn_alloc__part1488(void);
-    return devfn_alloc__part1488();
-}
+static int devfn_alloc(PCIBus *b);
 
 
 PCIDevice *pci_register_device(PCIBus *b, const char *name, int devfn,
                                uint16_t vendor_id, uint16_t device_id,
-                               uint8_t revision, uint16_t class_id)
-{
-    PCIDevice *d;
-    int i;
+                               uint8_t revision, uint16_t class_id);
 
-    if (devfn < 0) {
-        int (*pci_register_device__part1490)(PCIBus *, int);
-        devfn = pci_register_device__part1490(b, devfn);
-        if (devfn < 0)
-            return
-                  ((void *)0)
-                      ;
-    }
-
-        {
-        PCIDevice *pci_register_device__part1491(PCIBus *b, int devfn);
-        if (pci_register_device__part1491(b, devfn))
-            return 
-                  ((void *)0)
-                      ;
-    }
-
-
-    PCIDevice *pci_register_device__part1492(PCIBus *b, const char *name, int devfn,
-                                         uint16_t vendor_id, uint16_t device_id,
-                                         uint8_t revision, uint16_t class_id);
-    d = pci_register_device__part1492(b, name, devfn, vendor_id, device_id, revision, class_id);
-
-
-        {
-        void pci_register_device__part1493(IRQSignal *irq, SetIRQFunc *set_irq, void *opaque);
-        pci_register_device__part1493(&d->irq[0], pci_device_set_irq, d);
-    }
-
-        {
-        PCIDevice *pci_register_device__part1494(PCIBus *b, int devfn, PCIDevice *d);
-        return pci_register_device__part1494(b, devfn, d);
-    }
-
-}
-
-IRQSignal *pci_device_get_irq(PCIDevice *d, unsigned int irq_num)
-{
-    
-   IRQSignal *pci_device_get_irq__part1496(PCIDevice *d, unsigned int irq_num);
-    return pci_device_get_irq__part1496(d, irq_num);
-}
+IRQSignal *pci_device_get_irq(PCIDevice *d, unsigned int irq_num);
 
 static uint32_t pci_device_config_read(PCIDevice *d, uint32_t addr,
-                                       int size_log2)
-{
-    uint32_t val;
-        uint32_t pci_device_config_read__part1498(const uint8_t *cfg, uint32_t addr, int size_log2);
-    val = pci_device_config_read__part1498(d->config, addr, size_log2);
+                                       int size_log2);
 
+PhysMemoryMap *pci_device_get_mem_map(PCIDevice *d);
 
-
-
-
-    uint32_t pci_device_config_read__part1499(uint32_t val);
-    return pci_device_config_read__part1499(val);
-}
-
-PhysMemoryMap *pci_device_get_mem_map(PCIDevice *d)
-{
-    PhysMemoryMap *pci_device_get_mem_map__part1501(PCIDevice *d);
-    return pci_device_get_mem_map__part1501(d);
-}
-
-PhysMemoryMap *pci_device_get_port_map(PCIDevice *d)
-{
-    PhysMemoryMap *pci_device_get_port_map__part1503(PCIDevice *d);
-    return pci_device_get_port_map__part1503(d);
-}
+PhysMemoryMap *pci_device_get_port_map(PCIDevice *d);
 
 void pci_register_bar(PCIDevice *d, unsigned int bar_num,
                       uint32_t size, int type,
-                      void *opaque, PCIBarSetFunc *bar_set)
-{
-    void pci_register_bar__part1505(PCIDevice *d, unsigned int bar_num,
-                                uint32_t size, int type,
-                                void *opaque, PCIBarSetFunc *bar_set,
-                                PCIIORegion **r_out, uint32_t *val_out,
-                                uint32_t *config_addr_out);
-    PCIIORegion *r;
-    uint32_t val, config_addr;
-    pci_register_bar__part1505(d, bar_num, size, type, opaque, bar_set,
-                               &r, &val, &config_addr);
+                      void *opaque, PCIBarSetFunc *bar_set);
 
-    void pci_register_bar__part1506(PCIIORegion *r, unsigned int bar_num,
-                                uint32_t *val, uint32_t *config_addr);
-    pci_register_bar__part1506(r, bar_num, &val, &config_addr);
-    void pci_register_bar__part1507(uint8_t *ptr, uint32_t v);
-    pci_register_bar__part1507(&d->config[config_addr], val);
-
-}
-
-static void pci_update_mappings(PCIDevice *d)
-{
-    int cmd, i, offset;
-    uint32_t new_addr;
-    BOOL new_enabled;
-    PCIIORegion *r;
-
-    int pci_update_mappings__part1509(const uint8_t *ptr);
-    cmd = pci_update_mappings__part1509(&d->config[0x04]);
-
-    void pci_update_mappings__part1510(PCIDevice *d);
-    pci_update_mappings__part1510(d);
-
-}
+static void pci_update_mappings(PCIDevice *d);
 
 
 static int pci_write_bar(PCIDevice *d, uint32_t addr,
-                          uint32_t val)
-{
-    PCIIORegion *r;
-    int reg;
-
-        int pci_write_bar__part1512(uint32_t addr);
-    reg = pci_write_bar__part1512(addr);
-
-
-        PCIIORegion *pci_write_bar__part1513(PCIDevice *d, int reg);
-    r = pci_write_bar__part1513(d, reg);
-
-    int pci_write_bar__part1514(const PCIIORegion *r);
-    if (pci_write_bar__part1514(r))
-        return -1;
-
-    uint32_t pci_write_bar__part1515(int reg, PCIIORegion *r, uint32_t val);
-    val = pci_write_bar__part1515(reg, r, val);
-
-        {
-        extern int pci_write_bar__part1516(PCIDevice *d, uint32_t addr, uint32_t val);
-        return pci_write_bar__part1516(d, addr, val);
-    }
-
-}
+                          uint32_t val);
 
 static void pci_device_config_write8(PCIDevice *d, uint32_t addr,
-                                     uint32_t data)
-{
-    int can_write;
-
-    int pci_device_config_write8__part1518(PCIDevice *d, uint32_t addr, uint32_t data);
-    if (pci_device_config_write8__part1518(d, addr, data))
-        return;
-
-
-    int pci_device_config_write8__part1519(uint8_t config0e, uint32_t addr);
-    can_write = pci_device_config_write8__part1519(d->config[0x0e], addr);
-    void pci_device_config_write8__part1520(PCIDevice *d, uint32_t addr, uint32_t data, int can_write);
-    pci_device_config_write8__part1520(d, addr, data, can_write);
-
-}
+                                     uint32_t data);
 
 
 static void pci_device_config_write(PCIDevice *d, uint32_t addr,
-                                    uint32_t data, int size_log2)
-{
-    int size, i;
-    uint32_t addr1;
-
-
-
-
-
-    int pci_device_config_write__part1522(PCIDevice *d, uint32_t addr, uint32_t data, int size_log2);
-    if (pci_device_config_write__part1522(d, addr, data, size_log2))
-        return;
-
-        int pci_device_config_write__part1523(int size_log2);
-    size = pci_device_config_write__part1523(size_log2);
-        void pci_device_config_write__part1524(PCIDevice *d, uint32_t addr,
-                                           uint32_t data, int size);
-    (void)i;
-    (void)addr1;
-    pci_device_config_write__part1524(d, addr, data, size);
-
-        void pci_device_config_write__part1525(PCIDevice *d, uint32_t addr, int size);
-    pci_device_config_write__part1525(d, addr, size);
-
-}
+                                    uint32_t data, int size_log2);
 
 
 static void pci_data_write(PCIBus *s, uint32_t addr,
-                           uint32_t data, int size_log2)
-{
-    PCIDevice *d;
-    int bus_num, devfn, config_addr;
-    int pci_data_write__part1527(uint32_t addr);
-
-    bus_num = pci_data_write__part1527(addr);
-
-    int pci_data_write__part1528(int bus_num, int bus_bus_num);
-    if (pci_data_write__part1528(bus_num, s->bus_num))
-        return;
-        void pci_data_write__part1529(PCIBus *s, uint32_t addr, int *devfn, PCIDevice **d);
-    pci_data_write__part1529(s, addr, &devfn, &d);
-
-        int pci_data_write__part1530(void *d);
-    if (pci_data_write__part1530(d))
-        return;
-    void pci_data_write__part1531(PCIDevice *d, uint32_t addr, uint32_t data, int size_log2);
-    pci_data_write__part1531(d, addr, data, size_log2);
-}
+                           uint32_t data, int size_log2);
 
 static const uint32_t val_ones[3] = { 0xff, 0xffff, 0xffffffff };
 
-static uint32_t pci_data_read(PCIBus *s, uint32_t addr, int size_log2)
-{
-    int pci_data_read__part1534(uint32_t addr);
-
-    PCIDevice *d;
-    int bus_num, devfn, config_addr;
-
-    bus_num = pci_data_read__part1534(addr);
-
-    uint32_t pci_data_read__part1535(PCIBus *s, int bus_num, int size_log2);
-    if (pci_data_read__part1535(s, bus_num, size_log2))
-        return val_ones[size_log2];
-    int pci_data_read__part1536(PCIBus *s, uint32_t addr, PCIDevice **d);
-    devfn = pci_data_read__part1536(s, addr, &d);
-        {
-        int pci_data_read__part1537(PCIDevice *d, int size_log2, uint32_t *out);
-        uint32_t part_val;
-        if (pci_data_read__part1537(d, size_log2, &part_val))
-            return part_val;
-    }
-
-    uint32_t pci_data_read__part1538(PCIDevice *d, uint32_t addr, int size_log2);
-    return pci_data_read__part1538(d, addr, size_log2);
-}
+static uint32_t pci_data_read(PCIBus *s, uint32_t addr, int size_log2);
 
 
 
-uint8_t *pci_device_get_dma_ptr(PCIDevice *d, uint64_t addr, BOOL is_rw)
-{
-    uint8_t *pci_device_get_dma_ptr__part1540(PCIDevice *d, uint64_t addr, BOOL is_rw);
-    return pci_device_get_dma_ptr__part1540(d, addr, is_rw);
-}
+uint8_t *pci_device_get_dma_ptr(PCIDevice *d, uint64_t addr, BOOL is_rw);
 
-void pci_device_set_config8(PCIDevice *d, uint8_t addr, uint8_t val)
-{
-    void pci_device_set_config8__part1542(PCIDevice *d, uint8_t addr, uint8_t val);
-    pci_device_set_config8__part1542(d, addr, val);
+void pci_device_set_config8(PCIDevice *d, uint8_t addr, uint8_t val);
 
-}
+void pci_device_set_config16(PCIDevice *d, uint8_t addr, uint16_t val);
 
-void pci_device_set_config16(PCIDevice *d, uint8_t addr, uint16_t val)
-{
-    void pci_device_set_config16__part1544(uint8_t *ptr, uint16_t v);
-    pci_device_set_config16__part1544(&d->config[addr], val);
-
-}
-
-int pci_device_get_devfn(PCIDevice *d)
-{
-    int pci_device_get_devfn__part1546(PCIDevice *d);
-return pci_device_get_devfn__part1546(d);
-}
+int pci_device_get_devfn(PCIDevice *d);
 
 
-int pci_add_capability(PCIDevice *d, const uint8_t *buf, int size)
-{
-    int pci_add_capability__part1548(PCIDevice *d);
-
-int offset;
-
-    offset = pci_add_capability__part1548(d);
-    int pci_add_capability__part1549(int offset, int size);
-    if (pci_add_capability__part1549(offset, size))
-        return -1;
-
-    int pci_add_capability__part1550(PCIDevice *d, const uint8_t *buf, int size, int offset);
-    return pci_add_capability__part1550(d, buf, size, offset);
-}
+int pci_add_capability(PCIDevice *d, const uint8_t *buf, int size);
 
 
 
@@ -3229,104 +2961,21 @@ struct I440FXState {
 };
 
 static void i440fx_write_addr(void *opaque, uint32_t offset,
-                              uint32_t data, int size_log2)
-{
-    void i440fx_write_addr__part1553(void *opaque, uint32_t data);
-    i440fx_write_addr__part1553(opaque, data);
+                              uint32_t data, int size_log2);
 
-}
-
-static uint32_t i440fx_read_addr(void *opaque, uint32_t offset, int size_log2)
-{
-    uint32_t i440fx_read_addr__part1555(void *opaque);
-    return i440fx_read_addr__part1555(opaque);
-
-}
+static uint32_t i440fx_read_addr(void *opaque, uint32_t offset, int size_log2);
 
 static void i440fx_write_data(void *opaque, uint32_t offset,
-                              uint32_t data, int size_log2)
-{
-    I440FXState *s = opaque;
-        void i440fx_write_data__part1557(PCIBus *pci_bus, uint32_t config_reg, uint32_t offset, uint32_t data, int size_log2);
-    i440fx_write_data__part1557(s->pci_bus, s->config_reg, offset, data, size_log2);
+                              uint32_t data, int size_log2);
 
-}
+static uint32_t i440fx_read_data(void *opaque, uint32_t offset, int size_log2);
 
-static uint32_t i440fx_read_data(void *opaque, uint32_t offset, int size_log2)
-{
-    I440FXState *s = opaque;
-        void i440fx_read_data__part1559(void *opaque, int size_log2, int *taken, uint32_t *value);
-    {
-        int taken;
-        uint32_t value;
-        i440fx_read_data__part1559(opaque, size_log2, &taken, &value);
-        if (taken)
-            return value;
-    }
-    uint32_t i440fx_read_data__part1560(I440FXState *s, uint32_t offset, int size_log2);
-    return i440fx_read_data__part1560(s, offset, size_log2);
-}
-
-static void i440fx_set_irq(void *opaque, int irq_num, int irq_level)
-{
-    int i440fx_set_irq__part1562(void *opaque, int irq_num);
-    I440FXState *s = opaque;
-    int pic_irq;
-
-
-
-    pic_irq = i440fx_set_irq__part1562(opaque, irq_num);
-        if (pic_irq < 16) {
-        void i440fx_set_irq__part1563(I440FXState *s, int irq_num, int irq_level, int pic_irq);
-        i440fx_set_irq__part1563(s, irq_num, irq_level, pic_irq);
-    }
-}
+static void i440fx_set_irq(void *opaque, int irq_num, int irq_level);
 
 I440FXState *i440fx_init(PCIBus **pbus, int *ppiix3_devfn,
                          PhysMemoryMap *mem_map, PhysMemoryMap *port_map,
-                         IRQSignal *pic_irqs)
-{
-        I440FXState *s;
-    PCIBus *b;
-    PCIDevice *d;
-    int i;
-
-    void i440fx_init__part1565(I440FXState **s_out, PCIBus **b_out,
-                               PhysMemoryMap *mem_map, PhysMemoryMap *port_map,
-                               IRQSignal *pic_irqs);
-    i440fx_init__part1565(&s, &b, mem_map, port_map, pic_irqs);
-
-    void i440fx_init__part1566(PCIBus *b, void *s);
-for(i = 0; i < 4; i++) {
-        irq_init(&b->irq[i], i440fx_set_irq, s, i);
-    }
-
-
-        int i440fx_init__part1567(PCIBus **pbus, int *ppiix3_devfn,
-                              PhysMemoryMap *port_map, I440FXState *s,
-                              PCIBus *b);
-    *ppiix3_devfn = i440fx_init__part1567(pbus, ppiix3_devfn, port_map, s, b);
-
-}
+                         IRQSignal *pic_irqs);
 
 
 void i440fx_map_interrupts(I440FXState *s, uint8_t *elcr,
-                           const uint8_t *pci_irqs)
-{
-    void i440fx_map_interrupts__part1569(I440FXState *s, uint8_t *elcr,
-                                     PCIBus **out_b, PCIDevice **out_hd);
-    PCIBus *b;
-    PCIDevice *d, *hd;
-    int irq_num, pic_irq, devfn, i;
-
-    i440fx_map_interrupts__part1569(s, elcr, &b, &hd);
-
-        void i440fx_map_interrupts__part1570(PCIDevice *hd, uint8_t *elcr,
-                                        const uint8_t *pci_irqs);
-    i440fx_map_interrupts__part1570(hd, elcr, pci_irqs);
-
-
-    void i440fx_map_interrupts__part1571(PCIBus *b, PCIDevice *hd);
-    i440fx_map_interrupts__part1571(b, hd);
-
-}
+                           const uint8_t *pci_irqs);

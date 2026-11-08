@@ -9060,263 +9060,56 @@ static void dump_loaded_file(FSDevice *fs1, FSINode *n);
 
 
 
-void file_buffer_init(FileBuffer *bs)
-{
-    // Prototype for the Rust function
-void file_buffer_init__part635(FileBuffer *bs);
+void file_buffer_init(FileBuffer *bs);
 
-// Call to the Rust function, replacing the original TARGET
-file_buffer_init__part635(bs);
-}
+void file_buffer_reset(FileBuffer *bs);
 
-void file_buffer_reset(FileBuffer *bs)
-{
-    void file_buffer_reset__part637(FileBuffer *bs);
-}
-
-int file_buffer_resize(FileBuffer *bs, size_t new_size)
-{
-    uint8_t *file_buffer_resize__part639(FileBuffer *bs, size_t new_size);
-uint8_t *new_data = file_buffer_resize__part639(bs, new_size);
-    int file_buffer_resize__part640(uint8_t *new_data, size_t new_size)
-{
-    if (!new_data && new_size != 0)
-        return -1;
-    return 0;
-}
-    int file_buffer_resize__part641(FileBuffer *bs, uint8_t *new_data, size_t new_size);
-return file_buffer_resize__part641(bs, new_data, new_size);
-}
+int file_buffer_resize(FileBuffer *bs, size_t new_size);
 
 void file_buffer_write(FileBuffer *bs, size_t offset, const uint8_t *buf,
-                       size_t size)
-{
-    void file_buffer_write__part643(FileBuffer *bs, size_t offset, const uint8_t *buf, size_t size);
-file_buffer_write__part643(bs, offset, buf, size);
-}
+                       size_t size);
 
-void file_buffer_set(FileBuffer *bs, size_t offset, int val, size_t size)
-{
-    void file_buffer_set__part645(void *dest, size_t offset, int val, size_t size);
-
-void file_buffer_set(FileBuffer *bs, size_t offset, int val, size_t size)
-{
-    file_buffer_set__part645(bs->data, offset, val, size);
-}
-}
+void file_buffer_set(FileBuffer *bs, size_t offset, int val, size_t size);
 
 void file_buffer_read(FileBuffer *bs, size_t offset, uint8_t *buf,
-                       size_t size)
-{
-    void file_buffer_read__part647(FileBuffer *bs, size_t offset, uint8_t *buf, size_t size);
-
-memcpy(buf, bs->data + offset, size);
-}
+                       size_t size);
 
 
-static int64_t to_blocks(FSDeviceMem *fs, uint64_t size)
-{
-    int64_t to_blocks__part649(uint64_t size, uint32_t block_size, int block_size_log2);
-    return to_blocks__part649(size, fs->block_size, fs->block_size_log2);
+static int64_t to_blocks(FSDeviceMem *fs, uint64_t size);
 
-}
+static FSINode *inode_incref(FSDevice *fs, FSINode *n);
 
-static FSINode *inode_incref(FSDevice *fs, FSINode *n)
-{
-    extern FSINode *inode_incref__part651(FSDevice *fs, FSINode *n);
+static FSINode *inode_inc_open(FSDevice *fs, FSINode *n);
 
-n->refcount++;
-return n;
-}
+static void inode_free(FSDevice *fs1, FSINode *n);
 
-static FSINode *inode_inc_open(FSDevice *fs, FSINode *n)
-{
-    FSINode *inode_inc_open__part653(FSDevice *fs, FSINode *n);
+static void inode_decref(FSDevice *fs1, FSINode *n);
 
-n->open_count++;
-return n;
-}
+static void inode_dec_open(FSDevice *fs1, FSINode *n);
 
-static void inode_free(FSDevice *fs1, FSINode *n)
-{
-    void *inode_free__part655(void *fs1);
-
-FSDeviceMem *fs = (FSDeviceMem *)inode_free__part655(fs1);
-    void inode_free__part656(FSDevice *fs1, FSINode *n);
-    inode_free__part656(fs1, n);
-
-    void inode_free__part657(FSDeviceMem *fs, FSINode *n);
-    inode_free__part657(fs, n);
-
-}
-
-static void inode_decref(FSDevice *fs1, FSINode *n)
-{
-    
-   void inode_decref__part659(int refcount);
-inode_decref__part659(n->refcount);
-    int inode_decref__part660(FSINode *n);
-    if (inode_decref__part660(n)) {
-        inode_free(fs1, n);
-    }
-}
-
-static void inode_dec_open(FSDevice *fs1, FSINode *n)
-{
-    
-   extern void inode_dec_open__part662(
-    int open_count,
-    const char *assertion,
-    const char *file,
-    unsigned int line,
-    const char *function
-);
-
-inode_dec_open__part662(
-    n->open_count,
-    "n->open_count >= 1",
-    "fs_net.c",
-    397,
-    __extension__ __PRETTY_FUNCTION__
-);
-    void inode_dec_open__part663(FSDevice *fs1, FSINode *n);
-inode_dec_open__part663(fs1, n);
-}
-
-static void inode_update_mtime(FSDevice *fs, FSINode *n)
-{
-    void inode_update_mtime__part665(FSINode *n);
-inode_update_mtime__part665(n);
-}
+static void inode_update_mtime(FSDevice *fs, FSINode *n);
 
 static FSINode *inode_new(FSDevice *fs1, FSINodeTypeEnum type,
-                          uint32_t mode, uint32_t uid, uint32_t gid)
-{
-    FSINode *inode_new__part667(FSDevice *fs1, FSINodeTypeEnum type,
-                            uint32_t mode, uint32_t uid, uint32_t gid);
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    FSINode *n;
-
-    n = inode_new__part667(fs1, type, mode, uid, gid);
-
-
-        void inode_new__part668(int type, FSINode *n);
-    inode_new__part668(type, n);
-
-
-        FSINode *inode_new__part669(FSDevice *fs1, FSINode *n);
-    return inode_new__part669(fs1, n);
-}
+                          uint32_t mode, uint32_t uid, uint32_t gid);
 
 
 
 static FSDirEntry *inode_dir_add(FSDevice *fs1, FSINode *n, const char *name,
-                                 FSINode *n1)
-{
-    FSDirEntry *inode_dir_add__part671(FSDevice *fs1, FSINode *n, const char *name, FSINode *n1);
-    return inode_dir_add__part671(fs1, n, name, n1);
+                                 FSINode *n1);
 
-}
+static FSDirEntry *inode_search(FSINode *n, const char *name);
 
-static FSDirEntry *inode_search(FSINode *n, const char *name)
-{
-    struct list_head *el;
-    FSDirEntry *de;
+static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path);
 
-    extern FSDirEntry *inode_search__part673(FSINode *n, const char *name);
+static FSINode *inode_search_path(FSDevice *fs1, const char *path);
 
-if (n->type != FT_DIR)
-    return inode_search__part673(n, name);
+static BOOL is_empty_dir(FSDevice *fs, FSINode *n);
 
-        FSDirEntry *inode_search__part674(struct list_head *head, const char *name);
-    de = inode_search__part674(&n->u.dir.de_list, name);
-    if (de)
-        return de;
+static void inode_dirent_delete_no_decref(FSDevice *fs1, FSINode *n, FSDirEntry *de);
 
-    FSDirEntry *inode_search__part675();
-return inode_search__part675();
-}
+static void inode_dirent_delete(FSDevice *fs, FSINode *n, FSDirEntry *de);
 
-static FSINode *inode_search_path1(FSDevice *fs, FSINode *n, const char *path)
-{
-    char name[1024];
-    const char *p, *p1;
-    int len;
-    FSDirEntry *de;
-
-    void inode_search_path1__part677(char *name, const char **p_out, const char *path);
-    inode_search_path1__part677(name, &p, path);
-
-    extern void inode_search_path1__part678(const char **p);
-inode_search_path1__part678(&p);
-    int inode_search_path1__part679(const char *p);
-    if (inode_search_path1__part679(p))
-        return n;
-        {
-        FSINode *inode_search_path1__part680(FSINode *n, const char *p);
-        (void)name;
-        (void)p1;
-        (void)len;
-        (void)de;
-        n = inode_search_path1__part680(n, p);
-    }
-
-    void *inode_search_path1__part681(void *n);
-    return (FSINode *)inode_search_path1__part681((void *)n);
-}
-
-static FSINode *inode_search_path(FSDevice *fs1, const char *path)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    void *inode_search_path__part683(void);
-if (!fs1)
-        return inode_search_path__part683();
-    FSINode *inode_search_path__part684(FSDevice *fs, FSINode *n, const char *path);
-    return inode_search_path__part684(fs1, fs->root_inode, path);
-
-}
-
-static BOOL is_empty_dir(FSDevice *fs, FSINode *n)
-{
-    struct list_head *el;
-    FSDirEntry *de;
-
-    {
-    int is_empty_dir__part686(struct list_head *head);
-    if (is_empty_dir__part686(&n->u.dir.de_list) == 0)
-        return FALSE;
-}
-
-    BOOL is_empty_dir__part687(void);
-return is_empty_dir__part687();
-}
-
-static void inode_dirent_delete_no_decref(FSDevice *fs1, FSINode *n, FSDirEntry *de)
-{
-        void inode_dirent_delete_no_decref__part689(FSDevice *fs1, FSINode *n, FSDirEntry *de);
-    inode_dirent_delete_no_decref__part689(fs1, n, de);
-
-}
-
-static void inode_dirent_delete(FSDevice *fs, FSINode *n, FSDirEntry *de)
-{
-        void inode_dirent_delete__part691(FSDevice *fs, FSINode *n, FSDirEntry *de);
-    inode_dirent_delete__part691(fs, n, de);
-
-}
-
-static void flush_dir(FSDevice *fs, FSINode *n)
-{
-    struct list_head *el, *el1;
-    FSDirEntry *de;
-    {
-    extern void flush_dir__part693(FSDevice *fs, FSINode *n);
-    flush_dir__part693(fs, n);
-}
-
-    
-   void flush_dir__part694_int_check(int n_dir_size);
-}
+static void flush_dir(FSDevice *fs, FSINode *n);
 
 static void fs_delete(FSDevice *fs, FSFile *f)
 {
@@ -9333,15 +9126,7 @@ static FSFile *fid_create(FSDevice *fs1, FSINode *n, uint32_t uid)
 
 }
 
-static void inode_to_qid(FSQID *qid, FSINode *n)
-{
-    void inode_to_qid__part700(FSQID *qid, int type);
-    inode_to_qid__part700(qid, (int)n->type);
-
-    void inode_to_qid__part701(FSQID *qid, FSINode *n);
-    inode_to_qid__part701(qid, n);
-
-}
+static void inode_to_qid(FSQID *qid, FSINode *n);
 
 static void fs_statfs(FSDevice *fs1, FSStatFS *st)
 {
@@ -9399,250 +9184,34 @@ static int fs_mkdir(FSDevice *fs, FSQID *qid, FSFile *f,
 
 
 
-static void fs_trim_cache(FSDevice *fs1, int64_t added_size)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    struct list_head *el, *el1;
-    FSINode *n;
+static void fs_trim_cache(FSDevice *fs1, int64_t added_size);
 
-    int fs_trim_cache__part716(int64_t inode_cache_size, int64_t added_size, int64_t inode_cache_size_limit);
-    if (fs_trim_cache__part716(fs->inode_cache_size, added_size, fs->inode_cache_size_limit))
-        return;
+static void fs_open_end(FSOpenInfo *oi);
 
-        void fs_trim_cache__part717(void *fs, int64_t added_size);
-    fs_trim_cache__part717((void *)fs, added_size);
+static int fs_open_write_cb(void *opaque, const uint8_t *data, size_t size);
 
-}
+static void fs_wget_set_loaded(FSINode *n);
 
-static void fs_open_end(FSOpenInfo *oi)
-{
-    void fs_open_end__part719(FSOpenInfo *oi);
-    fs_open_end__part719(oi);
+static void fs_wget_set_error(FSINode *n);
 
-    void fs_open_end__part720(DecryptFileState *dec_state);
-    fs_open_end__part720(oi->dec_state);
-    void fs_open_end__part721(void *oi);
-fs_open_end__part721(oi);
+static void fs_read_archive(FSOpenInfo *oi);
 
-}
+static void fs_error_archive(FSOpenInfo *oi);
 
-static int fs_open_write_cb(void *opaque, const uint8_t *data, size_t size)
-{
-        FSOpenInfo *oi = opaque;
-    size_t len;
-    FSINode *n;
-
-    void fs_open_write_cb__part723(void *opaque, size_t *out_len, FSINode **out_n);
-    fs_open_write_cb__part723(opaque, &len, &n);
-
-    size_t fs_open_write_cb__part724(size_t len, size_t size);
-    len = fs_open_write_cb__part724(len, size);
-
-    int fs_open_write_cb__part725(size_t *cur_pos, FileBuffer *fbuf,
-                              const uint8_t *data, size_t len);
-    return fs_open_write_cb__part725(&oi->cur_pos, &n->u.reg.fbuf, data, len);
-
-}
-
-static void fs_wget_set_loaded(FSINode *n)
-{
-    void fs_wget_set_loaded__part727(FSINode *n, FSOpenInfo **poi, FSDeviceMem **pfs);
-    FSOpenInfo *oi;
-    FSDeviceMem *fs;
-    FSFile *f;
-    FSQID qid;
-
-    fs_wget_set_loaded__part727(n, &oi, &fs);
-    (void)f;
-    (void)qid;
-
-        if (oi->cb) {
-        void fs_wget_set_loaded__part728(FSOpenInfo *oi, FSINode *n, FSQID *qid, FSFile **pf);
-        fs_wget_set_loaded__part728(oi, n, &qid, &f);
-    }
-
-    void fs_wget_set_loaded__part729(FSOpenInfo *oi);
-fs_wget_set_loaded__part729(oi);
-
-}
-
-static void fs_wget_set_error(FSINode *n)
-{
-    FSOpenInfo *oi;
-    FSOpenInfo *fs_wget_set_error__part731(FSINode *n);
-    oi = fs_wget_set_error__part731(n);
-
-    void fs_wget_set_error__part732(FSOpenInfo *oi);
-
-if (oi->cb) {
-        fs_wget_set_error__part732(oi);
-    }
-
-    void fs_wget_set_error__part733(FSOpenInfo *oi);
-    fs_wget_set_error__part733(oi);
-}
-
-static void fs_read_archive(FSOpenInfo *oi)
-{
-    FSINode *n = oi->n;
-    uint64_t pos, pos1, l;
-    uint8_t buf[1024];
-    FSINode *n1;
-    FSOpenInfo *oi1;
-    struct list_head *el, *el1;
-
-        {
-        void fs_read_archive__part735(FSOpenInfo *oi, FSINode *n,
-                                      void (*set_loaded)(FSINode *n1));
-
-        fs_read_archive__part735(oi, n, fs_wget_set_loaded);
-    }
-
-}
-
-static void fs_error_archive(FSOpenInfo *oi)
-{
-    FSOpenInfo *oi1;
-    struct list_head *el, *el1;
-
-        void fs_error_archive__part737(FSOpenInfo *oi);
-    fs_error_archive__part737(oi);
-
-}
-
-static void fs_open_cb(void *opaque, int err, void *data, size_t size)
-{
-    FSOpenInfo *oi = opaque;
-    FSINode *n = oi->n;
+static void fs_open_cb(void *opaque, int err, void *data, size_t size);
 
 
-    void fs_open_cb__part739(FSOpenInfo *oi, FSINode *n, int err, void *data, size_t size);
-    fs_open_cb__part739(oi, n, err, data, size);
-
-}
+static int fs_open_wget(FSDevice *fs1, FSINode *n, FSOpenWgetEnum open_type);
 
 
-static int fs_open_wget(FSDevice *fs1, FSINode *n, FSOpenWgetEnum open_type)
-{
-    char *url;
-    FSOpenInfo *oi;
-    char fname[32];
-    FSBaseURL *bu;
-
-    void fs_open_wget__part741(FSDevice *fs1, FSINode *n);
-    fs_open_wget__part741(fs1, n);
-
-    {
-        extern int fs_open_wget__part742(FSINode *n);
-        if (fs_open_wget__part742(n) < 0)
-            return -5;
-    }
-
-    FSOpenInfo *fs_open_wget__part743(FSDevice *fs1, FSINode *n, FSOpenWgetEnum open_type);
-    oi = fs_open_wget__part743(fs1, n, open_type);
-
-    {
-        extern void fs_open_wget__part744(FSOpenInfo *oi, int open_type,
-                                          FSBaseURL *bu, FSFileID file_id,
-                                          void *dec_write_cb, void *wget_cb);
-        fs_open_wget__part744(oi, (int)open_type, n->u.reg.base_url,
-                              n->u.reg.file_id,
-                              (void *)fs_open_write_cb, (void *)fs_open_cb);
-    }
-
-        int fs_open_wget__part745(FSINode *n, FSOpenInfo *oi);
-    return fs_open_wget__part745(n, oi);
-
-}
-
-
-static void fs_preload_file(FSDevice *fs1, const char *filename)
-{
-    FSINode *fs_preload_file__part747(FSDevice *fs1, const char *filename);
-
-    FSINode *n;
-
-    n = fs_preload_file__part747(fs1, filename);
-
-        void fs_preload_file__part748(FSDevice *fs1, FSINode *n);
-    fs_preload_file__part748(fs1, n);
-
-}
+static void fs_preload_file(FSDevice *fs1, const char *filename);
 
 static PreloadArchive *find_preload_archive(FSDeviceMem *fs,
-                                            const char *filename)
-{
-    PreloadArchive *pa;
-    struct list_head *el;
-        {
-        PreloadArchive *found_pa;
-        PreloadArchive *find_preload_archive__part750(struct list_head *head, const char *filename);
-        found_pa = find_preload_archive__part750(&fs->preload_archive_list, filename);
-        if (found_pa)
-            return found_pa;
-    }
+                                            const char *filename);
 
-    void *find_preload_archive__part751(void);
-    return (PreloadArchive *)find_preload_archive__part751();
+static void fs_preload_archive(FSDevice *fs1, const char *filename);
 
-}
-
-static void fs_preload_archive(FSDevice *fs1, const char *filename)
-{
-    PreloadArchive *fs_preload_archive__part753(const FSDevice *fs1, const char *filename);
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    PreloadArchive *paf_unused_marker;
-    PreloadArchiveFile *paf;
-    struct list_head *el;
-    FSINode *n, *n1;
-    uint64_t offset;
-    BOOL has_unloaded;
-    PreloadArchive *pa = fs_preload_archive__part753(fs1, filename);
-    (void)paf_unused_marker;
-
-    int fs_preload_archive__part754(PreloadArchive *pa);
-    if (fs_preload_archive__part754(pa))
-        return;
-
-
-
-    struct FSINode *fs_preload_archive__part755(void *fs1, const char *filename, struct FSINode *root_inode);
-    n = fs_preload_archive__part755((void *)fs1, filename, ((FSDeviceMem *)fs1)->root_inode);
-    int fs_preload_archive__part756(FSDevice *fs1, FSINode *n, PreloadArchive *pa,
-                                void *write_cb, void *open_cb);
-{
-    if (fs_preload_archive__part756(fs1, n, pa, (void *)fs_open_write_cb,
-                                    (void *)fs_open_cb))
-        return;
-}
-
-}
-
-static void fs_preload_files(FSDevice *fs1, FSFileID file_id)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    struct list_head *el;
-    PreloadEntry *pe;
-    PreloadFile *pf;
-
-        PreloadEntry *fs_preload_files__part758(struct list_head *head, FSFileID file_id);
-    pe = fs_preload_files__part758(&fs->preload_list, file_id);
-    if (pe != 0)
-        goto found;
-
-    void fs_preload_files__part759(void);
-    fs_preload_files__part759();
-    return;
-
- found:
-    {
-        void fs_preload_files__part760(FSDevice *fs1, PreloadEntry *pe,
-                                       void (*preload_file)(FSDevice *, const char *),
-                                       void (*preload_archive)(FSDevice *, const char *));
-        fs_preload_files__part760(fs1, pe, fs_preload_file, fs_preload_archive);
-    }
-
-}
+static void fs_preload_files(FSDevice *fs1, FSFileID file_id);
 
 
 
@@ -9786,45 +9355,7 @@ count1 = fs_read__part782((uint64_t)n->u.reg.size, offset);
 
 }
 
-static int fs_truncate(FSDevice *fs1, FSINode *n, uint64_t size)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    intptr_t diff, diff_blocks;
-    size_t new_allocated_size;
-
-        int fs_truncate__part786(const FSINode *n);
-
-    if (fs_truncate__part786(n))
-        return -22;
-
-    int fs_truncate__part787(uint64_t size);
-    if (fs_truncate__part787(size) != 0)
-        return -28;
-
-        intptr_t fs_truncate__part788(uint64_t size, size_t reg_size);
-    diff = fs_truncate__part788(size, n->u.reg.size);
-    int fs_truncate__part789(intptr_t diff);
-    if (fs_truncate__part789(diff))
-        return 0;
-
-    intptr_t fs_truncate__part790(uint32_t block_size, int block_size_log2, uint64_t size, uint64_t old_size);
-    diff_blocks = fs_truncate__part790(fs->block_size, fs->block_size_log2, size, n->u.reg.size);
-
-    {
-    int fs_truncate__part791(FSDeviceMem *fs, FSINode *n, uint64_t size,
-                             intptr_t diff, intptr_t diff_blocks);
-    int fs_truncate__part791_ret =
-        fs_truncate__part791(fs, n, size, diff, diff_blocks);
-    (void)new_allocated_size;
-    if (fs_truncate__part791_ret < 0)
-        return fs_truncate__part791_ret;
-}
-
-        extern int fs_truncate__part792(FSDeviceMem *fs, intptr_t diff_blocks,
-                                    FSINode *n, uint64_t size);
-    return fs_truncate__part792(fs, diff_blocks, n, size);
-
-}
+static int fs_truncate(FSDevice *fs1, FSINode *n, uint64_t size);
 
 static int fs_write(FSDevice *fs1, FSFile *f, uint64_t offset,
                     const uint8_t *buf, int count)
@@ -10159,21 +9690,7 @@ static int fs_getlock(FSDevice *fs, FSFile *f, FSLock *lock)
 }
 
 
-static void fs_mem_end(FSDevice *fs1)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    struct list_head *el, *el1, *el2, *el3;
-    FSINode *n;
-    FSDirEntry *de;
-
-        void fs_mem_end__part862(FSDevice *fs1);
-    fs_mem_end__part862(fs1);
-
-    
-       void fs_mem_end__part863(struct list_head *inode_cache_list, char *import_dir);
-    fs_mem_end__part863(&fs->inode_cache_list, fs->import_dir);
-
-}
+static void fs_mem_end(FSDevice *fs1);
 
 FSDevice *fs_mem_init(void)
 {
@@ -10212,151 +9729,26 @@ FSDevice *fs_mem_init(void)
 
 }
 
-static BOOL fs_is_net(FSDevice *fs)
-{
-    int fs_is_net__part867(const void *slot, const void *mem_end);
-return fs_is_net__part867((const void *)fs->fs_end, (const void *)fs_mem_end);
-
-}
+static BOOL fs_is_net(FSDevice *fs);
 
 static FSBaseURL *fs_find_base_url(FSDevice *fs1,
-                                   const char *base_url_id)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    struct list_head *el;
-    FSBaseURL *bu;
+                                   const char *base_url_id);
 
-    {
-        FSBaseURL *fs_find_base_url__part869(FSDevice *fs1, const char *base_url_id);
-        for(el = (&fs->base_url_list)->next; el != (&fs->base_url_list); el = el->next) {
-            bu = fs_find_base_url__part869(fs1, base_url_id);
-            if (bu)
-                return bu;
-        }
-    }
-    FSBaseURL *fs_find_base_url__part870(void);
-    return fs_find_base_url__part870();
-
-}
-
-static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu)
-{
-    
-   void fs_base_url_decref__part872(FSBaseURL *bu);
-    fs_base_url_decref__part872(bu);
-
-    void fs_base_url_decref__part873(FSBaseURL *bu);
-    fs_base_url_decref__part873(bu);
-}
+static void fs_base_url_decref(FSDevice *fs, FSBaseURL *bu);
 
 static FSBaseURL *fs_net_set_base_url(FSDevice *fs1,
                                       const char *base_url_id,
                                       const char *url,
                                       const char *user, const char *password,
-                                      AES_KEY *aes_state)
-{
-        FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    FSBaseURL *bu;
-    FSBaseURL *fs_net_set_base_url__part875(FSDevice *fs1, const char *base_url_id,
-                                            struct list_head *base_url_list,
-                                            void (*fs_mem_end)(FSDevice *));
-    bu = fs_net_set_base_url__part875(fs1, base_url_id, &fs->base_url_list, fs_mem_end);
-
-        {
-        extern FSBaseURL *fs_net_set_base_url__part876(FSDeviceMem *fs, FSBaseURL *bu,
-                                                      const char *base_url_id);
-        bu = fs_net_set_base_url__part876(fs, bu, base_url_id);
-    }
-
-
-    char *fs_net_set_base_url__part877(const char *url);
-    bu->url = fs_net_set_base_url__part877(url);
-        char *fs_net_set_base_url__part878(const char *user);
-    bu->user = fs_net_set_base_url__part878(user);
-
-    void fs_net_set_base_url__part879(FSBaseURL *bu, const char *password);
-    fs_net_set_base_url__part879(bu, password);
-    void fs_net_set_base_url__part880(FSBaseURL *bu, AES_KEY *aes_state);
-    fs_net_set_base_url__part880(bu, aes_state);
-
-        FSBaseURL *fs_net_set_base_url__part881(FSBaseURL *bu);
-    return fs_net_set_base_url__part881(bu);
-
-}
+                                      AES_KEY *aes_state);
 
 static int fs_net_reset_base_url(FSDevice *fs1,
-                                 const char *base_url_id)
-{
-    FSBaseURL *bu;
-extern FSBaseURL *fs_net_reset_base_url__part883(FSDevice *fs1, const char *base_url_id);
+                                 const char *base_url_id);
 
-    
-   ((void) sizeof (__assert_single_arg (
-   fs_is_net(fs1)
-   )), __extension__ ({ if (
-   fs_is_net(fs1)
-   ) ; else __assert_fail (
-   "fs_is_net(fs1)"
-   , "fs_net.c", 1658, __extension__ __PRETTY_FUNCTION__); }))
-                         ;
-    bu = fs_net_reset_base_url__part883(fs1, base_url_id);
-
-    int fs_net_reset_base_url__part884(void *bu);
-    if (fs_net_reset_base_url__part884(bu))
-        return -2;
-
-    int fs_net_reset_base_url__part885(FSDevice *fs1, FSBaseURL *bu);
-    return fs_net_reset_base_url__part885(fs1, bu);
-}
-
-static void fs_net_set_fs_max_size(FSDevice *fs1, uint64_t fs_max_size)
-{
-        void fs_net_set_fs_max_size__part887(FSDevice *fs1, uint64_t fs_max_size);
-
-   ((void) sizeof (__assert_single_arg (
-   fs_is_net(fs1)
-   )), __extension__ ({ if (
-   fs_is_net(fs1)
-   ) ; else __assert_fail (
-   "fs_is_net(fs1)"
-   , "fs_net.c", 1670, __extension__ __PRETTY_FUNCTION__); }))
-                         ;
-    fs_net_set_fs_max_size__part887(fs1, fs_max_size);
-
-}
+static void fs_net_set_fs_max_size(FSDevice *fs1, uint64_t fs_max_size);
 
 static int fs_net_set_url(FSDevice *fs1, FSINode *n,
-                          const char *base_url_id, FSFileID file_id, uint64_t size)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    FSBaseURL *bu;
-
-    FSBaseURL *fs_net_set_url__part889(FSDevice *fs1, const char *base_url_id,
-                                       void (*fs_mem_end)(FSDevice *));
-
-    bu = fs_net_set_url__part889(fs1, base_url_id, fs_mem_end);
-
-        {
-        int fs_net_set_url__part890(const void *bu);
-        if (fs_net_set_url__part890(bu))
-            return -2;
-    }
-
-
-    {
-    int fs_net_set_url__part891_ret;
-    extern int fs_net_set_url__part891(FSINode *n);
-    fs_net_set_url__part891_ret = fs_net_set_url__part891(n);
-    if (fs_net_set_url__part891_ret)
-        return fs_net_set_url__part891_ret;
-}
-
-
-    void fs_net_set_url__part892(FSDeviceMem *fs, FSINode *n, FSBaseURL *bu, uint64_t size, FSFileID file_id);
-    fs_net_set_url__part892(fs, n, bu, size, file_id);
-        int fs_net_set_url__part893(void);
-    return fs_net_set_url__part893();
-}
+                          const char *base_url_id, FSFileID file_id, uint64_t size);
 
 
 
@@ -10467,105 +9859,15 @@ JSONValue json_parse_value_len(const char *p, int len);
 
 
 
-static void fs_dump_add_file(struct list_head *head, const char *name)
-{
-    void fs_dump_add_file__part895(struct list_head *head, const char *name);
-    fs_dump_add_file__part895(head, name);
-}
+static void fs_dump_add_file(struct list_head *head, const char *name);
 
-static PreloadFile *fs_dump_find_file(struct list_head *head, const char *name)
-{
-    PreloadFile *pf;
-    struct list_head *el;
-        PreloadFile *fs_dump_find_file__part897(struct list_head *head, const char *name);
-    {
-        PreloadFile *found = fs_dump_find_file__part897(head, name);
-        if (found != ((void *)0))
-            return found;
-    }
+static PreloadFile *fs_dump_find_file(struct list_head *head, const char *name);
 
-        {
-        PreloadFile *fs_dump_find_file__part898(void);
-        return fs_dump_find_file__part898();
-    }
+static void dump_close_archive(FSDevice *fs1);
 
-}
+static void dump_loaded_file(FSDevice *fs1, FSINode *n);
 
-static void dump_close_archive(FSDevice *fs1)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    void dump_close_archive__part900(FILE *f);
-    dump_close_archive__part900(fs->dump_archive_file);
-        void dump_close_archive__part901(FSDeviceMem *fs);
-    dump_close_archive__part901(fs);
-
-}
-
-static void dump_loaded_file(FSDevice *fs1, FSINode *n)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    char filename[1024];
-    const char *fname, *p;
-
-    extern int dump_loaded_file__part903(int dump_cache_load, const char *filename);
-    if (dump_loaded_file__part903(fs->dump_cache_load, n->u.reg.filename))
-        return;
-
-        const char *dump_loaded_file__part904(const FSINode *n);
-    fname = dump_loaded_file__part904(n);
-
-
-    void dump_loaded_file__part905(FSDevice *fs1, const char *fname);
-    dump_loaded_file__part905(fs1, fname);
-    int dump_loaded_file__part906(int dump_started);
-    if (dump_loaded_file__part906(fs->dump_started))
-        return;
-
-
-    void dump_loaded_file__part907(char *filename, size_t filename_size,
-                               const char *dump_preload_dir,
-                               const char *dump_archive_name,
-                               int *dump_archive_num,
-                               void **dump_archive_file,
-                               void *dump_preload_archive_file,
-                               void *dump_preload_file);
-    dump_loaded_file__part907(filename, sizeof(filename),
-                              fs->dump_preload_dir, fs->dump_archive_name,
-                              &fs->dump_archive_num,
-                              (void **)&fs->dump_archive_file,
-                              fs->dump_preload_archive_file,
-                              fs->dump_preload_file);
-
-
-    void dump_loaded_file__part908(const char *fname, size_t size,
-                               const uint8_t *fbuf_data, uint64_t file_id,
-                               FILE *dump_preload_file,
-                               FILE *dump_preload_archive_file,
-                               FILE **dump_archive_file,
-                               uint64_t *dump_archive_size);
-    dump_loaded_file__part908(fname, n->u.reg.size, n->u.reg.fbuf.data,
-                              n->u.reg.file_id, fs->dump_preload_file,
-                              fs->dump_preload_archive_file,
-                              &fs->dump_archive_file, &fs->dump_archive_size);
-
-}
-
-static JSONValue json_load(const char *filename)
-{
-    FILE *json_load__part910(const char *filename);
-    JSONValue val;
-    size_t size;
-    char *buf;
-
-    FILE *f = json_load__part910(filename);
-
-        void json_load__part911(void *f, const char *filename);
-    json_load__part911(f, filename);
-
-        JSONValue json_load__part912(FILE *f);
-    return json_load__part912(f);
-
-}
+static JSONValue json_load(const char *filename);
 
 void fs_dump_cache_load(FSDevice *fs1, const char *cfg_filename)
 {
@@ -10642,64 +9944,9 @@ void fs_dump_cache_load(FSDevice *fs1, const char *cfg_filename)
 
 }
 static int filelist_load_rec(FSDevice *fs1, const char **pp, FSINode *dir,
-                             const char *path)
-{
+                             const char *path);
 
-    char fname[1024], lname[1024];
-    int ret;
-    const char *p;
-    FSINodeTypeEnum type;
-    uint32_t mode, uid, gid;
-    uint64_t size;
-    FSINode *n;
-
-    const char *filelist_load_rec__part930(const char **pp);
-    p = filelist_load_rec__part930(pp);
-
-        {
-        extern int filelist_load_rec__part931(FSDevice *fs1, const char **pp,
-                                              FSINode *dir, const char *path,
-                                              FSINode *(*c_inode_new)(FSDevice *, FSINodeTypeEnum, uint32_t, uint32_t, uint32_t),
-                                              FSINode *(*c_inode_incref)(FSDevice *, FSINode *),
-                                              FSDirEntry *(*c_inode_dir_add)(FSDevice *, FSINode *, const char *, FSINode *),
-                                              int (*c_fs_net_set_url)(FSDevice *, FSINode *, const char *, FSFileID, uint64_t),
-                                              int (*c_filelist_load_rec)(FSDevice *, const char **, FSINode *, const char *),
-                                              const int *dump_cache_load);
-
-        ret = filelist_load_rec__part931(fs1, &p, dir, path,
-                                         inode_new, inode_incref, inode_dir_add,
-                                         fs_net_set_url, filelist_load_rec,
-                                         &((FSDeviceMem *)fs1)->dump_cache_load);
-        if (ret)
-            return ret;
-    }
-
-    int filelist_load_rec__part932(const char **pp, const char *p);
-    return filelist_load_rec__part932(pp, p);
-}
-
-static int filelist_load(FSDevice *fs1, const char *str)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    int ret;
-    const char *p;
-
-        {
-        int filelist_load__part934(const char *str);
-        int part934_ret = filelist_load__part934(str);
-        if (part934_ret != 0)
-            return part934_ret;
-    }
-
-        extern const char *filelist_load__part935(const char *str);
-    p = filelist_load__part935(str);
-    int filelist_load__part936(const char *p);
-    if (filelist_load__part936(p))
-        return -1;
-    int filelist_load__part937(FSDevice *fs1, const char **pp);
-    ret = filelist_load__part937(fs1, &p);
-    return ret;
-}
+static int filelist_load(FSDevice *fs1, const char *str);
 
 
 
@@ -10729,12 +9976,7 @@ static void __attribute__((format(printf, 1, 2))) fatal_error(const char *fmt, .
     exit(1);
 }
 
-static void fs_create_cmd(FSDevice *fs)
-{
-    void fs_create_cmd__part940(FSDevice *fs);
-    fs_create_cmd__part940(fs);
-
-}
+static void fs_create_cmd(FSDevice *fs);
 
 typedef struct {
     FSDevice *fs;
@@ -10878,108 +10120,13 @@ static const char *kernel_file_list[2] = {
 };
 
 static void kernel_load_cb(FSDevice *fs, FSQID *qid1, int err,
-                           void *opaque)
-{
-    FSNetInitState *s = opaque;
-    FSQID qid;
+                           void *opaque);
 
+static void preload_parse_str_old(FSDevice *fs1, const char *p);
 
+static void preload_parse_str(FSDevice *fs1, const char *p);
 
-    int kernel_load_cb__part963(FSDevice *fs);
-    if (kernel_load_cb__part963(fs))
-        return;
-
-
-
-        void kernel_load_cb__part964(FSDevice *fs, FSNetInitState *s);
-    if (s->fd) {
-        kernel_load_cb__part964(fs, s);
-    }
-
-
-        {
-        int (*kernel_load_cb__part965)(FSDevice *fs, FSNetInitState *s,
-            void (*open_cb)(FSDevice *, FSQID *, int, void *),
-            int (*preload_parse_fn)(FSDevice *, const char *, int),
-            const char *const *file_list);
-        int recurse;
-
-        (void)qid1;
-        (void)qid;
-        (void)err;
-
-        recurse = kernel_load_cb__part965(fs, s, kernel_load_cb, preload_parse,
-                                          kernel_file_list);
-        if (recurse)
-            kernel_load_cb(fs,
-                              ((void *)0)
-                                  , 0, s);
-    }
-}
-
-static void preload_parse_str_old(FSDevice *fs1, const char *p)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    char fname[1024];
-    PreloadEntry *pe;
-    PreloadFile *pf;
-    FSINode *n;
-
-        void preload_parse_str_old__part967(FSDevice *fs1, const char *p);
-    (void)fs; (void)fname; (void)pe; (void)pf; (void)n;
-    preload_parse_str_old__part967(fs1, p);
-
-}
-
-static void preload_parse_str(FSDevice *fs1, const char *p)
-{
-    FSDeviceMem *fs;
-    PreloadEntry *pe;
-    PreloadArchive *pa;
-    FSINode *n;
-    BOOL is_archive;
-    char fname[1024];
-
-    FSDeviceMem *preload_parse_str__part969(FSDevice *fs1,
-                                           PreloadEntry **pe,
-                                           PreloadArchive **pa);
-
-    fs = preload_parse_str__part969(fs1, &pe, &pa);
-
-        void preload_parse_str__part970(FSDeviceMem *fs, const char **pp,
-                                   char *fname, int fname_size,
-                                   PreloadEntry **ppe, PreloadArchive **ppa,
-                                   FSINode **pn, BOOL *pis_archive);
-    preload_parse_str__part970(fs, &p, fname, sizeof(fname), &pe, &pa, &n,
-                               &is_archive);
-
-}
-
-static int preload_parse(FSDevice *fs, const char *fname, BOOL is_new)
-{
-    FSINode *preload_parse__part972(FSDevice *fs, const char *fname);
-    FSINode *n;
-    char *buf;
-    size_t size;
-
-    n = preload_parse__part972(fs, fname);
-
-    int preload_parse__part973(const FSINode *n);
-    if (preload_parse__part973(n))
-        return -1;
-
-        char *preload_parse__part974(void *fbuf, size_t size_in, size_t *size_out);
-    buf = preload_parse__part974(&n->u.reg.fbuf, n->u.reg.size, &size);
-
-    {
-    void preload_parse__part975(FSDevice *fs, const char *buf, BOOL is_new);
-    preload_parse__part975(fs, buf, is_new);
-}
-
-    int preload_parse__part976(char *buf);
-    return preload_parse__part976(buf);
-
-}
+static int preload_parse(FSDevice *fs, const char *fname, BOOL is_new);
 
 
 
@@ -10997,524 +10144,37 @@ typedef struct CmdXHRState {
 static void fs_cmd_xhr_on_load(FSDevice *fs, FSFile *f, int64_t size,
                                void *opaque);
 
-static int parse_hex_buf(uint8_t *buf, int buf_size, const char **pp)
-{
-    char buf1[1024];
-    int len;
-
-    int parse_hex_buf__part980(char *buf1, int buf_size, const char **pp);
-    if (parse_hex_buf__part980(buf1, sizeof(buf1), pp) < 0)
-        return -1;
-
-    int parse_hex_buf__part981(const char *buf1);
-    len = parse_hex_buf__part981(buf1);
-    int parse_hex_buf__part982(int len);
-    if (parse_hex_buf__part982(len) != 0)
-        return -1;
-
-    void parse_hex_buf__part983(int *len);
-    parse_hex_buf__part983(&len);
-    int parse_hex_buf__part984(int len, int buf_size);
-    if (parse_hex_buf__part984(len, buf_size))
-        return -1;
-
-    int parse_hex_buf__part985(uint8_t *buf, const char *buf1, int len);
-    if (parse_hex_buf__part985(buf, buf1, len) < 0)
-        return -1;
-        {
-        int parse_hex_buf__part986(int len);
-        return parse_hex_buf__part986(len);
-    }
-}
+static int parse_hex_buf(uint8_t *buf, int buf_size, const char **pp);
 
 static int fs_cmd_xhr(FSDevice *fs, FSFile *f,
-                      const char *p, uint32_t uid, uint32_t gid)
-{
-    char url[1024], post_filename[1024], filename[1024];
-    char user_buf[128], *user;
-    char password_buf[128], *password;
-    FSQID qid;
-    FSFile *fd, *root_fd, *post_fd;
-    uint64_t post_data_len;
-    int err, aes_key_len;
-    CmdXHRState *s;
-    char *name;
-    AES_KEY *paes_state;
-    uint8_t aes_key[16];
-    uint32_t flags;
-    FSCMDRequest *req;
-
-
-    int fs_cmd_xhr__part988(FSFile *f);
-    if (fs_cmd_xhr__part988(f))
-        return -5;
-
-
-    int fs_cmd_xhr__part989(char *url, const char **p);
-    if (fs_cmd_xhr__part989(url, &p) < 0)
-        goto fail;
-
-    int fs_cmd_xhr__part990(char *user_buf, int buf_size, const char **pp);
-    if (fs_cmd_xhr__part990(user_buf, sizeof(user_buf), &p) < 0)
-        goto fail;
-
-    int fs_cmd_xhr__part991(char *password_buf, const char **p);
-    if (fs_cmd_xhr__part991(password_buf, &p) < 0)
-        goto fail;
-
-    int fs_cmd_xhr__part992(char *buf, int buf_size, const char **pp);
-    if (fs_cmd_xhr__part992(post_filename, (int)sizeof(post_filename), &p) < 0)
-        goto fail;
-
-    int fs_cmd_xhr__part993(char *filename, int filename_size, const char **pp);
-    if (fs_cmd_xhr__part993(filename, sizeof(filename), &p) < 0)
-        goto fail;
-
-    {
-    int fs_cmd_xhr__part994(const char **pp, uint8_t *buf, int buf_size);
-    aes_key_len = fs_cmd_xhr__part994(&p, aes_key, 16);
-}
-    int fs_cmd_xhr__part995(int aes_key_len);
-    if (fs_cmd_xhr__part995(aes_key_len))
-        goto fail;
-
-    int fs_cmd_xhr__part996(uint32_t *flags, const char **p);
-    if (fs_cmd_xhr__part996(&flags, &p) < 0)
-        goto fail;
-
-    int fs_cmd_xhr__part997(int aes_key_len);
-    if (fs_cmd_xhr__part997(aes_key_len))
-        goto fail;
-
-
-        char *fs_cmd_xhr__part998(char *user_buf);
-    user = fs_cmd_xhr__part998(user_buf);
-
-    char *fs_cmd_xhr__part999(char *password_buf);
-    password = fs_cmd_xhr__part999(password_buf);
-
-
-    
-       {
-        int (*fs_cmd_xhr__part1000_ptr)(FSDevice *, uint32_t, const char *, FSFile **,
-                                        FSFile **, FSFile **, FSQID *, char **);
-        extern int fs_cmd_xhr__part1000(FSDevice *fs, uint32_t uid,
-                                        const char *filename, FSFile **pfd,
-                                        FSFile **proot_fd, FSFile **ppost_fd,
-                                        FSQID *pqid, char **pname);
-        (void)fs_cmd_xhr__part1000_ptr;
-        (void)fs_cmd_xhr__part1000(fs, uid, filename, &fd, &root_fd, &post_fd,
-                                   &qid, &name);
-    }
-
-    int fs_cmd_xhr__part1001(FSFile *fd);
-    if (fs_cmd_xhr__part1001(fd)) {
-        err = -2;
-        goto fail1;
-    }
-
-
-    extern int fs_cmd_xhr__part1002(FSDevice *fs, FSFile *fd, const char *name, FSQID *qid, uint32_t gid);
-
-    err = fs_cmd_xhr__part1002(fs, fd, name, &qid, gid);
-        int fs_cmd_xhr__part1003(int err);
-    if (fs_cmd_xhr__part1003(err)) {
-        goto fail1;
-    }
-
-        {
-        int fs_cmd_xhr__part1004(FSDevice *fs, FSFile *root_fd,
-                                 const char *post_filename, FSQID *qid,
-                                 FSFile **p_post_fd, uint64_t *p_post_data_len,
-                                 int *p_err);
-        int part1004_r;
-        part1004_r = fs_cmd_xhr__part1004(fs, root_fd, post_filename, &qid,
-                                         &post_fd, &post_data_len, &err);
-        if (part1004_r)
-            goto fail1;
-    }
-
-
-        CmdXHRState *fs_cmd_xhr__part1005(FSFile *rf, FSFile *fdp, FSFile *pf);
-    s = fs_cmd_xhr__part1005(root_fd, fd, post_fd);
-
-        {
-        AES_KEY *fs_cmd_xhr__part1006(int aes_key_len, const uint8_t *aes_key, CmdXHRState *s);
-        paes_state = fs_cmd_xhr__part1006(aes_key_len, aes_key, s);
-    }
-
-
-        {
-        int fs_cmd_xhr__part1007(FSDevice *fs, FSFile *f, CmdXHRState *s,
-                                 FSFile *fd, const char *url, const char *user,
-                                 const char *password, FSFile *post_fd,
-                                 uint64_t post_data_len, FSWGetFileCB *cb,
-                                 AES_KEY *paes_state, FSCMDRequest **preq);
-        return fs_cmd_xhr__part1007(fs, f, s, fd, url, user, password, post_fd,
-                                    post_data_len, fs_cmd_xhr_on_load,
-                                    paes_state, &req);
-    }
-
-  fail1:
-    void fs_cmd_xhr__part1008(FSDevice *fs, FSFile *fd);
-    fs_cmd_xhr__part1008(fs, fd);
-
-        void fs_cmd_xhr__part1009(FSDevice *fs, FSFile *post_fd);
-    if (post_fd)
-        fs_cmd_xhr__part1009(fs, post_fd);
-    int fs_cmd_xhr__part1010(FSDevice *fs, FSFile *root_fd, int err);
-    return fs_cmd_xhr__part1010(fs, root_fd, err);
- int fs_cmd_xhr__part1011(void);
-fail:
-    return fs_cmd_xhr__part1011();
-
-}
+                      const char *p, uint32_t uid, uint32_t gid);
 
 static void fs_cmd_xhr_on_load(FSDevice *fs, FSFile *f, int64_t size,
-                               void *opaque)
-{
-    CmdXHRState *s = opaque;
-    FSCMDRequest *req;
-    int ret;
+                               void *opaque);
+
+static int fs_cmd_set_base_url(FSDevice *fs, const char *p);
+
+static int fs_cmd_reset_base_url(FSDevice *fs, const char *p);
+
+static int fs_cmd_set_url(FSDevice *fs, const char *p);
+
+static int fs_cmd_export_file(FSDevice *fs, const char *p);
 
 
+static int fs_cmd_pbkdf2(FSDevice *fs, FSFile *f, const char *p);
 
-    void fs_cmd_xhr_on_load__part1013(FSDevice *fs, FSFile *fd);
-    if (s->fd)
-        fs_cmd_xhr_on_load__part1013(fs, s->fd);
-
-    void fs_cmd_xhr_on_load__part1014(FSDevice *fs, CmdXHRState *s);
-    fs_cmd_xhr_on_load__part1014(fs, s);
-
-    void fs_cmd_xhr_on_load__part1015(FSDevice *fs, FSFile *root_fd);
-    fs_cmd_xhr_on_load__part1015(fs, s->root_fd);
-
-        {
-        void fs_cmd_xhr_on_load__part1016(CmdXHRState *s, int64_t size);
-        fs_cmd_xhr_on_load__part1016(s, size);
-        (void)req;
-        (void)ret;
-    }
-    void fs_cmd_xhr_on_load__part1017(void *s);
-    fs_cmd_xhr_on_load__part1017(s);
-
-}
-
-static int fs_cmd_set_base_url(FSDevice *fs, const char *p)
-{
-
-    char url[1024], base_url_id[1024];
-    char user_buf[128], *user;
-    char password_buf[128], *password;
-    AES_KEY aes_state, *paes_state;
-    uint8_t aes_key[16];
-    int aes_key_len;
-
-    int fs_cmd_set_base_url__part1019(char *buf, int buf_size, const char **pp);
-    if (fs_cmd_set_base_url__part1019(base_url_id, (int)sizeof(base_url_id), &p) < 0)
-        goto fail;
-
-    int fs_cmd_set_base_url__part1020(char *url, const char **p);
-    if (fs_cmd_set_base_url__part1020(url, &p) < 0)
-        goto fail;
-    int fs_cmd_set_base_url__part1021(char *user_buf, int user_buf_size, const char **pp);
-    if (fs_cmd_set_base_url__part1021(user_buf, (int)sizeof(user_buf), &p) < 0)
-        goto fail;
-
-    int fs_cmd_set_base_url__part1022(char *password_buf, int buf_size, const char **pp);
-    if (fs_cmd_set_base_url__part1022(password_buf, sizeof(password_buf), &p) < 0)
-        goto fail;
-    int fs_cmd_set_base_url__part1023(uint8_t *aes_key, const char **p);
-    aes_key_len = fs_cmd_set_base_url__part1023(aes_key, (const char **)&p);
-        {
-        int fs_cmd_set_base_url__part1024(int aes_key_len);
-        if (fs_cmd_set_base_url__part1024(aes_key_len))
-            goto fail;
-    }
-
-
-    char *fs_cmd_set_base_url__part1025(char *user_buf);
-    user = fs_cmd_set_base_url__part1025(user_buf);
-
-    char *fs_cmd_set_base_url__part1026(char password_buf[128]);
-    password = fs_cmd_set_base_url__part1026(password_buf);
-
-    int fs_cmd_set_base_url__part1027(int aes_key_len, uint8_t *aes_key, AES_KEY *aes_state, AES_KEY **paes_state);
-    if (fs_cmd_set_base_url__part1027(aes_key_len, aes_key, &aes_state, &paes_state))
-        goto fail;
-
-
-        void fs_cmd_set_base_url__part1028(FSDevice *fs1, const char *base_url_id,
-                                      const char *url, const char *user,
-                                      const char *password, AES_KEY *aes_state);
-    fs_cmd_set_base_url__part1028(fs, base_url_id, url, user, password,
-                                 paes_state);
-    return 0;
-
- fail:
-    {
-        int fs_cmd_set_base_url__part1029(void);
-        return fs_cmd_set_base_url__part1029();
-    }
-}
-
-static int fs_cmd_reset_base_url(FSDevice *fs, const char *p)
-{
-    char base_url_id[1024];
-
-        int fs_cmd_reset_base_url__part1031(char *base_url_id, int buf_size, const char **pp);
-    if (fs_cmd_reset_base_url__part1031(base_url_id, (int)sizeof(base_url_id), &p) < 0)
-        goto fail;
-
-        int fs_cmd_reset_base_url__part1032(FSDevice *fs, const char *base_url_id);
-    return fs_cmd_reset_base_url__part1032(fs, base_url_id);
-
- int fs_cmd_reset_base_url__part1033(void);
- fail:
-    return fs_cmd_reset_base_url__part1033();
-}
-
-static int fs_cmd_set_url(FSDevice *fs, const char *p)
-{
-    char base_url_id[1024];
-    char filename[1024];
-    FSFileID file_id;
-    uint64_t size;
-    FSINode *n;
-
-        {
-        int fs_cmd_set_url__part1035(char *filename, int filename_size, const char **pp);
-        if (fs_cmd_set_url__part1035(filename, sizeof(filename), &p) < 0)
-            goto fail;
-    }
-
-    int fs_cmd_set_url__part1036(char *base_url_id, int base_url_id_size, const char **p);
-    if (fs_cmd_set_url__part1036(base_url_id, sizeof(base_url_id), &p) < 0)
-        goto fail;
-        int fs_cmd_set_url__part1037(FSFileID *file_id, const char **p);
-    if (fs_cmd_set_url__part1037(&file_id, &p) < 0)
-        goto fail;
-
-        {
-        int fs_cmd_set_url__part1038(uint64_t *pval, const char **pp);
-        if (fs_cmd_set_url__part1038(&size, &p) < 0)
-            goto fail;
-    }
-
-
-    FSINode *fs_cmd_set_url__part1039(FSDevice *fs, const char *path);
-    n = fs_cmd_set_url__part1039(fs, filename);
-    int fs_cmd_set_url__part1040(void *n);
-    if (fs_cmd_set_url__part1040((void *)n)) {
-        return -2;
-    }
-
-    int fs_cmd_set_url__part1041(FSDevice *fs, FSINode *n, const char *base_url_id, FSFileID file_id, uint64_t size);
-    return fs_cmd_set_url__part1041(fs, n, base_url_id, file_id, size);
-     int fs_cmd_set_url__part1042(void);
- fail:
-    return fs_cmd_set_url__part1042();
-
-}
-
-static int fs_cmd_export_file(FSDevice *fs, const char *p)
-{
-    char filename[1024];
-    FSINode *n;
-    const char *name;
-    uint8_t *buf;
-
-    int fs_cmd_export_file__part1044(char *filename, int buf_size, const char **pp);
-    if (fs_cmd_export_file__part1044(filename, sizeof(filename), &p) < 0)
-        goto fail;
-
-    FSINode *fs_cmd_export_file__part1045(void *fs1, const char *path);
-    n = fs_cmd_export_file__part1045(fs, filename);
-
-        int fs_cmd_export_file__part1046(const void *n);
-    if (fs_cmd_export_file__part1046(n))
-        return -2;
-
-    {
-        int fs_cmd_export_file__part1047(FSINode *n);
-        if (fs_cmd_export_file__part1047(n))
-            goto fail;
-    }
-    const char *fs_cmd_export_file__part1048(const char *filename);
-    name = fs_cmd_export_file__part1048(filename);
-
-        {
-        const char *(*fs_cmd_export_file__part1049)(const char *name, const char *filename);
-        name = fs_cmd_export_file__part1049(name, filename);
-    }
-
-
-    int fs_cmd_export_file__part1050(FSINode *n, const char *name);
-    return fs_cmd_export_file__part1050(n, name);
-
- int fs_cmd_export_file__part1051(void);
- fail:
-    return fs_cmd_export_file__part1051();
-
-}
-
-
-static int fs_cmd_pbkdf2(FSDevice *fs, FSFile *f, const char *p)
-{
-    uint8_t pwd[1024];
-    uint8_t salt[128];
-    uint32_t iter, key_len;
-    int pwd_len, salt_len;
-    FSCMDRequest *req;
-
-
-    int fs_cmd_pbkdf2__part1053(FSFile *f);
-    if (fs_cmd_pbkdf2__part1053(f) != 0)
-        return -5;
-
-    int fs_cmd_pbkdf2__part1054(uint8_t *pwd, const char **pp);
-pwd_len = fs_cmd_pbkdf2__part1054(pwd, &p);
-    int fs_cmd_pbkdf2__part1055(int pwd_len);
-    if (fs_cmd_pbkdf2__part1055(pwd_len))
-        goto fail;
-
-        {
-        int fs_cmd_pbkdf2__part1056(uint8_t *buf, int buf_size, const char **pp);
-        salt_len = fs_cmd_pbkdf2__part1056(salt, sizeof(salt), &p);
-    }
-
-    int fs_cmd_pbkdf2__part1057(int pwd_len);
-    if (fs_cmd_pbkdf2__part1057(pwd_len))
-        goto fail;
-    {
-    int fs_cmd_pbkdf2__part1058(uint32_t *iter, const char **pp);
-    if (fs_cmd_pbkdf2__part1058(&iter, &p) < 0)
-        goto fail;
-}
-
-    int fs_cmd_pbkdf2__part1059(uint32_t *key_len, const char **p);
-    if (fs_cmd_pbkdf2__part1059(&key_len, &p) < 0)
-        goto fail;
-    int fs_cmd_pbkdf2__part1060(uint32_t key_len);
-    if (fs_cmd_pbkdf2__part1060(key_len))
-        goto fail;
-    int fs_cmd_pbkdf2__part1061(FSFile *f, const uint8_t *pwd, int pwd_len,
-                                const uint8_t *salt, int salt_len,
-                                uint32_t iter, uint32_t key_len);
-    return fs_cmd_pbkdf2__part1061(f, pwd, pwd_len, salt, salt_len, iter, key_len);
-
- int fs_cmd_pbkdf2__part1062(void);
-fail:
-    return fs_cmd_pbkdf2__part1062();
-
-}
-
-static int fs_cmd_set_import_dir(FSDevice *fs, FSFile *f, const char *p)
-{
-    FSDeviceMem *fs1 = (FSDeviceMem *)fs;
-    char filename[1024];
-
-    int fs_cmd_set_import_dir__part1064(char *filename, int buf_size, const char **pp);
-    if (fs_cmd_set_import_dir__part1064(filename, (int)sizeof(filename), &p) < 0)
-        return -22;
-    int fs_cmd_set_import_dir__part1065(char **import_dir, const char *filename);
-    return fs_cmd_set_import_dir__part1065(&fs1->import_dir, filename);
-}
+static int fs_cmd_set_import_dir(FSDevice *fs, FSFile *f, const char *p);
 
 static int fs_cmd_write(FSDevice *fs, FSFile *f, uint64_t offset,
-                        const uint8_t *buf, int buf_len)
-{
-    char *buf1;
-    const char *p;
-    char cmd[64];
-    int err;
-
-
-    char *fs_cmd_write__part1067(const uint8_t *buf, int buf_len,
-                                 const char **p, int *err);
-    buf1 = fs_cmd_write__part1067(buf, buf_len, &p, &err);
-
-        int fs_cmd_write__part1068(char *cmd, int buf_size, const char **pp);
-    if (fs_cmd_write__part1068(cmd, (int)sizeof(cmd), &p) < 0)
-        goto fail;
-        int fs_cmd_write__part1069(FSDevice *fs, FSFile *f, const char *cmd,
-                               const char *p,
-                               int (*cmd_xhr)(FSDevice *, FSFile *,
-                                              const char *, uint32_t, uint32_t),
-                               int (*cmd_set_base_url)(FSDevice *, const char *),
-                               int (*cmd_reset_base_url)(FSDevice *, const char *),
-                               int (*cmd_set_url)(FSDevice *, const char *),
-                               int (*cmd_export_file)(FSDevice *, const char *),
-                               int (*cmd_pbkdf2)(FSDevice *, FSFile *,
-                                                 const char *),
-                               int (*cmd_set_import_dir)(FSDevice *, FSFile *,
-                                                         const char *));
-    err = fs_cmd_write__part1069(fs, f, cmd, p,
-                                 fs_cmd_xhr,
-                                 fs_cmd_set_base_url,
-                                 fs_cmd_reset_base_url,
-                                 fs_cmd_set_url,
-                                 fs_cmd_export_file,
-                                 fs_cmd_pbkdf2,
-                                 fs_cmd_set_import_dir);
-    goto fs_cmd_write_done;
-fail:
-    err = -5;
-fs_cmd_write_done:
-    ;
-
-    void fs_cmd_write__part1070(char *buf1);
-    fs_cmd_write__part1070(buf1);
-
-    int fs_cmd_write__part1071(int err, int buf_len);
-    return fs_cmd_write__part1071(err, buf_len);
-}
+                        const uint8_t *buf, int buf_len);
 
 static int fs_cmd_read(FSDevice *fs, FSFile *f, uint64_t offset,
-                       uint8_t *buf, int buf_len)
-{
-        FSCMDRequest *req;
-    int l;
+                       uint8_t *buf, int buf_len);
 
-    extern FSCMDRequest *fs_cmd_read__part1073(FSFile *f);
-    req = fs_cmd_read__part1073(f);
-
-    int fs_cmd_read__part1074(FSCMDRequest *req);
-{
-    int _fs_ret = fs_cmd_read__part1074(req);
-    if (_fs_ret)
-        return _fs_ret;
-}
-
-    int fs_cmd_read__part1075(const FSCMDRequest *req, uint8_t *buf, int buf_len);
-    l = fs_cmd_read__part1075(req, buf, buf_len);
-    return l;
-
-}
-
-static void fs_cmd_close(FSDevice *fs, FSFile *f)
-{
-    FSCMDRequest *fs_cmd_close__part1077(FSFile *f);
-    FSCMDRequest *req;
-    req = fs_cmd_close__part1077(f);
-
-
-    void fs_cmd_close__part1078(FSCMDRequest *req, FSFile *f);
-    fs_cmd_close__part1078(req, f);
-}
+static void fs_cmd_close(FSDevice *fs, FSFile *f);
 
 
 
-void fs_net_set_pwd(FSDevice *fs, const char *pwd)
-{
-    void fs_net_set_pwd__part1080(FSDevice *fs, const char *pwd, FSFile **proot_fd,
-                             FSQID *pqid, void (*fs_mem_end_p)(FSDevice *));
-FSFile *root_fd;
-    FSQID qid;
-    fs_net_set_pwd__part1080(fs, pwd, &root_fd, &qid, fs_mem_end);
-
-}
+void fs_net_set_pwd(FSDevice *fs, const char *pwd);
 void fs_export_file(const char *filename,
-                    const uint8_t *buf, int buf_len)
-{
-}
+                    const uint8_t *buf, int buf_len);

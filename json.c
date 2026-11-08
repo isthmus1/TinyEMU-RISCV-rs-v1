@@ -5053,169 +5053,25 @@ int parse_tag_uint64(uint64_t *pval, const char *str, const char *tag);
 int parse_tag_file_id(FSFileID *pval, const char *str, const char *tag);
 int parse_tag_version(const char *str);
 
-static JSONValue parse_string(const char **pp)
-{
-    char buf[4096], *q;
-    const char *p;
-    int c, h;
+static JSONValue parse_string(const char **pp);
 
-    extern void parse_string__part1291(const char **pp, char *buf, char **q, const char **p);
-    parse_string__part1291(pp, buf, &q, &p);
+static JSONProperty *json_object_get2(JSONObject *obj, const char *name);
 
-    {
-        int _ps_status;
-        int parse_string__part1292(char *buf, char **pq, const char **pp);
-        _ps_status = parse_string__part1292(buf, &q, &p);
-        if (_ps_status == 1)
-            return json_error_new("unterminated string");
-        else if (_ps_status == 2)
-            return json_error_new("invalig hex digit");
-        else if (_ps_status == 3)
-            return json_error_new("unknown escape code");
-        else if (_ps_status == 4)
-            return json_error_new("string too long");
-    }
-        JSONValue parse_string__part1293(char *q, const char **pp, const char *p, const char *buf);
-    return parse_string__part1293(q, pp, p, buf);
-}
+JSONValue json_object_get(JSONValue val, const char *name);
 
-static JSONProperty *json_object_get2(JSONObject *obj, const char *name)
-{
-    JSONProperty *f;
-    int i;
-        JSONProperty *json_object_get2__part1295(JSONObject *obj, const char *name, int *i);
-    f = json_object_get2__part1295(obj, name, &i);
-    if (f)
-        return f;
+int json_object_set(JSONValue val, const char *name, JSONValue prop_val);
 
-        {
-        JSONProperty *(*json_object_get2__part1296)(void);
-        *(void **)(&json_object_get2__part1296) = (void *)0;
-        return json_object_get2__part1296();
-    }
+JSONValue json_array_get(JSONValue val, unsigned int idx);
 
-}
+int json_array_set(JSONValue val, unsigned int idx, JSONValue prop_val);
 
-JSONValue json_object_get(JSONValue val, const char *name)
-{
-    JSONProperty *f;
-    JSONObject *obj;
+const char *json_get_str(JSONValue val);
 
-        {
-        int json_object_get__part1298(JSONValue val, JSONValue *out);
-        JSONValue part1298_val;
-        if (json_object_get__part1298(val, &part1298_val))
-            return part1298_val;
-    }
+const char *json_get_error(JSONValue val);
 
-    void json_object_get__part1299(JSONValue val, const char *name, JSONObject **obj_out, JSONProperty **f_out);
-    json_object_get__part1299(val, name, &obj, &f);
-    int json_object_get__part1300(JSONProperty *f, JSONValue *pret);
-    if (json_object_get__part1300(f, &val))
-        return val;
-    JSONValue json_object_get__part1301(const JSONProperty *f);
-    return json_object_get__part1301(f);
+JSONValue json_string_new2(const char *str, int len);
 
-}
-
-int json_object_set(JSONValue val, const char *name, JSONValue prop_val)
-{
-    JSONObject *obj;
-    JSONProperty *f;
-    int new_size;
-
-    int json_object_set__part1303(int val_type);
-    if (json_object_set__part1303(val.type) != 0)
-        return -1;
-
-        {
-        JSONObject *json_part_obj;
-        JSONProperty *json_part_f;
-        void json_object_set__part1304(JSONValue val, const char *name, JSONObject **out_obj, JSONProperty **out_f);
-        json_object_set__part1304(val, name, &json_part_obj, &json_part_f);
-        obj = json_part_obj;
-        f = json_part_f;
-    }
-
-    void json_object_set__part1305(JSONProperty **f_p, JSONObject *obj, const char *name, JSONValue prop_val, int *new_size_p);
-    json_object_set__part1305(&f, obj, name, prop_val, &new_size);
-    int json_object_set__part1306(void);
-    return json_object_set__part1306();
-}
-
-JSONValue json_array_get(JSONValue val, unsigned int idx)
-{
-    JSONArray *array;
-
-        int json_array_get__part1308(const JSONValue *val);
-    if (json_array_get__part1308(&val))
-        return json_undefined_new();
-
-    JSONArray *json_array_get__part1309(JSONValue val);
-    array = json_array_get__part1309(val);
-
-    JSONValue json_array_get__part1310(JSONArray *array, unsigned int idx);
-    return json_array_get__part1310(array, idx);
-
-}
-
-int json_array_set(JSONValue val, unsigned int idx, JSONValue prop_val)
-{
-    JSONArray *array;
-    int new_size;
-
-    int json_array_set__part1312(JSONValue val);
-
-    if (json_array_set__part1312(val))
-        return -1;
-    JSONArray *json_array_set__part1313(JSONValue val);
-array = json_array_set__part1313(val);
-
-    int json_array_set__part1314(JSONArray *array, unsigned int idx, JSONValue prop_val, int *new_size);
-    {
-        int _ret1314 = json_array_set__part1314(array, idx, prop_val, &new_size);
-        if (_ret1314 != 0)
-            return -1;
-    }
-
-        int json_array_set__part1315(void);
-    return json_array_set__part1315();
-}
-
-const char *json_get_str(JSONValue val)
-{
-    int json_get_str__part1317(JSONValue val);
-    if (json_get_str__part1317(val))
-        return 
-              ((void *)0)
-                  ;
-
-    const char *json_get_str__part1318(JSONValue val);
-    return json_get_str__part1318(val);
-}
-
-const char *json_get_error(JSONValue val)
-{
-    int json_get_error__part1320(JSONValue val);
-if (json_get_error__part1320(val))
-    return ((void *)0);
-
-        const char *json_get_error__part1321(JSONValue val);
-    return json_get_error__part1321(val);
-
-}
-
-JSONValue json_string_new2(const char *str, int len)
-{
-    JSONValue json_string_new2__part1323(const char *str, int len);
-    return json_string_new2__part1323(str, len);
-}
-
-JSONValue json_string_new(const char *str)
-{
-    JSONValue json_string_new__part1325(const char *str);
-    return json_string_new__part1325(str);
-}
+JSONValue json_string_new(const char *str);
 
 JSONValue __attribute__((format(printf, 1, 2))) json_error_new(const char *fmt, ...)
 {
@@ -5239,118 +5095,20 @@ JSONValue __attribute__((format(printf, 1, 2))) json_error_new(const char *fmt, 
     return val;
 }
 
-JSONValue json_object_new(void)
-{
-    JSONValue json_object_new__part1328(void);
-    return json_object_new__part1328();
-}
+JSONValue json_object_new(void);
 
-JSONValue json_array_new(void)
-{
-    JSONValue json_array_new__part1330(void);
-    return json_array_new__part1330();
+JSONValue json_array_new(void);
 
-}
+void json_free(JSONValue val);
 
-void json_free(JSONValue val)
-{
-    {
-    void json_free__part1332(JSONValue val);
-    json_free__part1332(val);
-}
-}
+static void skip_spaces(const char **pp);
 
-static void skip_spaces(const char **pp)
-{
-    const char *skip_spaces__part1334(const char **pp);
-    const char *p;
-    p = skip_spaces__part1334(pp);
+static inline BOOL is_ident_first(int c);
 
-    void skip_spaces__part1335(const char **pp);
-    skip_spaces__part1335(&p);
-        void skip_spaces__part1336(const char **pp, const char *p);
-    skip_spaces__part1336(pp, p);
-}
+static int parse_ident(char *buf, int buf_size, const char **pp);
 
-static inline BOOL is_ident_first(int c)
-{
-    int is_ident_first__part1338(int c);
-    return is_ident_first__part1338(c);
-}
+JSONValue json_parse_value2(const char **pp);
 
-static int parse_ident(char *buf, int buf_size, const char **pp)
-{
-    void parse_ident__part1340(char *buf, const char **pp, const char **p_out, char **q_out);
-    char *q;
-    const char *p;
-    parse_ident__part1340(buf, pp, &p, &q);
-        {
-        int parse_ident__part1341(char *buf, int buf_size, const char **pp, char **pq);
-        if (parse_ident__part1341(buf, buf_size, &p, &q) != 0)
-            return -1;
-    }
+JSONValue json_parse_value(const char *p);
 
-    int parse_ident__part1342(const char **pp, const char *p, char *q);
-    return parse_ident__part1342(pp, p, q);
-
-}
-
-JSONValue json_parse_value2(const char **pp)
-{
-    char buf[128];
-    const char *p;
-    JSONValue val, val1, tag;
-
-    const char *json_parse_value2__part1344(const char **pp);
-    p = json_parse_value2__part1344(pp);
-
-    {
-        int json_parse_value2__part1345(const char *p, JSONValue *out);
-        JSONValue json_parse_value2__part1345_val;
-        if (json_parse_value2__part1345(p, &json_parse_value2__part1345_val)) {
-            return json_parse_value2__part1345_val;
-        }
-    }
-        {
-        JSONValue json_parse_value2__part1346(const char **pp, char *buf, int *pret);
-        int part1346_ret = 0;
-        val = json_parse_value2__part1346(&p, buf, &part1346_ret);
-        if (part1346_ret) {
-            return val;
-        }
-    }
-
-    JSONValue json_parse_value2__part1347(const char **pp, const char *p, JSONValue val);
-    return json_parse_value2__part1347(pp, p, val);
-}
-
-JSONValue json_parse_value(const char *p)
-{
-    JSONValue json_parse_value__part1349(const char **p);
-    JSONValue val;
-    val = json_parse_value__part1349(&p);
-
-    int json_parse_value__part1350(JSONValue val);
-    if (json_parse_value__part1350(val))
-        return val;
-    void json_parse_value__part1351(const char **pp);
-json_parse_value__part1351(&p);
-
-    {
-        int json_parse_value__part1352(const char *p, JSONValue val, JSONValue *ret);
-        JSONValue _part1352_ret;
-        if (json_parse_value__part1352(p, val, &_part1352_ret)) {
-            return _part1352_ret;
-        }
-    }
-        JSONValue json_parse_value__part1353(JSONValue val);
-    return json_parse_value__part1353(val);
-
-}
-
-JSONValue json_parse_value_len(const char *p, int len)
-{
-    JSONValue json_parse_value_len__part1355(const char *p, int len);
-    return json_parse_value_len__part1355(p, len);
-
-}
+JSONValue json_parse_value_len(const char *p, int len);

@@ -8434,61 +8434,22 @@ struct quehead {
 };
 
 inline void
-slirp_insque(void *a, void *b)
-{
- void slirp_insque__part2441(void *a, void *b);
- slirp_insque__part2441(a, b);
-
-}
+slirp_insque(void *a, void *b);
 
 inline void
-slirp_remque(void *a)
-{
-  void slirp_remque__part2443(void *a);
-  slirp_remque__part2443(a);
-}
+slirp_remque(void *a);
 
 int add_exec(struct ex_list **ex_ptr, int do_pty, char *exec,
-             struct in_addr addr, int port)
-{
- struct ex_list *tmp_ptr;
+             struct in_addr addr, int port);
+int os_socket(int domain, int type, int protocol);
 
-
-  int add_exec__part2445(struct ex_list **ex_ptr, struct in_addr addr, int port);
- if (add_exec__part2445(ex_ptr, addr, port) == -1)
-  return -1;
-
-
-  int add_exec__part2446(struct ex_list **, int, char *, struct in_addr, int);
- return add_exec__part2446(ex_ptr, do_pty, exec, addr, port);
-
-}
-int os_socket(int domain, int type, int protocol)
-{
-    int os_socket__part2448(int domain, int type, int protocol);
-    return os_socket__part2448(domain, type, protocol);
-
-}
-
-uint32_t os_get_time_ms(void)
-{
-    uint32_t os_get_time_ms__part2450(void);
-    return os_get_time_ms__part2450();
-}
+uint32_t os_get_time_ms(void);
 
 
 
 
 int
-fork_exec(struct socket *so, const char *ex, int do_pty)
-{
-
-        {
-        int fork_exec__part2452(struct socket *so, const char *ex, int do_pty);
-        return fork_exec__part2452(so, ex, do_pty);
-    }
-
-}
+fork_exec(struct socket *so, const char *ex, int do_pty);
 void lprint(const char *format, ...)
 {
     va_list args;
@@ -8511,38 +8472,7 @@ void lprint(const char *format, ...)
 
 
 void
-fd_nonblock(int fd)
-{
-
-
-
-
-        void fd_nonblock__part2455(int fd);
- fd_nonblock__part2455(fd);
-
-
-
-
-
-
-
-}
+fd_nonblock(int fd);
 
 void
-fd_block(int fd)
-{
-
-
-
-
- void fd_block__part2457(int fd);
- fd_block__part2457(fd);
-
-
-
-
-
-
-
-
-}
+fd_block(int fd);
