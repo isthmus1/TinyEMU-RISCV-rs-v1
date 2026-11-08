@@ -1,5 +1,7 @@
-TinyEMU-RISCV rewrite in Rust by Argo, rewrite artifact. One-command build and run script written by claude; the rest is built by nemotron with no human intervention
+TinyEMU-RISCV rewrite in Rust by Argo, rewrite artifact. One-command build and run script written by claude; the rest is autonomously written by agents with no human intervention
 
 Work in progress: new snapshots will be committed as the rewrite continues.
 
-`█░░░░░░░░░░░░░░░░░░░` 5.6% migrated (209 of 3,751 pieces)
+`█░░░░░░░░░░░░░░░░░░░` 7.1% migrated by Nemotron 3.5 Lightning (267 of 3,751 pieces)
+
+`████░░░░░░░░░░░░░░░░` 19.8% migrated by DeepSeek V4.1 Flash (743 of 3,751 pieces)

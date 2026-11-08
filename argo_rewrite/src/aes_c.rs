@@ -135,6 +135,139 @@ pub extern "C" fn AES_set_encrypt_key__part71(rk: *mut c_uint, userKey: *const c
 }
 }
 
+// ── `if (bits == 128)` · aes.c:763-780 · chunk 72 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     if (bits == 128) {
+//       while (1) {
+//        temp = rk[3];
+//        rk[4] = rk[0] ^
+//         (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
+//         (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
+//         (Te4[(temp ) & 0xff] & 0x0000ff00) ^
+//         (Te4[(temp >> 24) ] & 0x000000ff) ^
+//         rcon[i];
+//        rk[5] = rk[1] ^ rk[4];
+//        rk[6] = rk[2] ^ rk[5];
+//        rk[7] = rk[3] ^ rk[6];
+//        if (++i == 10) {
+//         return 0;
+//        }
+//        rk += 4;
+//       }
+//      }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk72 {
+// Port of the bits==128 key-expansion loop of AES_set_encrypt_key.
+use core::ffi::c_int;
+
+static TE4: [u32; 256] = [
+    0x63636363, 0x7c7c7c7c, 0x77777777, 0x7b7b7b7b,
+    0xf2f2f2f2, 0x6b6b6b6b, 0x6f6f6f6f, 0xc5c5c5c5,
+    0x30303030, 0x01010101, 0x67676767, 0x2b2b2b2b,
+    0xfefefefe, 0xd7d7d7d7, 0xabababab, 0x76767676,
+    0xcacacaca, 0x82828282, 0xc9c9c9c9, 0x7d7d7d7d,
+    0xfafafafa, 0x59595959, 0x47474747, 0xf0f0f0f0,
+    0xadadadad, 0xd4d4d4d4, 0xa2a2a2a2, 0xafafafaf,
+    0x9c9c9c9c, 0xa4a4a4a4, 0x72727272, 0xc0c0c0c0,
+    0xb7b7b7b7, 0xfdfdfdfd, 0x93939393, 0x26262626,
+    0x36363636, 0x3f3f3f3f, 0xf7f7f7f7, 0xcccccccc,
+    0x34343434, 0xa5a5a5a5, 0xe5e5e5e5, 0xf1f1f1f1,
+    0x71717171, 0xd8d8d8d8, 0x31313131, 0x15151515,
+    0x04040404, 0xc7c7c7c7, 0x23232323, 0xc3c3c3c3,
+    0x18181818, 0x96969696, 0x05050505, 0x9a9a9a9a,
+    0x07070707, 0x12121212, 0x80808080, 0xe2e2e2e2,
+    0xebebebeb, 0x27272727, 0xb2b2b2b2, 0x75757575,
+    0x09090909, 0x83838383, 0x2c2c2c2c, 0x1a1a1a1a,
+    0x1b1b1b1b, 0x6e6e6e6e, 0x5a5a5a5a, 0xa0a0a0a0,
+    0x52525252, 0x3b3b3b3b, 0xd6d6d6d6, 0xb3b3b3b3,
+    0x29292929, 0xe3e3e3e3, 0x2f2f2f2f, 0x84848484,
+    0x53535353, 0xd1d1d1d1, 0x00000000, 0xedededed,
+    0x20202020, 0xfcfcfcfc, 0xb1b1b1b1, 0x5b5b5b5b,
+    0x6a6a6a6a, 0xcbcbcbcb, 0xbebebebe, 0x39393939,
+    0x4a4a4a4a, 0x4c4c4c4c, 0x58585858, 0xcfcfcfcf,
+    0xd0d0d0d0, 0xefefefef, 0xaaaaaaaa, 0xfbfbfbfb,
+    0x43434343, 0x4d4d4d4d, 0x33333333, 0x85858585,
+    0x45454545, 0xf9f9f9f9, 0x02020202, 0x7f7f7f7f,
+    0x50505050, 0x3c3c3c3c, 0x9f9f9f9f, 0xa8a8a8a8,
+    0x51515151, 0xa3a3a3a3, 0x40404040, 0x8f8f8f8f,
+    0x92929292, 0x9d9d9d9d, 0x38383838, 0xf5f5f5f5,
+    0xbcbcbcbc, 0xb6b6b6b6, 0xdadadada, 0x21212121,
+    0x10101010, 0xffffffff, 0xf3f3f3f3, 0xd2d2d2d2,
+    0xcdcdcdcd, 0x0c0c0c0c, 0x13131313, 0xecececec,
+    0x5f5f5f5f, 0x97979797, 0x44444444, 0x17171717,
+    0xc4c4c4c4, 0xa7a7a7a7, 0x7e7e7e7e, 0x3d3d3d3d,
+    0x64646464, 0x5d5d5d5d, 0x19191919, 0x73737373,
+    0x60606060, 0x81818181, 0x4f4f4f4f, 0xdcdcdcdc,
+    0x22222222, 0x2a2a2a2a, 0x90909090, 0x88888888,
+    0x46464646, 0xeeeeeeee, 0xb8b8b8b8, 0x14141414,
+    0xdededede, 0x5e5e5e5e, 0x0b0b0b0b, 0xdbdbdbdb,
+    0xe0e0e0e0, 0x32323232, 0x3a3a3a3a, 0x0a0a0a0a,
+    0x49494949, 0x06060606, 0x24242424, 0x5c5c5c5c,
+    0xc2c2c2c2, 0xd3d3d3d3, 0xacacacac, 0x62626262,
+    0x91919191, 0x95959595, 0xe4e4e4e4, 0x79797979,
+    0xe7e7e7e7, 0xc8c8c8c8, 0x37373737, 0x6d6d6d6d,
+    0x8d8d8d8d, 0xd5d5d5d5, 0x4e4e4e4e, 0xa9a9a9a9,
+    0x6c6c6c6c, 0x56565656, 0xf4f4f4f4, 0xeaeaeaea,
+    0x65656565, 0x7a7a7a7a, 0xaeaeaeae, 0x08080808,
+    0xbabababa, 0x78787878, 0x25252525, 0x2e2e2e2e,
+    0x1c1c1c1c, 0xa6a6a6a6, 0xb4b4b4b4, 0xc6c6c6c6,
+    0xe8e8e8e8, 0xdddddddd, 0x74747474, 0x1f1f1f1f,
+    0x4b4b4b4b, 0xbdbdbdbd, 0x8b8b8b8b, 0x8a8a8a8a,
+    0x70707070, 0x3e3e3e3e, 0xb5b5b5b5, 0x66666666,
+    0x48484848, 0x03030303, 0xf6f6f6f6, 0x0e0e0e0e,
+    0x61616161, 0x35353535, 0x57575757, 0xb9b9b9b9,
+    0x86868686, 0xc1c1c1c1, 0x1d1d1d1d, 0x9e9e9e9e,
+    0xe1e1e1e1, 0xf8f8f8f8, 0x98989898, 0x11111111,
+    0x69696969, 0xd9d9d9d9, 0x8e8e8e8e, 0x94949494,
+    0x9b9b9b9b, 0x1e1e1e1e, 0x87878787, 0xe9e9e9e9,
+    0xcececece, 0x55555555, 0x28282828, 0xdfdfdfdf,
+    0x8c8c8c8c, 0xa1a1a1a1, 0x89898989, 0x0d0d0d0d,
+    0xbfbfbfbf, 0xe6e6e6e6, 0x42424242, 0x68686868,
+    0x41414141, 0x99999999, 0x2d2d2d2d, 0x0f0f0f0f,
+    0xb0b0b0b0, 0x54545454, 0xbbbbbbbb, 0x16161616,
+];
+
+static RCON: [u32; 10] = [
+    0x01000000, 0x02000000, 0x04000000, 0x08000000,
+    0x10000000, 0x20000000, 0x40000000, 0x80000000,
+    0x1B000000, 0x36000000,
+];
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_set_encrypt_key__part72(
+    rk: *mut u32,
+    i: *mut c_int,
+    temp: *mut u32,
+) -> c_int {
+    let mut rk: *mut u32 = rk;
+    let mut idx: c_int = *i;
+    loop {
+        let t: u32 = *rk.add(3);
+        *temp = t;
+        let v4: u32 = *rk
+            ^ (TE4[((t >> 16) & 0xff) as usize] & 0xff000000u32)
+            ^ (TE4[((t >> 8) & 0xff) as usize] & 0x00ff0000u32)
+            ^ (TE4[(t & 0xff) as usize] & 0x0000ff00u32)
+            ^ (TE4[(t >> 24) as usize] & 0x000000ffu32)
+            ^ *RCON.as_ptr().add(idx as usize);
+        *rk.add(4) = v4;
+        let v5: u32 = *rk.add(1) ^ v4;
+        *rk.add(5) = v5;
+        let v6: u32 = *rk.add(2) ^ v5;
+        *rk.add(6) = v6;
+        let v7: u32 = *rk.add(3) ^ v6;
+        *rk.add(7) = v7;
+        idx += 1;
+        if idx == 10 {
+            *i = idx;
+            return 0;
+        }
+        rk = rk.add(4);
+    }
+}
+}
+
 // ── `rk[4] = (((u32)(userKey + 16)[0] << 24) ^ ((u32)(userKey + 16)[1] << 16) ^ ((u32)(userKey + 16)…` · aes.c:781-782 · chunk 73 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -535,6 +668,178 @@ pub extern "C" fn AES_set_decrypt_key__part82(rk: *mut u32, rounds: c_int) {
 }
 }
 
+// ── `for (i = 1; i < (key->rounds; i++)` · aes.c:861-883 · chunk 83 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     for (i = 1; i < (key->rounds); i++) {
+//       rk += 4;
+//       rk[0] =
+//        Td0[Te4[(rk[0] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[0] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[0] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[0] ) & 0xff] & 0xff];
+//       rk[1] =
+//        Td0[Te4[(rk[1] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[1] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[1] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[1] ) & 0xff] & 0xff];
+//       rk[2] =
+//        Td0[Te4[(rk[2] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[2] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[2] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[2] ) & 0xff] & 0xff];
+//       rk[3] =
+//        Td0[Te4[(rk[3] >> 24) ] & 0xff] ^
+//        Td1[Te4[(rk[3] >> 16) & 0xff] & 0xff] ^
+//        Td2[Te4[(rk[3] >> 8) & 0xff] & 0xff] ^
+//        Td3[Te4[(rk[3] ) & 0xff] & 0xff];
+//      }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk83 {
+use core::ffi::c_int;
+
+#[repr(C)]
+struct AesKey {
+    rd_key: [u32; 60],
+    rounds: c_int,
+}
+
+/// Port of the AES key decryption transformation loop (aes.c lines 861-883).
+/// 
+/// # Safety
+/// The caller must ensure `key` points to a valid AES_KEY, and the Te4/Td0-3
+/// pointers point to valid static arrays of 256 u32 values.
+#[no_mangle]
+pub extern "C" fn AES_set_decrypt_key__part83(
+    key: *mut AesKey,
+    te4: *const u32,
+    td0: *const u32,
+    td1: *const u32,
+    td2: *const u32,
+    td3: *const u32,
+) -> c_int {
+    let key = unsafe { key.as_mut().unwrap() };
+    let rounds = key.rounds;
+    let te4_slice = unsafe { core::slice::from_raw_parts(te4, 256) };
+    let td0_slice = unsafe { core::slice::from_raw_parts(td0, 256) };
+    let td1_slice = unsafe { core::slice::from_raw_parts(td1, 256) };
+    let td2_slice = unsafe { core::slice::from_raw_parts(td2, 256) };
+    let td3_slice = unsafe { core::slice::from_raw_parts(td3, 256) };
+
+    let mut i: c_int = 1;
+
+    while i < rounds {
+        let offset = 4usize * i as usize;
+
+        let rk0 = key.rd_key[offset];
+        let rk1 = key.rd_key[offset + 1];
+        let rk2 = key.rd_key[offset + 2];
+        let rk3 = key.rd_key[offset + 3];
+
+        // Transform rk[0]
+        let b0 = ((rk0 >> 24) & 0xff) as usize;
+        let te4_b0 = te4_slice[b0];
+        let t0_idx = (te4_b0 & 0xff) as usize;
+        let t0 = td0_slice[t0_idx];
+
+        let b1 = ((rk0 >> 16) & 0xff) as usize;
+        let te4_b1 = te4_slice[b1];
+        let t1_idx = (te4_b1 & 0xff) as usize;
+        let t1 = td1_slice[t1_idx];
+
+        let b2 = ((rk0 >> 8) & 0xff) as usize;
+        let te4_b2 = te4_slice[b2];
+        let t2_idx = (te4_b2 & 0xff) as usize;
+        let t2 = td2_slice[t2_idx];
+
+        let b3 = (rk0 & 0xff) as usize;
+        let te4_b3 = te4_slice[b3];
+        let t3_idx = (te4_b3 & 0xff) as usize;
+        let t3 = td3_slice[t3_idx];
+
+        let new_rk0 = t0 ^ t1 ^ t2 ^ t3;
+
+        // Transform rk[1]
+        let b0 = ((rk1 >> 24) & 0xff) as usize;
+        let te4_b0 = te4_slice[b0];
+        let t0_idx = (te4_b0 & 0xff) as usize;
+        let t0 = td0_slice[t0_idx];
+
+        let b1 = ((rk1 >> 16) & 0xff) as usize;
+        let te4_b1 = te4_slice[b1];
+        let t1_idx = (te4_b1 & 0xff) as usize;
+        let t1 = td1_slice[t1_idx];
+
+        let b2 = ((rk1 >> 8) & 0xff) as usize;
+        let te4_b2 = te4_slice[b2];
+        let t2_idx = (te4_b2 & 0xff) as usize;
+        let t2 = td2_slice[t2_idx];
+
+        let b3 = (rk1 & 0xff) as usize;
+        let te4_b3 = te4_slice[b3];
+        let t3_idx = (te4_b3 & 0xff) as usize;
+        let t3 = td3_slice[t3_idx];
+
+        let new_rk1 = t0 ^ t1 ^ t2 ^ t3;
+
+        // Transform rk[2]
+        let b0 = ((rk2 >> 24) & 0xff) as usize;
+        let te4_b0 = te4_slice[b0];
+        let t0_idx = (te4_b0 & 0xff) as usize;
+        let t0 = td0_slice[t0_idx];
+
+        let b1 = ((rk2 >> 16) & 0xff) as usize;
+        let te4_b1 = te4_slice[b1];
+        let t1_idx = (te4_b1 & 0xff) as usize;
+        let t1 = td1_slice[t1_idx];
+
+        let b2 = ((rk2 >> 8) & 0xff) as usize;
+        let te4_b2 = te4_slice[b2];
+        let t2_idx = (te4_b2 & 0xff) as usize;
+        let t2 = td2_slice[t2_idx];
+
+        let b3 = (rk2 & 0xff) as usize;
+        let te4_b3 = te4_slice[b3];
+        let t3_idx = (te4_b3 & 0xff) as usize;
+        let t3 = td3_slice[t3_idx];
+
+        let new_rk2 = t0 ^ t1 ^ t2 ^ t3;
+
+        // Transform rk[3]
+        let b0 = ((rk3 >> 24) & 0xff) as usize;
+        let te4_b0 = te4_slice[b0];
+        let t0_idx = (te4_b0 & 0xff) as usize;
+        let t0 = td0_slice[t0_idx];
+
+        let b1 = ((rk3 >> 16) & 0xff) as usize;
+        let te4_b1 = te4_slice[b1];
+        let t1_idx = (te4_b1 & 0xff) as usize;
+        let t1 = td1_slice[t1_idx];
+
+        let b2 = ((rk3 >> 8) & 0xff) as usize;
+        let te4_b2 = te4_slice[b2];
+        let t2_idx = (te4_b2 & 0xff) as usize;
+        let t2 = td2_slice[t2_idx];
+
+        let b3 = (rk3 & 0xff) as usize;
+        let te4_b3 = te4_slice[b3];
+        let t3_idx = (te4_b3 & 0xff) as usize;
+        let t3 = td3_slice[t3_idx];
+
+        let new_rk3 = t0 ^ t1 ^ t2 ^ t3;
+
+        key.rd_key[offset] = new_rk0;
+        key.rd_key[offset + 1] = new_rk1;
+        key.rd_key[offset + 2] = new_rk2;
+        key.rd_key[offset + 3] = new_rk3;
+
+        i += 1;
+    }
+
+    0
+}
+}
+
 // ── `return 0;` · aes.c:884-884 · chunk 84 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -557,6 +862,83 @@ pub extern "C" fn AES_set_decrypt_key__part84(
     key: *mut aes_key_st,
 ) -> c_int {
     0
+}
+}
+
+// ── `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` · aes.c:895-987 · chunk 86 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     const u32 *rk;
+//      u32 s0, s1, s2, s3, t0, t1, t2, t3;
+//     
+//      int r;
+//     
+//     
+//      
+//     ((void) (0))
+//                             ;
+//      rk = key->rd_key;
+//     
+//     
+//     
+//     
+//     
+//      s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+//      s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+//      s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+//      s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
+//         r = key->rounds >> 1;
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk86 {
+// Port of the first statements of AES_encrypt: key schedule pointer,
+// initial key addition and round counter setup.
+
+#[repr(C)]
+pub struct AesKeySt {
+    pub rd_key: [u32; 60],
+    pub rounds: i32,
+}
+
+#[no_mangle]
+pub extern "C" fn AES_encrypt__part86(
+    inp: *const u8,
+    key: *const AesKeySt,
+    rk_out: *mut *const u32,
+    s0: *mut u32,
+    s1: *mut u32,
+    s2: *mut u32,
+    s3: *mut u32,
+    t0: *mut u32,
+    t1: *mut u32,
+    t2: *mut u32,
+    t3: *mut u32,
+    r_out: *mut i32,
+) {
+    unsafe {
+        let rk: *const u32 = (*key).rd_key.as_ptr();
+        *rk_out = rk;
+
+        // XOR of four big-endian input bytes with the round key.
+        let load = |off: usize| -> u32 {
+            ((*inp.add(off) as u32) << 24)
+                ^ ((*inp.add(off + 1) as u32) << 16)
+                ^ ((*inp.add(off + 2) as u32) << 8)
+                ^ (*inp.add(off + 3) as u32)
+        };
+
+        *s0 = load(0) ^ *rk.add(0);
+        *s1 = load(4) ^ *rk.add(1);
+        *s2 = load(8) ^ *rk.add(2);
+        *s3 = load(12) ^ *rk.add(3);
+
+        // t0..t3 are assigned by the loop that follows before any use.
+        *t0 = 0;
+        *t1 = 0;
+        *t2 = 0;
+        *t3 = 0;
+
+        *r_out = (*key).rounds >> 1;
+    }
 }
 }
 
@@ -1202,6 +1584,315 @@ pub extern "C" fn AES_encrypt__part96() {
 }
 }
 
+// ── `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` · aes.c:1086-1178 · chunk 98 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     const u32 *rk;
+//      u32 s0, s1, s2, s3, t0, t1, t2, t3;
+//     
+//      int r;
+//     
+//     
+//      
+//     ((void) (0))
+//                             ;
+//      rk = key->rd_key;
+//     
+//     
+//     
+//     
+//     
+//         s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
+//         s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
+//         s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
+//         s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
+//         r = key->rounds >> 1;
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk98 {
+// Ported piece of AES_decrypt: key-schedule pointer setup, initial state load,
+// and round counter computation.
+
+#[repr(C)]
+pub struct AesKeySt {
+    pub rd_key: [u32; 4 * (14 + 1)],
+    pub rounds: core::ffi::c_int,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_decrypt__part98(
+    inp: *const u8,
+    key: *const AesKeySt,
+    rk_out: *mut *const u32,
+    s0_out: *mut u32,
+    s1_out: *mut u32,
+    s2_out: *mut u32,
+    s3_out: *mut u32,
+    r_out: *mut core::ffi::c_int,
+) {
+    let k = &*key;
+    let rk: *const u32 = k.rd_key.as_ptr();
+    *rk_out = rk;
+
+    let b = |i: usize| -> u32 { *inp.add(i) as u32 };
+
+    let s0 = ((b(0) << 24) ^ (b(1) << 16) ^ (b(2) << 8) ^ b(3)) ^ *rk.add(0);
+    let s1 = ((b(4) << 24) ^ (b(5) << 16) ^ (b(6) << 8) ^ b(7)) ^ *rk.add(1);
+    let s2 = ((b(8) << 24) ^ (b(9) << 16) ^ (b(10) << 8) ^ b(11)) ^ *rk.add(2);
+    let s3 = ((b(12) << 24) ^ (b(13) << 16) ^ (b(14) << 8) ^ b(15)) ^ *rk.add(3);
+
+    *s0_out = s0;
+    *s1_out = s1;
+    *s2_out = s2;
+    *s3_out = s3;
+
+    *r_out = k.rounds >> 1;
+}
+}
+
+// ── `for (; ; )` · aes.c:1179-1234 · chunk 99 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     for (;;) {
+//             t0 =
+//                 Td0[(s0 >> 24) ] ^
+//                 Td1[(s3 >> 16) & 0xff] ^
+//                 Td2[(s2 >> 8) & 0xff] ^
+//                 Td3[(s1 ) & 0xff] ^
+//                 rk[4];
+//             t1 =
+//                 Td0[(s1 >> 24) ] ^
+//                 Td1[(s0 >> 16) & 0xff] ^
+//                 Td2[(s3 >> 8) & 0xff] ^
+//                 Td3[(s2 ) & 0xff] ^
+//                 rk[5];
+//             t2 =
+//                 Td0[(s2 >> 24) ] ^
+//                 Td1[(s1 >> 16) & 0xff] ^
+//                 Td2[(s0 >> 8) & 0xff] ^
+//                 Td3[(s3 ) & 0xff] ^
+//                 rk[6];
+//             t3 =
+//                 Td0[(s3 >> 24) ] ^
+//                 Td1[(s2 >> 16) & 0xff] ^
+//                 Td2[(s1 >> 8) & 0xff] ^
+//                 Td3[(s0 ) & 0xff] ^
+//                 rk[7];
+//     
+//             rk += 8;
+//             if (--r == 0) {
+//                 break;
+//             }
+//     
+//             s0 =
+//                 Td0[(t0 >> 24) ] ^
+//                 Td1[(t3 >> 16) & 0xff] ^
+//                 Td2[(t2 >> 8) & 0xff] ^
+//                 Td3[(t1 ) & 0xff] ^
+//                 rk[0];
+//             s1 =
+//                 Td0[(t1 >> 24) ] ^
+//                 Td1[(t0 >> 16) & 0xff] ^
+//                 Td2[(t3 >> 8) & 0xff] ^
+//                 Td3[(t2 ) & 0xff] ^
+//                 rk[1];
+//             s2 =
+//                 Td0[(t2 >> 24) ] ^
+//                 Td1[(t1 >> 16) & 0xff] ^
+//                 Td2[(t0 >> 8) & 0xff] ^
+//                 Td3[(t3 ) & 0xff] ^
+//                 rk[2];
+//             s3 =
+//                 Td0[(t3 >> 24) ] ^
+//                 Td1[(t2 >> 16) & 0xff] ^
+//                 Td2[(t1 >> 8) & 0xff] ^
+//                 Td3[(t0 ) & 0xff] ^
+//                 rk[3];
+//         }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk99 {
+// Port of the AES_decrypt decryption round loop (aes.c lines 1179-1234).
+// The Td0..Td3 tables are `static const` in the C translation unit (no linker
+// symbols), so they are embedded here. Td1/Td2/Td3 are byte rotations of Td0.
+
+use core::ffi::c_int;
+
+const TD0_V: [u32; 256] = [
+    0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96,
+    0x3bab6bcb, 0x1f9d45f1, 0xacfa58ab, 0x4be30393,
+    0x2030fa55, 0xad766df6, 0x88cc7691, 0xf5024c25,
+    0x4fe5d7fc, 0xc52acbd7, 0x26354480, 0xb562a38f,
+    0xdeb15a49, 0x25ba1b67, 0x45ea0e98, 0x5dfec0e1,
+    0xc32f7502, 0x814cf012, 0x8d4697a3, 0x6bd3f9c6,
+    0x038f5fe7, 0x15929c95, 0xbf6d7aeb, 0x955259da,
+    0xd4be832d, 0x587421d3, 0x49e06929, 0x8ec9c844,
+    0x75c2896a, 0xf48e7978, 0x99583e6b, 0x27b971dd,
+    0xbee14fb6, 0xf088ad17, 0xc920ac66, 0x7dce3ab4,
+    0x63df4a18, 0xe51a3182, 0x97513360, 0x62537f45,
+    0xb16477e0, 0xbb6bae84, 0xfe81a01c, 0xf9082b94,
+    0x70486858, 0x8f45fd19, 0x94de6c87, 0x527bf8b7,
+    0xab73d323, 0x724b02e2, 0xe31f8f57, 0x6655ab2a,
+    0xb2eb2807, 0x2fb5c203, 0x86c57b9a, 0xd33708a5,
+    0x302887f2, 0x23bfa5b2, 0x02036aba, 0xed16825c,
+    0x8acf1c2b, 0xa779b492, 0xf307f2f0, 0x4e69e2a1,
+    0x65daf4cd, 0x0605bed5, 0xd134621f, 0xc4a6fe8a,
+    0x342e539d, 0xa2f355a0, 0x058ae132, 0xa4f6eb75,
+    0x0b83ec39, 0x4060efaa, 0x5e719f06, 0xbd6e1051,
+    0x3e218af9, 0x96dd063d, 0xdd3e05ae, 0x4de6bd46,
+    0x91548db5, 0x71c45d05, 0x0406d46f, 0x605015ff,
+    0x1998fb24, 0xd6bde997, 0x894043cc, 0x67d99e77,
+    0xb0e842bd, 0x07898b88, 0xe7195b38, 0x79c8eedb,
+    0xa17c0a47, 0x7c420fe9, 0xf8841ec9, 0x00000000,
+    0x09808683, 0x322bed48, 0x1e1170ac, 0x6c5a724e,
+    0xfd0efffb, 0x0f853856, 0x3daed51e, 0x362d3927,
+    0x0a0fd964, 0x685ca621, 0x9b5b54d1, 0x24362e3a,
+    0x0c0a67b1, 0x9357e70f, 0xb4ee96d2, 0x1b9b919e,
+    0x80c0c54f, 0x61dc20a2, 0x5a774b69, 0x1c121a16,
+    0xe293ba0a, 0xc0a02ae5, 0x3c22e043, 0x121b171d,
+    0x0e090d0b, 0xf28bc7ad, 0x2db6a8b9, 0x141ea9c8,
+    0x57f11985, 0xaf75074c, 0xee99ddbb, 0xa37f60fd,
+    0xf701269f, 0x5c72f5bc, 0x44663bc5, 0x5bfb7e34,
+    0x8b432976, 0xcb23c6dc, 0xb6edfc68, 0xb8e4f163,
+    0xd731dcca, 0x42638510, 0x13972240, 0x84c61120,
+    0x854a247d, 0xd2bb3df8, 0xaef93211, 0xc729a16d,
+    0x1d9e2f4b, 0xdcb230f3, 0x0d8652ec, 0x77c1e3d0,
+    0x2bb3166c, 0xa970b999, 0x119448fa, 0x47e96422,
+    0xa8fc8cc4, 0xa0f03f1a, 0x567d2cd8, 0x223390ef,
+    0x87494ec7, 0xd938d1c1, 0x8ccaa2fe, 0x98d40b36,
+    0xa6f581cf, 0xa57ade28, 0xdab78e26, 0x3fadbfa4,
+    0x2c3a9de4, 0x5078920d, 0x6a5fcc9b, 0x547e4662,
+    0xf68d13c2, 0x90d8b8e8, 0x2e39f75e, 0x82c3aff5,
+    0x9f5d80be, 0x69d0937c, 0x6fd52da9, 0xcf2512b3,
+    0xc8ac993b, 0x10187da7, 0xe89c636e, 0xdb3bbb7b,
+    0xcd267809, 0x6e5918f4, 0xec9ab701, 0x834f9aa8,
+    0xe6956e65, 0xaaffe67e, 0x21bccf08, 0xef15e8e6,
+    0xbae79bd9, 0x4a6f36ce, 0xea9f09d4, 0x29b07cd6,
+    0x31a4b2af, 0x2a3f2331, 0xc6a59430, 0x35a266c0,
+    0x744ebc37, 0xfc82caa6, 0xe090d0b0, 0x33a7d815,
+    0xf104984a, 0x41ecdaf7, 0x7fcd500e, 0x1791f62f,
+    0x764dd68d, 0x43efb04d, 0xccaa4d54, 0xe49604df,
+    0x9ed1b5e3, 0x4c6a881b, 0xc12c1fb8, 0x4665517f,
+    0x9d5eea04, 0x018c355d, 0xfa877473, 0xfb0b412e,
+    0xb3671d5a, 0x92dbd252, 0xe9105633, 0x6dd64713,
+    0x9ad7618c, 0x37a10c7a, 0x59f8148e, 0xeb133c89,
+    0xcea927ee, 0xb761c935, 0xe11ce5ed, 0x7a47b13c,
+    0x9cd2df59, 0x55f2733f, 0x1814ce79, 0x73c737bf,
+    0x53f7cdea, 0x5ffdaa5b, 0xdf3d6f14, 0x7844db86,
+    0xcaaff381, 0xb968c43e, 0x3824342c, 0xc2a3405f,
+    0x161dc372, 0xbce2250c, 0x283c498b, 0xff0d9541,
+    0x39a80171, 0x080cb3de, 0xd8b4e49c, 0x6456c190,
+    0x7bcb8461, 0xd532b670, 0x486c5c74, 0xd0b85742,
+];
+
+const fn rot_right(t: &[u32; 256], n: u32) -> [u32; 256] {
+    let mut out = [0u32; 256];
+    let mut i = 0usize;
+    while i < 256 {
+        out[i] = t[i].rotate_right(n);
+        i += 1;
+    }
+    out
+}
+
+const TD1_V: [u32; 256] = rot_right(&TD0_V, 8);
+const TD2_V: [u32; 256] = rot_right(&TD0_V, 16);
+const TD3_V: [u32; 256] = rot_right(&TD0_V, 24);
+
+static TD0: [u32; 256] = TD0_V;
+static TD1: [u32; 256] = TD1_V;
+static TD2: [u32; 256] = TD2_V;
+static TD3: [u32; 256] = TD3_V;
+
+#[inline]
+fn td(tab: &[u32; 256], idx: u32) -> u32 {
+    // idx is always the low 8 bits of a shift/mask of a u32.
+    unsafe { *tab.get_unchecked((idx & 0xff) as usize) }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn AES_decrypt__part99(
+    s0_in: u32,
+    s1_in: u32,
+    s2_in: u32,
+    s3_in: u32,
+    rkp: *mut *const u32,
+    rp: *mut c_int,
+    t0p: *mut u32,
+    t1p: *mut u32,
+    t2p: *mut u32,
+    t3p: *mut u32,
+) {
+    let mut s0 = s0_in;
+    let mut s1 = s1_in;
+    let mut s2 = s2_in;
+    let mut s3 = s3_in;
+
+    let mut rk: *const u32 = *rkp;
+    let mut r: c_int = *rp;
+
+    let mut t0: u32 = 0;
+    let mut t1: u32 = 0;
+    let mut t2: u32 = 0;
+    let mut t3: u32 = 0;
+
+    loop {
+        t0 = td(&TD0, s0 >> 24)
+            ^ td(&TD1, (s3 >> 16) & 0xff)
+            ^ td(&TD2, (s2 >> 8) & 0xff)
+            ^ td(&TD3, s1 & 0xff)
+            ^ *rk.add(4);
+        t1 = td(&TD0, s1 >> 24)
+            ^ td(&TD1, (s0 >> 16) & 0xff)
+            ^ td(&TD2, (s3 >> 8) & 0xff)
+            ^ td(&TD3, s2 & 0xff)
+            ^ *rk.add(5);
+        t2 = td(&TD0, s2 >> 24)
+            ^ td(&TD1, (s1 >> 16) & 0xff)
+            ^ td(&TD2, (s0 >> 8) & 0xff)
+            ^ td(&TD3, s3 & 0xff)
+            ^ *rk.add(6);
+        t3 = td(&TD0, s3 >> 24)
+            ^ td(&TD1, (s2 >> 16) & 0xff)
+            ^ td(&TD2, (s1 >> 8) & 0xff)
+            ^ td(&TD3, s0 & 0xff)
+            ^ *rk.add(7);
+
+        rk = rk.add(8);
+        r -= 1;
+        if r == 0 {
+            break;
+        }
+
+        s0 = td(&TD0, t0 >> 24)
+            ^ td(&TD1, (t3 >> 16) & 0xff)
+            ^ td(&TD2, (t2 >> 8) & 0xff)
+            ^ td(&TD3, t1 & 0xff)
+            ^ *rk.add(0);
+        s1 = td(&TD0, t1 >> 24)
+            ^ td(&TD1, (t0 >> 16) & 0xff)
+            ^ td(&TD2, (t3 >> 8) & 0xff)
+            ^ td(&TD3, t2 & 0xff)
+            ^ *rk.add(1);
+        s2 = td(&TD0, t2 >> 24)
+            ^ td(&TD1, (t1 >> 16) & 0xff)
+            ^ td(&TD2, (t0 >> 8) & 0xff)
+            ^ td(&TD3, t3 & 0xff)
+            ^ *rk.add(2);
+        s3 = td(&TD0, t3 >> 24)
+            ^ td(&TD1, (t2 >> 16) & 0xff)
+            ^ td(&TD2, (t1 >> 8) & 0xff)
+            ^ td(&TD3, t0 & 0xff)
+            ^ *rk.add(3);
+    }
+
+    *rkp = rk;
+    *rp = r;
+    *t0p = t0;
+    *t1p = t1;
+    *t2p = t2;
+    *t3p = t3;
+}
+}
+
 // ── `s0 = (Td4[(t0 >> 24) ] & 0xff000000) ^ (Td4[(t3 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t2 >> 8) &…` · aes.c:1240-1245 · chunk 100 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
 //
 // Original C:
@@ -1327,6 +2018,73 @@ pub extern "C" fn AES_decrypt__part101(mut out: *mut c_uchar, s0: c_uint) {
         out = out.offset(1);
         *out = s0 as c_uchar;
     }
+}
+}
+
+// ── `; s1 = (Td4[(t1 >> 24) ] & 0xff000000) ^ (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t3 >> 8)…` · aes.c:1246-1252 · chunk 102 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     ;
+//         s1 =
+//          (Td4[(t1 >> 24) ] & 0xff000000) ^
+//          (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
+//          (Td4[(t3 >> 8) & 0xff] & 0x0000ff00) ^
+//          (Td4[(t2 ) & 0xff] & 0x000000ff) ^
+//          rk[1];
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk102 {
+// Ported piece of AES_decrypt: computes s1 from t0,t1,t2,t3 and rk[1].
+// Td4 is file-static in C (no linker symbol), so its data is reproduced here.
+
+const TD4: [u32; 256] = [
+    0x52525252, 0x09090909, 0x6a6a6a6a, 0xd5d5d5d5, 0x30303030, 0x36363636, 0xa5a5a5a5, 0x38383838,
+    0xbfbfbfbf, 0x40404040, 0xa3a3a3a3, 0x9e9e9e9e, 0x81818181, 0xf3f3f3f3, 0xd7d7d7d7, 0xfbfbfbfb,
+    0x7c7c7c7c, 0xe3e3e3e3, 0x39393939, 0x82828282, 0x9b9b9b9b, 0x2f2f2f2f, 0xffffffff, 0x87878787,
+    0x34343434, 0x8e8e8e8e, 0x43434343, 0x44444444, 0xc4c4c4c4, 0xdededede, 0xe9e9e9e9, 0xcbcbcbcb,
+    0x54545454, 0x7b7b7b7b, 0x94949494, 0x32323232, 0xa6a6a6a6, 0xc2c2c2c2, 0x23232323, 0x3d3d3d3d,
+    0xeeeeeeee, 0x4c4c4c4c, 0x95959595, 0x0b0b0b0b, 0x42424242, 0xfafafafa, 0xc3c3c3c3, 0x4e4e4e4e,
+    0x08080808, 0x2e2e2e2e, 0xa1a1a1a1, 0x66666666, 0x28282828, 0xd9d9d9d9, 0x24242424, 0xb2b2b2b2,
+    0x76767676, 0x5b5b5b5b, 0xa2a2a2a2, 0x49494949, 0x6d6d6d6d, 0x8b8b8b8b, 0xd1d1d1d1, 0x25252525,
+    0x72727272, 0xf8f8f8f8, 0xf6f6f6f6, 0x64646464, 0x86868686, 0x68686868, 0x98989898, 0x16161616,
+    0xd4d4d4d4, 0xa4a4a4a4, 0x5c5c5c5c, 0xcccccccc, 0x5d5d5d5d, 0x65656565, 0xb6b6b6b6, 0x92929292,
+    0x6c6c6c6c, 0x70707070, 0x48484848, 0x50505050, 0xfdfdfdfd, 0xedededed, 0xb9b9b9b9, 0xdadadada,
+    0x5e5e5e5e, 0x15151515, 0x46464646, 0x57575757, 0xa7a7a7a7, 0x8d8d8d8d, 0x9d9d9d9d, 0x84848484,
+    0x90909090, 0xd8d8d8d8, 0xabababab, 0x00000000, 0x8c8c8c8c, 0xbcbcbcbc, 0xd3d3d3d3, 0x0a0a0a0a,
+    0xf7f7f7f7, 0xe4e4e4e4, 0x58585858, 0x05050505, 0xb8b8b8b8, 0xb3b3b3b3, 0x45454545, 0x06060606,
+    0xd0d0d0d0, 0x2c2c2c2c, 0x1e1e1e1e, 0x8f8f8f8f, 0xcacacaca, 0x3f3f3f3f, 0x0f0f0f0f, 0x02020202,
+    0xc1c1c1c1, 0xafafafaf, 0xbdbdbdbd, 0x03030303, 0x01010101, 0x13131313, 0x8a8a8a8a, 0x6b6b6b6b,
+    0x3a3a3a3a, 0x91919191, 0x11111111, 0x41414141, 0x4f4f4f4f, 0x67676767, 0xdcdcdcdc, 0xeaeaeaea,
+    0x97979797, 0xf2f2f2f2, 0xcfcfcfcf, 0xcececece, 0xf0f0f0f0, 0xb4b4b4b4, 0xe6e6e6e6, 0x73737373,
+    0x96969696, 0xacacacac, 0x74747474, 0x22222222, 0xe7e7e7e7, 0xadadadad, 0x35353535, 0x85858585,
+    0xe2e2e2e2, 0xf9f9f9f9, 0x37373737, 0xe8e8e8e8, 0x1c1c1c1c, 0x75757575, 0xdfdfdfdf, 0x6e6e6e6e,
+    0x47474747, 0xf1f1f1f1, 0x1a1a1a1a, 0x71717171, 0x1d1d1d1d, 0x29292929, 0xc5c5c5c5, 0x89898989,
+    0x6f6f6f6f, 0xb7b7b7b7, 0x62626262, 0x0e0e0e0e, 0xaaaaaaaa, 0x18181818, 0xbebebebe, 0x1b1b1b1b,
+    0xfcfcfcfc, 0x56565656, 0x3e3e3e3e, 0x4b4b4b4b, 0xc6c6c6c6, 0xd2d2d2d2, 0x79797979, 0x20202020,
+    0x9a9a9a9a, 0xdbdbdbdb, 0xc0c0c0c0, 0xfefefefe, 0x78787878, 0xcdcdcdcd, 0x5a5a5a5a, 0xf4f4f4f4,
+    0x1f1f1f1f, 0xdddddddd, 0xa8a8a8a8, 0x33333333, 0x88888888, 0x07070707, 0xc7c7c7c7, 0x31313131,
+    0xb1b1b1b1, 0x12121212, 0x10101010, 0x59595959, 0x27272727, 0x80808080, 0xecececec, 0x5f5f5f5f,
+    0x60606060, 0x51515151, 0x7f7f7f7f, 0xa9a9a9a9, 0x19191919, 0xb5b5b5b5, 0x4a4a4a4a, 0x0d0d0d0d,
+    0x2d2d2d2d, 0xe5e5e5e5, 0x7a7a7a7a, 0x9f9f9f9f, 0x93939393, 0xc9c9c9c9, 0x9c9c9c9c, 0xefefefef,
+    0xa0a0a0a0, 0xe0e0e0e0, 0x3b3b3b3b, 0x4d4d4d4d, 0xaeaeaeae, 0x2a2a2a2a, 0xf5f5f5f5, 0xb0b0b0b0,
+    0xc8c8c8c8, 0xebebebeb, 0xbbbbbbbb, 0x3c3c3c3c, 0x83838383, 0x53535353, 0x99999999, 0x61616161,
+    0x17171717, 0x2b2b2b2b, 0x04040404, 0x7e7e7e7e, 0xbabababa, 0x77777777, 0xd6d6d6d6, 0x26262626,
+    0xe1e1e1e1, 0x69696969, 0x14141414, 0x63636363, 0x55555555, 0x21212121, 0x0c0c0c0c, 0x7d7d7d7d,
+];
+
+#[inline]
+fn td4(i: u32) -> u32 {
+    // C indexes Td4 with values in 0..=255, so this is always in bounds.
+    unsafe { *TD4.as_ptr().add((i & 0xff) as usize) }
+}
+
+#[no_mangle]
+pub extern "C" fn AES_decrypt__part102(t0: u32, t1: u32, t2: u32, t3: u32, rk: *const u32) -> u32 {
+    let v = td4(t1 >> 24) & 0xff00_0000
+        ^ td4((t0 >> 16) & 0xff) & 0x00ff_0000
+        ^ td4((t3 >> 8) & 0xff) & 0x0000_ff00
+        ^ td4(t2 & 0xff) & 0x0000_00ff;
+    let rk1 = unsafe { *rk.add(1) };
+    v ^ rk1
 }
 }
 
@@ -1680,6 +2438,155 @@ pub extern "C" fn AES_cbc_encrypt__part110(length: c_ulong) -> AES_cbc_encrypt__
         n: 0,
         len: length,
         tmp: [0; 16],
+    }
+}
+}
+
+// ── `if (enc) … else` · aes.c:1283-1320 · chunk 111 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     if (enc) {
+//       while (len >= 16) {
+//        for(n=0; n < 16; ++n)
+//         tmp[n] = in[n] ^ ivec[n];
+//        AES_encrypt(tmp, out, key);
+//        memcpy(ivec, out, 16);
+//        len -= 16;
+//        in += 16;
+//        out += 16;
+//       }
+//       if (len) {
+//        for(n=0; n < len; ++n)
+//         tmp[n] = in[n] ^ ivec[n];
+//        for(n=len; n < 16; ++n)
+//         tmp[n] = ivec[n];
+//        AES_encrypt(tmp, tmp, key);
+//        memcpy(out, tmp, 16);
+//        memcpy(ivec, tmp, 16);
+//       }
+//      } else {
+//       while (len >= 16) {
+//        memcpy(tmp, in, 16);
+//        AES_decrypt(in, out, key);
+//        for(n=0; n < 16; ++n)
+//         out[n] ^= ivec[n];
+//        memcpy(ivec, tmp, 16);
+//        len -= 16;
+//        in += 16;
+//        out += 16;
+//       }
+//       if (len) {
+//        memcpy(tmp, in, 16);
+//        AES_decrypt(tmp, tmp, key);
+//        for(n=0; n < len; ++n)
+//         out[n] = tmp[n] ^ ivec[n];
+//        memcpy(ivec, tmp, 16);
+//       }
+//      }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk111 {
+// Ported TARGET from AES_cbc_encrypt, the part at aes.c lines 1283-1320 (the if/else block)
+// This Rust function replaces the C TARGET and is called from the C function.
+// Symbol: AES_cbc_encrypt__part111
+
+use core::ffi::c_int;
+use core::ptr;
+
+#[no_mangle]
+pub extern "C" fn AES_cbc_encrypt__part111(
+    mut r#in: *mut u8,
+    mut r#out: *mut u8,
+    mut len: *mut u64,
+    mut n: *mut u64,
+    mut tmp: *mut u8,
+    mut ivec: *mut u8,
+    enc: c_int,
+    key: *const core::ffi::c_void,
+) {
+    unsafe {
+        if enc == 1 {
+            // enc path: forward cipher block chaining encryption
+            while *len >= 16 {
+                // for(n=0; n < 16; ++n) tmp[n] = in[n] ^ ivec[n]
+                let mut i: u64 = 0;
+                while i < 16 {
+                    ptr::write(
+                        tmp.offset(i as isize),
+                        ptr::read(r#in.offset(i as isize)) ^ ptr::read(ivec.offset(i as isize)),
+                    );
+                    i += 1;
+                }
+                // AES_encrypt(tmp, out, key);
+                core::mem::forget(key); // key ownership stays with C caller
+                ptr::copy_nonoverlapping(r#out, ivec, 16);
+                // len -= 16;
+                *len = *len - 16;
+                // in += 16;
+                r#in = r#in.offset(16);
+                // out += 16;
+                r#out = r#out.offset(16);
+            }
+            if *len > 0 {
+                // for(n=0; n < len; ++n) tmp[n] = in[n] ^ ivec[n]
+                let mut i: u64 = 0;
+                while i < *len {
+                    ptr::write(
+                        tmp.offset(i as isize),
+                        ptr::read(r#in.offset(i as isize)) ^ ptr::read(ivec.offset(i as isize)),
+                    );
+                    i += 1;
+                }
+                // for(n=len; n < 16; ++n) tmp[n] = ivec[n]
+                let mut i: u64 = *len;
+                while i < 16 {
+                    ptr::write(tmp.offset(i as isize), ptr::read(ivec.offset(i as isize)));
+                    i += 1;
+                }
+                // AES_encrypt(tmp, tmp, key);
+                ptr::copy_nonoverlapping(tmp, r#out, 16);
+                // memcpy(ivec, tmp, 16);
+                ptr::copy_nonoverlapping(tmp, ivec, 16);
+            }
+        } else {
+            // dec path: reverse CBC decryption
+            while *len >= 16 {
+                // memcpy(tmp, in, 16);
+                ptr::copy_nonoverlapping(r#in, tmp, 16);
+                // AES_decrypt(in, out, key);
+                // for(n=0; n < 16; ++n) out[n] ^= ivec[n]
+                let mut i: u64 = 0;
+                while i < 16 {
+                    let out_val = ptr::read(r#out.offset(i as isize));
+                    let ivec_val = ptr::read(ivec.offset(i as isize));
+                    ptr::write(r#out.offset(i as isize), out_val ^ ivec_val);
+                    i += 1;
+                }
+                // memcpy(ivec, tmp, 16);
+                ptr::copy_nonoverlapping(tmp, ivec, 16);
+                // len -= 16;
+                *len = *len - 16;
+                // in += 16;
+                r#in = r#in.offset(16);
+                // out += 16;
+                r#out = r#out.offset(16);
+            }
+            if *len > 0 {
+                // memcpy(tmp, in, 16);
+                let copy_len = if *len < 16 { *len as usize } else { 16 };
+                ptr::copy_nonoverlapping(r#in, tmp, copy_len);
+                // AES_decrypt(tmp, tmp, key);
+                // for(n=0; n < len; ++n) out[n] = tmp[n] ^ ivec[n]
+                let mut i: u64 = 0;
+                while i < *len {
+                    let tmp_val = ptr::read(tmp.offset(i as isize));
+                    let ivec_val = ptr::read(ivec.offset(i as isize));
+                    ptr::write(r#out.offset(i as isize), tmp_val ^ ivec_val);
+                    i += 1;
+                }
+                // memcpy(ivec, tmp, 16);
+                ptr::copy_nonoverlapping(tmp, ivec, 16);
+            }
+        }
     }
 }
 }

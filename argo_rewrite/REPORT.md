@@ -1,6 +1,6 @@
 # Argo rewrite of https://github.com/fernandotcl/TinyEMU.git
 
-209 of 3751 functions exported into 14 modules; 3542 left out.
+1010 of 3751 functions exported into 23 modules; 2741 left out.
 
 Every exported function compiled on its own with rustc when its worker checked it. `cargo build` here checks that they also compile together as one crate.
 
@@ -12,7 +12,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `rk = key->rd_key;` | aes.c | exported | Unvalidated |
 | `if (bits==128) … else` | aes.c | exported | Unvalidated |
 | `rk[0] = (((u32)(userKey)[0] << 24) ^ ((u32)(userKey)[1] << 16) ^ ((u32)(userKey)[2] << 8) ^ ((u…` | aes.c | exported | Unvalidated |
-| `if (bits == 128)` | aes.c | left out | still being translated |
+| `if (bits == 128)` | aes.c | exported | Unvalidated |
 | `rk[4] = (((u32)(userKey + 16)[0] << 24) ^ ((u32)(userKey + 16)[1] << 16) ^ ((u32)(userKey + 16)…` | aes.c | exported | Unvalidated |
 | `if (bits == 192)` | aes.c | exported | Unvalidated |
 | `rk[6] = (((u32)(userKey + 24)[0] << 24) ^ ((u32)(userKey + 24)[1] << 16) ^ ((u32)(userKey + 24)…` | aes.c | exported | Unvalidated |
@@ -23,10 +23,10 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (status < 0)` | aes.c | exported | Unvalidated |
 | `rk = key->rd_key;` | aes.c | exported | Unvalidated |
 | `for (i = 0, j = 4*(key->rounds; i < j; i += 4, j -= 4)` | aes.c | exported | Unvalidated |
-| `for (i = 1; i < (key->rounds; i++)` | aes.c | left out | still being translated |
+| `for (i = 1; i < (key->rounds; i++)` | aes.c | exported | Unvalidated |
 | `return 0;` | aes.c | exported | Unvalidated |
 | `AES_encrypt` | aes.c | left out | not translated yet |
-| `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` | aes.c | left out | still being translated |
+| `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` | aes.c | exported | Unvalidated |
 | `for (; ; )` | aes.c | exported | Unvalidated |
 | `s0 = (Te4[(t0 >> 24) ] & 0xff000000) ^ (Te4[(t1 >> 16) & 0xff] & 0x00ff0000) ^ (Te4[(t2 >> 8) &…` | aes.c | exported | Unvalidated |
 | `{ … }` | aes.c | exported | Unvalidated |
@@ -38,11 +38,11 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `{ … }` | aes.c | exported | Unvalidated |
 | `;` | aes.c | exported | Unvalidated |
 | `AES_decrypt` | aes.c | left out | not translated yet |
-| `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` | aes.c | left out | still being translated |
-| `for (; ; )` | aes.c | left out | still being translated |
+| `const u32 *rk; u32 s0, s1, s2, s3, t0, t1, t2, t3; int r; ((void) (0)) ; rk = key->rd_key; s0 =…` | aes.c | exported | Unvalidated |
+| `for (; ; )` | aes.c | exported | Unvalidated |
 | `s0 = (Td4[(t0 >> 24) ] & 0xff000000) ^ (Td4[(t3 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t2 >> 8) &…` | aes.c | exported | Unvalidated |
 | `{ … }` | aes.c | exported | Unvalidated |
-| `; s1 = (Td4[(t1 >> 24) ] & 0xff000000) ^ (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t3 >> 8)…` | aes.c | left out | still being translated |
+| `; s1 = (Td4[(t1 >> 24) ] & 0xff000000) ^ (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t3 >> 8)…` | aes.c | exported | Unvalidated |
 | `{ … }` | aes.c | exported | Unvalidated |
 | `; s2 = (Td4[(t2 >> 24) ] & 0xff000000) ^ (Td4[(t1 >> 16) & 0xff] & 0x00ff0000) ^ (Td4[(t0 >> 8)…` | aes.c | exported | Unvalidated |
 | `{ … }` | aes.c | exported | Unvalidated |
@@ -51,27 +51,27 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `;` | aes.c | exported | Unvalidated |
 | `AES_cbc_encrypt` | aes.c | left out | not translated yet |
 | `unsigned long n; unsigned long len = length; unsigned char tmp[16]; ((void) (0)) ;` | aes.c | exported | Unvalidated |
-| `if (enc) … else` | aes.c | left out | still being translated |
+| `if (enc) … else` | aes.c | exported | Unvalidated |
 | `bf_find_block` | block_net.c | left out | not translated yet |
-| `for (el = (&bf->cached_blocks)->next; el != (&bf->cached_blocks; el = el->next)` | block_net.c | left out | still being translated |
+| `for (el = (&bf->cached_blocks)->next; el != (&bf->cached_blocks; el = el->next)` | block_net.c | exported | Unvalidated |
 | `return ((void *)0) ;` | block_net.c | exported | Unvalidated |
 | `bf_free_block` | block_net.c | left out | not translated yet |
-| `bf->n_cached_blocks--; file_buffer_reset(&b->fbuf); list_del(&b->link); free(b);` | block_net.c | left out | still being translated |
+| `bf->n_cached_blocks--; file_buffer_reset(&b->fbuf); list_del(&b->link); free(b);` | block_net.c | exported | Unvalidated |
 | `bf_add_block` | block_net.c | left out | not translated yet |
-| `if (bf->n_cached_blocks >= bf->n_cached_blocks_max)` | block_net.c | left out | still being translated |
-| `b = mallocz(sizeof(CachedBlock)); b->bf = bf; b->block_num = block_num; b->state = CBLOCK_LOADI…` | block_net.c | left out | still being translated |
+| `if (bf->n_cached_blocks >= bf->n_cached_blocks_max)` | block_net.c | exported | Unvalidated |
+| `b = mallocz(sizeof(CachedBlock)); b->bf = bf; b->block_num = block_num; b->state = CBLOCK_LOADI…` | block_net.c | exported | Unvalidated |
 | `bf_get_sector_count` | block_net.c | left out | not translated yet |
 | `BlockDeviceHTTP *bf = bs->opaque; return bf->nb_sectors;` | block_net.c | exported | Unvalidated |
 | `bf_start_load_block` | block_net.c | left out | not translated yet |
-| `BlockDeviceHTTP *bf = bs->opaque; char filename[1024]; CachedBlock *b; b = bf_add_block(bf, blo…` | block_net.c | left out | still being translated |
+| `BlockDeviceHTTP *bf = bs->opaque; char filename[1024]; CachedBlock *b; b = bf_add_block(bf, blo…` | block_net.c | exported | Unvalidated |
 | `bf_start_load_prefetch_group` | block_net.c | left out | not translated yet |
-| `BlockDeviceHTTP *bf = bs->opaque; CachedBlock *b; PrefetchGroupRequest *req; char filename[1024…` | block_net.c | left out | still being translated |
-| `for (i = 0; i < n_block_num; i++)` | block_net.c | left out | still being translated |
+| `BlockDeviceHTTP *bf = bs->opaque; CachedBlock *b; PrefetchGroupRequest *req; char filename[1024…` | block_net.c | exported | Unvalidated |
+| `for (i = 0; i < n_block_num; i++)` | block_net.c | exported | Unvalidated |
 | `if (req_flag) … else` | block_net.c | exported | Unvalidated |
 | `bf_prefetch_group_onload` | block_net.c | left out | not translated yet |
 | `if (err < 0)` | block_net.c | exported | Unvalidated |
 | `block_bytes = bf->block_size * 512; ((void) sizeof (__assert_single_arg ( size == block_bytes *…` | block_net.c | exported | Unvalidated |
-| `for (i = 0; i < req->n_block_num; i++)` | block_net.c | left out | still being translated |
+| `for (i = 0; i < req->n_block_num; i++)` | block_net.c | exported | Unvalidated |
 | `free(req);` | block_net.c | exported | Unvalidated |
 | `bf_rw_async1` | block_net.c | left out | not translated yet |
 | `for (; ; )` | block_net.c | exported | Unvalidated |
@@ -82,13 +82,13 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (b->block_num == bf->cur_block_num)` | block_net.c | exported | Unvalidated |
 | `bf_read_onload` | block_net.c | left out | not translated yet |
 | `if (err < 0)` | block_net.c | exported | Unvalidated |
-| `((void) sizeof (__assert_single_arg ( size == bf->block_size * 512 )), __extension__ ({ if ( si…` | block_net.c | left out | still being translated |
+| `((void) sizeof (__assert_single_arg ( size == bf->block_size * 512 )), __extension__ ({ if ( si…` | block_net.c | exported | Unvalidated |
 | `bf_read_async` | block_net.c | left out | not translated yet |
 | `BlockDeviceHTTP *bf = bs->opaque; bf->is_write = FALSE; bf->sector_num = sector_num; bf->io_buf…` | block_net.c | exported | Unvalidated |
 | `bf_write_async` | block_net.c | left out | not translated yet |
 | `BlockDeviceHTTP *bf = bs->opaque; bf->is_write = TRUE; bf->sector_num = sector_num; bf->io_buf…` | block_net.c | exported | Unvalidated |
 | `block_device_init_http` | block_net.c | left out | not translated yet |
-| `BlockDevice *bs; BlockDeviceHTTP *bf; char *p; bs = mallocz(sizeof(*bs)); bf = mallocz(sizeof(*…` | block_net.c | left out | still being translated |
+| `BlockDevice *bs; BlockDeviceHTTP *bf; char *p; bs = mallocz(sizeof(*bs)); bf = mallocz(sizeof(*…` | block_net.c | exported | Unvalidated |
 | `if (!p) … else` | block_net.c | exported | Unvalidated |
 | `*p = '\0'; init_list_head(&bf->cached_blocks); bf->max_cache_size_kb = max_cache_size_kb; bf->s…` | block_net.c | exported | Unvalidated |
 | `bf_init_onload` | block_net.c | left out | not translated yet |
@@ -100,11 +100,11 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (bf->block_size <= 0 || (bf->block_size & (bf->block_size - 1)) != 0)` | block_net.c | exported | Unvalidated |
 | `if (vm_get_int(cfg, "n_block", &bf->nb_blocks) < 0)` | block_net.c | exported | Unvalidated |
 | `if (bf->nb_blocks <= 0)` | block_net.c | exported | Unvalidated |
-| `bf->nb_sectors = bf->block_size * (uint64_t)bf->nb_blocks; bf->n_cached_blocks = 0; bf->n_cache…` | block_net.c | left out | still being translated |
+| `bf->nb_sectors = bf->block_size * (uint64_t)bf->nb_blocks; bf->n_cached_blocks = 0; bf->n_cache…` | block_net.c | exported | Unvalidated |
 | `if (vm_get_int_opt(cfg, "prefetch_group_len", &bf->prefetch_group_len, 1) < 0)` | block_net.c | exported | Unvalidated |
 | `if (bf->prefetch_group_len > 32)` | block_net.c | exported | Unvalidated |
 | `array = json_object_get(cfg, "prefetch");` | block_net.c | exported | Unvalidated |
-| `if (!json_is_undefined(array))` | block_net.c | left out | still being translated |
+| `if (!json_is_undefined(array))` | block_net.c | exported | Unvalidated |
 | `json_free(cfg);` | block_net.c | exported | Unvalidated |
 | `if (bf->start_cb)` | block_net.c | exported | Unvalidated |
 | `print_str` | build_filelist.c | left out | not translated yet |
@@ -128,7 +128,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `scan_dir` | build_filelist.c | left out | not translated yet |
 | `FILE *f = s->f; DIR *dirp; struct dirent *de; const char *name; struct stat st; char *path1; ui…` | build_filelist.c | exported | Unvalidated |
 | `if (!dirp)` | build_filelist.c | exported | Unvalidated |
-| `for (; ; )` | build_filelist.c | left out | still being translated |
+| `for (; ; )` | build_filelist.c | exported | Unvalidated |
 | `closedir(dirp); fprintf(f, ".\n");` | build_filelist.c | exported | Unvalidated |
 | `help` | build_filelist.c | left out | not translated yet |
 | `printf("usage: build_filelist [options] source_path dest_path\n" "\n" "Options:\n" "-m size_mb…` | build_filelist.c | exported | Unvalidated |
@@ -136,13 +136,13 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `const char *dst_path, *src_path; ScanState s_s, *s = &s_s; FILE *f; char *filename; FSFileID ro…` | build_filelist.c | exported | Unvalidated |
 | `for (; ; )` | build_filelist.c | exported | Unvalidated |
 | `if (optind + 1 >= argc)` | build_filelist.c | exported | Unvalidated |
-| `src_path = argv[optind]; dst_path = argv[optind + 1]; mkdir(dst_path, 0755); s->files_path = co…` | build_filelist.c | left out | still being translated |
+| `src_path = argv[optind]; dst_path = argv[optind + 1]; mkdir(dst_path, 0755); s->files_path = co…` | build_filelist.c | exported | Unvalidated |
 | `if (!f)` | build_filelist.c | exported | Unvalidated |
 | `fprintf(f, "Version: 1\n"); fprintf(f, "Revision: 1\n"); fprintf(f, "\n"); s->f = f; scan_dir(s…` | build_filelist.c | exported | Unvalidated |
 | `if (stat(filename, &st) < 0)` | build_filelist.c | exported | Unvalidated |
 | `add_file_size(s, st.st_size); free(filename); filename = compose_path(dst_path, "head"); f = fo…` | build_filelist.c | exported | Unvalidated |
 | `if (!f)` | build_filelist.c | exported | Unvalidated |
-| `fprintf(f, "Version: 1\n"); fprintf(f, "Revision: 1\n"); fprintf(f, "NextFileID: %" "l" "x" "\n…` | build_filelist.c | left out | still being translated |
+| `fprintf(f, "Version: 1\n"); fprintf(f, "Revision: 1\n"); fprintf(f, "NextFileID: %" "l" "x" "\n…` | build_filelist.c | exported | Unvalidated |
 | `if (!f)` | build_filelist.c | exported | Unvalidated |
 | `fclose(f); free(filename); return 0;` | build_filelist.c | exported | Unvalidated |
 | `detect_algorithm` | compress.c | left out | not translated yet |
@@ -218,21 +218,21 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `elf_ident_t *ident = (void *)buf; return (ident->magic[0] == 0x7f && ident->magic[1] == 'E' &&…` | elf.c | exported | Unvalidated |
 | `elf_load` | elf.c | left out | not translated yet |
 | `for (i = 0; i < phnum; i++)` | elf.c | exported | Unvalidated |
-| `for (i = 0; i < phnum; i++)` | elf.c | left out | still being translated |
+| `for (i = 0; i < phnum; i++)` | elf.c | exported | Unvalidated |
 | `if (start != ((void *)0)` | elf.c | exported | Unvalidated |
 | `if (len != ((void *)0)` | elf.c | exported | Unvalidated |
 | `return 0;` | elf.c | exported | Unvalidated |
 | `elf_find_section` | elf.c | left out | not translated yet |
 | `if (shstrndx == 0)` | elf.c | exported | Unvalidated |
 | `if (table_len == 0)` | elf.c | exported | Unvalidated |
-| `for (i = 0; i < shnum; i++)` | elf.c | left out | still being translated |
+| `for (i = 0; i < shnum; i++)` | elf.c | exported | Unvalidated |
 | `return 0;` | elf.c | exported | Unvalidated |
 | `fs_dup` | fs.c | left out | not translated yet |
 | `FSQID qid; fs->fs_walk(fs, &f, &qid, f, 0, ((void *)0) ); return f;` | fs.c | exported | Unvalidated |
 | `fs_walk_path1` | fs.c | left out | not translated yet |
 | `if (path[0] == '/')` | fs.c | exported | Unvalidated |
 | `is_first = TRUE;` | fs.c | exported | Unvalidated |
-| `for (; ; )` | fs.c | left out | still being translated |
+| `for (; ; )` | fs.c | exported | Unvalidated |
 | `return f;` | fs.c | exported | Unvalidated |
 | `fs_walk_path` | fs.c | left out | not translated yet |
 | `return fs_walk_path1(fs, f, path, ((void *)0) );` | fs.c | exported | Unvalidated |
@@ -242,7 +242,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (f->is_opened)` | fs_disk.c | exported | Unvalidated |
 | `free(f->path); free(f);` | fs_disk.c | exported | Unvalidated |
 | `fid_create` | fs_disk.c | left out | not translated yet |
-| `FSFile *f; f = mallocz(sizeof(*f)); f->path = path; f->uid = uid; return f;` | fs_disk.c | left out | still being translated |
+| `FSFile *f; f = mallocz(sizeof(*f)); f->path = path; f->uid = uid; return f;` | fs_disk.c | exported | Unvalidated |
 | `errno_to_p9` | fs_disk.c | left out | not translated yet |
 | `if (err == 0)` | fs_disk.c | exported | Unvalidated |
 | `for (i = 0; i < (sizeof(errno_table) / sizeof(errno_table[0]; i++)` | fs_disk.c | exported | Unvalidated |
@@ -255,621 +255,621 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (st->st_mode )) & 0170000) == (0040000) … else` | fs_disk.c | exported | Unvalidated |
 | `qid->version = 0; qid->path = st->st_ino;` | fs_disk.c | exported | Unvalidated |
 | `fs_statfs` | fs_disk.c | left out | not translated yet |
-| `FSDeviceDisk *fs = (FSDeviceDisk *)fs1; struct statfs st1; statfs(fs->root_path, &st1); st->f_b…` | fs_disk.c | left out | still being translated |
+| `FSDeviceDisk *fs = (FSDeviceDisk *)fs1; struct statfs st1; statfs(fs->root_path, &st1); st->f_b…` | fs_disk.c | exported | Unvalidated |
 | `compose_path` | fs_disk.c | left out | not translated yet |
 | `int path_len, name_len; char *d; path_len = strlen(path); name_len = strlen(name); d = malloc(p…` | fs_disk.c | exported | Unvalidated |
 | `fs_attach` | fs_disk.c | left out | not translated yet |
-| `if (lstat(fs->root_path, &st) != 0)` | fs_disk.c | left out | still being translated |
-| `f = fid_create(fs1, strdup(fs->root_path), uid); stat_to_qid(qid, &st); *pf = f; return 0;` | fs_disk.c | left out | still being translated |
+| `if (lstat(fs->root_path, &st) != 0)` | fs_disk.c | exported | Unvalidated |
+| `f = fid_create(fs1, strdup(fs->root_path), uid); stat_to_qid(qid, &st); *pf = f; return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_walk` | fs_disk.c | left out | not translated yet |
 | `char *path, *path1; struct stat st; int i; path = strdup(f->path);` | fs_disk.c | exported | Unvalidated |
-| `for (i = 0; i < n; i++)` | fs_disk.c | left out | still being translated |
-| `*pf = fid_create(fs, path, f->uid); return i;` | fs_disk.c | left out | still being translated |
+| `for (i = 0; i < n; i++)` | fs_disk.c | exported | Unvalidated |
+| `*pf = fid_create(fs, path, f->uid); return i;` | fs_disk.c | exported | Unvalidated |
 | `fs_mkdir` | fs_disk.c | left out | not translated yet |
 | `char *path; struct stat st; path = compose_path(f->path, name);` | fs_disk.c | exported | Unvalidated |
 | `if (mkdir(path, mode) < 0)` | fs_disk.c | exported | Unvalidated |
-| `if (lstat(path, &st) != 0)` | fs_disk.c | left out | still being translated |
-| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | left out | still being translated |
+| `if (lstat(path, &st) != 0)` | fs_disk.c | exported | Unvalidated |
+| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_open` | fs_disk.c | left out | not translated yet |
 | `struct stat st; fs_close(fs, f);` | fs_disk.c | exported | Unvalidated |
 | `if (stat(f->path, &st) != 0)` | fs_disk.c | exported | Unvalidated |
-| `stat_to_qid(qid, &st);` | fs_disk.c | left out | still being translated |
-| `if (flags & 0x00010000) … else` | fs_disk.c | left out | still being translated |
+| `stat_to_qid(qid, &st);` | fs_disk.c | exported | Unvalidated |
+| `if (flags & 0x00010000) … else` | fs_disk.c | exported | Unvalidated |
 | `return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_create` | fs_disk.c | left out | not translated yet |
-| `struct stat st; char *path; int ret, fd; fs_close(fs, f); path = compose_path(f->path, name); f…` | fs_disk.c | left out | still being translated |
-| `if (fd < 0)` | fs_disk.c | left out | still being translated |
+| `struct stat st; char *path; int ret, fd; fs_close(fs, f); path = compose_path(f->path, name); f…` | fs_disk.c | exported | Unvalidated |
+| `if (fd < 0)` | fs_disk.c | exported | Unvalidated |
 | `ret = lstat(path, &st);` | fs_disk.c | exported | Unvalidated |
 | `if (ret != 0)` | fs_disk.c | exported | Unvalidated |
-| `free(f->path); f->path = path; f->is_opened = TRUE; f->is_dir = FALSE; f->u.fd = fd; stat_to_qi…` | fs_disk.c | left out | still being translated |
+| `free(f->path); f->path = path; f->is_opened = TRUE; f->is_dir = FALSE; f->u.fd = fd; stat_to_qi…` | fs_disk.c | exported | Unvalidated |
 | `fs_readdir` | fs_disk.c | left out | not translated yet |
 | `if (!f->is_opened || !f->is_dir)` | fs_disk.c | exported | Unvalidated |
 | `if (offset == 0) … else` | fs_disk.c | exported | Unvalidated |
 | `pos = 0;` | fs_disk.c | exported | Unvalidated |
-| `for (; ; )` | fs_disk.c | left out | still being translated |
-| `return pos;` | fs_disk.c | left out | still being translated |
+| `for (; ; )` | fs_disk.c | exported | Unvalidated |
+| `return pos;` | fs_disk.c | exported | Unvalidated |
 | `fs_read` | fs_disk.c | left out | not translated yet |
 | `if (!f->is_opened || f->is_dir)` | fs_disk.c | exported | Unvalidated |
 | `ret = pread(f->u.fd, buf, count, offset);` | fs_disk.c | exported | Unvalidated |
 | `if (ret < 0) … else` | fs_disk.c | exported | Unvalidated |
 | `fs_write` | fs_disk.c | left out | not translated yet |
 | `if (!f->is_opened || f->is_dir)` | fs_disk.c | exported | Unvalidated |
-| `ret = pwrite(f->u.fd, buf, count, offset);` | fs_disk.c | left out | still being translated |
-| `if (ret < 0) … else` | fs_disk.c | left out | still being translated |
+| `ret = pwrite(f->u.fd, buf, count, offset);` | fs_disk.c | exported | Unvalidated |
+| `if (ret < 0) … else` | fs_disk.c | exported | Unvalidated |
 | `fs_close` | fs_disk.c | left out | not translated yet |
-| `if (!f->is_opened)` | fs_disk.c | left out | still being translated |
+| `if (!f->is_opened)` | fs_disk.c | exported | Unvalidated |
 | `if (f->is_dir) … else` | fs_disk.c | exported | Unvalidated |
 | `f->is_opened = FALSE;` | fs_disk.c | exported | Unvalidated |
 | `fs_stat` | fs_disk.c | left out | not translated yet |
-| `if (lstat(f->path, &st1) != 0)` | fs_disk.c | left out | still being translated |
-| `stat_to_qid(&st->qid, &st1); st->st_mode = st1.st_mode; st->st_uid = st1.st_uid; st->st_gid = s…` | fs_disk.c | left out | still being translated |
+| `if (lstat(f->path, &st1) != 0)` | fs_disk.c | exported | Unvalidated |
+| `stat_to_qid(&st->qid, &st1); st->st_mode = st1.st_mode; st->st_uid = st1.st_uid; st->st_gid = s…` | fs_disk.c | exported | Unvalidated |
 | `fs_setattr` | fs_disk.c | left out | not translated yet |
 | `if (mask & (0x00000002 | 0x00000004)` | fs_disk.c | exported | Unvalidated |
-| `if (mask & 0x00000001)` | fs_disk.c | left out | still being translated |
-| `if (mask & 0x00000008)` | fs_disk.c | left out | still being translated |
-| `if (mask & (0x00000010 | 0x00000020)` | fs_disk.c | left out | still being translated |
+| `if (mask & 0x00000001)` | fs_disk.c | exported | Unvalidated |
+| `if (mask & 0x00000008)` | fs_disk.c | exported | Unvalidated |
+| `if (mask & (0x00000010 | 0x00000020)` | fs_disk.c | exported | Unvalidated |
 | `if (mask & 0x00000040) && !ctime_updated)` | fs_disk.c | exported | Unvalidated |
 | `return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_link` | fs_disk.c | left out | not translated yet |
-| `char *path; path = compose_path(df->path, name);` | fs_disk.c | left out | still being translated |
-| `if (link(f->path, path) < 0)` | fs_disk.c | left out | still being translated |
+| `char *path; path = compose_path(df->path, name);` | fs_disk.c | exported | Unvalidated |
+| `if (link(f->path, path) < 0)` | fs_disk.c | exported | Unvalidated |
 | `free(path); return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_symlink` | fs_disk.c | left out | not translated yet |
-| `char *path; struct stat st; path = compose_path(f->path, name);` | fs_disk.c | left out | still being translated |
-| `if (symlink(symgt, path) < 0)` | fs_disk.c | left out | still being translated |
-| `if (lstat(path, &st) != 0)` | fs_disk.c | left out | still being translated |
-| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | left out | still being translated |
+| `char *path; struct stat st; path = compose_path(f->path, name);` | fs_disk.c | exported | Unvalidated |
+| `if (symlink(symgt, path) < 0)` | fs_disk.c | exported | Unvalidated |
+| `if (lstat(path, &st) != 0)` | fs_disk.c | exported | Unvalidated |
+| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_mknod` | fs_disk.c | left out | not translated yet |
-| `char *path; struct stat st; path = compose_path(f->path, name);` | fs_disk.c | left out | still being translated |
-| `if (mknod(path, mode, gnu_dev_makedev ( major , minor ) ) < 0)` | fs_disk.c | left out | still being translated |
-| `if (lstat(path, &st) != 0)` | fs_disk.c | left out | still being translated |
-| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | left out | still being translated |
+| `char *path; struct stat st; path = compose_path(f->path, name);` | fs_disk.c | exported | Unvalidated |
+| `if (mknod(path, mode, gnu_dev_makedev ( major , minor ) ) < 0)` | fs_disk.c | exported | Unvalidated |
+| `if (lstat(path, &st) != 0)` | fs_disk.c | exported | Unvalidated |
+| `free(path); stat_to_qid(qid, &st); return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_readlink` | fs_disk.c | left out | not translated yet |
-| `int ret; ret = readlink(f->path, buf, buf_size - 1);` | fs_disk.c | left out | still being translated |
+| `int ret; ret = readlink(f->path, buf, buf_size - 1);` | fs_disk.c | exported | Unvalidated |
 | `if (ret < 0)` | fs_disk.c | exported | Unvalidated |
-| `buf[ret] = '\0'; return 0;` | fs_disk.c | left out | still being translated |
+| `buf[ret] = '\0'; return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_renameat` | fs_disk.c | left out | not translated yet |
-| `char *path, *new_path; int ret; path = compose_path(f->path, name); new_path = compose_path(new…` | fs_disk.c | left out | still being translated |
-| `if (ret < 0)` | fs_disk.c | left out | still being translated |
-| `return 0;` | fs_disk.c | left out | still being translated |
+| `char *path, *new_path; int ret; path = compose_path(f->path, name); new_path = compose_path(new…` | fs_disk.c | exported | Unvalidated |
+| `if (ret < 0)` | fs_disk.c | exported | Unvalidated |
+| `return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_unlinkat` | fs_disk.c | left out | not translated yet |
-| `char *path; int ret; path = compose_path(f->path, name); ret = remove(path); free(path);` | fs_disk.c | left out | still being translated |
-| `if (ret < 0)` | fs_disk.c | left out | not translated yet |
-| `return 0;` | fs_disk.c | left out | not translated yet |
+| `char *path; int ret; path = compose_path(f->path, name); ret = remove(path); free(path);` | fs_disk.c | exported | Unvalidated |
+| `if (ret < 0)` | fs_disk.c | exported | Unvalidated |
+| `return 0;` | fs_disk.c | exported | Unvalidated |
 | `fs_lock` | fs_disk.c | left out | not translated yet |
-| `if (!f->is_opened || f->is_dir)` | fs_disk.c | left out | not translated yet |
-| `fl.l_type = lock->type; fl.l_whence = 0 ; fl.l_start = lock->start; fl.l_len = lock->length; re…` | fs_disk.c | left out | not translated yet |
-| `if (ret == 0) … else` | fs_disk.c | left out | not translated yet |
-| `return ret;` | fs_disk.c | left out | not translated yet |
+| `if (!f->is_opened || f->is_dir)` | fs_disk.c | exported | Unvalidated |
+| `fl.l_type = lock->type; fl.l_whence = 0 ; fl.l_start = lock->start; fl.l_len = lock->length; re…` | fs_disk.c | exported | Unvalidated |
+| `if (ret == 0) … else` | fs_disk.c | exported | Unvalidated |
+| `return ret;` | fs_disk.c | exported | Unvalidated |
 | `fs_getlock` | fs_disk.c | left out | not translated yet |
-| `if (!f->is_opened || f->is_dir)` | fs_disk.c | left out | not translated yet |
-| `fl.l_type = lock->type; fl.l_whence = 0 ; fl.l_start = lock->start; fl.l_len = lock->length; re…` | fs_disk.c | left out | not translated yet |
-| `if (ret < 0) … else` | fs_disk.c | left out | not translated yet |
-| `return ret;` | fs_disk.c | left out | not translated yet |
+| `if (!f->is_opened || f->is_dir)` | fs_disk.c | exported | Unvalidated |
+| `fl.l_type = lock->type; fl.l_whence = 0 ; fl.l_start = lock->start; fl.l_len = lock->length; re…` | fs_disk.c | exported | Unvalidated |
+| `if (ret < 0) … else` | fs_disk.c | exported | Unvalidated |
+| `return ret;` | fs_disk.c | exported | Unvalidated |
 | `fs_disk_end` | fs_disk.c | left out | not translated yet |
-| `FSDeviceDisk *fs = (FSDeviceDisk *)fs1; free(fs->root_path);` | fs_disk.c | left out | not translated yet |
+| `FSDeviceDisk *fs = (FSDeviceDisk *)fs1; free(fs->root_path);` | fs_disk.c | exported | Unvalidated |
 | `fs_disk_init` | fs_disk.c | left out | not translated yet |
-| `FSDeviceDisk *fs; struct stat st; lstat(root_path, &st);` | fs_disk.c | left out | not translated yet |
-| `if (! (((( st.st_mode )) & 0170000) == (0040000)` | fs_disk.c | left out | not translated yet |
-| `fs = mallocz(sizeof(*fs)); fs->common.fs_end = fs_disk_end; fs->common.fs_delete = fs_delete; f…` | fs_disk.c | left out | not translated yet |
+| `FSDeviceDisk *fs; struct stat st; lstat(root_path, &st);` | fs_disk.c | exported | Unvalidated |
+| `if (! (((( st.st_mode )) & 0170000) == (0040000)` | fs_disk.c | exported | Unvalidated |
+| `fs = mallocz(sizeof(*fs)); fs->common.fs_end = fs_disk_end; fs->common.fs_delete = fs_delete; f…` | fs_disk.c | exported | Unvalidated |
 | `file_buffer_init` | fs_net.c | left out | not translated yet |
-| `bs->data = ((void *)0) ; bs->allocated_size = 0;` | fs_net.c | left out | not translated yet |
+| `bs->data = ((void *)0) ; bs->allocated_size = 0;` | fs_net.c | exported | Unvalidated |
 | `file_buffer_reset` | fs_net.c | left out | not translated yet |
-| `free(bs->data); file_buffer_init(bs);` | fs_net.c | left out | not translated yet |
+| `free(bs->data); file_buffer_init(bs);` | fs_net.c | exported | Unvalidated |
 | `file_buffer_resize` | fs_net.c | left out | not translated yet |
-| `uint8_t *new_data; new_data = realloc(bs->data, new_size);` | fs_net.c | left out | not translated yet |
-| `if (!new_data && new_size != 0)` | fs_net.c | left out | not translated yet |
-| `bs->data = new_data; bs->allocated_size = new_size; return 0;` | fs_net.c | left out | not translated yet |
+| `uint8_t *new_data; new_data = realloc(bs->data, new_size);` | fs_net.c | exported | Unvalidated |
+| `if (!new_data && new_size != 0)` | fs_net.c | exported | Unvalidated |
+| `bs->data = new_data; bs->allocated_size = new_size; return 0;` | fs_net.c | exported | Unvalidated |
 | `file_buffer_write` | fs_net.c | left out | not translated yet |
-| `memcpy(bs->data + offset, buf, size);` | fs_net.c | left out | not translated yet |
+| `memcpy(bs->data + offset, buf, size);` | fs_net.c | exported | Unvalidated |
 | `file_buffer_set` | fs_net.c | left out | not translated yet |
-| `memset(bs->data + offset, val, size);` | fs_net.c | left out | not translated yet |
+| `memset(bs->data + offset, val, size);` | fs_net.c | exported | Unvalidated |
 | `file_buffer_read` | fs_net.c | left out | not translated yet |
-| `memcpy(buf, bs->data + offset, size);` | fs_net.c | left out | not translated yet |
+| `memcpy(buf, bs->data + offset, size);` | fs_net.c | exported | Unvalidated |
 | `to_blocks` | fs_net.c | left out | not translated yet |
-| `return (size + fs->block_size - 1) >> fs->block_size_log2;` | fs_net.c | left out | not translated yet |
+| `return (size + fs->block_size - 1) >> fs->block_size_log2;` | fs_net.c | exported | Unvalidated |
 | `inode_incref` | fs_net.c | left out | not translated yet |
-| `n->refcount++; return n;` | fs_net.c | left out | not translated yet |
+| `n->refcount++; return n;` | fs_net.c | exported | Unvalidated |
 | `inode_inc_open` | fs_net.c | left out | not translated yet |
-| `n->open_count++; return n;` | fs_net.c | left out | not translated yet |
+| `n->open_count++; return n;` | fs_net.c | exported | Unvalidated |
 | `inode_free` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; ((void) sizeof (__assert_single_arg ( n->refcount == 0 ))…` | fs_net.c | left out | not translated yet |
-| `switch (n->type)` | fs_net.c | left out | not translated yet |
-| `list_del(&n->link); free(n); fs->inode_count--; ((void) sizeof (__assert_single_arg ( fs->inode…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; ((void) sizeof (__assert_single_arg ( n->refcount == 0 ))…` | fs_net.c | exported | Unvalidated |
+| `switch (n->type)` | fs_net.c | exported | Unvalidated |
+| `list_del(&n->link); free(n); fs->inode_count--; ((void) sizeof (__assert_single_arg ( fs->inode…` | fs_net.c | exported | Unvalidated |
 | `inode_decref` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( n->refcount >= 1 )), __extension__ ({ if ( n->refcount >=…` | fs_net.c | left out | not translated yet |
-| `if (--n->refcount <= 0 && n->open_count <= 0)` | fs_net.c | left out | not translated yet |
+| `((void) sizeof (__assert_single_arg ( n->refcount >= 1 )), __extension__ ({ if ( n->refcount >=…` | fs_net.c | exported | Unvalidated |
+| `if (--n->refcount <= 0 && n->open_count <= 0)` | fs_net.c | exported | Unvalidated |
 | `inode_dec_open` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( n->open_count >= 1 )), __extension__ ({ if ( n->open_coun…` | fs_net.c | left out | not translated yet |
-| `if (--n->open_count <= 0 && n->refcount <= 0)` | fs_net.c | left out | not translated yet |
+| `((void) sizeof (__assert_single_arg ( n->open_count >= 1 )), __extension__ ({ if ( n->open_coun…` | fs_net.c | exported | Unvalidated |
+| `if (--n->open_count <= 0 && n->refcount <= 0)` | fs_net.c | exported | Unvalidated |
 | `inode_update_mtime` | fs_net.c | left out | not translated yet |
-| `struct timeval tv; gettimeofday(&tv, ((void *)0) ); n->mtime_sec = tv.tv_sec; n->mtime_nsec = t…` | fs_net.c | left out | not translated yet |
+| `struct timeval tv; gettimeofday(&tv, ((void *)0) ); n->mtime_sec = tv.tv_sec; n->mtime_nsec = t…` | fs_net.c | exported | Unvalidated |
 | `inode_new` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSINode *n; n = mallocz(sizeof(*n)); n->refcount = 1; n->…` | fs_net.c | left out | not translated yet |
-| `switch (type)` | fs_net.c | left out | not translated yet |
-| `list_add(&n->link, &fs->inode_list); fs->inode_count++; inode_update_mtime(fs1, n); n->ctime_se…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSINode *n; n = mallocz(sizeof(*n)); n->refcount = 1; n->…` | fs_net.c | exported | Unvalidated |
+| `switch (type)` | fs_net.c | exported | Unvalidated |
+| `list_add(&n->link, &fs->inode_list); fs->inode_count++; inode_update_mtime(fs1, n); n->ctime_se…` | fs_net.c | exported | Unvalidated |
 | `inode_dir_add` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSDirEntry *de; int name_len, dirent_size, new_size; ((vo…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSDirEntry *de; int name_len, dirent_size, new_size; ((vo…` | fs_net.c | exported | Unvalidated |
 | `inode_search` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_DIR)` | fs_net.c | left out | not translated yet |
-| `for (el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return ((void *)0) ;` | fs_net.c | left out | not translated yet |
+| `if (n->type != FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `for (el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return ((void *)0) ;` | fs_net.c | exported | Unvalidated |
 | `inode_search_path1` | fs_net.c | left out | not translated yet |
-| `char name[1024]; const char *p, *p1; int len; FSDirEntry *de; p = path;` | fs_net.c | left out | not translated yet |
-| `if (*p == '/')` | fs_net.c | left out | not translated yet |
-| `if (*p == '\0')` | fs_net.c | left out | not translated yet |
-| `for (; ; )` | fs_net.c | left out | not translated yet |
-| `return n;` | fs_net.c | left out | not translated yet |
+| `char name[1024]; const char *p, *p1; int len; FSDirEntry *de; p = path;` | fs_net.c | exported | Unvalidated |
+| `if (*p == '/')` | fs_net.c | exported | Unvalidated |
+| `if (*p == '\0')` | fs_net.c | exported | Unvalidated |
+| `for (; ; )` | fs_net.c | exported | Unvalidated |
+| `return n;` | fs_net.c | exported | Unvalidated |
 | `inode_search_path` | fs_net.c | left out | not translated yet |
-| `if (!fs1)` | fs_net.c | left out | not translated yet |
-| `return inode_search_path1(fs1, fs->root_inode, path);` | fs_net.c | left out | not translated yet |
+| `if (!fs1)` | fs_net.c | exported | Unvalidated |
+| `return inode_search_path1(fs1, fs->root_inode, path);` | fs_net.c | exported | Unvalidated |
 | `is_empty_dir` | fs_net.c | left out | not translated yet |
-| `for (el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return TRUE;` | fs_net.c | left out | not translated yet |
+| `for (el = (&n->u.dir.de_list)->next; el != (&n->u.dir.de_list; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return TRUE;` | fs_net.c | exported | Unvalidated |
 | `inode_dirent_delete_no_decref` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; int dirent_size, new_size; dirent_size = sizeof(*de) + st…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; int dirent_size, new_size; dirent_size = sizeof(*de) + st…` | fs_net.c | exported | Unvalidated |
 | `inode_dirent_delete` | fs_net.c | left out | not translated yet |
-| `FSINode *n1; n1 = de->inode; inode_dirent_delete_no_decref(fs, n, de); inode_decref(fs, n1);` | fs_net.c | left out | not translated yet |
+| `FSINode *n1; n1 = de->inode; inode_dirent_delete_no_decref(fs, n, de); inode_decref(fs, n1);` | fs_net.c | exported | Unvalidated |
 | `flush_dir` | fs_net.c | left out | not translated yet |
-| `for (el = (&n->u.dir.de_list)->next, el1 = el->next; el != (&n->u.dir.de_list; el = el1, el1 =…` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( n->u.dir.size == 0 )), __extension__ ({ if ( n->u.dir.siz…` | fs_net.c | left out | not translated yet |
+| `for (el = (&n->u.dir.de_list)->next, el1 = el->next; el != (&n->u.dir.de_list; el = el1, el1 =…` | fs_net.c | exported | Unvalidated |
+| `((void) sizeof (__assert_single_arg ( n->u.dir.size == 0 )), __extension__ ({ if ( n->u.dir.siz…` | fs_net.c | exported | Unvalidated |
 | `fs_delete` | fs_net.c | left out | not translated yet |
-| `fs_close(fs, f); inode_dec_open(fs, f->inode); free(f);` | fs_net.c | left out | not translated yet |
+| `fs_close(fs, f); inode_dec_open(fs, f->inode); free(f);` | fs_net.c | exported | Unvalidated |
 | `fid_create` | fs_net.c | left out | not translated yet |
-| `FSFile *f; f = mallocz(sizeof(*f)); f->inode = inode_inc_open(fs1, n); f->uid = uid; return f;` | fs_net.c | left out | not translated yet |
+| `FSFile *f; f = mallocz(sizeof(*f)); f->inode = inode_inc_open(fs1, n); f->uid = uid; return f;` | fs_net.c | exported | Unvalidated |
 | `inode_to_qid` | fs_net.c | left out | not translated yet |
-| `if (n->type == FT_DIR) … else` | fs_net.c | left out | not translated yet |
-| `qid->version = 0; qid->path = n->inode_num;` | fs_net.c | left out | not translated yet |
+| `if (n->type == FT_DIR) … else` | fs_net.c | exported | Unvalidated |
+| `qid->version = 0; qid->path = n->inode_num;` | fs_net.c | exported | Unvalidated |
 | `fs_statfs` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; st->f_bsize = 1024; st->f_blocks = fs->fs_max_blocks << (…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; st->f_bsize = 1024; st->f_blocks = fs->fs_max_blocks << (…` | fs_net.c | exported | Unvalidated |
 | `fs_attach` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; *pf = fid_create(fs1, fs->root_inode, uid); inode_to_qid(…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; *pf = fid_create(fs1, fs->root_inode, uid); inode_to_qid(…` | fs_net.c | exported | Unvalidated |
 | `fs_walk` | fs_net.c | left out | not translated yet |
-| `int i; FSINode *n; FSDirEntry *de; n = f->inode;` | fs_net.c | left out | not translated yet |
-| `for (i = 0; i < count; i++)` | fs_net.c | left out | not translated yet |
-| `*pf = fid_create(fs, n, f->uid); return i;` | fs_net.c | left out | not translated yet |
+| `int i; FSINode *n; FSDirEntry *de; n = f->inode;` | fs_net.c | exported | Unvalidated |
+| `for (i = 0; i < count; i++)` | fs_net.c | exported | Unvalidated |
+| `*pf = fid_create(fs, n, f->uid); return i;` | fs_net.c | exported | Unvalidated |
 | `fs_mkdir` | fs_net.c | left out | not translated yet |
-| `FSINode *n, *n1; n = f->inode;` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_DIR)` | fs_net.c | left out | not translated yet |
-| `if (inode_search(n, name))` | fs_net.c | left out | not translated yet |
-| `n1 = inode_new(fs, FT_DIR, mode, f->uid, gid); inode_dir_add(fs, n1, ".", inode_incref(fs, n1))…` | fs_net.c | left out | not translated yet |
+| `FSINode *n, *n1; n = f->inode;` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `if (inode_search(n, name))` | fs_net.c | exported | Unvalidated |
+| `n1 = inode_new(fs, FT_DIR, mode, f->uid, gid); inode_dir_add(fs, n1, ".", inode_incref(fs, n1))…` | fs_net.c | exported | Unvalidated |
 | `fs_trim_cache` | fs_net.c | left out | not translated yet |
-| `if (fs->inode_cache_size + added_size) <= fs->inode_cache_size_limit)` | fs_net.c | left out | not translated yet |
-| `for (el = (&fs->inode_cache_list)->prev, el1 = el->prev; el != (&fs->inode_cache_list; el = el1…` | fs_net.c | left out | not translated yet |
+| `if (fs->inode_cache_size + added_size) <= fs->inode_cache_size_limit)` | fs_net.c | exported | Unvalidated |
+| `for (el = (&fs->inode_cache_list)->prev, el1 = el->prev; el != (&fs->inode_cache_list; el = el1…` | fs_net.c | exported | Unvalidated |
 | `fs_open_end` | fs_net.c | left out | not translated yet |
-| `if (oi->open_type == FS_OPEN_WGET_ARCHIVE_FILE)` | fs_net.c | left out | not translated yet |
-| `if (oi->dec_state)` | fs_net.c | left out | not translated yet |
-| `free(oi);` | fs_net.c | left out | not translated yet |
+| `if (oi->open_type == FS_OPEN_WGET_ARCHIVE_FILE)` | fs_net.c | exported | Unvalidated |
+| `if (oi->dec_state)` | fs_net.c | exported | Unvalidated |
+| `free(oi);` | fs_net.c | exported | Unvalidated |
 | `fs_open_write_cb` | fs_net.c | left out | not translated yet |
-| `FSOpenInfo *oi = opaque; size_t len; FSINode *n = oi->n; len = n->u.reg.size - oi->cur_pos;` | fs_net.c | left out | not translated yet |
-| `if (size < len)` | fs_net.c | left out | not translated yet |
-| `file_buffer_write(&n->u.reg.fbuf, oi->cur_pos, data, len); oi->cur_pos += len; return 0;` | fs_net.c | left out | not translated yet |
+| `FSOpenInfo *oi = opaque; size_t len; FSINode *n = oi->n; len = n->u.reg.size - oi->cur_pos;` | fs_net.c | exported | Unvalidated |
+| `if (size < len)` | fs_net.c | exported | Unvalidated |
+| `file_buffer_write(&n->u.reg.fbuf, oi->cur_pos, data, len); oi->cur_pos += len; return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_wget_set_loaded` | fs_net.c | left out | not translated yet |
-| `FSOpenInfo *oi; FSDeviceMem *fs; FSFile *f; FSQID qid; ((void) sizeof (__assert_single_arg ( n-…` | fs_net.c | left out | not translated yet |
-| `if (oi->cb)` | fs_net.c | left out | not translated yet |
-| `fs_open_end(oi);` | fs_net.c | left out | not translated yet |
+| `FSOpenInfo *oi; FSDeviceMem *fs; FSFile *f; FSQID qid; ((void) sizeof (__assert_single_arg ( n-…` | fs_net.c | exported | Unvalidated |
+| `if (oi->cb)` | fs_net.c | exported | Unvalidated |
+| `fs_open_end(oi);` | fs_net.c | exported | Unvalidated |
 | `fs_wget_set_error` | fs_net.c | left out | not translated yet |
-| `FSOpenInfo *oi; ((void) sizeof (__assert_single_arg ( n->u.reg.state == REG_STATE_LOADING )), _…` | fs_net.c | left out | not translated yet |
-| `if (oi->cb)` | fs_net.c | left out | not translated yet |
-| `fs_open_end(oi);` | fs_net.c | left out | not translated yet |
+| `FSOpenInfo *oi; ((void) sizeof (__assert_single_arg ( n->u.reg.state == REG_STATE_LOADING )), _…` | fs_net.c | exported | Unvalidated |
+| `if (oi->cb)` | fs_net.c | exported | Unvalidated |
+| `fs_open_end(oi);` | fs_net.c | exported | Unvalidated |
 | `fs_read_archive` | fs_net.c | left out | not translated yet |
-| `for (el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list; el = e…` | fs_net.c | left out | not translated yet |
+| `for (el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list; el = e…` | fs_net.c | exported | Unvalidated |
 | `fs_error_archive` | fs_net.c | left out | not translated yet |
-| `for (el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list; el = e…` | fs_net.c | left out | not translated yet |
+| `for (el = (&oi->archive_file_list)->next, el1 = el->next; el != (&oi->archive_file_list; el = e…` | fs_net.c | exported | Unvalidated |
 | `fs_open_cb` | fs_net.c | left out | not translated yet |
-| `if (err < 0) … else` | fs_net.c | left out | not translated yet |
+| `if (err < 0) … else` | fs_net.c | exported | Unvalidated |
 | `fs_open_wget` | fs_net.c | left out | not translated yet |
-| `char *url; FSOpenInfo *oi; char fname[32]; FSBaseURL *bu; ((void) sizeof (__assert_single_arg (…` | fs_net.c | left out | not translated yet |
-| `if (file_buffer_resize(&n->u.reg.fbuf, n->u.reg.size) < 0)` | fs_net.c | left out | not translated yet |
-| `n->u.reg.state = REG_STATE_LOADING; oi = mallocz(sizeof(*oi)); oi->cur_pos = 0; oi->fs = fs1; o…` | fs_net.c | left out | not translated yet |
-| `if (open_type != FS_OPEN_WGET_ARCHIVE_FILE)` | fs_net.c | left out | not translated yet |
-| `n->u.reg.open_info = oi; return 0;` | fs_net.c | left out | not translated yet |
+| `char *url; FSOpenInfo *oi; char fname[32]; FSBaseURL *bu; ((void) sizeof (__assert_single_arg (…` | fs_net.c | exported | Unvalidated |
+| `if (file_buffer_resize(&n->u.reg.fbuf, n->u.reg.size) < 0)` | fs_net.c | exported | Unvalidated |
+| `n->u.reg.state = REG_STATE_LOADING; oi = mallocz(sizeof(*oi)); oi->cur_pos = 0; oi->fs = fs1; o…` | fs_net.c | exported | Unvalidated |
+| `if (open_type != FS_OPEN_WGET_ARCHIVE_FILE)` | fs_net.c | exported | Unvalidated |
+| `n->u.reg.open_info = oi; return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_preload_file` | fs_net.c | left out | not translated yet |
-| `FSINode *n; n = inode_search_path(fs1, filename);` | fs_net.c | left out | not translated yet |
-| `if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED)` | fs_net.c | left out | not translated yet |
+| `FSINode *n; n = inode_search_path(fs1, filename);` | fs_net.c | exported | Unvalidated |
+| `if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED)` | fs_net.c | exported | Unvalidated |
 | `find_preload_archive` | fs_net.c | left out | not translated yet |
-| `for (el = (&fs->preload_archive_list)->next; el != (&fs->preload_archive_list; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return ((void *)0) ;` | fs_net.c | left out | not translated yet |
+| `for (el = (&fs->preload_archive_list)->next; el != (&fs->preload_archive_list; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return ((void *)0) ;` | fs_net.c | exported | Unvalidated |
 | `fs_preload_archive` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; PreloadArchive *pa; PreloadArchiveFile *paf; struct list_…` | fs_net.c | left out | not translated yet |
-| `if (!pa)` | fs_net.c | left out | not translated yet |
-| `n = inode_search_path(fs1, filename);` | fs_net.c | left out | not translated yet |
-| `if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED) … else` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; PreloadArchive *pa; PreloadArchiveFile *paf; struct list_…` | fs_net.c | exported | Unvalidated |
+| `if (!pa)` | fs_net.c | exported | Unvalidated |
+| `n = inode_search_path(fs1, filename);` | fs_net.c | exported | Unvalidated |
+| `if (n && n->type == FT_REG && n->u.reg.state == REG_STATE_UNLOADED) … else` | fs_net.c | exported | Unvalidated |
 | `fs_preload_files` | fs_net.c | left out | not translated yet |
-| `for (el = (&fs->preload_list)->next; el != (&fs->preload_list; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return;` | fs_net.c | left out | not translated yet |
-| `found: for(el = (&pe->file_list)->next; el != (&pe->file_list); el = el->next) { pf = ((Preload…` | fs_net.c | left out | not translated yet |
+| `for (el = (&fs->preload_list)->next; el != (&fs->preload_list; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return;` | fs_net.c | exported | Unvalidated |
+| `found: for(el = (&pe->file_list)->next; el != (&pe->file_list); el = el->next) { pf = ((Preload…` | fs_net.c | exported | Unvalidated |
 | `fs_open` | fs_net.c | left out | not translated yet |
-| `FSINode *n = f->inode; FSDeviceMem *fs = (FSDeviceMem *)fs1; int ret; fs_close(fs1, f);` | fs_net.c | left out | not translated yet |
-| `if (flags & 0x00010000) … else` | fs_net.c | left out | not translated yet |
-| `f->open_flags = flags;` | fs_net.c | left out | not translated yet |
-| `if (n->type == FT_REG) … else` | fs_net.c | left out | not translated yet |
+| `FSINode *n = f->inode; FSDeviceMem *fs = (FSDeviceMem *)fs1; int ret; fs_close(fs1, f);` | fs_net.c | exported | Unvalidated |
+| `if (flags & 0x00010000) … else` | fs_net.c | exported | Unvalidated |
+| `f->open_flags = flags;` | fs_net.c | exported | Unvalidated |
+| `if (n->type == FT_REG) … else` | fs_net.c | exported | Unvalidated |
 | `fs_create` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_DIR)` | fs_net.c | left out | not translated yet |
-| `if (inode_search(n, name)) … else` | fs_net.c | left out | not translated yet |
+| `if (n->type != FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `if (inode_search(n, name)) … else` | fs_net.c | exported | Unvalidated |
 | `fs_readdir` | fs_net.c | left out | not translated yet |
-| `if (!f->is_opened || n->type != FT_DIR)` | fs_net.c | left out | not translated yet |
-| `el = n->u.dir.de_list.next; offset = 0;` | fs_net.c | left out | not translated yet |
-| `while (offset < offset1)` | fs_net.c | left out | not translated yet |
-| `pos = 0;` | fs_net.c | left out | not translated yet |
-| `for (; ; )` | fs_net.c | left out | not translated yet |
-| `return pos;` | fs_net.c | left out | not translated yet |
+| `if (!f->is_opened || n->type != FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `el = n->u.dir.de_list.next; offset = 0;` | fs_net.c | exported | Unvalidated |
+| `while (offset < offset1)` | fs_net.c | exported | Unvalidated |
+| `pos = 0;` | fs_net.c | exported | Unvalidated |
+| `for (; ; )` | fs_net.c | exported | Unvalidated |
+| `return pos;` | fs_net.c | exported | Unvalidated |
 | `fs_read` | fs_net.c | left out | not translated yet |
-| `if (!f->is_opened)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG)` | fs_net.c | left out | not translated yet |
-| `if (f->open_flags & 0x00000003) == 0x00000001)` | fs_net.c | left out | not translated yet |
-| `if (n->u.reg.is_fscmd)` | fs_net.c | left out | not translated yet |
-| `if (offset >= n->u.reg.size)` | fs_net.c | left out | not translated yet |
-| `count1 = n->u.reg.size - offset;` | fs_net.c | left out | not translated yet |
-| `if (count1 < count)` | fs_net.c | left out | not translated yet |
-| `file_buffer_read(&n->u.reg.fbuf, offset, buf, count); return count;` | fs_net.c | left out | not translated yet |
+| `if (!f->is_opened)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG)` | fs_net.c | exported | Unvalidated |
+| `if (f->open_flags & 0x00000003) == 0x00000001)` | fs_net.c | exported | Unvalidated |
+| `if (n->u.reg.is_fscmd)` | fs_net.c | exported | Unvalidated |
+| `if (offset >= n->u.reg.size)` | fs_net.c | exported | Unvalidated |
+| `count1 = n->u.reg.size - offset;` | fs_net.c | exported | Unvalidated |
+| `if (count1 < count)` | fs_net.c | exported | Unvalidated |
+| `file_buffer_read(&n->u.reg.fbuf, offset, buf, count); return count;` | fs_net.c | exported | Unvalidated |
 | `fs_truncate` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG)` | fs_net.c | left out | not translated yet |
-| `if (size > (18446744073709551615UL)` | fs_net.c | left out | not translated yet |
-| `diff = size - n->u.reg.size;` | fs_net.c | left out | not translated yet |
-| `if (diff == 0)` | fs_net.c | left out | not translated yet |
-| `diff_blocks = to_blocks(fs, size) - to_blocks(fs, n->u.reg.size);` | fs_net.c | left out | not translated yet |
-| `switch (n->u.reg.state)` | fs_net.c | left out | not translated yet |
-| `fs->fs_blocks += diff_blocks; ((void) sizeof (__assert_single_arg ( fs->fs_blocks >= 0 )), __ex…` | fs_net.c | left out | not translated yet |
+| `if (n->type != FT_REG)` | fs_net.c | exported | Unvalidated |
+| `if (size > (18446744073709551615UL)` | fs_net.c | exported | Unvalidated |
+| `diff = size - n->u.reg.size;` | fs_net.c | exported | Unvalidated |
+| `if (diff == 0)` | fs_net.c | exported | Unvalidated |
+| `diff_blocks = to_blocks(fs, size) - to_blocks(fs, n->u.reg.size);` | fs_net.c | exported | Unvalidated |
+| `switch (n->u.reg.state)` | fs_net.c | exported | Unvalidated |
+| `fs->fs_blocks += diff_blocks; ((void) sizeof (__assert_single_arg ( fs->fs_blocks >= 0 )), __ex…` | fs_net.c | exported | Unvalidated |
 | `fs_write` | fs_net.c | left out | not translated yet |
-| `if (!f->is_opened)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG)` | fs_net.c | left out | not translated yet |
-| `if (f->open_flags & 0x00000003) == 0x00000000)` | fs_net.c | left out | not translated yet |
-| `if (count == 0)` | fs_net.c | left out | not translated yet |
-| `if (n->u.reg.is_fscmd)` | fs_net.c | left out | not translated yet |
-| `end = offset + count;` | fs_net.c | left out | not translated yet |
-| `if (end > n->u.reg.size)` | fs_net.c | left out | not translated yet |
-| `inode_update_mtime(fs1, n);` | fs_net.c | left out | not translated yet |
-| `if (n->u.reg.state == REG_STATE_LOADED)` | fs_net.c | left out | not translated yet |
-| `file_buffer_write(&n->u.reg.fbuf, offset, buf, count); return count;` | fs_net.c | left out | not translated yet |
+| `if (!f->is_opened)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG)` | fs_net.c | exported | Unvalidated |
+| `if (f->open_flags & 0x00000003) == 0x00000000)` | fs_net.c | exported | Unvalidated |
+| `if (count == 0)` | fs_net.c | exported | Unvalidated |
+| `if (n->u.reg.is_fscmd)` | fs_net.c | exported | Unvalidated |
+| `end = offset + count;` | fs_net.c | exported | Unvalidated |
+| `if (end > n->u.reg.size)` | fs_net.c | exported | Unvalidated |
+| `inode_update_mtime(fs1, n);` | fs_net.c | exported | Unvalidated |
+| `if (n->u.reg.state == REG_STATE_LOADED)` | fs_net.c | exported | Unvalidated |
+| `file_buffer_write(&n->u.reg.fbuf, offset, buf, count); return count;` | fs_net.c | exported | Unvalidated |
 | `fs_close` | fs_net.c | left out | not translated yet |
-| `if (f->is_opened)` | fs_net.c | left out | not translated yet |
-| `if (f->req)` | fs_net.c | left out | not translated yet |
+| `if (f->is_opened)` | fs_net.c | exported | Unvalidated |
+| `if (f->req)` | fs_net.c | exported | Unvalidated |
 | `fs_stat` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSINode *n = f->inode; inode_to_qid(&st->qid, n); st->st_…` | fs_net.c | left out | not translated yet |
-| `if (n->type == FT_BLK || n->type == FT_CHR) … else` | fs_net.c | left out | not translated yet |
-| `st->st_blksize = fs->block_size;` | fs_net.c | left out | not translated yet |
-| `if (n->type == FT_REG) … else` | fs_net.c | left out | not translated yet |
-| `st->st_blocks = to_blocks(fs, st->st_size) << (fs->block_size_log2 - 9); st->st_atime_sec = n->…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSINode *n = f->inode; inode_to_qid(&st->qid, n); st->st_…` | fs_net.c | exported | Unvalidated |
+| `if (n->type == FT_BLK || n->type == FT_CHR) … else` | fs_net.c | exported | Unvalidated |
+| `st->st_blksize = fs->block_size;` | fs_net.c | exported | Unvalidated |
+| `if (n->type == FT_REG) … else` | fs_net.c | exported | Unvalidated |
+| `st->st_blocks = to_blocks(fs, st->st_size) << (fs->block_size_log2 - 9); st->st_atime_sec = n->…` | fs_net.c | exported | Unvalidated |
 | `fs_setattr` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000001)` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000002)` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000004)` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000008)` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000020)` | fs_net.c | left out | not translated yet |
-| `if (mask & 0x00000040)` | fs_net.c | left out | not translated yet |
-| `return 0;` | fs_net.c | left out | not translated yet |
+| `if (mask & 0x00000001)` | fs_net.c | exported | Unvalidated |
+| `if (mask & 0x00000002)` | fs_net.c | exported | Unvalidated |
+| `if (mask & 0x00000004)` | fs_net.c | exported | Unvalidated |
+| `if (mask & 0x00000008)` | fs_net.c | exported | Unvalidated |
+| `if (mask & 0x00000020)` | fs_net.c | exported | Unvalidated |
+| `if (mask & 0x00000040)` | fs_net.c | exported | Unvalidated |
+| `return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_link` | fs_net.c | left out | not translated yet |
-| `if (f->inode->type == FT_DIR)` | fs_net.c | left out | not translated yet |
-| `if (inode_search(n, name))` | fs_net.c | left out | not translated yet |
-| `inode_dir_add(fs, n, name, inode_incref(fs, f->inode)); return 0;` | fs_net.c | left out | not translated yet |
+| `if (f->inode->type == FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `if (inode_search(n, name))` | fs_net.c | exported | Unvalidated |
+| `inode_dir_add(fs, n, name, inode_incref(fs, f->inode)); return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_symlink` | fs_net.c | left out | not translated yet |
-| `if (inode_search(n, name))` | fs_net.c | left out | not translated yet |
-| `n1 = inode_new(fs, FT_LNK, 0777, f->uid, gid); n1->u.symlink.name = strdup(symgt); inode_dir_ad…` | fs_net.c | left out | not translated yet |
+| `if (inode_search(n, name))` | fs_net.c | exported | Unvalidated |
+| `n1 = inode_new(fs, FT_LNK, 0777, f->uid, gid); n1->u.symlink.name = strdup(symgt); inode_dir_ad…` | fs_net.c | exported | Unvalidated |
 | `fs_mknod` | fs_net.c | left out | not translated yet |
-| `int type; FSINode *n1, *n = f->inode; type = (mode & 0xF000) >> 12;` | fs_net.c | left out | not translated yet |
-| `if (type != FT_FIFO && type != FT_CHR && type != FT_BLK && type != FT_REG && type != FT_SOCK)` | fs_net.c | left out | not translated yet |
-| `if (inode_search(n, name))` | fs_net.c | left out | not translated yet |
-| `n1 = inode_new(fs, type, mode, f->uid, gid);` | fs_net.c | left out | not translated yet |
-| `if (type == FT_CHR || type == FT_BLK)` | fs_net.c | left out | not translated yet |
-| `inode_dir_add(fs, n, name, n1); inode_to_qid(qid, n1); return 0;` | fs_net.c | left out | not translated yet |
+| `int type; FSINode *n1, *n = f->inode; type = (mode & 0xF000) >> 12;` | fs_net.c | exported | Unvalidated |
+| `if (type != FT_FIFO && type != FT_CHR && type != FT_BLK && type != FT_REG && type != FT_SOCK)` | fs_net.c | exported | Unvalidated |
+| `if (inode_search(n, name))` | fs_net.c | exported | Unvalidated |
+| `n1 = inode_new(fs, type, mode, f->uid, gid);` | fs_net.c | exported | Unvalidated |
+| `if (type == FT_CHR || type == FT_BLK)` | fs_net.c | exported | Unvalidated |
+| `inode_dir_add(fs, n, name, n1); inode_to_qid(qid, n1); return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_readlink` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_LNK)` | fs_net.c | left out | not translated yet |
-| `len = min_int(strlen(n->u.symlink.name), buf_size - 1); memcpy(buf, n->u.symlink.name, len); bu…` | fs_net.c | left out | not translated yet |
+| `if (n->type != FT_LNK)` | fs_net.c | exported | Unvalidated |
+| `len = min_int(strlen(n->u.symlink.name), buf_size - 1); memcpy(buf, n->u.symlink.name, len); bu…` | fs_net.c | exported | Unvalidated |
 | `fs_renameat` | fs_net.c | left out | not translated yet |
-| `FSDirEntry *de, *de1; FSINode *n1; de = inode_search(f->inode, name);` | fs_net.c | left out | not translated yet |
-| `if (!de)` | fs_net.c | left out | not translated yet |
-| `de1 = inode_search(new_f->inode, new_name); n1 = ((void *)0) ;` | fs_net.c | left out | not translated yet |
-| `if (de1)` | fs_net.c | left out | not translated yet |
-| `inode_dir_add(fs, new_f->inode, new_name, inode_incref(fs, de->inode)); inode_dirent_delete(fs,…` | fs_net.c | left out | not translated yet |
-| `if (n1)` | fs_net.c | left out | not translated yet |
-| `return 0;` | fs_net.c | left out | not translated yet |
+| `FSDirEntry *de, *de1; FSINode *n1; de = inode_search(f->inode, name);` | fs_net.c | exported | Unvalidated |
+| `if (!de)` | fs_net.c | exported | Unvalidated |
+| `de1 = inode_search(new_f->inode, new_name); n1 = ((void *)0) ;` | fs_net.c | exported | Unvalidated |
+| `if (de1)` | fs_net.c | exported | Unvalidated |
+| `inode_dir_add(fs, new_f->inode, new_name, inode_incref(fs, de->inode)); inode_dirent_delete(fs,…` | fs_net.c | exported | Unvalidated |
+| `if (n1)` | fs_net.c | exported | Unvalidated |
+| `return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_unlinkat` | fs_net.c | left out | not translated yet |
-| `if (!strcmp(name, ".") || !strcmp(name, ".."))` | fs_net.c | left out | not translated yet |
-| `de = inode_search(f->inode, name);` | fs_net.c | left out | not translated yet |
-| `if (!de)` | fs_net.c | left out | not translated yet |
-| `n = de->inode;` | fs_net.c | left out | not translated yet |
-| `if (n->type == FT_DIR)` | fs_net.c | left out | not translated yet |
-| `inode_dirent_delete(fs, f->inode, de); return 0;` | fs_net.c | left out | not translated yet |
+| `if (!strcmp(name, ".") || !strcmp(name, ".."))` | fs_net.c | exported | Unvalidated |
+| `de = inode_search(f->inode, name);` | fs_net.c | exported | Unvalidated |
+| `if (!de)` | fs_net.c | exported | Unvalidated |
+| `n = de->inode;` | fs_net.c | exported | Unvalidated |
+| `if (n->type == FT_DIR)` | fs_net.c | exported | Unvalidated |
+| `inode_dirent_delete(fs, f->inode, de); return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_lock` | fs_net.c | left out | not translated yet |
-| `if (!f->is_opened)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG)` | fs_net.c | left out | not translated yet |
-| `return 0;` | fs_net.c | left out | not translated yet |
+| `if (!f->is_opened)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG)` | fs_net.c | exported | Unvalidated |
+| `return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_getlock` | fs_net.c | left out | not translated yet |
-| `if (!f->is_opened)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG)` | fs_net.c | left out | not translated yet |
-| `return 0;` | fs_net.c | left out | not translated yet |
+| `if (!f->is_opened)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG)` | fs_net.c | exported | Unvalidated |
+| `return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_mem_end` | fs_net.c | left out | not translated yet |
-| `for (el = (&fs->inode_list)->next, el1 = el->next; el != (&fs->inode_list; el = el1, el1 = el->…` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( list_empty(&fs->inode_cache_list) )), __extension__ ({ if…` | fs_net.c | left out | not translated yet |
+| `for (el = (&fs->inode_list)->next, el1 = el->next; el != (&fs->inode_list; el = el1, el1 = el->…` | fs_net.c | exported | Unvalidated |
+| `((void) sizeof (__assert_single_arg ( list_empty(&fs->inode_cache_list) )), __extension__ ({ if…` | fs_net.c | exported | Unvalidated |
 | `fs_mem_init` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs; FSDevice *fs1; FSINode *n; fs = mallocz(sizeof(*fs)); fs1 = &fs->common; fs->c…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs; FSDevice *fs1; FSINode *n; fs = mallocz(sizeof(*fs)); fs1 = &fs->common; fs->c…` | fs_net.c | exported | Unvalidated |
 | `fs_is_net` | fs_net.c | left out | not translated yet |
-| `return (fs->fs_end == fs_mem_end);` | fs_net.c | left out | not translated yet |
+| `return (fs->fs_end == fs_mem_end);` | fs_net.c | exported | Unvalidated |
 | `fs_find_base_url` | fs_net.c | left out | not translated yet |
-| `for (el = (&fs->base_url_list)->next; el != (&fs->base_url_list; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return ((void *)0) ;` | fs_net.c | left out | not translated yet |
+| `for (el = (&fs->base_url_list)->next; el != (&fs->base_url_list; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return ((void *)0) ;` | fs_net.c | exported | Unvalidated |
 | `fs_base_url_decref` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( bu->ref_count >= 1 )), __extension__ ({ if ( bu->ref_coun…` | fs_net.c | left out | not translated yet |
-| `if (--bu->ref_count == 0)` | fs_net.c | left out | not translated yet |
+| `((void) sizeof (__assert_single_arg ( bu->ref_count >= 1 )), __extension__ ({ if ( bu->ref_coun…` | fs_net.c | exported | Unvalidated |
+| `if (--bu->ref_count == 0)` | fs_net.c | exported | Unvalidated |
 | `fs_net_set_base_url` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_i…` | fs_net.c | left out | not translated yet |
-| `if (!bu) … else` | fs_net.c | left out | not translated yet |
-| `bu->url = strdup(url);` | fs_net.c | left out | not translated yet |
-| `if (user) … else` | fs_net.c | left out | not translated yet |
-| `if (password) … else` | fs_net.c | left out | not translated yet |
-| `if (aes_state) … else` | fs_net.c | left out | not translated yet |
-| `return bu;` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_i…` | fs_net.c | exported | Unvalidated |
+| `if (!bu) … else` | fs_net.c | exported | Unvalidated |
+| `bu->url = strdup(url);` | fs_net.c | exported | Unvalidated |
+| `if (user) … else` | fs_net.c | exported | Unvalidated |
+| `if (password) … else` | fs_net.c | exported | Unvalidated |
+| `if (aes_state) … else` | fs_net.c | exported | Unvalidated |
+| `return bu;` | fs_net.c | exported | Unvalidated |
 | `fs_net_reset_base_url` | fs_net.c | left out | not translated yet |
-| `FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )), __extension__ ({ if ( f…` | fs_net.c | left out | not translated yet |
-| `if (!bu)` | fs_net.c | left out | not translated yet |
-| `fs_base_url_decref(fs1, bu); return 0;` | fs_net.c | left out | not translated yet |
+| `FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )), __extension__ ({ if ( f…` | fs_net.c | exported | Unvalidated |
+| `if (!bu)` | fs_net.c | exported | Unvalidated |
+| `fs_base_url_decref(fs1, bu); return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_net_set_fs_max_size` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )),…` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; ((void) sizeof (__assert_single_arg ( fs_is_net(fs1) )),…` | fs_net.c | exported | Unvalidated |
 | `fs_net_set_url` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_i…` | fs_net.c | left out | not translated yet |
-| `if (!bu)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG || n->u.reg.state != REG_STATE_LOCAL || n->u.reg.fbuf.allocated_size != 0)` | fs_net.c | left out | not translated yet |
-| `if (size > 0)` | fs_net.c | left out | not translated yet |
-| `return 0;` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; FSBaseURL *bu; ((void) sizeof (__assert_single_arg ( fs_i…` | fs_net.c | exported | Unvalidated |
+| `if (!bu)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG || n->u.reg.state != REG_STATE_LOCAL || n->u.reg.fbuf.allocated_size != 0)` | fs_net.c | exported | Unvalidated |
+| `if (size > 0)` | fs_net.c | exported | Unvalidated |
+| `return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_dump_add_file` | fs_net.c | left out | not translated yet |
-| `PreloadFile *pf; pf = mallocz(sizeof(*pf)); pf->name = strdup(name); list_add_tail(&pf->link, h…` | fs_net.c | left out | not translated yet |
+| `PreloadFile *pf; pf = mallocz(sizeof(*pf)); pf->name = strdup(name); list_add_tail(&pf->link, h…` | fs_net.c | exported | Unvalidated |
 | `fs_dump_find_file` | fs_net.c | left out | not translated yet |
-| `for (el = (head)->next; el != (head; el = el->next)` | fs_net.c | left out | not translated yet |
-| `return ((void *)0) ;` | fs_net.c | left out | not translated yet |
+| `for (el = (head)->next; el != (head; el = el->next)` | fs_net.c | exported | Unvalidated |
+| `return ((void *)0) ;` | fs_net.c | exported | Unvalidated |
 | `dump_close_archive` | fs_net.c | left out | not translated yet |
-| `if (fs->dump_archive_file)` | fs_net.c | left out | not translated yet |
-| `fs->dump_archive_file = ((void *)0) ; fs->dump_archive_size = 0;` | fs_net.c | left out | not translated yet |
+| `if (fs->dump_archive_file)` | fs_net.c | exported | Unvalidated |
+| `fs->dump_archive_file = ((void *)0) ; fs->dump_archive_size = 0;` | fs_net.c | exported | Unvalidated |
 | `dump_loaded_file` | fs_net.c | left out | not translated yet |
-| `if (!fs->dump_cache_load || !n->u.reg.filename)` | fs_net.c | left out | not translated yet |
-| `fname = n->u.reg.filename;` | fs_net.c | left out | not translated yet |
-| `if (fs_dump_find_file(&fs->dump_preload_list, fname))` | fs_net.c | left out | not translated yet |
-| `if (!fs->dump_started)` | fs_net.c | left out | not translated yet |
-| `if (!fs->dump_archive_file)` | fs_net.c | left out | not translated yet |
-| `if (n->u.reg.size >= (4 << 20) … else` | fs_net.c | left out | not translated yet |
+| `if (!fs->dump_cache_load || !n->u.reg.filename)` | fs_net.c | exported | Unvalidated |
+| `fname = n->u.reg.filename;` | fs_net.c | exported | Unvalidated |
+| `if (fs_dump_find_file(&fs->dump_preload_list, fname))` | fs_net.c | exported | Unvalidated |
+| `if (!fs->dump_started)` | fs_net.c | exported | Unvalidated |
+| `if (!fs->dump_archive_file)` | fs_net.c | exported | Unvalidated |
+| `if (n->u.reg.size >= (4 << 20) … else` | fs_net.c | exported | Unvalidated |
 | `json_load` | fs_net.c | left out | not translated yet |
-| `FILE *f; JSONValue val; size_t size; char *buf; f = fopen(filename, "rb");` | fs_net.c | left out | not translated yet |
-| `if (!f)` | fs_net.c | left out | not translated yet |
-| `fseek(f, 0, 2 ); size = ftell(f); fseek(f, 0, 0 ); buf = malloc(size + 1); fread(buf, 1, size,…` | fs_net.c | left out | not translated yet |
+| `FILE *f; JSONValue val; size_t size; char *buf; f = fopen(filename, "rb");` | fs_net.c | exported | Unvalidated |
+| `if (!f)` | fs_net.c | exported | Unvalidated |
+| `fseek(f, 0, 2 ); size = ftell(f); fseek(f, 0, 0 ); buf = malloc(size + 1); fread(buf, 1, size,…` | fs_net.c | exported | Unvalidated |
 | `fs_dump_cache_load` | fs_net.c | left out | not translated yet |
-| `if (!fs_is_net(fs1))` | fs_net.c | left out | not translated yet |
-| `cfg = json_load(cfg_filename);` | fs_net.c | left out | not translated yet |
-| `if (json_is_error(cfg))` | fs_net.c | left out | not translated yet |
-| `val = json_object_get(cfg, "preload_dir");` | fs_net.c | left out | not translated yet |
-| `if (json_is_undefined(cfg))` | fs_net.c | left out | not translated yet |
-| `preload_dir = json_get_str(val);` | fs_net.c | left out | not translated yet |
-| `if (!preload_dir)` | fs_net.c | left out | not translated yet |
-| `fs->dump_preload_dir = strdup(preload_dir); init_list_head(&fs->dump_preload_list); init_list_h…` | fs_net.c | left out | not translated yet |
-| `if (array.type != JSON_ARRAY)` | fs_net.c | left out | not translated yet |
-| `for (i = 0; i < array.u.array->len; i++)` | fs_net.c | left out | not translated yet |
-| `json_free(cfg); fname = compose_path(fs->dump_preload_dir, "preload.txt"); fs->dump_preload_fil…` | fs_net.c | left out | not translated yet |
-| `if (!fs->dump_preload_file)` | fs_net.c | left out | not translated yet |
-| `free(fname); fname = compose_path(fs->dump_preload_dir, "preload_archive.txt"); fs->dump_preloa…` | fs_net.c | left out | not translated yet |
-| `if (!fs->dump_preload_archive_file)` | fs_net.c | left out | not translated yet |
-| `free(fname); fs->dump_cache_load = TRUE;` | fs_net.c | left out | not translated yet |
+| `if (!fs_is_net(fs1))` | fs_net.c | exported | Unvalidated |
+| `cfg = json_load(cfg_filename);` | fs_net.c | exported | Unvalidated |
+| `if (json_is_error(cfg))` | fs_net.c | exported | Unvalidated |
+| `val = json_object_get(cfg, "preload_dir");` | fs_net.c | exported | Unvalidated |
+| `if (json_is_undefined(cfg))` | fs_net.c | exported | Unvalidated |
+| `preload_dir = json_get_str(val);` | fs_net.c | exported | Unvalidated |
+| `if (!preload_dir)` | fs_net.c | exported | Unvalidated |
+| `fs->dump_preload_dir = strdup(preload_dir); init_list_head(&fs->dump_preload_list); init_list_h…` | fs_net.c | exported | Unvalidated |
+| `if (array.type != JSON_ARRAY)` | fs_net.c | exported | Unvalidated |
+| `for (i = 0; i < array.u.array->len; i++)` | fs_net.c | exported | Unvalidated |
+| `json_free(cfg); fname = compose_path(fs->dump_preload_dir, "preload.txt"); fs->dump_preload_fil…` | fs_net.c | exported | Unvalidated |
+| `if (!fs->dump_preload_file)` | fs_net.c | exported | Unvalidated |
+| `free(fname); fname = compose_path(fs->dump_preload_dir, "preload_archive.txt"); fs->dump_preloa…` | fs_net.c | exported | Unvalidated |
+| `if (!fs->dump_preload_archive_file)` | fs_net.c | exported | Unvalidated |
+| `free(fname); fs->dump_cache_load = TRUE;` | fs_net.c | exported | Unvalidated |
 | `filelist_load_rec` | fs_net.c | left out | not translated yet |
-| `char fname[1024], lname[1024]; int ret; const char *p; FSINodeTypeEnum type; uint32_t mode, uid…` | fs_net.c | left out | not translated yet |
-| `for (; ; )` | fs_net.c | left out | not translated yet |
-| `*pp = p; return 0;` | fs_net.c | left out | not translated yet |
+| `char fname[1024], lname[1024]; int ret; const char *p; FSINodeTypeEnum type; uint32_t mode, uid…` | fs_net.c | exported | Unvalidated |
+| `for (; ; )` | fs_net.c | left out | still being translated |
+| `*pp = p; return 0;` | fs_net.c | exported | Unvalidated |
 | `filelist_load` | fs_net.c | left out | not translated yet |
-| `if (parse_tag_version(str) != 1)` | fs_net.c | left out | not translated yet |
-| `p = skip_header(str);` | fs_net.c | left out | not translated yet |
-| `if (!p)` | fs_net.c | left out | not translated yet |
-| `ret = filelist_load_rec(fs1, &p, fs->root_inode, ""); return ret;` | fs_net.c | left out | not translated yet |
+| `if (parse_tag_version(str) != 1)` | fs_net.c | exported | Unvalidated |
+| `p = skip_header(str);` | fs_net.c | exported | Unvalidated |
+| `if (!p)` | fs_net.c | exported | Unvalidated |
+| `ret = filelist_load_rec(fs1, &p, fs->root_inode, ""); return ret;` | fs_net.c | exported | Unvalidated |
 | `fs_create_cmd` | fs_net.c | left out | not translated yet |
-| `FSFile *root_fd; FSQID qid; FSINode *n; ((void) sizeof (__assert_single_arg ( !fs->fs_attach(fs…` | fs_net.c | left out | not translated yet |
+| `FSFile *root_fd; FSQID qid; FSINode *n; ((void) sizeof (__assert_single_arg ( !fs->fs_attach(fs…` | fs_net.c | exported | Unvalidated |
 | `fs_net_init` | fs_net.c | left out | not translated yet |
-| `FSDevice *fs; FSDeviceMem *fs1; fs_wget_init(); fs = fs_mem_init(); fs1 = (FSDeviceMem *)fs; fs…` | fs_net.c | left out | not translated yet |
-| `if (url)` | fs_net.c | left out | not translated yet |
-| `return fs;` | fs_net.c | left out | not translated yet |
+| `FSDevice *fs; FSDeviceMem *fs1; fs_wget_init(); fs = fs_mem_init(); fs1 = (FSDeviceMem *)fs; fs…` | fs_net.c | exported | Unvalidated |
+| `if (url)` | fs_net.c | exported | Unvalidated |
+| `return fs;` | fs_net.c | exported | Unvalidated |
 | `fs_initial_sync` | fs_net.c | left out | not translated yet |
-| `FSNetInitState *s; FSFile *head_fd; FSQID qid; char *head_url; char buf[128]; struct timeval tv…` | fs_net.c | left out | not translated yet |
+| `FSNetInitState *s; FSFile *head_fd; FSQID qid; char *head_url; char buf[128]; struct timeval tv…` | fs_net.c | exported | Unvalidated |
 | `head_loaded` | fs_net.c | left out | not translated yet |
-| `if (size < 0)` | fs_net.c | left out | not translated yet |
-| `buf = malloc(size + 1); fs->fs_read(fs, f, 0, (uint8_t *)buf, size); buf[size] = '\0'; fs->fs_d…` | fs_net.c | left out | not translated yet |
-| `if (parse_tag_version(buf) != 1)` | fs_net.c | left out | not translated yet |
-| `if (parse_tag_file_id(&root_id, buf, "RootID") < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_tag_uint64(&fs_max_size, buf, "FSMaxSize") == 0 && fs_max_size >= ((uint64_t)1 << 20)` | fs_net.c | left out | not translated yet |
-| `root_url = compose_url(s->url, "files"); fs_net_set_base_url(fs, "/", root_url, ((void *)0) , (…` | fs_net.c | left out | not translated yet |
+| `if (size < 0)` | fs_net.c | exported | Unvalidated |
+| `buf = malloc(size + 1); fs->fs_read(fs, f, 0, (uint8_t *)buf, size); buf[size] = '\0'; fs->fs_d…` | fs_net.c | exported | Unvalidated |
+| `if (parse_tag_version(buf) != 1)` | fs_net.c | exported | Unvalidated |
+| `if (parse_tag_file_id(&root_id, buf, "RootID") < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_tag_uint64(&fs_max_size, buf, "FSMaxSize") == 0 && fs_max_size >= ((uint64_t)1 << 20)` | fs_net.c | exported | Unvalidated |
+| `root_url = compose_url(s->url, "files"); fs_net_set_base_url(fs, "/", root_url, ((void *)0) , (…` | fs_net.c | exported | Unvalidated |
 | `filelist_loaded` | fs_net.c | left out | not translated yet |
-| `if (size < 0)` | fs_net.c | left out | not translated yet |
-| `buf = malloc(size + 1); fs->fs_read(fs, f, 0, buf, size); buf[size] = '\0'; fs->fs_delete(fs, f…` | fs_net.c | left out | not translated yet |
-| `if (filelist_load(fs, (char *)buf) != 0)` | fs_net.c | left out | not translated yet |
-| `s->file_index = 0; kernel_load_cb(fs, ((void *)0) , 0, s);` | fs_net.c | left out | not translated yet |
+| `if (size < 0)` | fs_net.c | exported | Unvalidated |
+| `buf = malloc(size + 1); fs->fs_read(fs, f, 0, buf, size); buf[size] = '\0'; fs->fs_delete(fs, f…` | fs_net.c | exported | Unvalidated |
+| `if (filelist_load(fs, (char *)buf) != 0)` | fs_net.c | exported | Unvalidated |
+| `s->file_index = 0; kernel_load_cb(fs, ((void *)0) , 0, s);` | fs_net.c | exported | Unvalidated |
 | `kernel_load_cb` | fs_net.c | left out | not translated yet |
-| `if ((FSDeviceMem *)fs)->dump_cache_load)` | fs_net.c | left out | not translated yet |
-| `if (s->fd)` | fs_net.c | left out | not translated yet |
-| `if (s->file_index >= 2) … else` | fs_net.c | left out | not translated yet |
+| `if ((FSDeviceMem *)fs)->dump_cache_load)` | fs_net.c | exported | Unvalidated |
+| `if (s->fd)` | fs_net.c | exported | Unvalidated |
+| `if (s->file_index >= 2) … else` | fs_net.c | exported | Unvalidated |
 | `preload_parse_str_old` | fs_net.c | left out | not translated yet |
-| `for (; ; )` | fs_net.c | left out | not translated yet |
+| `for (; ; )` | fs_net.c | exported | Unvalidated |
 | `preload_parse_str` | fs_net.c | left out | not translated yet |
-| `FSDeviceMem *fs = (FSDeviceMem *)fs1; PreloadEntry *pe; PreloadArchive *pa; FSINode *n; BOOL is…` | fs_net.c | left out | not translated yet |
-| `for (; ; )` | fs_net.c | left out | not translated yet |
+| `FSDeviceMem *fs = (FSDeviceMem *)fs1; PreloadEntry *pe; PreloadArchive *pa; FSINode *n; BOOL is…` | fs_net.c | exported | Unvalidated |
+| `for (; ; )` | fs_net.c | exported | Unvalidated |
 | `preload_parse` | fs_net.c | left out | not translated yet |
-| `FSINode *n; char *buf; size_t size; n = inode_search_path(fs, fname);` | fs_net.c | left out | not translated yet |
-| `if (!n || n->type != FT_REG || n->u.reg.state != REG_STATE_LOADED)` | fs_net.c | left out | not translated yet |
-| `size = n->u.reg.size; buf = malloc(size + 1); file_buffer_read(&n->u.reg.fbuf, 0, (uint8_t *)bu…` | fs_net.c | left out | not translated yet |
-| `if (is_new) … else` | fs_net.c | left out | not translated yet |
-| `free(buf); return 0;` | fs_net.c | left out | not translated yet |
+| `FSINode *n; char *buf; size_t size; n = inode_search_path(fs, fname);` | fs_net.c | exported | Unvalidated |
+| `if (!n || n->type != FT_REG || n->u.reg.state != REG_STATE_LOADED)` | fs_net.c | exported | Unvalidated |
+| `size = n->u.reg.size; buf = malloc(size + 1); file_buffer_read(&n->u.reg.fbuf, 0, (uint8_t *)bu…` | fs_net.c | exported | Unvalidated |
+| `if (is_new) … else` | fs_net.c | exported | Unvalidated |
+| `free(buf); return 0;` | fs_net.c | exported | Unvalidated |
 | `parse_hex_buf` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(buf1, sizeof(buf1), pp) < 0)` | fs_net.c | left out | not translated yet |
-| `len = strlen(buf1);` | fs_net.c | left out | not translated yet |
-| `if (len & 1) != 0)` | fs_net.c | left out | not translated yet |
-| `len >>= 1;` | fs_net.c | left out | not translated yet |
-| `if (len > buf_size)` | fs_net.c | left out | not translated yet |
-| `if (decode_hex(buf, buf1, len) < 0)` | fs_net.c | left out | not translated yet |
-| `return len;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(buf1, sizeof(buf1), pp) < 0)` | fs_net.c | exported | Unvalidated |
+| `len = strlen(buf1);` | fs_net.c | exported | Unvalidated |
+| `if (len & 1) != 0)` | fs_net.c | exported | Unvalidated |
+| `len >>= 1;` | fs_net.c | exported | Unvalidated |
+| `if (len > buf_size)` | fs_net.c | exported | Unvalidated |
+| `if (decode_hex(buf, buf1, len) < 0)` | fs_net.c | exported | Unvalidated |
+| `return len;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_xhr` | fs_net.c | left out | not translated yet |
-| `if (f->req != ((void *)0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(url, sizeof(url), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(post_filename, sizeof(post_filename), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `aes_key_len = parse_hex_buf(aes_key, 16, &p);` | fs_net.c | left out | not translated yet |
-| `if (aes_key_len < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_uint32(&flags, &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (aes_key_len != 0 && aes_key_len != 16)` | fs_net.c | left out | not translated yet |
-| `if (user_buf[0] != '\0') … else` | fs_net.c | left out | not translated yet |
-| `if (password_buf[0] != '\0') … else` | fs_net.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( !fs->fs_attach(fs, &root_fd, &qid, uid, "", "") )), __ext…` | fs_net.c | left out | not translated yet |
-| `if (!fd)` | fs_net.c | left out | not translated yet |
-| `fs->fs_unlinkat(fs, fd, name); err = fs->fs_create(fs, &qid, fd, name, 0x00000002 | 0x00000200,…` | fs_net.c | left out | not translated yet |
-| `if (err < 0)` | fs_net.c | left out | not translated yet |
-| `if (post_filename[0] != '\0') … else` | fs_net.c | left out | not translated yet |
-| `s = mallocz(sizeof(*s)); s->root_fd = root_fd; s->fd = fd; s->post_fd = post_fd;` | fs_net.c | left out | not translated yet |
-| `if (aes_key_len != 0) … else` | fs_net.c | left out | not translated yet |
-| `req = mallocz(sizeof(*req)); req->type = FS_CMD_XHR; req->reply_len = 0; req->xhr_state = s; s-…` | fs_net.c | left out | not translated yet |
-| `fail1: if (fd) fs->fs_delete(fs, fd);` | fs_net.c | left out | not translated yet |
-| `if (post_fd)` | fs_net.c | left out | not translated yet |
-| `fs->fs_delete(fs, root_fd); return err;` | fs_net.c | left out | not translated yet |
-| `fail: return -5;` | fs_net.c | left out | not translated yet |
+| `if (f->req != ((void *)0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(url, sizeof(url), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(post_filename, sizeof(post_filename), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `aes_key_len = parse_hex_buf(aes_key, 16, &p);` | fs_net.c | exported | Unvalidated |
+| `if (aes_key_len < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_uint32(&flags, &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (aes_key_len != 0 && aes_key_len != 16)` | fs_net.c | exported | Unvalidated |
+| `if (user_buf[0] != '\0') … else` | fs_net.c | exported | Unvalidated |
+| `if (password_buf[0] != '\0') … else` | fs_net.c | exported | Unvalidated |
+| `((void) sizeof (__assert_single_arg ( !fs->fs_attach(fs, &root_fd, &qid, uid, "", "") )), __ext…` | fs_net.c | exported | Unvalidated |
+| `if (!fd)` | fs_net.c | exported | Unvalidated |
+| `fs->fs_unlinkat(fs, fd, name); err = fs->fs_create(fs, &qid, fd, name, 0x00000002 | 0x00000200,…` | fs_net.c | exported | Unvalidated |
+| `if (err < 0)` | fs_net.c | exported | Unvalidated |
+| `if (post_filename[0] != '\0') … else` | fs_net.c | exported | Unvalidated |
+| `s = mallocz(sizeof(*s)); s->root_fd = root_fd; s->fd = fd; s->post_fd = post_fd;` | fs_net.c | exported | Unvalidated |
+| `if (aes_key_len != 0) … else` | fs_net.c | exported | Unvalidated |
+| `req = mallocz(sizeof(*req)); req->type = FS_CMD_XHR; req->reply_len = 0; req->xhr_state = s; s-…` | fs_net.c | exported | Unvalidated |
+| `fail1: if (fd) fs->fs_delete(fs, fd);` | fs_net.c | exported | Unvalidated |
+| `if (post_fd)` | fs_net.c | exported | Unvalidated |
+| `fs->fs_delete(fs, root_fd); return err;` | fs_net.c | exported | Unvalidated |
+| `fail: return -5;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_xhr_on_load` | fs_net.c | left out | not translated yet |
-| `if (s->fd)` | fs_net.c | left out | not translated yet |
-| `if (s->post_fd)` | fs_net.c | left out | not translated yet |
-| `fs->fs_delete(fs, s->root_fd);` | fs_net.c | left out | not translated yet |
-| `if (s->req_fd)` | fs_net.c | left out | not translated yet |
-| `free(s);` | fs_net.c | left out | not translated yet |
+| `if (s->fd)` | fs_net.c | exported | Unvalidated |
+| `if (s->post_fd)` | fs_net.c | exported | Unvalidated |
+| `fs->fs_delete(fs, s->root_fd);` | fs_net.c | exported | Unvalidated |
+| `if (s->req_fd)` | fs_net.c | exported | Unvalidated |
+| `free(s);` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_set_base_url` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(url, sizeof(url), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `aes_key_len = parse_hex_buf(aes_key, 16, &p);` | fs_net.c | left out | not translated yet |
-| `if (aes_key_len < 0)` | fs_net.c | left out | not translated yet |
-| `if (user_buf[0] != '\0') … else` | fs_net.c | left out | not translated yet |
-| `if (password_buf[0] != '\0') … else` | fs_net.c | left out | not translated yet |
-| `if (aes_key_len != 0) … else` | fs_net.c | left out | not translated yet |
-| `fs_net_set_base_url(fs, base_url_id, url, user, password, paes_state); return 0;` | fs_net.c | left out | not translated yet |
-| `fail: return -22;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(url, sizeof(url), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(user_buf, sizeof(user_buf), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(password_buf, sizeof(password_buf), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `aes_key_len = parse_hex_buf(aes_key, 16, &p);` | fs_net.c | exported | Unvalidated |
+| `if (aes_key_len < 0)` | fs_net.c | exported | Unvalidated |
+| `if (user_buf[0] != '\0') … else` | fs_net.c | exported | Unvalidated |
+| `if (password_buf[0] != '\0') … else` | fs_net.c | exported | Unvalidated |
+| `if (aes_key_len != 0) … else` | fs_net.c | exported | Unvalidated |
+| `fs_net_set_base_url(fs, base_url_id, url, user, password, paes_state); return 0;` | fs_net.c | exported | Unvalidated |
+| `fail: return -22;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_reset_base_url` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `fs_net_reset_base_url(fs, base_url_id); return 0;` | fs_net.c | left out | not translated yet |
-| `fail: return -22;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `fs_net_reset_base_url(fs, base_url_id); return 0;` | fs_net.c | exported | Unvalidated |
+| `fail: return -22;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_set_url` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_file_id(&file_id, &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_uint64(&size, &p) < 0)` | fs_net.c | left out | not translated yet |
-| `n = inode_search_path(fs, filename);` | fs_net.c | left out | not translated yet |
-| `if (!n)` | fs_net.c | left out | not translated yet |
-| `return fs_net_set_url(fs, n, base_url_id, file_id, size);` | fs_net.c | left out | not translated yet |
-| `fail: return -22;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(base_url_id, sizeof(base_url_id), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_file_id(&file_id, &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_uint64(&size, &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `n = inode_search_path(fs, filename);` | fs_net.c | exported | Unvalidated |
+| `if (!n)` | fs_net.c | exported | Unvalidated |
+| `return fs_net_set_url(fs, n, base_url_id, file_id, size);` | fs_net.c | exported | Unvalidated |
+| `fail: return -22;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_export_file` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `n = inode_search_path(fs, filename);` | fs_net.c | left out | not translated yet |
-| `if (!n)` | fs_net.c | left out | not translated yet |
-| `if (n->type != FT_REG || (n->u.reg.state != REG_STATE_LOCAL && n->u.reg.state != REG_STATE_LOAD…` | fs_net.c | left out | not translated yet |
-| `name = _Generic (0 ? ( filename ) : (void *) 1, const void *: (const char *) (strrchr ( filenam…` | fs_net.c | left out | not translated yet |
-| `if (name) … else` | fs_net.c | left out | not translated yet |
-| `buf = malloc(n->u.reg.size); file_buffer_read(&n->u.reg.fbuf, 0, buf, n->u.reg.size); fs_export…` | fs_net.c | left out | not translated yet |
-| `fail: return -5;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `n = inode_search_path(fs, filename);` | fs_net.c | exported | Unvalidated |
+| `if (!n)` | fs_net.c | exported | Unvalidated |
+| `if (n->type != FT_REG || (n->u.reg.state != REG_STATE_LOCAL && n->u.reg.state != REG_STATE_LOAD…` | fs_net.c | exported | Unvalidated |
+| `name = _Generic (0 ? ( filename ) : (void *) 1, const void *: (const char *) (strrchr ( filenam…` | fs_net.c | exported | Unvalidated |
+| `if (name) … else` | fs_net.c | exported | Unvalidated |
+| `buf = malloc(n->u.reg.size); file_buffer_read(&n->u.reg.fbuf, 0, buf, n->u.reg.size); fs_export…` | fs_net.c | exported | Unvalidated |
+| `fail: return -5;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_pbkdf2` | fs_net.c | left out | not translated yet |
-| `if (f->req != ((void *)0)` | fs_net.c | left out | not translated yet |
-| `pwd_len = parse_hex_buf(pwd, sizeof(pwd), &p);` | fs_net.c | left out | not translated yet |
-| `if (pwd_len < 0)` | fs_net.c | left out | not translated yet |
-| `salt_len = parse_hex_buf(salt, sizeof(salt), &p);` | fs_net.c | left out | not translated yet |
-| `if (pwd_len < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_uint32(&iter, &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (parse_uint32(&key_len, &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (key_len > 64 || key_len == 0)` | fs_net.c | left out | not translated yet |
-| `req = mallocz(sizeof(*req)); req->type = FS_CMD_PBKDF2; req->reply_len = key_len; pbkdf2_hmac_s…` | fs_net.c | left out | not translated yet |
-| `fail: return -22;` | fs_net.c | left out | not translated yet |
+| `if (f->req != ((void *)0)` | fs_net.c | exported | Unvalidated |
+| `pwd_len = parse_hex_buf(pwd, sizeof(pwd), &p);` | fs_net.c | exported | Unvalidated |
+| `if (pwd_len < 0)` | fs_net.c | exported | Unvalidated |
+| `salt_len = parse_hex_buf(salt, sizeof(salt), &p);` | fs_net.c | exported | Unvalidated |
+| `if (pwd_len < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_uint32(&iter, &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (parse_uint32(&key_len, &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (key_len > 64 || key_len == 0)` | fs_net.c | exported | Unvalidated |
+| `req = mallocz(sizeof(*req)); req->type = FS_CMD_PBKDF2; req->reply_len = key_len; pbkdf2_hmac_s…` | fs_net.c | exported | Unvalidated |
+| `fail: return -22;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_set_import_dir` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `free(fs1->import_dir); fs1->import_dir = strdup(filename); return 0;` | fs_net.c | left out | not translated yet |
+| `if (parse_fname(filename, sizeof(filename), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `free(fs1->import_dir); fs1->import_dir = strdup(filename); return 0;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_write` | fs_net.c | left out | not translated yet |
-| `char *buf1; const char *p; char cmd[64]; int err; buf1 = malloc(buf_len + 1); memcpy(buf1, buf,…` | fs_net.c | left out | not translated yet |
-| `if (parse_fname(cmd, sizeof(cmd), &p) < 0)` | fs_net.c | left out | not translated yet |
-| `if (!strcmp(cmd, "xhr")) … else` | fs_net.c | left out | not translated yet |
-| `free(buf1);` | fs_net.c | left out | not translated yet |
-| `if (err == 0) … else` | fs_net.c | left out | not translated yet |
+| `char *buf1; const char *p; char cmd[64]; int err; buf1 = malloc(buf_len + 1); memcpy(buf1, buf,…` | fs_net.c | exported | Unvalidated |
+| `if (parse_fname(cmd, sizeof(cmd), &p) < 0)` | fs_net.c | exported | Unvalidated |
+| `if (!strcmp(cmd, "xhr")) … else` | fs_net.c | exported | Unvalidated |
+| `free(buf1);` | fs_net.c | exported | Unvalidated |
+| `if (err == 0) … else` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_read` | fs_net.c | left out | not translated yet |
-| `FSCMDRequest *req; int l; req = f->req;` | fs_net.c | left out | not translated yet |
-| `if (!req)` | fs_net.c | left out | not translated yet |
-| `l = min_int(req->reply_len, buf_len); memcpy(buf, req->reply_buf, l); return l;` | fs_net.c | left out | not translated yet |
+| `FSCMDRequest *req; int l; req = f->req;` | fs_net.c | exported | Unvalidated |
+| `if (!req)` | fs_net.c | exported | Unvalidated |
+| `l = min_int(req->reply_len, buf_len); memcpy(buf, req->reply_buf, l); return l;` | fs_net.c | exported | Unvalidated |
 | `fs_cmd_close` | fs_net.c | left out | not translated yet |
-| `FSCMDRequest *req; req = f->req;` | fs_net.c | left out | not translated yet |
-| `if (req)` | fs_net.c | left out | not translated yet |
+| `FSCMDRequest *req; req = f->req;` | fs_net.c | exported | Unvalidated |
+| `if (req)` | fs_net.c | exported | Unvalidated |
 | `fs_net_set_pwd` | fs_net.c | left out | not translated yet |
-| `FSFile *root_fd; FSQID qid; ((void) sizeof (__assert_single_arg ( fs_is_net(fs) )), __extension…` | fs_net.c | left out | not translated yet |
+| `FSFile *root_fd; FSQID qid; ((void) sizeof (__assert_single_arg ( fs_is_net(fs) )), __extension…` | fs_net.c | exported | Unvalidated |
 | `fs_export_file` | fs_net.c | left out | not translated yet |
 | `compose_path` | fs_utils.c | left out | not translated yet |
-| `if (path[0] == '\0') … else` | fs_utils.c | left out | not translated yet |
-| `return d;` | fs_utils.c | left out | not translated yet |
+| `if (path[0] == '\0') … else` | fs_utils.c | exported | Unvalidated |
+| `return d;` | fs_utils.c | exported | Unvalidated |
 | `compose_url` | fs_utils.c | left out | not translated yet |
-| `if ( _Generic (0 ? ( name ) : (void *) 1, const void *: (const char *) (strchr ( name , ':' )),…` | fs_utils.c | left out | not translated yet |
+| `if ( _Generic (0 ? ( name ) : (void *) 1, const void *: (const char *) (strchr ( name , ':' )),…` | fs_utils.c | exported | Unvalidated |
 | `skip_line` | fs_utils.c | left out | not translated yet |
-| `const char *p; p = *pp;` | fs_utils.c | left out | not translated yet |
-| `while (*p != '\n' && *p != '\0')` | fs_utils.c | left out | not translated yet |
-| `if (*p == '\n')` | fs_utils.c | left out | not translated yet |
-| `*pp = p;` | fs_utils.c | left out | not translated yet |
+| `const char *p; p = *pp;` | fs_utils.c | exported | Unvalidated |
+| `while (*p != '\n' && *p != '\0')` | fs_utils.c | exported | Unvalidated |
+| `if (*p == '\n')` | fs_utils.c | exported | Unvalidated |
+| `*pp = p;` | fs_utils.c | exported | Unvalidated |
 | `quoted_str` | fs_utils.c | left out | not translated yet |
-| `if (str[0] == '\0')` | fs_utils.c | left out | not translated yet |
-| `s = str;` | fs_utils.c | left out | not translated yet |
-| `while (*s != '\0')` | fs_utils.c | left out | not translated yet |
-| `return strdup(str);` | fs_utils.c | left out | not translated yet |
-| `use_quote: buf = malloc(strlen(str) * 4 + 2 + 1);` | fs_utils.c | left out | not translated yet |
-| `q = buf; s = str; *q++ = '"';` | fs_utils.c | left out | not translated yet |
-| `while (*s != '\0')` | fs_utils.c | left out | not translated yet |
-| `*q++ = '"'; *q = '\0'; return buf;` | fs_utils.c | left out | not translated yet |
+| `if (str[0] == '\0')` | fs_utils.c | exported | Unvalidated |
+| `s = str;` | fs_utils.c | exported | Unvalidated |
+| `while (*s != '\0')` | fs_utils.c | exported | Unvalidated |
+| `return strdup(str);` | fs_utils.c | exported | Unvalidated |
+| `use_quote: buf = malloc(strlen(str) * 4 + 2 + 1);` | fs_utils.c | exported | Unvalidated |
+| `q = buf; s = str; *q++ = '"';` | fs_utils.c | exported | Unvalidated |
+| `while (*s != '\0')` | fs_utils.c | exported | Unvalidated |
+| `*q++ = '"'; *q = '\0'; return buf;` | fs_utils.c | exported | Unvalidated |
 | `parse_fname` | fs_utils.c | left out | not translated yet |
-| `const char *p; char *q; int c, h; p = *pp;` | fs_utils.c | left out | not translated yet |
-| `while (isspace_nolf(*p))` | fs_utils.c | left out | not translated yet |
-| `if (*p == '\0')` | fs_utils.c | left out | not translated yet |
-| `q = buf;` | fs_utils.c | left out | not translated yet |
-| `if (*p == '"') … else` | fs_utils.c | left out | not translated yet |
-| `*q = '\0'; *pp = p; return 0;` | fs_utils.c | left out | not translated yet |
+| `const char *p; char *q; int c, h; p = *pp;` | fs_utils.c | exported | Unvalidated |
+| `while (isspace_nolf(*p))` | fs_utils.c | exported | Unvalidated |
+| `if (*p == '\0')` | fs_utils.c | exported | Unvalidated |
+| `q = buf;` | fs_utils.c | exported | Unvalidated |
+| `if (*p == '"') … else` | fs_utils.c | exported | Unvalidated |
+| `*q = '\0'; *pp = p; return 0;` | fs_utils.c | exported | Unvalidated |
 | `parse_uint32_base` | fs_utils.c | left out | not translated yet |
-| `const char *p, *p1; p = *pp;` | fs_utils.c | left out | not translated yet |
-| `while (isspace_nolf(*p))` | fs_utils.c | left out | not translated yet |
-| `*pval = strtoul(p, (char **)&p1, base);` | fs_utils.c | left out | not translated yet |
-| `if (p1 == p)` | fs_utils.c | left out | not translated yet |
-| `*pp = p1; return 0;` | fs_utils.c | left out | not translated yet |
+| `const char *p, *p1; p = *pp;` | fs_utils.c | exported | Unvalidated |
+| `while (isspace_nolf(*p))` | fs_utils.c | exported | Unvalidated |
+| `*pval = strtoul(p, (char **)&p1, base);` | fs_utils.c | exported | Unvalidated |
+| `if (p1 == p)` | fs_utils.c | exported | Unvalidated |
+| `*pp = p1; return 0;` | fs_utils.c | exported | Unvalidated |
 | `parse_uint64_base` | fs_utils.c | left out | not translated yet |
-| `const char *p, *p1; p = *pp;` | fs_utils.c | left out | not translated yet |
-| `while (isspace_nolf(*p))` | fs_utils.c | left out | not translated yet |
-| `*pval = strtoull(p, (char **)&p1, base);` | fs_utils.c | left out | not translated yet |
-| `if (p1 == p)` | fs_utils.c | left out | not translated yet |
-| `*pp = p1; return 0;` | fs_utils.c | left out | not translated yet |
+| `const char *p, *p1; p = *pp;` | fs_utils.c | exported | Unvalidated |
+| `while (isspace_nolf(*p))` | fs_utils.c | exported | Unvalidated |
+| `*pval = strtoull(p, (char **)&p1, base);` | fs_utils.c | exported | Unvalidated |
+| `if (p1 == p)` | fs_utils.c | exported | Unvalidated |
+| `*pp = p1; return 0;` | fs_utils.c | exported | Unvalidated |
 | `parse_uint64` | fs_utils.c | left out | not translated yet |
-| `return parse_uint64_base(pval, pp, 0);` | fs_utils.c | left out | not translated yet |
+| `return parse_uint64_base(pval, pp, 0);` | fs_utils.c | exported | Unvalidated |
 | `parse_uint32` | fs_utils.c | left out | not translated yet |
-| `return parse_uint32_base(pval, pp, 0);` | fs_utils.c | left out | not translated yet |
+| `return parse_uint32_base(pval, pp, 0);` | fs_utils.c | exported | Unvalidated |
 | `parse_time` | fs_utils.c | left out | not translated yet |
-| `const char *p; uint32_t v, m; p = *pp;` | fs_utils.c | left out | not translated yet |
-| `if (parse_uint32(psec, &p) < 0)` | fs_utils.c | left out | not translated yet |
-| `v = 0;` | fs_utils.c | left out | not translated yet |
-| `if (*p == '.')` | fs_utils.c | left out | not translated yet |
-| `*pnsec = v; *pp = p; return 0;` | fs_utils.c | left out | not translated yet |
+| `const char *p; uint32_t v, m; p = *pp;` | fs_utils.c | exported | Unvalidated |
+| `if (parse_uint32(psec, &p) < 0)` | fs_utils.c | exported | Unvalidated |
+| `v = 0;` | fs_utils.c | exported | Unvalidated |
+| `if (*p == '.')` | fs_utils.c | exported | Unvalidated |
+| `*pnsec = v; *pp = p; return 0;` | fs_utils.c | exported | Unvalidated |
 | `parse_file_id` | fs_utils.c | left out | not translated yet |
-| `return parse_uint64_base(pval, pp, 16);` | fs_utils.c | left out | not translated yet |
+| `return parse_uint64_base(pval, pp, 16);` | fs_utils.c | exported | Unvalidated |
 | `file_id_to_filename` | fs_utils.c | left out | not translated yet |
-| `sprintf(buf, "%016" "l" "x" , file_id); return buf;` | fs_utils.c | left out | not translated yet |
+| `sprintf(buf, "%016" "l" "x" , file_id); return buf;` | fs_utils.c | exported | Unvalidated |
 | `encode_hex` | fs_utils.c | left out | not translated yet |
-| `for (i = 0; i < len; i++)` | fs_utils.c | left out | not translated yet |
+| `for (i = 0; i < len; i++)` | fs_utils.c | exported | Unvalidated |
 | `decode_hex` | fs_utils.c | left out | not translated yet |
-| `for (i = 0; i < len; i++)` | fs_utils.c | left out | not translated yet |
-| `return 0;` | fs_utils.c | left out | not translated yet |
+| `for (i = 0; i < len; i++)` | fs_utils.c | exported | Unvalidated |
+| `return 0;` | fs_utils.c | exported | Unvalidated |
 | `skip_header` | fs_utils.c | left out | not translated yet |
-| `p = _Generic (0 ? ( p ) : (void *) 1, const void *: (const char *) (strstr ( p , "\n\n" )), def…` | fs_utils.c | left out | not translated yet |
-| `if (!p)` | fs_utils.c | left out | not translated yet |
-| `return p + 2;` | fs_utils.c | left out | not translated yet |
+| `p = _Generic (0 ? ( p ) : (void *) 1, const void *: (const char *) (strstr ( p , "\n\n" )), def…` | fs_utils.c | exported | Unvalidated |
+| `if (!p)` | fs_utils.c | exported | Unvalidated |
+| `return p + 2;` | fs_utils.c | exported | Unvalidated |
 | `parse_tag` | fs_utils.c | left out | not translated yet |
-| `char tagname[128], *q; const char *p, *p1; int len; p = str;` | fs_utils.c | left out | not translated yet |
-| `for (; ; )` | fs_utils.c | left out | not translated yet |
-| `return -1;` | fs_utils.c | left out | not translated yet |
+| `char tagname[128], *q; const char *p, *p1; int len; p = str;` | fs_utils.c | exported | Unvalidated |
+| `for (; ; )` | fs_utils.c | exported | Unvalidated |
+| `return -1;` | fs_utils.c | exported | Unvalidated |
 | `parse_tag_uint64` | fs_utils.c | left out | not translated yet |
-| `if (parse_tag(buf, sizeof(buf), str, tag))` | fs_utils.c | left out | not translated yet |
-| `p = buf; return parse_uint64(pval, &p);` | fs_utils.c | left out | not translated yet |
+| `if (parse_tag(buf, sizeof(buf), str, tag))` | fs_utils.c | exported | Unvalidated |
+| `p = buf; return parse_uint64(pval, &p);` | fs_utils.c | exported | Unvalidated |
 | `parse_tag_file_id` | fs_utils.c | left out | not translated yet |
-| `if (parse_tag(buf, sizeof(buf), str, tag))` | fs_utils.c | left out | not translated yet |
-| `p = buf; return parse_uint64_base(pval, &p, 16);` | fs_utils.c | left out | not translated yet |
+| `if (parse_tag(buf, sizeof(buf), str, tag))` | fs_utils.c | exported | Unvalidated |
+| `p = buf; return parse_uint64_base(pval, &p, 16);` | fs_utils.c | exported | Unvalidated |
 | `parse_tag_version` | fs_utils.c | left out | not translated yet |
-| `if (parse_tag_uint64(&version, str, "Version"))` | fs_utils.c | left out | not translated yet |
-| `return version;` | fs_utils.c | left out | not translated yet |
+| `if (parse_tag_uint64(&version, str, "Version"))` | fs_utils.c | exported | Unvalidated |
+| `return version;` | fs_utils.c | exported | Unvalidated |
 | `is_url` | fs_utils.c | left out | not translated yet |
-| `return (strstart(path, "http:", ((void *)0) ) || strstart(path, "https:", ((void *)0) ) || strs…` | fs_utils.c | left out | not translated yet |
+| `return (strstart(path, "http:", ((void *)0) ) || strstart(path, "https:", ((void *)0) ) || strs…` | fs_utils.c | exported | Unvalidated |
 | `isspace_nolf` | fs_utils.h | left out | not translated yet |
 | `return (c == ' ' || c == '\t');` | fs_utils.h | exported | Unvalidated |
 | `from_hex` | fs_utils.h | left out | not translated yet |
@@ -877,126 +877,126 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `block_align` | fs_utils.h | left out | not translated yet |
 | `return (val + align - 1) & ~(align - 1);` | fs_utils.h | exported | Unvalidated |
 | `padstr` | ide.c | left out | not translated yet |
-| `for (i = 0; i < len; i++)` | ide.c | left out | not translated yet |
+| `for (i = 0; i < len; i++)` | ide.c | exported | Unvalidated |
 | `stw` | ide.c | left out | not translated yet |
-| `*buf = v;` | ide.c | left out | not translated yet |
+| `*buf = v;` | ide.c | exported | Unvalidated |
 | `ide_identify` | ide.c | left out | not translated yet |
-| `uint16_t *tab; uint32_t oldsize; tab = (uint16_t *)s->io_buffer; memset(tab, 0, 512 * 2); stw(t…` | ide.c | left out | not translated yet |
-| `if (s->mult_sectors)` | ide.c | left out | not translated yet |
-| `stw(tab + 60, s->nb_sectors); stw(tab + 61, s->nb_sectors >> 16); stw(tab + 80, (1 << 1) | (1 <…` | ide.c | left out | not translated yet |
+| `uint16_t *tab; uint32_t oldsize; tab = (uint16_t *)s->io_buffer; memset(tab, 0, 512 * 2); stw(t…` | ide.c | exported | Unvalidated |
+| `if (s->mult_sectors)` | ide.c | exported | Unvalidated |
+| `stw(tab + 60, s->nb_sectors); stw(tab + 61, s->nb_sectors >> 16); stw(tab + 80, (1 << 1) | (1 <…` | ide.c | exported | Unvalidated |
 | `ide_set_signature` | ide.c | left out | not translated yet |
-| `s->select &= 0xf0; s->nsector = 1; s->sector = 1; s->lcyl = 0; s->hcyl = 0;` | ide.c | left out | not translated yet |
+| `s->select &= 0xf0; s->nsector = 1; s->sector = 1; s->lcyl = 0; s->hcyl = 0;` | ide.c | exported | Unvalidated |
 | `ide_abort_command` | ide.c | left out | not translated yet |
-| `s->status = 0x40 | 0x01; s->error = 0x04;` | ide.c | left out | not translated yet |
+| `s->status = 0x40 | 0x01; s->error = 0x04;` | ide.c | exported | Unvalidated |
 | `ide_set_irq` | ide.c | left out | not translated yet |
-| `if (!(ide_if->cmd & 0x02)` | ide.c | left out | not translated yet |
+| `if (!(ide_if->cmd & 0x02)` | ide.c | exported | Unvalidated |
 | `ide_transfer_start` | ide.c | left out | not translated yet |
-| `s->end_transfer_func = end_transfer_func; s->data_index = 0; s->data_end = size;` | ide.c | left out | not translated yet |
+| `s->end_transfer_func = end_transfer_func; s->data_index = 0; s->data_end = size;` | ide.c | exported | Unvalidated |
 | `ide_transfer_stop` | ide.c | left out | not translated yet |
-| `s->end_transfer_func = ide_transfer_stop; s->data_index = 0; s->data_end = 0;` | ide.c | left out | not translated yet |
+| `s->end_transfer_func = ide_transfer_stop; s->data_index = 0; s->data_end = 0;` | ide.c | exported | Unvalidated |
 | `ide_get_sector` | ide.c | left out | not translated yet |
-| `if (s->select & 0x40) … else` | ide.c | left out | not translated yet |
-| `return sector_num;` | ide.c | left out | not translated yet |
+| `if (s->select & 0x40) … else` | ide.c | exported | Unvalidated |
+| `return sector_num;` | ide.c | exported | Unvalidated |
 | `ide_set_sector` | ide.c | left out | not translated yet |
-| `if (s->select & 0x40) … else` | ide.c | left out | not translated yet |
+| `if (s->select & 0x40) … else` | ide.c | exported | Unvalidated |
 | `ide_sector_read` | ide.c | left out | not translated yet |
-| `int64_t sector_num; int ret, n; sector_num = ide_get_sector(s); n = s->nsector;` | ide.c | left out | not translated yet |
-| `if (n == 0)` | ide.c | left out | not translated yet |
-| `if (n > s->req_nb_sectors)` | ide.c | left out | not translated yet |
-| `s->io_nb_sectors = n; ret = s->bs->read_async(s->bs, sector_num, s->io_buffer, n, ide_sector_re…` | ide.c | left out | not translated yet |
-| `if (ret < 0) … else` | ide.c | left out | not translated yet |
+| `int64_t sector_num; int ret, n; sector_num = ide_get_sector(s); n = s->nsector;` | ide.c | exported | Unvalidated |
+| `if (n == 0)` | ide.c | exported | Unvalidated |
+| `if (n > s->req_nb_sectors)` | ide.c | exported | Unvalidated |
+| `s->io_nb_sectors = n; ret = s->bs->read_async(s->bs, sector_num, s->io_buffer, n, ide_sector_re…` | ide.c | exported | Unvalidated |
+| `if (ret < 0) … else` | ide.c | exported | Unvalidated |
 | `ide_sector_read_cb` | ide.c | left out | not translated yet |
-| `IDEState *s = opaque; int n; EndTransferFunc *func; n = s->io_nb_sectors; ide_set_sector(s, ide…` | ide.c | left out | not translated yet |
-| `if (s->nsector == 0) … else` | ide.c | left out | not translated yet |
-| `ide_transfer_start(s, 512 * n, func); ide_set_irq(s); s->status = 0x40 | 0x10 | 0x08; s->error…` | ide.c | left out | not translated yet |
+| `IDEState *s = opaque; int n; EndTransferFunc *func; n = s->io_nb_sectors; ide_set_sector(s, ide…` | ide.c | exported | Unvalidated |
+| `if (s->nsector == 0) … else` | ide.c | exported | Unvalidated |
+| `ide_transfer_start(s, 512 * n, func); ide_set_irq(s); s->status = 0x40 | 0x10 | 0x08; s->error…` | ide.c | exported | Unvalidated |
 | `ide_sector_read_cb_end` | ide.c | left out | not translated yet |
-| `s->status = 0x40 | 0x10; s->error = 0; ide_transfer_stop(s);` | ide.c | left out | not translated yet |
+| `s->status = 0x40 | 0x10; s->error = 0; ide_transfer_stop(s);` | ide.c | exported | Unvalidated |
 | `ide_sector_write_cb1` | ide.c | left out | not translated yet |
-| `int64_t sector_num; int ret; ide_transfer_stop(s); sector_num = ide_get_sector(s); ret = s->bs-…` | ide.c | left out | not translated yet |
-| `if (ret < 0) … else` | ide.c | left out | not translated yet |
+| `int64_t sector_num; int ret; ide_transfer_stop(s); sector_num = ide_get_sector(s); ret = s->bs-…` | ide.c | exported | Unvalidated |
+| `if (ret < 0) … else` | ide.c | exported | Unvalidated |
 | `ide_sector_write_cb2` | ide.c | left out | not translated yet |
-| `IDEState *s = opaque; int n; n = s->io_nb_sectors; ide_set_sector(s, ide_get_sector(s) + n); s-…` | ide.c | left out | not translated yet |
-| `if (s->nsector == 0) … else` | ide.c | left out | not translated yet |
-| `ide_set_irq(s);` | ide.c | left out | not translated yet |
+| `IDEState *s = opaque; int n; n = s->io_nb_sectors; ide_set_sector(s, ide_get_sector(s) + n); s-…` | ide.c | exported | Unvalidated |
+| `if (s->nsector == 0) … else` | ide.c | exported | Unvalidated |
+| `ide_set_irq(s);` | ide.c | exported | Unvalidated |
 | `ide_sector_write` | ide.c | left out | not translated yet |
-| `int n; n = s->nsector;` | ide.c | left out | not translated yet |
-| `if (n == 0)` | ide.c | left out | not translated yet |
-| `if (n > s->req_nb_sectors)` | ide.c | left out | not translated yet |
-| `s->io_nb_sectors = n; ide_transfer_start(s, 512 * n, ide_sector_write_cb1); s->status = 0x40 |…` | ide.c | left out | not translated yet |
+| `int n; n = s->nsector;` | ide.c | exported | Unvalidated |
+| `if (n == 0)` | ide.c | exported | Unvalidated |
+| `if (n > s->req_nb_sectors)` | ide.c | exported | Unvalidated |
+| `s->io_nb_sectors = n; ide_transfer_start(s, 512 * n, ide_sector_write_cb1); s->status = 0x40 |…` | ide.c | exported | Unvalidated |
 | `ide_identify_cb` | ide.c | left out | not translated yet |
-| `ide_transfer_stop(s); s->status = 0x40;` | ide.c | left out | not translated yet |
+| `ide_transfer_stop(s); s->status = 0x40;` | ide.c | exported | Unvalidated |
 | `ide_exec_cmd` | ide.c | left out | not translated yet |
-| `switch (val)` | ide.c | left out | not translated yet |
+| `switch (val)` | ide.c | exported | Unvalidated |
 | `ide_ioport_write` | ide.c | left out | not translated yet |
-| `switch (addr)` | ide.c | left out | not translated yet |
+| `switch (addr)` | ide.c | exported | Unvalidated |
 | `ide_ioport_read` | ide.c | left out | not translated yet |
-| `if (!s) … else` | ide.c | left out | not translated yet |
-| `return ret;` | ide.c | left out | not translated yet |
+| `if (!s) … else` | ide.c | exported | Unvalidated |
+| `return ret;` | ide.c | exported | Unvalidated |
 | `ide_status_read` | ide.c | left out | not translated yet |
-| `if (s) … else` | ide.c | left out | not translated yet |
-| `return ret;` | ide.c | left out | not translated yet |
+| `if (s) … else` | ide.c | exported | Unvalidated |
+| `return ret;` | ide.c | exported | Unvalidated |
 | `ide_cmd_write` | ide.c | left out | not translated yet |
-| `if (!(s1->cmd & 0x04) && (val & 0x04) … else` | ide.c | left out | not translated yet |
-| `s1->cmd = val;` | ide.c | left out | not translated yet |
+| `if (!(s1->cmd & 0x04) && (val & 0x04) … else` | ide.c | exported | Unvalidated |
+| `s1->cmd = val;` | ide.c | exported | Unvalidated |
 | `ide_data_writew` | ide.c | left out | not translated yet |
-| `if (!s)` | ide.c | left out | not translated yet |
-| `p = s->data_index; tab = s->io_buffer; tab[p] = val & 0xff; tab[p + 1] = (val >> 8) & 0xff; p +…` | ide.c | left out | not translated yet |
-| `if (p >= s->data_end)` | ide.c | left out | not translated yet |
+| `if (!s)` | ide.c | exported | Unvalidated |
+| `p = s->data_index; tab = s->io_buffer; tab[p] = val & 0xff; tab[p + 1] = (val >> 8) & 0xff; p +…` | ide.c | exported | Unvalidated |
+| `if (p >= s->data_end)` | ide.c | exported | Unvalidated |
 | `ide_data_readw` | ide.c | left out | not translated yet |
-| `if (!s) … else` | ide.c | left out | not translated yet |
-| `return ret;` | ide.c | left out | not translated yet |
+| `if (!s) … else` | ide.c | exported | Unvalidated |
+| `return ret;` | ide.c | exported | Unvalidated |
 | `ide_drive_init` | ide.c | left out | not translated yet |
-| `IDEState *s; uint32_t cylinders; uint64_t nb_sectors; s = malloc(sizeof(*s)); memset(s, 0, size…` | ide.c | left out | not translated yet |
-| `if (cylinders > 16383) … else` | ide.c | left out | not translated yet |
-| `s->cylinders = cylinders; s->heads = 16; s->sectors = 63; s->nb_sectors = nb_sectors; s->mult_s…` | ide.c | left out | not translated yet |
+| `IDEState *s; uint32_t cylinders; uint64_t nb_sectors; s = malloc(sizeof(*s)); memset(s, 0, size…` | ide.c | exported | Unvalidated |
+| `if (cylinders > 16383) … else` | ide.c | exported | Unvalidated |
+| `s->cylinders = cylinders; s->heads = 16; s->sectors = 63; s->nb_sectors = nb_sectors; s->mult_s…` | ide.c | exported | Unvalidated |
 | `ide_init` | ide.c | left out | not translated yet |
-| `int i; IDEIFState *s; s = malloc(sizeof(IDEIFState)); memset(s, 0, sizeof(*s)); s->irq = irq; s…` | ide.c | left out | not translated yet |
-| `if (addr2)` | ide.c | left out | not translated yet |
-| `for (i = 0; i < 2; i++)` | ide.c | left out | not translated yet |
-| `s->cur_drive = s->drives[0]; return s;` | ide.c | left out | not translated yet |
+| `int i; IDEIFState *s; s = malloc(sizeof(IDEIFState)); memset(s, 0, sizeof(*s)); s->irq = irq; s…` | ide.c | exported | Unvalidated |
+| `if (addr2)` | ide.c | exported | Unvalidated |
+| `for (i = 0; i < 2; i++)` | ide.c | exported | Unvalidated |
+| `s->cur_drive = s->drives[0]; return s;` | ide.c | exported | Unvalidated |
 | `piix3_ide_init` | ide.c | left out | not translated yet |
-| `PCIDevice *d; d = pci_register_device(pci_bus, "PIIX3 IDE", devfn, 0x8086, 0x7010, 0x00, 0x0101…` | ide.c | left out | not translated yet |
+| `PCIDevice *d; d = pci_register_device(pci_bus, "PIIX3 IDE", devfn, 0x8086, 0x7010, 0x00, 0x0101…` | ide.c | exported | Unvalidated |
 | `phys_mem_map_init` | iomem.c | left out | not translated yet |
-| `PhysMemoryMap *s; s = mallocz(sizeof(*s)); s->register_ram = default_register_ram; s->free_ram…` | iomem.c | left out | not translated yet |
+| `PhysMemoryMap *s; s = mallocz(sizeof(*s)); s->register_ram = default_register_ram; s->free_ram…` | iomem.c | exported | Unvalidated |
 | `phys_mem_map_end` | iomem.c | left out | not translated yet |
-| `for (i = 0; i < s->n_phys_mem_range; i++)` | iomem.c | left out | not translated yet |
-| `free(s);` | iomem.c | left out | not translated yet |
+| `for (i = 0; i < s->n_phys_mem_range; i++)` | iomem.c | exported | Unvalidated |
+| `free(s);` | iomem.c | exported | Unvalidated |
 | `get_phys_mem_range` | iomem.c | left out | not translated yet |
-| `for (i = 0; i < s->n_phys_mem_range; i++)` | iomem.c | left out | not translated yet |
-| `return ((void *)0) ;` | iomem.c | left out | not translated yet |
+| `for (i = 0; i < s->n_phys_mem_range; i++)` | iomem.c | exported | Unvalidated |
+| `return ((void *)0) ;` | iomem.c | exported | Unvalidated |
 | `register_ram_entry` | iomem.c | left out | not translated yet |
-| `PhysMemoryRange *pr; ((void) sizeof (__assert_single_arg ( s->n_phys_mem_range < 32 )), __exten…` | iomem.c | left out | not translated yet |
-| `if (devram_flags & (1 << 2) … else` | iomem.c | left out | not translated yet |
-| `pr->phys_mem = ((void *)0) ; pr->dirty_bits = ((void *)0) ; return pr;` | iomem.c | left out | not translated yet |
+| `PhysMemoryRange *pr; ((void) sizeof (__assert_single_arg ( s->n_phys_mem_range < 32 )), __exten…` | iomem.c | exported | Unvalidated |
+| `if (devram_flags & (1 << 2) … else` | iomem.c | exported | Unvalidated |
+| `pr->phys_mem = ((void *)0) ; pr->dirty_bits = ((void *)0) ; return pr;` | iomem.c | exported | Unvalidated |
 | `default_register_ram` | iomem.c | left out | not translated yet |
-| `PhysMemoryRange *pr; pr = register_ram_entry(s, addr, size, devram_flags); pr->phys_mem = mallo…` | iomem.c | left out | not translated yet |
-| `if (!pr->phys_mem)` | iomem.c | left out | not translated yet |
-| `if (devram_flags & (1 << 1)` | iomem.c | left out | not translated yet |
-| `return pr;` | iomem.c | left out | not translated yet |
+| `PhysMemoryRange *pr; pr = register_ram_entry(s, addr, size, devram_flags); pr->phys_mem = mallo…` | iomem.c | exported | Unvalidated |
+| `if (!pr->phys_mem)` | iomem.c | exported | Unvalidated |
+| `if (devram_flags & (1 << 1)` | iomem.c | exported | Unvalidated |
+| `return pr;` | iomem.c | exported | Unvalidated |
 | `default_get_dirty_bits` | iomem.c | left out | not translated yet |
-| `uint32_t *dirty_bits; BOOL has_dirty_bits; size_t n, i; dirty_bits = pr->dirty_bits; has_dirty_…` | iomem.c | left out | not translated yet |
-| `for (i = 0; i < n; i++)` | iomem.c | left out | not translated yet |
-| `if (has_dirty_bits && pr->size != 0)` | iomem.c | left out | not translated yet |
-| `pr->dirty_bits_index ^= 1; pr->dirty_bits = pr->dirty_bits_tab[pr->dirty_bits_index]; memset(pr…` | iomem.c | left out | not translated yet |
+| `uint32_t *dirty_bits; BOOL has_dirty_bits; size_t n, i; dirty_bits = pr->dirty_bits; has_dirty_…` | iomem.c | exported | Unvalidated |
+| `for (i = 0; i < n; i++)` | iomem.c | exported | Unvalidated |
+| `if (has_dirty_bits && pr->size != 0)` | iomem.c | exported | Unvalidated |
+| `pr->dirty_bits_index ^= 1; pr->dirty_bits = pr->dirty_bits_tab[pr->dirty_bits_index]; memset(pr…` | iomem.c | exported | Unvalidated |
 | `phys_mem_reset_dirty_bit` | iomem.c | left out | not translated yet |
-| `if (pr->dirty_bits)` | iomem.c | left out | not translated yet |
+| `if (pr->dirty_bits)` | iomem.c | exported | Unvalidated |
 | `default_free_ram` | iomem.c | left out | not translated yet |
-| `free(pr->phys_mem);` | iomem.c | left out | not translated yet |
+| `free(pr->phys_mem);` | iomem.c | exported | Unvalidated |
 | `cpu_register_device` | iomem.c | left out | not translated yet |
-| `PhysMemoryRange *pr; ((void) sizeof (__assert_single_arg ( s->n_phys_mem_range < 32 )), __exten…` | iomem.c | left out | not translated yet |
-| `if (devio_flags & (1 << 4) … else` | iomem.c | left out | not translated yet |
-| `pr->is_ram = FALSE; pr->opaque = opaque; pr->read_func = read_func; pr->write_func = write_func…` | iomem.c | left out | not translated yet |
+| `PhysMemoryRange *pr; ((void) sizeof (__assert_single_arg ( s->n_phys_mem_range < 32 )), __exten…` | iomem.c | exported | Unvalidated |
+| `if (devio_flags & (1 << 4) … else` | iomem.c | exported | Unvalidated |
+| `pr->is_ram = FALSE; pr->opaque = opaque; pr->read_func = read_func; pr->write_func = write_func…` | iomem.c | exported | Unvalidated |
 | `default_set_addr` | iomem.c | left out | not translated yet |
-| `if (enabled) … else` | iomem.c | left out | not translated yet |
+| `if (enabled) … else` | iomem.c | exported | Unvalidated |
 | `phys_mem_set_addr` | iomem.c | left out | not translated yet |
-| `if (!pr->is_ram) … else` | iomem.c | left out | not translated yet |
+| `if (!pr->is_ram) … else` | iomem.c | exported | Unvalidated |
 | `phys_mem_get_ram_ptr` | iomem.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | iomem.c | left out | not translated yet |
-| `offset = paddr - pr->addr;` | iomem.c | left out | not translated yet |
-| `if (is_rw)` | iomem.c | left out | not translated yet |
-| `return pr->phys_mem + (uintptr_t)offset;` | iomem.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | iomem.c | exported | Unvalidated |
+| `offset = paddr - pr->addr;` | iomem.c | exported | Unvalidated |
+| `if (is_rw)` | iomem.c | exported | Unvalidated |
+| `return pr->phys_mem + (uintptr_t)offset;` | iomem.c | exported | Unvalidated |
 | `irq_init` | iomem.c | left out | not translated yet |
-| `irq->set_irq = set_irq; irq->opaque = opaque; irq->irq_num = irq_num;` | iomem.c | left out | not translated yet |
+| `irq->set_irq = set_irq; irq->opaque = opaque; irq->irq_num = irq_num;` | iomem.c | exported | Unvalidated |
 | `cpu_register_ram` | iomem.h | left out | not translated yet |
 | `return s->register_ram(s, addr, size, devram_flags);` | iomem.h | exported | Unvalidated |
 | `phys_mem_get_dirty_bits` | iomem.h | left out | not translated yet |
@@ -1009,70 +1009,70 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `set_irq` | iomem.h | left out | not translated yet |
 | `irq->set_irq(irq->opaque, irq->irq_num, level);` | iomem.h | exported | Unvalidated |
 | `parse_string` | json.c | left out | not translated yet |
-| `char buf[4096], *q; const char *p; int c, h; q = buf; p = *pp; p++;` | json.c | left out | not translated yet |
-| `for (; ; )` | json.c | left out | not translated yet |
-| `*q = '\0'; *pp = p; return json_string_new(buf);` | json.c | left out | not translated yet |
+| `char buf[4096], *q; const char *p; int c, h; q = buf; p = *pp; p++;` | json.c | exported | Unvalidated |
+| `for (; ; )` | json.c | exported | Unvalidated |
+| `*q = '\0'; *pp = p; return json_string_new(buf);` | json.c | exported | Unvalidated |
 | `json_object_get2` | json.c | left out | not translated yet |
-| `for (i = 0; i < obj->len; i++)` | json.c | left out | not translated yet |
-| `return ((void *)0) ;` | json.c | left out | not translated yet |
+| `for (i = 0; i < obj->len; i++)` | json.c | exported | Unvalidated |
+| `return ((void *)0) ;` | json.c | exported | Unvalidated |
 | `json_object_get` | json.c | left out | not translated yet |
-| `if (val.type != JSON_OBJ)` | json.c | left out | not translated yet |
-| `obj = val.u.obj; f = json_object_get2(obj, name);` | json.c | left out | not translated yet |
-| `if (!f)` | json.c | left out | not translated yet |
-| `return f->value;` | json.c | left out | not translated yet |
+| `if (val.type != JSON_OBJ)` | json.c | exported | Unvalidated |
+| `obj = val.u.obj; f = json_object_get2(obj, name);` | json.c | exported | Unvalidated |
+| `if (!f)` | json.c | exported | Unvalidated |
+| `return f->value;` | json.c | exported | Unvalidated |
 | `json_object_set` | json.c | left out | not translated yet |
-| `if (val.type != JSON_OBJ)` | json.c | left out | not translated yet |
-| `obj = val.u.obj; f = json_object_get2(obj, name);` | json.c | left out | not translated yet |
-| `if (f) … else` | json.c | left out | not translated yet |
-| `return 0;` | json.c | left out | not translated yet |
+| `if (val.type != JSON_OBJ)` | json.c | exported | Unvalidated |
+| `obj = val.u.obj; f = json_object_get2(obj, name);` | json.c | exported | Unvalidated |
+| `if (f) … else` | json.c | exported | Unvalidated |
+| `return 0;` | json.c | exported | Unvalidated |
 | `json_array_get` | json.c | left out | not translated yet |
-| `if (val.type != JSON_ARRAY)` | json.c | left out | not translated yet |
-| `array = val.u.array;` | json.c | left out | not translated yet |
-| `if (idx < array->len) … else` | json.c | left out | not translated yet |
+| `if (val.type != JSON_ARRAY)` | json.c | exported | Unvalidated |
+| `array = val.u.array;` | json.c | exported | Unvalidated |
+| `if (idx < array->len) … else` | json.c | exported | Unvalidated |
 | `json_array_set` | json.c | left out | not translated yet |
-| `if (val.type != JSON_ARRAY)` | json.c | left out | not translated yet |
-| `array = val.u.array;` | json.c | left out | not translated yet |
-| `if (idx < array->len) … else` | json.c | left out | not translated yet |
-| `return 0;` | json.c | left out | not translated yet |
+| `if (val.type != JSON_ARRAY)` | json.c | exported | Unvalidated |
+| `array = val.u.array;` | json.c | exported | Unvalidated |
+| `if (idx < array->len) … else` | json.c | exported | Unvalidated |
+| `return 0;` | json.c | exported | Unvalidated |
 | `json_get_str` | json.c | left out | not translated yet |
-| `if (val.type != JSON_STR)` | json.c | left out | not translated yet |
-| `return val.u.str->data;` | json.c | left out | not translated yet |
+| `if (val.type != JSON_STR)` | json.c | exported | Unvalidated |
+| `return val.u.str->data;` | json.c | exported | Unvalidated |
 | `json_get_error` | json.c | left out | not translated yet |
-| `if (val.type != JSON_EXCEPTION)` | json.c | left out | not translated yet |
-| `return val.u.str->data;` | json.c | left out | not translated yet |
+| `if (val.type != JSON_EXCEPTION)` | json.c | exported | Unvalidated |
+| `return val.u.str->data;` | json.c | exported | Unvalidated |
 | `json_string_new2` | json.c | left out | not translated yet |
-| `JSONValue val; JSONString *str1; str1 = malloc(sizeof(JSONString) + len + 1); str1->len = len;…` | json.c | left out | not translated yet |
+| `JSONValue val; JSONString *str1; str1 = malloc(sizeof(JSONString) + len + 1); str1->len = len;…` | json.c | exported | Unvalidated |
 | `json_string_new` | json.c | left out | not translated yet |
-| `return json_string_new2(str, strlen(str));` | json.c | left out | not translated yet |
+| `return json_string_new2(str, strlen(str));` | json.c | exported | Unvalidated |
 | `json_object_new` | json.c | left out | not translated yet |
-| `JSONValue val; JSONObject *obj; obj = mallocz(sizeof(JSONObject)); val.type = JSON_OBJ; val.u.o…` | json.c | left out | not translated yet |
+| `JSONValue val; JSONObject *obj; obj = mallocz(sizeof(JSONObject)); val.type = JSON_OBJ; val.u.o…` | json.c | exported | Unvalidated |
 | `json_array_new` | json.c | left out | not translated yet |
-| `JSONValue val; JSONArray *array; array = mallocz(sizeof(JSONArray)); val.type = JSON_ARRAY; val…` | json.c | left out | not translated yet |
+| `JSONValue val; JSONArray *array; array = mallocz(sizeof(JSONArray)); val.type = JSON_ARRAY; val…` | json.c | exported | Unvalidated |
 | `json_free` | json.c | left out | not translated yet |
-| `switch (val.type)` | json.c | left out | not translated yet |
+| `switch (val.type)` | json.c | exported | Unvalidated |
 | `skip_spaces` | json.c | left out | not translated yet |
-| `const char *p; p = *pp;` | json.c | left out | not translated yet |
-| `for (; ; )` | json.c | left out | not translated yet |
-| `*pp = p;` | json.c | left out | not translated yet |
+| `const char *p; p = *pp;` | json.c | exported | Unvalidated |
+| `for (; ; )` | json.c | exported | Unvalidated |
+| `*pp = p;` | json.c | exported | Unvalidated |
 | `is_ident_first` | json.c | left out | not translated yet |
-| `return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$';` | json.c | left out | not translated yet |
+| `return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$';` | json.c | exported | Unvalidated |
 | `parse_ident` | json.c | left out | not translated yet |
-| `char *q; const char *p; p = *pp; q = buf; *q++ = *p++;` | json.c | left out | not translated yet |
-| `while (is_ident_first(*p) || ((*__ctype_b_loc ())[(int) (( *p ))] & (unsigned short int) _ISdig…` | json.c | left out | not translated yet |
-| `*pp = p; *q = '\0'; return 0;` | json.c | left out | not translated yet |
+| `char *q; const char *p; p = *pp; q = buf; *q++ = *p++;` | json.c | exported | Unvalidated |
+| `while (is_ident_first(*p) || ((*__ctype_b_loc ())[(int) (( *p ))] & (unsigned short int) _ISdig…` | json.c | exported | Unvalidated |
+| `*pp = p; *q = '\0'; return 0;` | json.c | exported | Unvalidated |
 | `json_parse_value2` | json.c | left out | not translated yet |
-| `char buf[128]; const char *p; JSONValue val, val1, tag; p = *pp; skip_spaces(&p);` | json.c | left out | not translated yet |
-| `if (*p == '\0')` | json.c | left out | not translated yet |
-| `if (*__ctype_b_loc ())[(int) (( *p ))] & (unsigned short int) _ISdigit) … else` | json.c | left out | not translated yet |
-| `*pp = p; return val;` | json.c | left out | not translated yet |
+| `char buf[128]; const char *p; JSONValue val, val1, tag; p = *pp; skip_spaces(&p);` | json.c | exported | Unvalidated |
+| `if (*p == '\0')` | json.c | exported | Unvalidated |
+| `if (*__ctype_b_loc ())[(int) (( *p ))] & (unsigned short int) _ISdigit) … else` | json.c | exported | Unvalidated |
+| `*pp = p; return val;` | json.c | exported | Unvalidated |
 | `json_parse_value` | json.c | left out | not translated yet |
-| `JSONValue val; val = json_parse_value2(&p);` | json.c | left out | not translated yet |
-| `if (json_is_error(val))` | json.c | left out | not translated yet |
-| `skip_spaces(&p);` | json.c | left out | not translated yet |
-| `if (*p != '\0')` | json.c | left out | not translated yet |
-| `return val;` | json.c | left out | not translated yet |
+| `JSONValue val; val = json_parse_value2(&p);` | json.c | exported | Unvalidated |
+| `if (json_is_error(val))` | json.c | exported | Unvalidated |
+| `skip_spaces(&p);` | json.c | exported | Unvalidated |
+| `if (*p != '\0')` | json.c | exported | Unvalidated |
+| `return val;` | json.c | exported | Unvalidated |
 | `json_parse_value_len` | json.c | left out | not translated yet |
-| `char *str; JSONValue val; str = malloc(len + 1); memcpy(str, p, len); str[len] = '\0'; val = js…` | json.c | left out | not translated yet |
+| `char *str; JSONValue val; str = malloc(len + 1); memcpy(str, p, len); str[len] = '\0'; val = js…` | json.c | exported | Unvalidated |
 | `json_is_error` | json.h | left out | not translated yet |
 | `return val.type == JSON_EXCEPTION;` | json.h | exported | Unvalidated |
 | `json_is_undefined` | json.h | left out | not translated yet |
@@ -1098,116 +1098,116 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `list_empty` | list.h | left out | not translated yet |
 | `return el->next == el;` | list.h | exported | Unvalidated |
 | `vm_get_int` | machine.c | left out | not translated yet |
-| `JSONValue val; val = json_object_get(obj, name);` | machine.c | left out | not translated yet |
-| `if (json_is_undefined(val))` | machine.c | left out | not translated yet |
-| `if (val.type != JSON_INT)` | machine.c | left out | not translated yet |
-| `*pval = val.u.int32; return 0;` | machine.c | left out | not translated yet |
+| `JSONValue val; val = json_object_get(obj, name);` | machine.c | exported | Unvalidated |
+| `if (json_is_undefined(val))` | machine.c | exported | Unvalidated |
+| `if (val.type != JSON_INT)` | machine.c | exported | Unvalidated |
+| `*pval = val.u.int32; return 0;` | machine.c | exported | Unvalidated |
 | `vm_get_int_opt` | machine.c | left out | not translated yet |
-| `JSONValue val; val = json_object_get(obj, name);` | machine.c | left out | not translated yet |
-| `if (json_is_undefined(val))` | machine.c | left out | not translated yet |
-| `if (val.type != JSON_INT)` | machine.c | left out | not translated yet |
-| `*pval = val.u.int32; return 0;` | machine.c | left out | not translated yet |
+| `JSONValue val; val = json_object_get(obj, name);` | machine.c | exported | Unvalidated |
+| `if (json_is_undefined(val))` | machine.c | exported | Unvalidated |
+| `if (val.type != JSON_INT)` | machine.c | exported | Unvalidated |
+| `*pval = val.u.int32; return 0;` | machine.c | exported | Unvalidated |
 | `vm_get_str2` | machine.c | left out | not translated yet |
-| `JSONValue val; val = json_object_get(obj, name);` | machine.c | left out | not translated yet |
-| `if (json_is_undefined(val))` | machine.c | left out | not translated yet |
-| `if (val.type != JSON_STR)` | machine.c | left out | not translated yet |
-| `*pstr = val.u.str->data; return 0;` | machine.c | left out | not translated yet |
+| `JSONValue val; val = json_object_get(obj, name);` | machine.c | exported | Unvalidated |
+| `if (json_is_undefined(val))` | machine.c | exported | Unvalidated |
+| `if (val.type != JSON_STR)` | machine.c | exported | Unvalidated |
+| `*pstr = val.u.str->data; return 0;` | machine.c | exported | Unvalidated |
 | `vm_get_str` | machine.c | left out | not translated yet |
-| `return vm_get_str2(obj, name, pstr, FALSE);` | machine.c | left out | not translated yet |
+| `return vm_get_str2(obj, name, pstr, FALSE);` | machine.c | exported | Unvalidated |
 | `vm_get_str_opt` | machine.c | left out | not translated yet |
-| `return vm_get_str2(obj, name, pstr, TRUE);` | machine.c | left out | not translated yet |
+| `return vm_get_str2(obj, name, pstr, TRUE);` | machine.c | exported | Unvalidated |
 | `strdup_null` | machine.c | left out | not translated yet |
-| `if (!str) … else` | machine.c | left out | not translated yet |
+| `if (!str) … else` | machine.c | exported | Unvalidated |
 | `cmdline_subst` | machine.c | left out | not translated yet |
-| `DynBuf dbuf; const char *p; char var_name[32], *q, buf[32]; dbuf_init(&dbuf); p = cmdline;` | machine.c | left out | not translated yet |
-| `while (*p != '\0')` | machine.c | left out | not translated yet |
-| `dbuf_putc(&dbuf, 0); return (char *)dbuf.buf;` | machine.c | left out | not translated yet |
+| `DynBuf dbuf; const char *p; char var_name[32], *q, buf[32]; dbuf_init(&dbuf); p = cmdline;` | machine.c | exported | Unvalidated |
+| `while (*p != '\0')` | machine.c | exported | Unvalidated |
+| `dbuf_putc(&dbuf, 0); return (char *)dbuf.buf;` | machine.c | exported | Unvalidated |
 | `find_name` | machine.c | left out | not translated yet |
-| `size_t len; const char *p, *r; p = name_list;` | machine.c | left out | not translated yet |
-| `for (; ; )` | machine.c | left out | not translated yet |
-| `return FALSE;` | machine.c | left out | not translated yet |
+| `size_t len; const char *p, *r; p = name_list;` | machine.c | exported | Unvalidated |
+| `for (; ; )` | machine.c | exported | Unvalidated |
+| `return FALSE;` | machine.c | exported | Unvalidated |
 | `virt_machine_find_class` | machine.c | left out | not translated yet |
-| `for (pvmc = virt_machine_list; *pvmc != ((void *)0; pvmc++)` | machine.c | left out | not translated yet |
-| `return ((void *)0) ;` | machine.c | left out | not translated yet |
+| `for (pvmc = virt_machine_list; *pvmc != ((void *)0; pvmc++)` | machine.c | exported | Unvalidated |
+| `return ((void *)0) ;` | machine.c | exported | Unvalidated |
 | `virt_machine_parse_config` | machine.c | left out | not translated yet |
-| `int version, val; const char *tag_name, *str; char buf1[256]; JSONValue cfg, obj, el; cfg = jso…` | machine.c | left out | not translated yet |
-| `if (json_is_error(cfg))` | machine.c | left out | not translated yet |
-| `if (vm_get_int(cfg, "version", &version) < 0)` | machine.c | left out | not translated yet |
-| `if (version != 1)` | machine.c | left out | not translated yet |
-| `if (vm_get_str(cfg, "machine", &str) < 0)` | machine.c | left out | not translated yet |
-| `p->machine_name = strdup(str); p->vmc = virt_machine_find_class(p->machine_name);` | machine.c | left out | not translated yet |
-| `if (!p->vmc)` | machine.c | left out | not translated yet |
-| `p->vmc->virt_machine_set_defaults(p); tag_name = "memory_size";` | machine.c | left out | not translated yet |
-| `if (vm_get_int(cfg, tag_name, &val) < 0)` | machine.c | left out | not translated yet |
-| `p->ram_size = (uint64_t)val << 20; tag_name = "bios";` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | left out | not translated yet |
-| `if (str)` | machine.c | left out | not translated yet |
-| `tag_name = "kernel";` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | left out | not translated yet |
-| `if (str)` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, "cmdline", &str) < 0)` | machine.c | left out | not translated yet |
-| `if (str)` | machine.c | left out | not translated yet |
-| `tag_name = "initrd";` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | left out | not translated yet |
-| `if (str)` | machine.c | left out | not translated yet |
-| `for (; ; )` | machine.c | left out | not translated yet |
-| `for (; ; )` | machine.c | left out | not translated yet |
-| `for (; ; )` | machine.c | left out | not translated yet |
-| `p->display_device = ((void *)0) ; obj = json_object_get(cfg, "display0");` | machine.c | left out | not translated yet |
-| `if (!json_is_undefined(obj))` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, "input_device", &str) < 0)` | machine.c | left out | not translated yet |
-| `p->input_device = strdup_null(str);` | machine.c | left out | not translated yet |
-| `if (vm_get_str_opt(cfg, "accel", &str) < 0)` | machine.c | left out | not translated yet |
-| `if (str)` | machine.c | left out | not translated yet |
-| `tag_name = "rtc_local_time"; el = json_object_get(cfg, tag_name);` | machine.c | left out | not translated yet |
-| `if (!json_is_undefined(el))` | machine.c | left out | not translated yet |
-| `json_free(cfg); return 0;` | machine.c | left out | not translated yet |
-| `tag_fail: json_free(cfg);` | machine.c | left out | not translated yet |
-| `return -1;` | machine.c | left out | not translated yet |
+| `int version, val; const char *tag_name, *str; char buf1[256]; JSONValue cfg, obj, el; cfg = jso…` | machine.c | exported | Unvalidated |
+| `if (json_is_error(cfg))` | machine.c | exported | Unvalidated |
+| `if (vm_get_int(cfg, "version", &version) < 0)` | machine.c | exported | Unvalidated |
+| `if (version != 1)` | machine.c | exported | Unvalidated |
+| `if (vm_get_str(cfg, "machine", &str) < 0)` | machine.c | exported | Unvalidated |
+| `p->machine_name = strdup(str); p->vmc = virt_machine_find_class(p->machine_name);` | machine.c | exported | Unvalidated |
+| `if (!p->vmc)` | machine.c | exported | Unvalidated |
+| `p->vmc->virt_machine_set_defaults(p); tag_name = "memory_size";` | machine.c | exported | Unvalidated |
+| `if (vm_get_int(cfg, tag_name, &val) < 0)` | machine.c | exported | Unvalidated |
+| `p->ram_size = (uint64_t)val << 20; tag_name = "bios";` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | exported | Unvalidated |
+| `if (str)` | machine.c | exported | Unvalidated |
+| `tag_name = "kernel";` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | exported | Unvalidated |
+| `if (str)` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, "cmdline", &str) < 0)` | machine.c | exported | Unvalidated |
+| `if (str)` | machine.c | exported | Unvalidated |
+| `tag_name = "initrd";` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, tag_name, &str) < 0)` | machine.c | exported | Unvalidated |
+| `if (str)` | machine.c | exported | Unvalidated |
+| `for (; ; )` | machine.c | exported | Unvalidated |
+| `for (; ; )` | machine.c | exported | Unvalidated |
+| `for (; ; )` | machine.c | exported | Unvalidated |
+| `p->display_device = ((void *)0) ; obj = json_object_get(cfg, "display0");` | machine.c | exported | Unvalidated |
+| `if (!json_is_undefined(obj))` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, "input_device", &str) < 0)` | machine.c | exported | Unvalidated |
+| `p->input_device = strdup_null(str);` | machine.c | exported | Unvalidated |
+| `if (vm_get_str_opt(cfg, "accel", &str) < 0)` | machine.c | exported | Unvalidated |
+| `if (str)` | machine.c | exported | Unvalidated |
+| `tag_name = "rtc_local_time"; el = json_object_get(cfg, tag_name);` | machine.c | exported | Unvalidated |
+| `if (!json_is_undefined(el))` | machine.c | exported | Unvalidated |
+| `json_free(cfg); return 0;` | machine.c | exported | Unvalidated |
+| `tag_fail: json_free(cfg);` | machine.c | exported | Unvalidated |
+| `return -1;` | machine.c | exported | Unvalidated |
 | `get_file_path` | machine.c | left out | not translated yet |
-| `if (!base_filename)` | machine.c | left out | not translated yet |
-| `if ( _Generic (0 ? ( filename ) : (void *) 1, const void *: (const char *) (strchr ( filename ,…` | machine.c | left out | not translated yet |
-| `if (filename[0] == '/')` | machine.c | left out | not translated yet |
-| `p = _Generic (0 ? ( base_filename ) : (void *) 1, const void *: (const char *) (strrchr ( base_…` | machine.c | left out | not translated yet |
-| `if (!p)` | machine.c | left out | not translated yet |
-| `len = p + 1 - base_filename; len1 = strlen(filename); fname = malloc(len + len1 + 1); memcpy(fn…` | machine.c | left out | not translated yet |
+| `if (!base_filename)` | machine.c | exported | Unvalidated |
+| `if ( _Generic (0 ? ( filename ) : (void *) 1, const void *: (const char *) (strchr ( filename ,…` | machine.c | exported | Unvalidated |
+| `if (filename[0] == '/')` | machine.c | exported | Unvalidated |
+| `p = _Generic (0 ? ( base_filename ) : (void *) 1, const void *: (const char *) (strrchr ( base_…` | machine.c | exported | Unvalidated |
+| `if (!p)` | machine.c | exported | Unvalidated |
+| `len = p + 1 - base_filename; len1 = strlen(filename); fname = malloc(len + len1 + 1); memcpy(fn…` | machine.c | exported | Unvalidated |
 | `load_file` | machine.c | left out | not translated yet |
-| `FILE *f; int size; uint8_t *buf; f = fopen(filename, "rb");` | machine.c | left out | not translated yet |
-| `if (!f)` | machine.c | left out | not translated yet |
-| `fseek(f, 0, 2 ); size = ftell(f); fseek(f, 0, 0 ); buf = malloc(size);` | machine.c | left out | not translated yet |
-| `if (fread(buf, 1, size, f) != size)` | machine.c | left out | not translated yet |
-| `fclose(f); *pbuf = buf; return size;` | machine.c | left out | not translated yet |
+| `FILE *f; int size; uint8_t *buf; f = fopen(filename, "rb");` | machine.c | exported | Unvalidated |
+| `if (!f)` | machine.c | exported | Unvalidated |
+| `fseek(f, 0, 2 ); size = ftell(f); fseek(f, 0, 0 ); buf = malloc(size);` | machine.c | exported | Unvalidated |
+| `if (fread(buf, 1, size, f) != size)` | machine.c | exported | Unvalidated |
+| `fclose(f); *pbuf = buf; return size;` | machine.c | exported | Unvalidated |
 | `config_load_file_cb` | machine.c | left out | not translated yet |
-| `if (err < 0)` | machine.c | left out | not translated yet |
-| `s->file_load_cb(s->file_load_opaque, data, size);` | machine.c | left out | not translated yet |
+| `if (err < 0)` | machine.c | exported | Unvalidated |
+| `s->file_load_cb(s->file_load_opaque, data, size);` | machine.c | exported | Unvalidated |
 | `config_load_file` | machine.c | left out | not translated yet |
-| `if (is_url(filename)) … else` | machine.c | left out | not translated yet |
+| `if (is_url(filename)) … else` | machine.c | exported | Unvalidated |
 | `virt_machine_load_config_file` | machine.c | left out | not translated yet |
-| `VMConfigLoadState *s; s = mallocz(sizeof(*s)); s->vm_params = p; s->start_cb = start_cb; s->opa…` | machine.c | left out | not translated yet |
+| `VMConfigLoadState *s; s = mallocz(sizeof(*s)); s->vm_params = p; s->start_cb = start_cb; s->opa…` | machine.c | exported | Unvalidated |
 | `config_file_loaded` | machine.c | left out | not translated yet |
-| `if (virt_machine_parse_config(p, (char *)buf, buf_len) < 0)` | machine.c | left out | not translated yet |
-| `s->file_index = 0; config_additional_file_load(s);` | machine.c | left out | not translated yet |
+| `if (virt_machine_parse_config(p, (char *)buf, buf_len) < 0)` | machine.c | exported | Unvalidated |
+| `s->file_index = 0; config_additional_file_load(s);` | machine.c | exported | Unvalidated |
 | `config_additional_file_load` | machine.c | left out | not translated yet |
-| `while (s->file_index < VM_FILE_COUNT && p->files[s->file_index].filename == ((void *)0)` | machine.c | left out | not translated yet |
-| `if (s->file_index == VM_FILE_COUNT) … else` | machine.c | left out | not translated yet |
+| `while (s->file_index < VM_FILE_COUNT && p->files[s->file_index].filename == ((void *)0)` | machine.c | exported | Unvalidated |
+| `if (s->file_index == VM_FILE_COUNT) … else` | machine.c | exported | Unvalidated |
 | `config_additional_file_load_cb` | machine.c | left out | not translated yet |
-| `VMConfigLoadState *s = opaque; VirtMachineParams *p = s->vm_params; p->files[s->file_index].buf…` | machine.c | left out | not translated yet |
+| `VMConfigLoadState *s = opaque; VirtMachineParams *p = s->vm_params; p->files[s->file_index].buf…` | machine.c | exported | Unvalidated |
 | `vm_add_cmdline` | machine.c | left out | not translated yet |
-| `if (cmdline[0] == '!') … else` | machine.c | left out | not translated yet |
-| `free(p->cmdline); p->cmdline = new_cmdline;` | machine.c | left out | not translated yet |
+| `if (cmdline[0] == '!') … else` | machine.c | exported | Unvalidated |
+| `free(p->cmdline); p->cmdline = new_cmdline;` | machine.c | exported | Unvalidated |
 | `virt_machine_free_config` | machine.c | left out | not translated yet |
-| `int i; free(p->machine_name); free(p->cmdline);` | machine.c | left out | not translated yet |
-| `for (i = 0; i < VM_FILE_COUNT; i++)` | machine.c | left out | not translated yet |
-| `for (i = 0; i < p->drive_count; i++)` | machine.c | left out | not translated yet |
-| `for (i = 0; i < p->fs_count; i++)` | machine.c | left out | not translated yet |
-| `for (i = 0; i < p->eth_count; i++)` | machine.c | left out | not translated yet |
-| `free(p->input_device); free(p->display_device); free(p->cfg_filename);` | machine.c | left out | not translated yet |
+| `int i; free(p->machine_name); free(p->cmdline);` | machine.c | exported | Unvalidated |
+| `for (i = 0; i < VM_FILE_COUNT; i++)` | machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->drive_count; i++)` | machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->fs_count; i++)` | machine.c | exported | Unvalidated |
+| `for (i = 0; i < p->eth_count; i++)` | machine.c | exported | Unvalidated |
+| `free(p->input_device); free(p->display_device); free(p->cfg_filename);` | machine.c | exported | Unvalidated |
 | `virt_machine_init` | machine.c | left out | not translated yet |
-| `const VirtMachineClass *vmc = p->vmc; return vmc->virt_machine_init(p);` | machine.c | left out | not translated yet |
+| `const VirtMachineClass *vmc = p->vmc; return vmc->virt_machine_init(p);` | machine.c | exported | Unvalidated |
 | `virt_machine_set_defaults` | machine.c | left out | not translated yet |
-| `memset(p, 0, sizeof(*p));` | machine.c | left out | not translated yet |
+| `memset(p, 0, sizeof(*p));` | machine.c | exported | Unvalidated |
 | `virt_machine_end` | machine.c | left out | not translated yet |
-| `s->vmc->virt_machine_end(s);` | machine.c | left out | not translated yet |
+| `s->vmc->virt_machine_end(s);` | machine.c | exported | Unvalidated |
 | `virt_machine_get_sleep_duration` | machine.h | left out | not translated yet |
 | `return s->vmc->virt_machine_get_sleep_duration(s, delay);` | machine.h | exported | Unvalidated |
 | `virt_machine_interp` | machine.h | left out | not translated yet |
@@ -1219,209 +1219,209 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `vm_send_key_event` | machine.h | left out | not translated yet |
 | `s1->vmc->vm_send_key_event(s1, is_down, key_code);` | machine.h | exported | Unvalidated |
 | `bus_map_irq` | pci.c | left out | not translated yet |
-| `int slot_addend; slot_addend = (d->devfn >> 3) - 1; return (irq_num + slot_addend) & 3;` | pci.c | left out | not translated yet |
+| `int slot_addend; slot_addend = (d->devfn >> 3) - 1; return (irq_num + slot_addend) & 3;` | pci.c | exported | Unvalidated |
 | `pci_device_set_irq` | pci.c | left out | not translated yet |
-| `PCIDevice *d = opaque; PCIBus *b = d->bus; uint32_t mask; int i, irq_level; irq_num = bus_map_i…` | pci.c | left out | not translated yet |
-| `if (level) … else` | pci.c | left out | not translated yet |
-| `mask = 0;` | pci.c | left out | not translated yet |
-| `for (i = 0; i < 8; i++)` | pci.c | left out | not translated yet |
-| `irq_level = (mask != 0); set_irq(&b->irq[irq_num], irq_level);` | pci.c | left out | not translated yet |
+| `PCIDevice *d = opaque; PCIBus *b = d->bus; uint32_t mask; int i, irq_level; irq_num = bus_map_i…` | pci.c | exported | Unvalidated |
+| `if (level) … else` | pci.c | exported | Unvalidated |
+| `mask = 0;` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < 8; i++)` | pci.c | exported | Unvalidated |
+| `irq_level = (mask != 0); set_irq(&b->irq[irq_num], irq_level);` | pci.c | exported | Unvalidated |
 | `devfn_alloc` | pci.c | left out | not translated yet |
-| `for (devfn = 0; devfn < 256; devfn += 8)` | pci.c | left out | not translated yet |
-| `return -1;` | pci.c | left out | not translated yet |
+| `for (devfn = 0; devfn < 256; devfn += 8)` | pci.c | exported | Unvalidated |
+| `return -1;` | pci.c | exported | Unvalidated |
 | `pci_register_device` | pci.c | left out | not translated yet |
-| `if (devfn < 0)` | pci.c | left out | not translated yet |
-| `if (b->device[devfn])` | pci.c | left out | not translated yet |
-| `d = mallocz(sizeof(PCIDevice)); d->bus = b; d->name = strdup(name); d->devfn = devfn; put_le16(…` | pci.c | left out | not translated yet |
-| `for (i = 0; i < 4; i++)` | pci.c | left out | not translated yet |
-| `b->device[devfn] = d; return d;` | pci.c | left out | not translated yet |
+| `if (devfn < 0)` | pci.c | exported | Unvalidated |
+| `if (b->device[devfn])` | pci.c | exported | Unvalidated |
+| `d = mallocz(sizeof(PCIDevice)); d->bus = b; d->name = strdup(name); d->devfn = devfn; put_le16(…` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < 4; i++)` | pci.c | exported | Unvalidated |
+| `b->device[devfn] = d; return d;` | pci.c | exported | Unvalidated |
 | `pci_device_get_irq` | pci.c | left out | not translated yet |
-| `((void) sizeof (__assert_single_arg ( irq_num < 4 )), __extension__ ({ if ( irq_num < 4 ) ; els…` | pci.c | left out | not translated yet |
+| `((void) sizeof (__assert_single_arg ( irq_num < 4 )), __extension__ ({ if ( irq_num < 4 ) ; els…` | pci.c | exported | Unvalidated |
 | `pci_device_config_read` | pci.c | left out | not translated yet |
-| `switch (size_log2)` | pci.c | left out | not translated yet |
-| `return val;` | pci.c | left out | not translated yet |
+| `switch (size_log2)` | pci.c | exported | Unvalidated |
+| `return val;` | pci.c | exported | Unvalidated |
 | `pci_device_get_mem_map` | pci.c | left out | not translated yet |
-| `return d->bus->mem_map;` | pci.c | left out | not translated yet |
+| `return d->bus->mem_map;` | pci.c | exported | Unvalidated |
 | `pci_device_get_port_map` | pci.c | left out | not translated yet |
-| `return d->bus->port_map;` | pci.c | left out | not translated yet |
+| `return d->bus->port_map;` | pci.c | exported | Unvalidated |
 | `pci_register_bar` | pci.c | left out | not translated yet |
-| `PCIIORegion *r; uint32_t val, config_addr; ((void) sizeof (__assert_single_arg ( bar_num < 7 ))…` | pci.c | left out | not translated yet |
-| `if (bar_num == 6) … else` | pci.c | left out | not translated yet |
-| `put_le32(&d->config[config_addr], val);` | pci.c | left out | not translated yet |
+| `PCIIORegion *r; uint32_t val, config_addr; ((void) sizeof (__assert_single_arg ( bar_num < 7 ))…` | pci.c | exported | Unvalidated |
+| `if (bar_num == 6) … else` | pci.c | exported | Unvalidated |
+| `put_le32(&d->config[config_addr], val);` | pci.c | exported | Unvalidated |
 | `pci_update_mappings` | pci.c | left out | not translated yet |
-| `int cmd, i, offset; uint32_t new_addr; BOOL new_enabled; PCIIORegion *r; cmd = get_le16(&d->con…` | pci.c | left out | not translated yet |
-| `for (i = 0; i < 7; i++)` | pci.c | left out | not translated yet |
+| `int cmd, i, offset; uint32_t new_addr; BOOL new_enabled; PCIIORegion *r; cmd = get_le16(&d->con…` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < 7; i++)` | pci.c | exported | Unvalidated |
 | `pci_write_bar` | pci.c | left out | not translated yet |
-| `if (addr == 0x30) … else` | pci.c | left out | not translated yet |
-| `r = &d->io_regions[reg];` | pci.c | left out | not translated yet |
-| `if (r->size == 0)` | pci.c | left out | not translated yet |
-| `if (reg == 6) … else` | pci.c | left out | not translated yet |
-| `put_le32(d->config + addr, val); pci_update_mappings(d); return 0;` | pci.c | left out | not translated yet |
+| `if (addr == 0x30) … else` | pci.c | exported | Unvalidated |
+| `r = &d->io_regions[reg];` | pci.c | exported | Unvalidated |
+| `if (r->size == 0)` | pci.c | exported | Unvalidated |
+| `if (reg == 6) … else` | pci.c | exported | Unvalidated |
+| `put_le32(d->config + addr, val); pci_update_mappings(d); return 0;` | pci.c | exported | Unvalidated |
 | `pci_device_config_write8` | pci.c | left out | not translated yet |
-| `if (addr == 0x06 || addr == (0x06 + 1)` | pci.c | left out | not translated yet |
-| `switch (d->config[0x0e])` | pci.c | left out | not translated yet |
-| `if (can_write)` | pci.c | left out | not translated yet |
+| `if (addr == 0x06 || addr == (0x06 + 1)` | pci.c | exported | Unvalidated |
+| `switch (d->config[0x0e])` | pci.c | exported | Unvalidated |
+| `if (can_write)` | pci.c | exported | Unvalidated |
 | `pci_device_config_write` | pci.c | left out | not translated yet |
-| `if (size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30)` | pci.c | left out | not translated yet |
-| `size = 1 << size_log2;` | pci.c | left out | not translated yet |
-| `for (i = 0; i < size; i++)` | pci.c | left out | not translated yet |
-| `if (0x04 >= addr && 0x04 < addr + size)` | pci.c | left out | not translated yet |
+| `if (size_log2 == 2 && ((addr >= 0x10 && addr < 0x10 + 4 * 6) || addr == 0x30)` | pci.c | exported | Unvalidated |
+| `size = 1 << size_log2;` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < size; i++)` | pci.c | exported | Unvalidated |
+| `if (0x04 >= addr && 0x04 < addr + size)` | pci.c | exported | Unvalidated |
 | `pci_data_write` | pci.c | left out | not translated yet |
-| `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` | pci.c | left out | not translated yet |
-| `if (bus_num != s->bus_num)` | pci.c | left out | not translated yet |
-| `devfn = (addr >> 8) & 0xff; d = s->device[devfn];` | pci.c | left out | not translated yet |
-| `if (!d)` | pci.c | left out | not translated yet |
-| `config_addr = addr & 0xff; pci_device_config_write(d, config_addr, data, size_log2);` | pci.c | left out | not translated yet |
+| `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` | pci.c | exported | Unvalidated |
+| `if (bus_num != s->bus_num)` | pci.c | exported | Unvalidated |
+| `devfn = (addr >> 8) & 0xff; d = s->device[devfn];` | pci.c | exported | Unvalidated |
+| `if (!d)` | pci.c | exported | Unvalidated |
+| `config_addr = addr & 0xff; pci_device_config_write(d, config_addr, data, size_log2);` | pci.c | exported | Unvalidated |
 | `pci_data_read` | pci.c | left out | not translated yet |
-| `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` | pci.c | left out | not translated yet |
-| `if (bus_num != s->bus_num)` | pci.c | left out | not translated yet |
-| `devfn = (addr >> 8) & 0xff; d = s->device[devfn];` | pci.c | left out | not translated yet |
-| `if (!d)` | pci.c | left out | not translated yet |
-| `config_addr = addr & 0xff; return pci_device_config_read(d, config_addr, size_log2);` | pci.c | left out | not translated yet |
+| `PCIDevice *d; int bus_num, devfn, config_addr; bus_num = (addr >> 16) & 0xff;` | pci.c | exported | Unvalidated |
+| `if (bus_num != s->bus_num)` | pci.c | exported | Unvalidated |
+| `devfn = (addr >> 8) & 0xff; d = s->device[devfn];` | pci.c | exported | Unvalidated |
+| `if (!d)` | pci.c | exported | Unvalidated |
+| `config_addr = addr & 0xff; return pci_device_config_read(d, config_addr, size_log2);` | pci.c | exported | Unvalidated |
 | `pci_device_get_dma_ptr` | pci.c | left out | not translated yet |
-| `return phys_mem_get_ram_ptr(d->bus->mem_map, addr, is_rw);` | pci.c | left out | not translated yet |
+| `return phys_mem_get_ram_ptr(d->bus->mem_map, addr, is_rw);` | pci.c | exported | Unvalidated |
 | `pci_device_set_config8` | pci.c | left out | not translated yet |
-| `d->config[addr] = val;` | pci.c | left out | not translated yet |
+| `d->config[addr] = val;` | pci.c | exported | Unvalidated |
 | `pci_device_set_config16` | pci.c | left out | not translated yet |
-| `put_le16(&d->config[addr], val);` | pci.c | left out | not translated yet |
+| `put_le16(&d->config[addr], val);` | pci.c | exported | Unvalidated |
 | `pci_device_get_devfn` | pci.c | left out | not translated yet |
-| `return d->devfn;` | pci.c | left out | not translated yet |
+| `return d->devfn;` | pci.c | exported | Unvalidated |
 | `pci_add_capability` | pci.c | left out | not translated yet |
-| `int offset; offset = d->next_cap_offset;` | pci.c | left out | not translated yet |
-| `if (offset + size) > 256)` | pci.c | left out | not translated yet |
-| `d->next_cap_offset += size; d->config[0x06] |= (1 << 4); memcpy(d->config + offset, buf, size);…` | pci.c | left out | not translated yet |
+| `int offset; offset = d->next_cap_offset;` | pci.c | exported | Unvalidated |
+| `if (offset + size) > 256)` | pci.c | exported | Unvalidated |
+| `d->next_cap_offset += size; d->config[0x06] |= (1 << 4); memcpy(d->config + offset, buf, size);…` | pci.c | exported | Unvalidated |
 | `i440fx_write_addr` | pci.c | left out | not translated yet |
-| `I440FXState *s = opaque; s->config_reg = data;` | pci.c | left out | not translated yet |
+| `I440FXState *s = opaque; s->config_reg = data;` | pci.c | exported | Unvalidated |
 | `i440fx_read_addr` | pci.c | left out | not translated yet |
-| `I440FXState *s = opaque; return s->config_reg;` | pci.c | left out | not translated yet |
+| `I440FXState *s = opaque; return s->config_reg;` | pci.c | exported | Unvalidated |
 | `i440fx_write_data` | pci.c | left out | not translated yet |
-| `if (s->config_reg & 0x80000000)` | pci.c | left out | not translated yet |
+| `if (s->config_reg & 0x80000000)` | pci.c | exported | Unvalidated |
 | `i440fx_read_data` | pci.c | left out | not translated yet |
-| `if (!(s->config_reg & 0x80000000)` | pci.c | left out | not translated yet |
-| `if (size_log2 == 2) … else` | pci.c | left out | not translated yet |
+| `if (!(s->config_reg & 0x80000000)` | pci.c | exported | Unvalidated |
+| `if (size_log2 == 2) … else` | pci.c | exported | Unvalidated |
 | `i440fx_set_irq` | pci.c | left out | not translated yet |
-| `I440FXState *s = opaque; PCIDevice *hd = s->piix3_dev; int pic_irq; hd->config[0x60 + irq_num]…` | pci.c | left out | not translated yet |
-| `if (pic_irq < 16)` | pci.c | left out | not translated yet |
+| `I440FXState *s = opaque; PCIDevice *hd = s->piix3_dev; int pic_irq; hd->config[0x60 + irq_num]…` | pci.c | exported | Unvalidated |
+| `if (pic_irq < 16)` | pci.c | exported | Unvalidated |
 | `i440fx_init` | pci.c | left out | not translated yet |
-| `I440FXState *s; PCIBus *b; PCIDevice *d; int i; s = mallocz(sizeof(*s)); b = mallocz(sizeof(PCI…` | pci.c | left out | not translated yet |
-| `for (i = 0; i < 4; i++)` | pci.c | left out | not translated yet |
-| `cpu_register_device(port_map, 0xcf8, 1, s, i440fx_read_addr, i440fx_write_addr, (1 << 2)); cpu_…` | pci.c | left out | not translated yet |
+| `I440FXState *s; PCIBus *b; PCIDevice *d; int i; s = mallocz(sizeof(*s)); b = mallocz(sizeof(PCI…` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < 4; i++)` | pci.c | exported | Unvalidated |
+| `cpu_register_device(port_map, 0xcf8, 1, s, i440fx_read_addr, i440fx_write_addr, (1 << 2)); cpu_…` | pci.c | exported | Unvalidated |
 | `i440fx_map_interrupts` | pci.c | left out | not translated yet |
-| `PCIBus *b = s->pci_bus; PCIDevice *d, *hd; int irq_num, pic_irq, devfn, i; hd = s->piix3_dev; e…` | pci.c | left out | not translated yet |
-| `for (i = 0; i < 4; i++)` | pci.c | left out | not translated yet |
-| `for (devfn = 0; devfn < 256; devfn++)` | pci.c | left out | not translated yet |
+| `PCIBus *b = s->pci_bus; PCIDevice *d, *hd; int irq_num, pic_irq, devfn, i; hd = s->piix3_dev; e…` | pci.c | exported | Unvalidated |
+| `for (i = 0; i < 4; i++)` | pci.c | exported | Unvalidated |
+| `for (devfn = 0; devfn < 256; devfn++)` | pci.c | exported | Unvalidated |
 | `qemu_system_reset_request` | pckbd.c | left out | not translated yet |
-| `printf("system_reset_request\n"); exit(1);` | pckbd.c | left out | not translated yet |
+| `printf("system_reset_request\n"); exit(1);` | pckbd.c | exported | Unvalidated |
 | `ioport_set_a20` | pckbd.c | left out | not translated yet |
 | `ioport_get_a20` | pckbd.c | left out | not translated yet |
-| `return 1;` | pckbd.c | left out | not translated yet |
+| `return 1;` | pckbd.c | exported | Unvalidated |
 | `kbd_update_irq` | pckbd.c | left out | not translated yet |
-| `int irq_kbd_level, irq_mouse_level; irq_kbd_level = 0; irq_mouse_level = 0; s->status &= ~(0x01…` | pckbd.c | left out | not translated yet |
-| `if (s->pending)` | pckbd.c | left out | not translated yet |
-| `set_irq(s->irq_kbd, irq_kbd_level); set_irq(s->irq_mouse, irq_mouse_level);` | pckbd.c | left out | not translated yet |
+| `int irq_kbd_level, irq_mouse_level; irq_kbd_level = 0; irq_mouse_level = 0; s->status &= ~(0x01…` | pckbd.c | exported | Unvalidated |
+| `if (s->pending)` | pckbd.c | exported | Unvalidated |
+| `set_irq(s->irq_kbd, irq_kbd_level); set_irq(s->irq_mouse, irq_mouse_level);` | pckbd.c | exported | Unvalidated |
 | `kbd_update_kbd_irq` | pckbd.c | left out | not translated yet |
-| `if (level) … else` | pckbd.c | left out | not translated yet |
-| `kbd_update_irq(s);` | pckbd.c | left out | not translated yet |
+| `if (level) … else` | pckbd.c | exported | Unvalidated |
+| `kbd_update_irq(s);` | pckbd.c | exported | Unvalidated |
 | `kbd_update_aux_irq` | pckbd.c | left out | not translated yet |
-| `if (level) … else` | pckbd.c | left out | not translated yet |
-| `kbd_update_irq(s);` | pckbd.c | left out | not translated yet |
+| `if (level) … else` | pckbd.c | exported | Unvalidated |
+| `kbd_update_irq(s);` | pckbd.c | exported | Unvalidated |
 | `kbd_read_status` | pckbd.c | left out | not translated yet |
-| `KBDState *s = opaque; int val; val = s->status; return val;` | pckbd.c | left out | not translated yet |
+| `KBDState *s = opaque; int val; val = s->status; return val;` | pckbd.c | exported | Unvalidated |
 | `kbd_queue` | pckbd.c | left out | not translated yet |
-| `if (aux) … else` | pckbd.c | left out | not translated yet |
+| `if (aux) … else` | pckbd.c | exported | Unvalidated |
 | `kbd_write_command` | pckbd.c | left out | not translated yet |
-| `switch (val)` | pckbd.c | left out | not translated yet |
+| `switch (val)` | pckbd.c | exported | Unvalidated |
 | `kbd_read_data` | pckbd.c | left out | not translated yet |
-| `if (s->pending == 2) … else` | pckbd.c | left out | not translated yet |
-| `return val;` | pckbd.c | left out | not translated yet |
+| `if (s->pending == 2) … else` | pckbd.c | exported | Unvalidated |
+| `return val;` | pckbd.c | exported | Unvalidated |
 | `kbd_write_data` | pckbd.c | left out | not translated yet |
-| `switch (s->write_cmd)` | pckbd.c | left out | not translated yet |
-| `s->write_cmd = 0;` | pckbd.c | left out | not translated yet |
+| `switch (s->write_cmd)` | pckbd.c | exported | Unvalidated |
+| `s->write_cmd = 0;` | pckbd.c | exported | Unvalidated |
 | `kbd_reset` | pckbd.c | left out | not translated yet |
-| `KBDState *s = opaque; s->mode = 0x01 | 0x02; s->status = 0x08 | 0x10;` | pckbd.c | left out | not translated yet |
+| `KBDState *s = opaque; s->mode = 0x01 | 0x02; s->status = 0x08 | 0x10;` | pckbd.c | exported | Unvalidated |
 | `i8042_init` | pckbd.c | left out | not translated yet |
-| `KBDState *s; s = mallocz(sizeof(*s)); s->irq_kbd = kbd_irq; s->irq_mouse = mouse_irq; kbd_reset…` | pckbd.c | left out | not translated yet |
+| `KBDState *s; s = mallocz(sizeof(*s)); s->irq_kbd = kbd_irq; s->irq_mouse = mouse_irq; kbd_reset…` | pckbd.c | exported | Unvalidated |
 | `ps2_queue` | ps2.c | left out | not translated yet |
-| `if (q->count >= 256)` | ps2.c | left out | not translated yet |
-| `q->data[q->wptr] = b;` | ps2.c | left out | not translated yet |
-| `if (++q->wptr == 256)` | ps2.c | left out | not translated yet |
-| `q->count++; s->update_irq(s->update_arg, 1);` | ps2.c | left out | not translated yet |
+| `if (q->count >= 256)` | ps2.c | exported | Unvalidated |
+| `q->data[q->wptr] = b;` | ps2.c | exported | Unvalidated |
+| `if (++q->wptr == 256)` | ps2.c | exported | Unvalidated |
+| `q->count++; s->update_irq(s->update_arg, 1);` | ps2.c | exported | Unvalidated |
 | `ps2_put_keycode` | ps2.c | left out | not translated yet |
-| `if (keycode >= 96)` | ps2.c | left out | not translated yet |
-| `ps2_queue(&s->common, keycode | ((!is_down) << 7));` | ps2.c | left out | not translated yet |
+| `if (keycode >= 96)` | ps2.c | exported | Unvalidated |
+| `ps2_queue(&s->common, keycode | ((!is_down) << 7));` | ps2.c | exported | Unvalidated |
 | `ps2_read_data` | ps2.c | left out | not translated yet |
-| `PS2State *s = (PS2State *)opaque; PS2Queue *q; int val, index; q = &s->queue;` | ps2.c | left out | not translated yet |
-| `if (q->count == 0) … else` | ps2.c | left out | not translated yet |
-| `return val;` | ps2.c | left out | not translated yet |
+| `PS2State *s = (PS2State *)opaque; PS2Queue *q; int val, index; q = &s->queue;` | ps2.c | exported | Unvalidated |
+| `if (q->count == 0) … else` | ps2.c | exported | Unvalidated |
+| `return val;` | ps2.c | exported | Unvalidated |
 | `ps2_reset_keyboard` | ps2.c | left out | not translated yet |
-| `s->scan_enabled = 1;` | ps2.c | left out | not translated yet |
+| `s->scan_enabled = 1;` | ps2.c | exported | Unvalidated |
 | `ps2_write_keyboard` | ps2.c | left out | not translated yet |
-| `switch (s->common.write_cmd)` | ps2.c | left out | not translated yet |
+| `switch (s->common.write_cmd)` | ps2.c | exported | Unvalidated |
 | `ps2_keyboard_set_translation` | ps2.c | left out | not translated yet |
-| `PS2KbdState *s = (PS2KbdState *)opaque; s->translate = mode;` | ps2.c | left out | not translated yet |
+| `PS2KbdState *s = (PS2KbdState *)opaque; s->translate = mode;` | ps2.c | exported | Unvalidated |
 | `ps2_mouse_send_packet` | ps2.c | left out | not translated yet |
-| `unsigned int b; int dx1, dy1, dz1; dx1 = s->mouse_dx; dy1 = s->mouse_dy; dz1 = s->mouse_dz;` | ps2.c | left out | not translated yet |
-| `if (dx1 > 127) … else` | ps2.c | left out | not translated yet |
-| `if (dy1 > 127) … else` | ps2.c | left out | not translated yet |
-| `b = 0x08 | ((dx1 < 0) << 4) | ((dy1 < 0) << 5) | (s->mouse_buttons & 0x07); ps2_queue(&s->commo…` | ps2.c | left out | not translated yet |
-| `switch (s->mouse_type)` | ps2.c | left out | not translated yet |
-| `s->mouse_dx -= dx1; s->mouse_dy -= dy1; s->mouse_dz -= dz1;` | ps2.c | left out | not translated yet |
+| `unsigned int b; int dx1, dy1, dz1; dx1 = s->mouse_dx; dy1 = s->mouse_dy; dz1 = s->mouse_dz;` | ps2.c | exported | Unvalidated |
+| `if (dx1 > 127) … else` | ps2.c | exported | Unvalidated |
+| `if (dy1 > 127) … else` | ps2.c | exported | Unvalidated |
+| `b = 0x08 | ((dx1 < 0) << 4) | ((dy1 < 0) << 5) | (s->mouse_buttons & 0x07); ps2_queue(&s->commo…` | ps2.c | exported | Unvalidated |
+| `switch (s->mouse_type)` | ps2.c | exported | Unvalidated |
+| `s->mouse_dx -= dx1; s->mouse_dy -= dy1; s->mouse_dz -= dz1;` | ps2.c | exported | Unvalidated |
 | `ps2_mouse_event` | ps2.c | left out | not translated yet |
-| `if (!(s->mouse_status & 0x20)` | ps2.c | left out | not translated yet |
-| `s->mouse_dx += dx; s->mouse_dy -= dy; s->mouse_dz += dz;` | ps2.c | left out | not translated yet |
-| `if (s->mouse_dx == 0 && s->mouse_dy == 0 && s->mouse_dz == 0 && s->mouse_buttons == buttons_sta…` | ps2.c | left out | not translated yet |
-| `s->mouse_buttons = buttons_state;` | ps2.c | left out | not translated yet |
-| `if (!(s->mouse_status & 0x40) && (s->common.queue.count < (256 - 16)` | ps2.c | left out | not translated yet |
+| `if (!(s->mouse_status & 0x20)` | ps2.c | exported | Unvalidated |
+| `s->mouse_dx += dx; s->mouse_dy -= dy; s->mouse_dz += dz;` | ps2.c | exported | Unvalidated |
+| `if (s->mouse_dx == 0 && s->mouse_dy == 0 && s->mouse_dz == 0 && s->mouse_buttons == buttons_sta…` | ps2.c | exported | Unvalidated |
+| `s->mouse_buttons = buttons_state;` | ps2.c | exported | Unvalidated |
+| `if (!(s->mouse_status & 0x40) && (s->common.queue.count < (256 - 16)` | ps2.c | exported | Unvalidated |
 | `ps2_write_mouse` | ps2.c | left out | not translated yet |
-| `switch (s->common.write_cmd)` | ps2.c | left out | not translated yet |
+| `switch (s->common.write_cmd)` | ps2.c | exported | Unvalidated |
 | `ps2_reset` | ps2.c | left out | not translated yet |
-| `PS2State *s = (PS2State *)opaque; PS2Queue *q; s->write_cmd = -1; q = &s->queue; q->rptr = 0; q…` | ps2.c | left out | not translated yet |
+| `PS2State *s = (PS2State *)opaque; PS2Queue *q; s->write_cmd = -1; q = &s->queue; q->rptr = 0; q…` | ps2.c | exported | Unvalidated |
 | `ps2_kbd_init` | ps2.c | left out | not translated yet |
-| `PS2KbdState *s = (PS2KbdState *)mallocz(sizeof(PS2KbdState)); s->common.update_irq = update_irq…` | ps2.c | left out | not translated yet |
+| `PS2KbdState *s = (PS2KbdState *)mallocz(sizeof(PS2KbdState)); s->common.update_irq = update_irq…` | ps2.c | exported | Unvalidated |
 | `ps2_mouse_init` | ps2.c | left out | not translated yet |
-| `PS2MouseState *s = (PS2MouseState *)mallocz(sizeof(PS2MouseState)); s->common.update_irq = upda…` | ps2.c | left out | not translated yet |
+| `PS2MouseState *s = (PS2MouseState *)mallocz(sizeof(PS2MouseState)); s->common.update_irq = upda…` | ps2.c | exported | Unvalidated |
 | `log_vprintf` | riscv_cpu.c | left out | not translated yet |
-| `vprintf(fmt, ap);` | riscv_cpu.c | left out | not translated yet |
+| `vprintf(fmt, ap);` | riscv_cpu.c | left out | still being translated |
 | `fprint_target_ulong` | riscv_cpu.c | left out | not translated yet |
-| `fprintf(f, "%016" "l" "x" "%016" "l" "x" , (uint64_t)(a >> 64), (uint64_t)a);` | riscv_cpu.c | left out | not translated yet |
+| `fprintf(f, "%016" "l" "x" "%016" "l" "x" , (uint64_t)(a >> 64), (uint64_t)a);` | riscv_cpu.c | left out | still being translated |
 | `print_target_ulong` | riscv_cpu.c | left out | not translated yet |
-| `fprint_target_ulong( stdout , a);` | riscv_cpu.c | left out | not translated yet |
+| `fprint_target_ulong( stdout , a);` | riscv_cpu.c | left out | still being translated |
 | `dump_regs` | riscv_cpu.c | left out | not translated yet |
-| `int i, cols; const char priv_str[4] = "USHM"; cols = 256 / 128; printf("pc ="); print_target_ul…` | riscv_cpu.c | left out | not translated yet |
-| `for (i = 1; i < 32; i++)` | riscv_cpu.c | left out | not translated yet |
-| `printf("priv=%c", priv_str[s->priv]); printf(" mstatus="); print_target_ulong(s->mstatus); prin…` | riscv_cpu.c | left out | not translated yet |
+| `int i, cols; const char priv_str[4] = "USHM"; cols = 256 / 128; printf("pc ="); print_target_ul…` | riscv_cpu.c | left out | still being translated |
+| `for (i = 1; i < 32; i++)` | riscv_cpu.c | left out | still being translated |
+| `printf("priv=%c", priv_str[s->priv]); printf(" mstatus="); print_target_ulong(s->mstatus); prin…` | riscv_cpu.c | left out | still being translated |
 | `cpu_abort` | riscv_cpu.c | left out | not translated yet |
-| `dump_regs(s); abort();` | riscv_cpu.c | left out | not translated yet |
+| `dump_regs(s); abort();` | riscv_cpu.c | left out | still being translated |
 | `phys_write_u8` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `*(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `*(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
 | `phys_read_u8` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `return *(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `return *(uint8_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
 | `phys_write_u32` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `*(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `*(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
 | `phys_read_u32` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `return *(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `return *(uint32_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
 | `phys_write_u64` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `*(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `*(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr)) = val;` | riscv_cpu.c | left out | still being translated |
 | `phys_read_u64` | riscv_cpu.c | left out | not translated yet |
-| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | not translated yet |
-| `return *(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | not translated yet |
+| `if (!pr || !pr->is_ram)` | riscv_cpu.c | left out | still being translated |
+| `return *(uint64_t *)(pr->phys_mem + (uintptr_t)(addr - pr->addr));` | riscv_cpu.c | left out | still being translated |
 | `get_phys_addr` | riscv_cpu.c | left out | not translated yet |
-| `if (s->mstatus & (1 << 17)) && access != 2) … else` | riscv_cpu.c | left out | not translated yet |
-| `if (priv == 3)` | riscv_cpu.c | left out | not translated yet |
-| `mode = (s->satp >> 60) & 0xf;` | riscv_cpu.c | left out | not translated yet |
-| `if (mode == 0) … else` | riscv_cpu.c | left out | not translated yet |
-| `pte_addr = (s->satp & (((target_ulong)1 << pte_addr_bits) - 1)) << 12; pte_bits = 12 - pte_size…` | riscv_cpu.c | left out | not translated yet |
-| `for (i = 0; i < levels; i++)` | riscv_cpu.c | left out | not translated yet |
-| `return -1;` | riscv_cpu.c | left out | not translated yet |
+| `if (s->mstatus & (1 << 17)) && access != 2) … else` | riscv_cpu.c | left out | still being translated |
+| `if (priv == 3)` | riscv_cpu.c | left out | still being translated |
+| `mode = (s->satp >> 60) & 0xf;` | riscv_cpu.c | left out | still being translated |
+| `if (mode == 0) … else` | riscv_cpu.c | left out | still being translated |
+| `pte_addr = (s->satp & (((target_ulong)1 << pte_addr_bits) - 1)) << 12; pte_bits = 12 - pte_size…` | riscv_cpu.c | left out | still being translated |
+| `for (i = 0; i < levels; i++)` | riscv_cpu.c | left out | still being translated |
+| `return -1;` | riscv_cpu.c | left out | still being translated |
 | `riscv128_read_slow` | riscv_cpu.c | left out | not translated yet |
-| `int size, tlb_idx, err, al; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; mem_…` | riscv_cpu.c | left out | not translated yet |
-| `if (al != 0) … else` | riscv_cpu.c | left out | not translated yet |
-| `*pval = ret; return 0;` | riscv_cpu.c | left out | not translated yet |
+| `int size, tlb_idx, err, al; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; mem_…` | riscv_cpu.c | left out | still being translated |
+| `if (al != 0) … else` | riscv_cpu.c | left out | still being translated |
+| `*pval = ret; return 0;` | riscv_cpu.c | left out | still being translated |
 | `riscv128_write_slow` | riscv_cpu.c | left out | not translated yet |
 | `int size, i, tlb_idx, err; target_ulong paddr, offset; uint8_t *ptr; PhysMemoryRange *pr; size…` | riscv_cpu.c | left out | not translated yet |
 | `if (addr & (size - 1)) != 0) … else` | riscv_cpu.c | left out | not translated yet |
@@ -1523,58 +1523,58 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `switch (max_xlen)` | riscv_cpu.c | left out | not translated yet |
 | `return c->riscv_cpu_init(mem_map);` | riscv_cpu.c | left out | not translated yet |
 | `riscv_cpu_end` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_end(s);` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_end(s);` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_interp` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_interp(s, n_cycles…` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_interp(s, n_cycles…` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_get_cycles` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_cycles(…` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_cycles(…` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_set_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_set_mip(s, mask);` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_set_mip(s, mask);` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_reset_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_reset_mip(s, mask);` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_reset_mip(s, mask);` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_get_mip` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_mip(s);` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_mip(s);` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_get_power_down` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_power_d…` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_power_d…` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_get_misa` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_misa(s);` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; return c->riscv_cpu_get_misa(s);` | riscv_cpu.h | left out | still being translated |
 | `riscv_cpu_flush_tlb_write_range_ram` | riscv_cpu.h | left out | not translated yet |
-| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_flush_tlb_write_ra…` | riscv_cpu.h | left out | not translated yet |
+| `const RISCVCPUClass *c = ((RISCVCPUCommonState *)s)->class_ptr; c->riscv_cpu_flush_tlb_write_ra…` | riscv_cpu.h | left out | still being translated |
 | `target_read_u8` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) - 1… … else` | riscv_cpu_priv.h | left out | not translated yet |
-| `return 0;` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) - 1… … else` | riscv_cpu_priv.h | left out | still being translated |
+| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
 | `target_write_u8` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((8 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
 | `target_read_u16` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
-| `return 0;` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
+| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
 | `target_write_u16` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((16 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
 | `target_read_u32` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
-| `return 0;` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
+| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
 | `target_write_u32` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((32 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
 | `target_read_u64` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
-| `return 0;` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
+| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
 | `target_write_u64` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((64 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
 | `target_read_u128` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8) -… … else` | riscv_cpu_priv.h | left out | not translated yet |
-| `return 0;` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_read[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8) -… … else` | riscv_cpu_priv.h | left out | still being translated |
+| `return 0;` | riscv_cpu_priv.h | left out | still being translated |
 | `target_write_u128` | riscv_cpu_priv.h | left out | not translated yet |
-| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | not translated yet |
-| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8)… … else` | riscv_cpu_priv.h | left out | not translated yet |
+| `uint32_t tlb_idx; tlb_idx = (addr >> 12) & (256 - 1);` | riscv_cpu_priv.h | left out | still being translated |
+| `if (__builtin_expect(!!(s->tlb_write[tlb_idx].vaddr == (addr & ~(((1 << 12) - 1) & ~((128 / 8)… … else` | riscv_cpu_priv.h | left out | still being translated |
 | `div32` | riscv_cpu_template.h | left out | not translated yet |
 | `div64` | riscv_cpu_template.h | left out | not translated yet |
 | `div128` | riscv_cpu_template.h | left out | not translated yet |

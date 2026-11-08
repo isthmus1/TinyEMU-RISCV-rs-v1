@@ -5084,79 +5084,12 @@ int elf_load(const uint8_t *buf, int buf_len,
 }
 
     size_t image_size = 0;
-    for (i = 0; i < phnum; i++) {
-        const uintptr_t phbase = phoff + i * phentsize;
-        const uint32_t type = ((ident->class == 2) ? ((ident->data == 2) ? 
-                             __bswap_32 (
-                             ((elf_pheader64_t *)(buf + phbase))->type
-                             ) 
-                             : (((elf_pheader64_t *)(buf + phbase))->type)) : ((ident->data == 2) ? 
-                             __bswap_32 (
-                             ((elf_pheader32_t *)(buf + phbase))->type
-                             ) 
-                             : (((elf_pheader32_t *)(buf + phbase))->type)));
-        if (type == 0x01) {
-            const uintptr_t offset = (uintptr_t)((ident->class == 2) ? ((ident->data == 2) ? 
-                                               __bswap_64 (
-                                               ((elf_pheader64_t *)(buf + phbase))->offset
-                                               ) 
-                                               : (((elf_pheader64_t *)(buf + phbase))->offset)) : (uint64_t)((ident->data == 2) ? 
-                                               __bswap_32 (
-                                               ((elf_pheader32_t *)(buf + phbase))->offset
-                                               ) 
-                                               : (((elf_pheader32_t *)(buf + phbase))->offset)));
-            const uintptr_t paddr = (uintptr_t)((ident->class == 2) ? ((ident->data == 2) ? 
-                                              __bswap_64 (
-                                              ((elf_pheader64_t *)(buf + phbase))->paddr
-                                              ) 
-                                              : (((elf_pheader64_t *)(buf + phbase))->paddr)) : (uint64_t)((ident->data == 2) ? 
-                                              __bswap_32 (
-                                              ((elf_pheader32_t *)(buf + phbase))->paddr
-                                              ) 
-                                              : (((elf_pheader32_t *)(buf + phbase))->paddr)));
-            const size_t filesz = (size_t)((ident->class == 2) ? ((ident->data == 2) ? 
-                                         __bswap_64 (
-                                         ((elf_pheader64_t *)(buf + phbase))->filesz
-                                         ) 
-                                         : (((elf_pheader64_t *)(buf + phbase))->filesz)) : (uint64_t)((ident->data == 2) ? 
-                                         __bswap_32 (
-                                         ((elf_pheader32_t *)(buf + phbase))->filesz
-                                         ) 
-                                         : (((elf_pheader32_t *)(buf + phbase))->filesz)));
-            const size_t memsz = (size_t)((ident->class == 2) ? ((ident->data == 2) ? 
-                                        __bswap_64 (
-                                        ((elf_pheader64_t *)(buf + phbase))->memsz
-                                        ) 
-                                        : (((elf_pheader64_t *)(buf + phbase))->memsz)) : (uint64_t)((ident->data == 2) ? 
-                                        __bswap_32 (
-                                        ((elf_pheader32_t *)(buf + phbase))->memsz
-                                        ) 
-                                        : (((elf_pheader32_t *)(buf + phbase))->memsz)));
-            if (paddr - base_address + 
-                                      (((
-                                      memsz
-                                      )>(
-                                      filesz
-                                      ))?(
-                                      memsz
-                                      ):(
-                                      filesz
-                                      )) 
-                                                         > outbuf_len) return -1;
-            memcpy(&outbuf[paddr - base_address], &buf[offset], filesz);
-            image_size = 
-                        (((
-                        image_size
-                        )>(
-                        paddr - base_address + memsz
-                        ))?(
-                        image_size
-                        ):(
-                        paddr - base_address + memsz
-                        ))
-                                                                     ;
-        }
-    }
+    int elf_load__part463(const uint8_t *buf, uint16_t phnum, uint16_t phentsize,
+                      uintptr_t phoff, uintptr_t base_address,
+                      uint8_t *outbuf, int outbuf_len, size_t *image_size);
+    if (elf_load__part463(buf, phnum, phentsize, phoff, base_address,
+                          outbuf, outbuf_len, &image_size) != 0) return -1;
+
 
     uint64_t elf_load__part464(uint64_t *start, uint64_t base_address);
 *start = elf_load__part464(start, base_address);
@@ -5237,44 +5170,13 @@ if (elf_find_section__part469(table_len)) return 0;
 
 
     uint16_t i;
-    for (i = 0; i < shnum; i++) {
-        shbase = shoff + i * shentsize;
-        const uint32_t name_idx = ((ident->class == 2) ? ((ident->data == 2) ? 
-                                 __bswap_32 (
-                                 ((elf_sheader64_t *)(buf + shbase))->name
-                                 ) 
-                                 : (((elf_sheader64_t *)(buf + shbase))->name)) : ((ident->data == 2) ? 
-                                 __bswap_32 (
-                                 ((elf_sheader32_t *)(buf + shbase))->name
-                                 ) 
-                                 : (((elf_sheader32_t *)(buf + shbase))->name)));
-        const char *name_str = (const char *)(buf + table_start + name_idx);
-        if (!strcmp(name_str, name)) {
-            if (start != 
-                        ((void *)0)
-                            ) *start = ((ident->class == 2) ? ((ident->data == 2) ? 
-                                       __bswap_64 (
-                                       ((elf_sheader64_t *)(buf + shbase))->addr
-                                       ) 
-                                       : (((elf_sheader64_t *)(buf + shbase))->addr)) : (uint64_t)((ident->data == 2) ? 
-                                       __bswap_32 (
-                                       ((elf_sheader32_t *)(buf + shbase))->addr
-                                       ) 
-                                       : (((elf_sheader32_t *)(buf + shbase))->addr)));
-            if (len != 
-                      ((void *)0)
-                          ) *len = ((ident->class == 2) ? ((ident->data == 2) ? 
-                                   __bswap_64 (
-                                   ((elf_sheader64_t *)(buf + shbase))->size
-                                   ) 
-                                   : (((elf_sheader64_t *)(buf + shbase))->size)) : (uint64_t)((ident->data == 2) ? 
-                                   __bswap_32 (
-                                   ((elf_sheader32_t *)(buf + shbase))->size
-                                   ) 
-                                   : (((elf_sheader32_t *)(buf + shbase))->size)));
-            return 1;
-        }
-    }
+        int elf_find_section__part470(const uint8_t *buf, uint8_t ident_class, uint8_t ident_data,
+                                  uint16_t shnum, uint16_t shentsize, uintptr_t shoff,
+                                  uintptr_t table_start, const char *name,
+                                  uint64_t *start, uint64_t *len);
+    if (elf_find_section__part470(buf, ident->class, ident->data, shnum, shentsize,
+                                  shoff, table_start, name, start, len)) return 1;
+
 
     int elf_find_section__part471(void);
 return elf_find_section__part471();

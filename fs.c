@@ -2853,61 +2853,18 @@ path = fs_walk_path1__part476(path);
 
     void fs_walk_path1__part477(int *is_first_ptr);
 fs_walk_path1__part477(&is_first);
-    for(;;) {
-        p = 
-           _Generic (0 ? (
-           path
-           ) : (void *) 1, const void *: (const char *) (strchr (
-           path
-           , 
-           '/'
-           )), default: strchr (
-           path
-           , 
-           '/'
-           ))
-                            ;
-        if (!p) {
-            name = (char *)path;
-            if (pname) {
-                *pname = name;
-                if (is_first) {
-                    ret = fs->fs_walk(fs, &f, &qid, f, 0, 
-                                                         ((void *)0)
-                                                             );
-                    if (ret < 0)
-                        f = 
-                           ((void *)0)
-                               ;
-                }
-                return f;
-            }
-            is_last = TRUE;
-        } else {
-            len = p - path;
-            name = malloc(len + 1);
-            memcpy(name, path, len);
-            name[len] = '\0';
-            is_last = FALSE;
-        }
-        ret = fs->fs_walk(fs, &f1, &qid, f, 1, &name);
-        if (!is_last)
-            free(name);
-        if (!is_first)
-            fs->fs_delete(fs, f);
-        f = f1;
-        is_first = FALSE;
-        if (ret <= 0) {
-            fs->fs_delete(fs, f);
-            f = 
-               ((void *)0)
-                   ;
-            break;
-        } else if (is_last) {
-            break;
-        }
-        path = p + 1;
+        {
+        FSFile *fs_walk_path1__part478(FSDevice *fs, FSFile *f, const char *path,
+                                       char **pname, FSQID *qid, int is_first);
+        (void)p;
+        (void)name;
+        (void)f1;
+        (void)len;
+        (void)ret;
+        (void)is_last;
+        return fs_walk_path1__part478(fs, f, path, pname, &qid, is_first);
     }
+
     FSFile *fs_walk_path1__part479(FSDevice *fs, FSFile *f, const char *path, char **pname);
 return fs_walk_path1__part479(fs, f, path, pname);
 }

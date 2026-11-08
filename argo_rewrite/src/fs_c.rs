@@ -81,6 +81,173 @@ pub extern "C" fn fs_walk_path1__part477(is_first: *mut c_int) {
 }
 }
 
+// ── `for (; ; )` · fs.c:55-91 · chunk 478 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     for(;;) {
+//             p = 
+//                _Generic (0 ? (
+//                path
+//                ) : (void *) 1, const void *: (const char *) (strchr (
+//                path
+//                , 
+//                '/'
+//                )), default: strchr (
+//                path
+//                , 
+//                '/'
+//                ))
+//                                 ;
+//             if (!p) {
+//                 name = (char *)path;
+//                 if (pname) {
+//                     *pname = name;
+//                     if (is_first) {
+//                         ret = fs->fs_walk(fs, &f, &qid, f, 0, 
+//                                                              ((void *)0)
+//                                                                  );
+//                         if (ret < 0)
+//                             f = 
+//                                ((void *)0)
+//                                    ;
+//                     }
+//                     return f;
+//                 }
+//                 is_last = TRUE;
+//             } else {
+//                 len = p - path;
+//                 name = malloc(len + 1);
+//                 memcpy(name, path, len);
+//                 name[len] = '\0';
+//                 is_last = FALSE;
+//             }
+//             ret = fs->fs_walk(fs, &f1, &qid, f, 1, &name);
+//             if (!is_last)
+//                 free(name);
+//             if (!is_first)
+//                 fs->fs_delete(fs, f);
+//             f = f1;
+//             is_first = FALSE;
+//             if (ret <= 0) {
+//                 fs->fs_delete(fs, f);
+//                 f = 
+//                    ((void *)0)
+//                        ;
+//                 break;
+//             } else if (is_last) {
+//                 break;
+//             }
+//             path = p + 1;
+//         }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk478 {
+// Port of the walk loop of fs_walk_path1 (fs.c lines 55-91).
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
+use core::ffi::{c_char, c_int, c_void};
+
+// Opaque handle types from the C program.
+#[repr(C)]
+pub struct FSFile {
+    _opaque: [u8; 0],
+}
+
+#[repr(C)]
+pub struct FSQID {
+    pub type_: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+// Mirrors the leading fields of struct FSDevice, in order.  Only the fields
+// reached by this code are needed; the offsets of a #[repr(C)] prefix match
+// the C struct exactly.
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: unsafe extern "C" fn(*mut FSDevice),
+    pub fs_delete: unsafe extern "C" fn(*mut FSDevice, *mut FSFile),
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: unsafe extern "C" fn(
+        *mut FSDevice,
+        *mut *mut FSFile,
+        *mut FSQID,
+        *mut FSFile,
+        c_int,
+        *mut *mut c_char,
+    ) -> c_int,
+}
+
+extern "C" {
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_walk_path1__part478(
+    fs: *mut FSDevice,
+    f_in: *mut FSFile,
+    mut path: *const c_char,
+    pname: *mut *mut c_char,
+    qid: *mut FSQID,
+    mut is_first: c_int,
+) -> *mut FSFile {
+    let mut f: *mut FSFile = f_in;
+    let mut p: *mut c_char;
+    let mut name: *mut c_char;
+    let mut f1: *mut FSFile;
+    let mut ret: c_int;
+    let mut len: isize;
+    let mut is_last: bool;
+
+    loop {
+        p = strchr(path, '/' as c_int);
+        if p.is_null() {
+            name = path as *mut c_char;
+            if !pname.is_null() {
+                *pname = name;
+                if is_first != 0 {
+                    ret = ((*fs).fs_walk)(fs, core::ptr::addr_of_mut!(f), qid, f, 0, core::ptr::null_mut());
+                    if ret < 0 {
+                        f = core::ptr::null_mut();
+                    }
+                }
+                return f;
+            }
+            is_last = true;
+        } else {
+            len = (p as isize).wrapping_sub(path as isize);
+            name = malloc((len + 1) as usize) as *mut c_char;
+            memcpy(name as *mut c_void, path as *const c_void, len as usize);
+            *name.offset(len) = 0;
+            is_last = false;
+        }
+        f1 = core::ptr::null_mut();
+        ret = ((*fs).fs_walk)(fs, core::ptr::addr_of_mut!(f1), qid, f, 1, core::ptr::addr_of_mut!(name));
+        if !is_last {
+            free(name as *mut c_void);
+        }
+        if is_first == 0 {
+            ((*fs).fs_delete)(fs, f);
+        }
+        f = f1;
+        is_first = 0;
+        if ret <= 0 {
+            ((*fs).fs_delete)(fs, f);
+            f = core::ptr::null_mut();
+            break;
+        } else if is_last {
+            break;
+        }
+        path = p.offset(1);
+    }
+    f
+}
+}
+
 // ── `return f;` · fs.c:92-92 · chunk 479 · nvidia/nemotron-3.5-lightning · 1 attempt(s) · Unvalidated
 //
 // Original C:

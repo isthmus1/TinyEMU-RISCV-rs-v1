@@ -5225,114 +5225,12 @@ uint32_t mode, v;
 dirp = scan_dir__part378(path);
     void *scan_dir__part379(const char *path);
 dirp = scan_dir__part379(path);
-    for(;;) {
-        de = readdir(dirp);
-        if (!de)
+        int scan_dir__part380(ScanState *s, const char *path, DIR *dirp);
+    for (;;) {
+        if (scan_dir__part380(s, path, dirp))
             break;
-        name = de->d_name;
-        if (!strcmp(name, ".") || !strcmp(name, ".."))
-            continue;
-        path1 = compose_path(path, name);
-        if (lstat(path1, &st) < 0) {
-            perror(path1);
-            exit(1);
-        }
-
-        mode = st.st_mode & 0xffff;
-        fprintf(f, "%06o %u %u",
-                mode,
-                (int)st.st_uid,
-                (int)st.st_gid);
-        if (
-           ((((
-           mode
-           )) & 0170000) == (0020000)) 
-                         || 
-                            ((((
-                            mode
-                            )) & 0170000) == (0060000))
-                                         ) {
-            fprintf(f, " %u %u",
-                    (int)
-                        gnu_dev_major (
-                        st.st_rdev
-                        )
-                                         ,
-                    (int)
-                        gnu_dev_minor (
-                        st.st_rdev
-                        )
-                                         );
-        }
-        if (
-           ((((
-           mode
-           )) & 0170000) == (0100000))
-                        ) {
-            fprintf(f, " %" 
-                           "l" "u"
-                                 , st.st_size);
-        }
-
-
-
-
-
-        fprintf(f, " %u", (int)st.st_mtim.tv_sec);
-        v = st.st_mtim.tv_nsec;
-
-        if (v != 0) {
-            fprintf(f, ".");
-            while (v != 0) {
-                fprintf(f, "%u", v / 100000000);
-                v = (v % 100000000) * 10;
-            }
-        }
-
-        fprintf(f, " ");
-        print_str(f, name);
-        if (
-           ((((
-           mode
-           )) & 0170000) == (0120000))
-                        ) {
-            char buf[1024];
-            int len;
-            len = readlink(path1, buf, sizeof(buf) - 1);
-            if (len < 0) {
-                perror("readlink");
-                exit(1);
-            }
-            buf[len] = '\0';
-            fprintf(f, " ");
-            print_str(f, buf);
-        } else if (
-                  ((((
-                  mode
-                  )) & 0170000) == (0100000)) 
-                                && st.st_size > 0) {
-            char buf1[32], *fname;
-            FSFileID file_id;
-            file_id = s->next_inode_num++;
-            fprintf(f, " %" 
-                           "l" "x"
-                                 , file_id);
-            file_id_to_filename(buf1, file_id);
-            fname = compose_path(s->files_path, buf1);
-            copy_file(path1, fname);
-            add_file_size(s, st.st_size);
-        }
-
-        fprintf(f, "\n");
-        if (
-           ((((
-           mode
-           )) & 0170000) == (0040000))
-                        ) {
-            scan_dir(s, path1);
-        }
-        free(path1);
     }
+
 
     int scan_dir__part381(DIR *dirp, FILE *f);
 scan_dir__part381(dirp, f);
@@ -5369,22 +5267,71 @@ if (main__part386(argc, argv, &first_inode, &fs_max_size) != 0) {
 
     void main__part387(int optind, int argc);
 main__part387(optind, argc);
-    src_path = argv[optind];
-    dst_path = argv[optind + 1];
+    // Prototype for the exported Rust function
+// The C replacement will place this prototype before main, and the call
+// will replace the TARGET block in main.
 
-    mkdir(dst_path, 0755);
+// The TARGET block in main (lines 5403-5418 of original.c) is:
+//   src_path = argv[optind];
+//   dst_path = argv[optind + 1];
+//   mkdir(dst_path, 0755);
+//   s->files_path = compose_path(dst_path, "files");
+//   s->next_inode_num = first_inode;
+//   s->fs_size = 0;
+//   s->fs_max_size = fs_max_size;
+//   mkdir(s->files_path, 0755);
+//   root_id = s->next_inode_num++;
+//   file_id_to_filename(fname, root_id);
+//   filename = compose_path(s->files_path, fname);
+//   f = fopen(filename, "wb");
 
-    s->files_path = compose_path(dst_path, "files");
-    s->next_inode_num = first_inode;
-    s->fs_size = 0;
-    s->fs_max_size = fs_max_size;
+// C replacement: declare the Rust function and call it in place of the TARGET.
+// All variables needed by the TARGET are passed as pointers so the Rust function
+// can write back the results.
 
-    mkdir(s->files_path, 0755);
+// In the real C code, the variables at the top of main are:
+//   const char *dst_path, *src_path;
+//   ScanState s_s, *s = &s_s;
+//   FILE *f;
+//   char *filename;
+//   FSFileID root_id;
+//   char fname[32];
+//   struct stat st;
+//   uint64_t first_inode, fs_max_size;
+//   int c;
 
-    root_id = s->next_inode_num++;
-    file_id_to_filename(fname, root_id);
-    filename = compose_path(s->files_path, fname);
-    f = fopen(filename, "wb");
+// The C replacement will look like:
+//   // declarations above main()
+//   void main__part388(char **argv, int optind,
+//                      char **src_path, char **dst_path,
+//                      ScanState *s, unsigned long first_inode,
+//                      unsigned long fs_max_size,
+//                      unsigned long *root_id, char *fname,
+//                      char **filename, FILE **f);
+//   
+//   // Inside main, replace the TARGET block with:
+//   main__part388(argv, optind,
+//                 &src_path, &dst_path,
+//                 &s, first_inode, fs_max_size,
+//                 &root_id, fname, &filename, &f);
+//   
+//   // The rest of main continues unchanged, now with src_path, dst_path,
+//   // s->files_path, s->next_inode_num, s->fs_size, s->fs_max_size,
+//   // root_id, fname, filename, and f all set by the Rust function.
+
+// Note: The C code after the TARGET uses:
+//   mkdir(s->files_path, 0755);    // already in TARGET
+//   scan_dir(s, src_path);          // uses s and src_path - set by Rust
+//   // ... then later uses filename, root_id, fname via compose_path etc.
+//   // The Rust function sets filename via compose_path(s->files_path, fname)
+//   // and f via fopen(filename, "wb"), so the C code after the call works.
+
+int main(void) // context only - the real main has the full signature
+{
+    // The actual main function in the program has its own variable declarations.
+    // The TARGET replacement call will be placed by the submission system.
+    return 0;
+}
     int main__part389(const char *filename);
 main__part389(filename);
         void main__part390(void *f, ScanState *s, const char *src_path);
@@ -5397,29 +5344,9 @@ main__part391(filename, &st);
 main__part392(s, (uint64_t)st.st_size);
     extern void main__part393(void *f, char *filename);
 main__part393(f, filename);
-    fprintf(f, "Version: 1\n");
-    fprintf(f, "Revision: 1\n");
-    fprintf(f, "NextFileID: %" 
-                              "l" "x" 
-                                     "\n", s->next_inode_num);
-    fprintf(f, "FSFileCount: %" 
-                               "l" "u" 
-                                      "\n", s->next_inode_num - 1);
-    fprintf(f, "FSSize: %" 
-                          "l" "u" 
-                                 "\n", s->fs_size);
-    fprintf(f, "FSMaxSize: %" 
-                             "l" "u" 
-                                    "\n", s->fs_max_size);
-    fprintf(f, "Key:\n");
-    fprintf(f, "RootID: %" 
-                          "l" "x" 
-                                 "\n", root_id);
-    fclose(f);
-    free(filename);
+    void main__part394(FILE **pf, const char *dst_path, char **pfilename, ScanState *s, uint64_t root_id);
+    main__part394(&f, dst_path, &filename, s, root_id);
 
-    filename = compose_path(dst_path, "lock");
-    f = fopen(filename, "wb");
     int main__part395(FILE *f);
 if (main__part395(f)) {
     perror(filename);

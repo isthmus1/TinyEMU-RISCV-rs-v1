@@ -5271,11 +5271,10 @@ fs_delete__part490(fs, f);
 
 static FSFile *fid_create(FSDevice *s1, char *path, uint32_t uid)
 {
-    FSFile *f;
-    f = mallocz(sizeof(*f));
-    f->path = path;
-    f->uid = uid;
-    return f;
+    FSFile *fid_create__part492(char *path, uint32_t uid);
+FSFile *f;
+f = fid_create__part492(path, uid);
+return f;
 }
 
 
@@ -5375,15 +5374,16 @@ stat_to_qid__part505(qid, st);
 
 static void fs_statfs(FSDevice *fs1, FSStatFS *st)
 {
-    FSDeviceDisk *fs = (FSDeviceDisk *)fs1;
-    struct statfs st1;
-    statfs(fs->root_path, &st1);
-    st->f_bsize = st1.f_bsize;
-    st->f_blocks = st1.f_blocks;
-    st->f_bfree = st1.f_bfree;
-    st->f_bavail = st1.f_bavail;
-    st->f_files = st1.f_files;
-    st->f_ffree = st1.f_ffree;
+    void fs_statfs__part507(FSDevice *fs1, FSStatFS *st);
+FSDeviceDisk *fs = (FSDeviceDisk *)fs1;
+struct statfs st1;
+statfs(fs->root_path, &st1);
+st->f_bsize = st1.f_bsize;
+st->f_blocks = st1.f_blocks;
+st->f_bfree = st1.f_bfree;
+st->f_bavail = st1.f_bavail;
+st->f_files = st1.f_files;
+st->f_ffree = st1.f_ffree;
 }
 
 static char *compose_path(const char *path, const char *name)
@@ -5400,18 +5400,18 @@ static int fs_attach(FSDevice *fs1, FSFile **pf,
     struct stat st;
     FSFile *f;
 
-    if (lstat(fs->root_path, &st) != 0) {
-        *pf = 
-             ((void *)0)
-                 ;
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
+    int fs_attach__part511(const char *root_path, struct stat *st);
+int ret = fs_attach__part511(fs->root_path, &st);
+if (ret != 0) {
+    *pf = ((void *)0);
+    return ret;
+}
+        {
+        int fs_attach__part512(FSDevice *fs1, FSFile **pf, FSQID *qid,
+                               uint32_t uid, struct stat *st, const char *root_path);
+        return fs_attach__part512(fs1, pf, qid, uid, &st, fs->root_path);
     }
-    f = fid_create(fs1, strdup(fs->root_path), uid);
-    stat_to_qid(qid, &st);
-    *pf = f;
-    return 0;
+
 }
 
 static int fs_walk(FSDevice *fs, FSFile **pf, FSQID *qids,
@@ -5423,17 +5423,11 @@ int i;
 
 char *fs_walk__part514(const char *p);
 path = fs_walk__part514(f->path);
-    for(i = 0; i < n; i++) {
-        path1 = compose_path(path, names[i]);
-        if (lstat(path1, &st) != 0) {
-            free(path1);
-            break;
-        }
-        free(path);
-        path = path1;
-        stat_to_qid(&qids[i], &st);
-    }
-    *pf = fid_create(fs, path, f->uid);
+    int fs_walk__part515(char **pathp, int n, char **names, FSQID *qids);
+    i = fs_walk__part515(&path, n, names, qids);
+
+    void fs_walk__part516(FSFile **pf, char *path, uint32_t uid);
+    fs_walk__part516(pf, path, f->uid);
     return i;
 }
 
@@ -5447,15 +5441,16 @@ struct stat st;
 path = fs_mkdir__part518(f->path, name);
     extern int fs_mkdir__part519(const char *path, uint32_t mode);
 return fs_mkdir__part519(path, mode);
-    if (lstat(path, &st) != 0) {
-        free(path);
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
-    }
+    extern int fs_mkdir__part520(const char *path, struct stat *st);
+
+int __fs_mkdir__part520_rc = fs_mkdir__part520(path, &st);
+if (__fs_mkdir__part520_rc != 0) {
     free(path);
-    stat_to_qid(qid, &st);
-    return 0;
+    return __fs_mkdir__part520_rc;
+}
+    void fs_mkdir__part521(char *path, struct stat *st, FSQID *qid);
+fs_mkdir__part521(path, &st, qid);
+return 0;
 }
 
 static int fs_open(FSDevice *fs, FSQID *qid, FSFile *f, uint32_t flags,
@@ -5470,31 +5465,17 @@ fs_open__part523(fs, f, &st);
 
     int fs_open__part524(const char *path, struct stat *st);
 return fs_open__part524(f->path, &st);
-    stat_to_qid(qid, &st);
+    void fs_open__part525(FSQID *qid, struct stat *st);
+fs_open__part525(qid, &st);
 
-    if (flags & 0x00010000) {
-        DIR *dirp;
-        dirp = opendir(f->path);
-        if (!dirp)
-            return -errno_to_p9(
-                               (*__errno_location ())
-                                    );
-        f->is_opened = TRUE;
-        f->is_dir = TRUE;
-        f->u.dirp = dirp;
-    } else {
-        int fd;
-        fd = open(f->path, p9_flags_to_host(flags) & ~
-                                                     0100
-                                                            );
-        if (fd < 0)
-            return -errno_to_p9(
-                               (*__errno_location ())
-                                    );
-        f->is_opened = TRUE;
-        f->is_dir = FALSE;
-        f->u.fd = fd;
+    {
+        int fs_open_part526_ret;
+        int fs_open__part526(FSFile *f, uint32_t flags);
+        fs_open_part526_ret = fs_open__part526(f, flags);
+        if (fs_open_part526_ret != 0)
+            return fs_open_part526_ret;
     }
+
     extern int fs_open__part527(void);
 return fs_open__part527();
 }
@@ -5502,34 +5483,27 @@ return fs_open__part527();
 static int fs_create(FSDevice *fs, FSQID *qid, FSFile *f, const char *name,
                      uint32_t flags, uint32_t mode, uint32_t gid)
 {
-    struct stat st;
+        struct stat st;
     char *path;
     int ret, fd;
 
-    fs_close(fs, f);
+    int fs_create__part529(FSDevice *fs, FSFile *f, const char *name,
+                           uint32_t flags, uint32_t mode, char **ppath);
 
-    path = compose_path(f->path, name);
-    fd = open(path, p9_flags_to_host(flags) | 
-                                             0100
-                                                    , mode);
-    if (fd < 0) {
-        free(path);
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
-    }
+    fd = fs_create__part529(fs, f, name, flags, mode, &path);
+
+    int fs_create__part530(void);
     int fs_create__part531(const char *path, struct stat *st);
 ret = fs_create__part531(path, &st);
     int fs_create__part532(int ret, char *path, int fd);
 if (ret != 0) {
     return fs_create__part532(ret, path, fd);
 }
-    free(f->path);
-    f->path = path;
-    f->is_opened = TRUE;
-    f->is_dir = FALSE;
-    f->u.fd = fd;
-    stat_to_qid(qid, &st);
+        {
+        int fs_create__part533(FSQID *qid, FSFile *f, char *path, int fd,
+                               const struct stat *st);
+        fs_create__part533(qid, f, path, fd, &st);
+    }
     return 0;
 }
 
@@ -5545,57 +5519,13 @@ return fs_readdir__part535(fs, f);
     fs_readdir__part536(offset, f->u.dirp);
     int fs_readdir__part537();
 pos = fs_readdir__part537();
-    for(;;) {
-        de = readdir(f->u.dirp);
-        if (de == 
-                 ((void *)0)
-                     )
-            break;
-        name_len = strlen(de->d_name);
-        len = 13 + 8 + 1 + 2 + name_len;
-        if ((pos + len) > count)
-            break;
-        offset = telldir(f->u.dirp);
-        d_type = de->d_type;
-        if (d_type == 
-                     DT_UNKNOWN
-                               ) {
-            char *path;
-            struct stat st;
-            path = compose_path(f->path, de->d_name);
-            if (lstat(path, &st) == 0) {
-                d_type = st.st_mode >> 12;
-            } else {
-                d_type = 
-                        DT_REG
-                              ;
-            }
-            free(path);
-        }
-        if (d_type == 
-                     DT_DIR
-                           )
-            type = 0x80;
-        else if (d_type == 
-                          DT_LNK
-                                )
-            type = 0x02;
-        else
-            type = 0x00;
-        buf[pos++] = type;
-        put_le32(buf + pos, 0);
-        pos += 4;
-        put_le64(buf + pos, de->d_ino);
-        pos += 8;
-        put_le64(buf + pos, offset);
-        pos += 8;
-        buf[pos++] = d_type;
-        put_le16(buf + pos, name_len);
-        pos += 2;
-        memcpy(buf + pos, de->d_name, name_len);
-        pos += name_len;
+        {
+        extern int fs_readdir__part538(FSFile *f, int pos, uint64_t offset, uint8_t *buf, int count);
+        pos = fs_readdir__part538(f, pos, offset, buf, count);
     }
-    return pos;
+
+    int fs_readdir__part539(int pos);
+return fs_readdir__part539(pos);
 }
 
 static int fs_read(FSDevice *fs, FSFile *f, uint64_t offset,
@@ -5621,19 +5551,18 @@ static int fs_write(FSDevice *fs, FSFile *f, uint64_t offset,
         extern int fs_write__part545(FSFile *f);
     if (fs_write__part545(f))
         return -71;
-    ret = pwrite(f->u.fd, buf, count, offset);
-    if (ret < 0)
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
-    else
-        return ret;
+    int fs_write__part546(int fd, const uint8_t *buf, int count, uint64_t offset);
+ret = fs_write__part546(f->u.fd, buf, count, offset);
+    int fs_write__part547(int ret);
+
+return fs_write__part547(ret);
 }
 
 static void fs_close(FSDevice *fs, FSFile *f)
 {
-    if (!f->is_opened)
-        return;
+    int fs_close__part549(const struct FSFile *f);
+if (fs_close__part549(f))
+    return;
     void fs_close__part550(struct FSFile *f);
 fs_close__part550(f);
     void fs_close__part551(FSFile *f);
@@ -5644,25 +5573,13 @@ static int fs_stat(FSDevice *fs, FSFile *f, FSStat *st)
 {
     struct stat st1;
 
-    if (lstat(f->path, &st1) != 0)
-        return -2;
-    stat_to_qid(&st->qid, &st1);
-    st->st_mode = st1.st_mode;
-    st->st_uid = st1.st_uid;
-    st->st_gid = st1.st_gid;
-    st->st_nlink = st1.st_nlink;
-    st->st_rdev = st1.st_rdev;
-    st->st_size = st1.st_size;
-    st->st_blksize = st1.st_blksize;
-    st->st_blocks = st1.st_blocks;
-    st->st_atime_sec = st1.st_atim.tv_sec;
-    st->st_atime_nsec = st1.st_atim.tv_nsec;
-    st->st_mtime_sec = st1.st_mtim.tv_sec;
-    st->st_mtime_nsec = st1.st_mtim.tv_nsec;
-    st->st_ctime_sec = st1.st_ctim.tv_sec;
-    st->st_ctime_nsec = st1.st_ctim.tv_nsec;
+    extern int fs_stat__part553(const char *path);
 
-    return 0;
+if (fs_stat__part553(f->path) != 0)
+    return -2;
+    void fs_stat__part554(FSStat *st, const struct stat *st1);
+    fs_stat__part554(st, &st1);
+
 }
 
 static int fs_setattr(FSDevice *fs, FSFile *f, uint32_t mask,
@@ -5678,64 +5595,42 @@ if (rc < 0) {
     return rc;
 }
 
-    if (mask & 0x00000001) {
-        if (chmod(f->path, mode) < 0)
-            return -errno_to_p9(
-                               (*__errno_location ())
-                                    );
+    int fs_setattr__part557(unsigned int mask, const char *path, unsigned int mode);
+
+if (mask & 0x00000001) {
+    if (fs_setattr__part557(mask, f->path, mode) < 0)
+        return -errno_to_p9(
+                           (*__errno_location ())
+                                );
+    ctime_updated = TRUE;
+}
+    // C replacement for the TARGET in fs_setattr
+// mask: unsigned int, f_path: const char*, size: unsigned long
+// The original TARGET was:
+//     if (mask & 0x00000008) {
+//         if (truncate(f->path, size) < 0)
+//             return -errno_to_p9((*__errno_location()));
+//         ctime_updated = TRUE;
+//     }
+
+int fs_setattr__part558(unsigned int mask, const char *f_path, unsigned long size) {
+    int r = fs_setattr__part558(mask, f_path, size);
+    if (r < 0)
+        return -errno_to_p9(*__errno_location());
+    ctime_updated = TRUE;
+    return 0;
+}
+        if (mask & (0x00000010 | 0x00000020)) {
+        int fs_setattr__part559(uint32_t mask, const char *path,
+                                uint64_t atime_sec, uint64_t atime_nsec,
+                                uint64_t mtime_sec, uint64_t mtime_nsec);
+        int part559_err = fs_setattr__part559(mask, f->path, atime_sec,
+                                             atime_nsec, mtime_sec, mtime_nsec);
+        if (part559_err != 0)
+            return -errno_to_p9(part559_err);
         ctime_updated = TRUE;
     }
-    if (mask & 0x00000008) {
-        if (truncate(f->path, size) < 0)
-            return -errno_to_p9(
-                               (*__errno_location ())
-                                    );
-        ctime_updated = TRUE;
-    }
-    if (mask & (0x00000010 | 0x00000020)) {
-        struct timespec ts[2];
-        if (mask & 0x00000010) {
-            if (mask & 0x00000080) {
-                ts[0].tv_sec = atime_sec;
-                ts[0].tv_nsec = atime_nsec;
-            } else {
-                ts[0].tv_sec = 0;
-                ts[0].tv_nsec = 
-                               ((1l << 30) - 1l)
-                                        ;
-            }
-        } else {
-            ts[0].tv_sec = 0;
-            ts[0].tv_nsec = 
-                           ((1l << 30) - 2l)
-                                     ;
-        }
-        if (mask & 0x00000020) {
-            if (mask & 0x00000100) {
-                ts[1].tv_sec = mtime_sec;
-                ts[1].tv_nsec = mtime_nsec;
-            } else {
-                ts[1].tv_sec = 0;
-                ts[1].tv_nsec = 
-                               ((1l << 30) - 1l)
-                                        ;
-            }
-        } else {
-            ts[1].tv_sec = 0;
-            ts[1].tv_nsec = 
-                           ((1l << 30) - 2l)
-                                     ;
-        }
-        if (utimensat(
-                     -100
-                             , f->path, ts, 
-                                            0x100
-                                                               ) < 0)
-            return -errno_to_p9(
-                               (*__errno_location ())
-                                    );
-        ctime_updated = TRUE;
-    }
+
     int fs_setattr__part560(unsigned int mask, const struct FSFile *f, int *ctime_updated);
 int fs_setattr__part560_result = fs_setattr__part560(mask, f, &ctime_updated);
 if (fs_setattr__part560_result < 0)
@@ -5748,13 +5643,18 @@ static int fs_link(FSDevice *fs, FSFile *df, FSFile *f, const char *name)
 {
     char *path;
 
-    path = compose_path(df->path, name);
-    if (link(f->path, path) < 0) {
-        free(path);
+    char *fs_link__part563(const char *path, const char *name);
+    path = fs_link__part563(df->path, name);
+
+    int fs_link__part564(const char *path) {
+    if (link(path, path) < 0) {
+        free((void *)path);
         return -errno_to_p9(
                            (*__errno_location ())
                                 );
     }
+    return 0;
+}
     int fs_link__part565(char *path);
 return fs_link__part565(path);
 }
@@ -5762,24 +5662,31 @@ return fs_link__part565(path);
 static int fs_symlink(FSDevice *fs, FSQID *qid,
                       FSFile *f, const char *name, const char *symgt, uint32_t gid)
 {
+    char *fs_symlink__part567(const char *, const char *);
+
     char *path;
     struct stat st;
 
-    path = compose_path(f->path, name);
-    if (symlink(symgt, path) < 0) {
-        free(path);
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
+    path = fs_symlink__part567(f->path, name);
+        {
+        extern int fs_symlink__part568(const char *symgt, const char *path, int *p9err);
+        int part568_err = 0;
+        if (fs_symlink__part568(symgt, path, &part568_err)) {
+            free(path);
+            return part568_err;
+        }
     }
+
     if (lstat(path, &st) != 0) {
         free(path);
         return -errno_to_p9(
                            (*__errno_location ())
                                 );
     }
+    void fs_symlink__part570(FSQID *qid, struct stat *st);
+
     free(path);
-    stat_to_qid(qid, &st);
+    fs_symlink__part570(qid, &st);
     return 0;
 }
 
@@ -5787,75 +5694,89 @@ static int fs_mknod(FSDevice *fs, FSQID *qid,
              FSFile *f, const char *name, uint32_t mode, uint32_t major,
              uint32_t minor, uint32_t gid)
 {
+        char *fs_mknod__part572(FSFile *f, const char *name);
+
     char *path;
     struct stat st;
 
-    path = compose_path(f->path, name);
-    if (mknod(path, mode, 
-                         gnu_dev_makedev (
-                         major
-                         , 
-                         minor
-                         )
-                                              ) < 0) {
-        free(path);
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
+    path = fs_mknod__part572(f, name);
+        {
+        extern int fs_mknod__part573(const char *path, unsigned int mode,
+                                     unsigned int major, unsigned int minor,
+                                     int *p9err);
+        int __mknod_rc;
+        int __p9_err = 0;
+        __mknod_rc = fs_mknod__part573(path, mode, major, minor, &__p9_err);
+        if (__mknod_rc < 0) {
+            free(path);
+            return -__p9_err;
+        }
     }
-    if (lstat(path, &st) != 0) {
-        free(path);
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
+
+        {
+        int fs_mknod__part574(const char *path, struct stat *st, int *err_out);
+        int __part574_err = 0;
+        if (fs_mknod__part574(path, &st, &__part574_err)) {
+            free(path);
+            return __part574_err;
+        }
     }
-    free(path);
-    stat_to_qid(qid, &st);
-    return 0;
+
+        {
+        int fs_mknod__part575(char *path, FSQID *qid, const struct stat *st);
+        return fs_mknod__part575(path, qid, &st);
+    }
+
 }
 
 static int fs_readlink(FSDevice *fs, char *buf, int buf_size, FSFile *f)
 {
-    int ret;
-    ret = readlink(f->path, buf, buf_size - 1);
+    int fs_readlink__part577(const char *path, char *buf, int buf_size);
+int ret = fs_readlink__part577(f->path, buf, buf_size - 1);
     int fs_readlink__part578(int ret);
 int _ret = fs_readlink__part578(ret);
 if (_ret < 0) return _ret;
-    buf[ret] = '\0';
-    return 0;
+    int fs_readlink__part579(char *buf, int ret);
+return fs_readlink__part579(buf, ret);
 }
 
 static int fs_renameat(FSDevice *fs, FSFile *f, const char *name,
                 FSFile *new_f, const char *new_name)
 {
-    char *path, *new_path;
+    int fs_renameat__part581(const char *f_path, const char *name,
+                         const char *new_f_path, const char *new_name);
     int ret;
 
-    path = compose_path(f->path, name);
-    new_path = compose_path(new_f->path, new_name);
-    ret = rename(path, new_path);
-    free(path);
-    free(new_path);
-    if (ret < 0)
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
+    ret = fs_renameat__part581(f->path, name, new_f->path, new_name);
+
+    int fs_renameat__part582(int ret);
+if (ret < 0)
+    return -fs_renameat__part582(ret);
+else
     return 0;
+    int fs_renameat__part583(void);
+return fs_renameat__part583();
 }
 
 static int fs_unlinkat(FSDevice *fs, FSFile *f, const char *name)
 {
-    char *path;
-    int ret;
+    int fs_unlinkat__part585(const char *path, const char *name);
+int ret;
+ret = fs_unlinkat__part585(f->path, name);
+    // C replacement for the TARGET in fs_unlinkat
+// The TARGET is: if (ret < 0) return -errno_to_p9((*__errno_location()));
+// Replace with call to the Rust function
 
-    path = compose_path(f->path, name);
-    ret = remove(path);
-    free(path);
-    if (ret < 0)
-        return -errno_to_p9(
-                           (*__errno_location ())
-                                );
-    return 0;
+// Declare the Rust function with C-compatible prototype
+int fs_unlinkat__part586(int ret);
+
+// Call the Rust function, keeping the return 0 in C
+if (ret < 0) {
+    return fs_unlinkat__part586(ret);
+}
+return 0;
+    int fs_unlinkat__part587(void);
+return fs_unlinkat__part587();
 
 }
 
@@ -5865,37 +5786,17 @@ static int fs_lock(FSDevice *fs, FSFile *f, const FSLock *lock)
     struct flock fl;
 
 
-    if (!f->is_opened || f->is_dir)
-        return -71;
+    int fs_lock__part589(int is_opened, int is_dir);
+ret = fs_lock__part589(f->is_opened, f->is_dir);
+if (ret != 0) return ret;
 
-    fl.l_type = lock->type;
-    fl.l_whence = 
-                 0
-                         ;
-    fl.l_start = lock->start;
-    fl.l_len = lock->length;
+    int fs_lock__part590(FSFile *f, const FSLock *lock, struct flock *fl);
+    ret = fs_lock__part590(f, lock, &fl);
+    int fs_lock__part591(int errno_val);
 
-    ret = fcntl(f->u.fd, 
-                        6
-                               , &fl);
-    if (ret == 0) {
-        ret = 0;
-    } else if (
-              (*__errno_location ()) 
-                    == 
-                       11 
-                              || 
-                                 (*__errno_location ()) 
-                                       == 
-                                          13
-                                                ) {
-        ret = 1;
-    } else {
-        ret = -errno_to_p9(
-                          (*__errno_location ())
-                               );
-    }
-    return ret;
+ret = fs_lock__part591(*__errno_location());
+    int fs_lock__part592(int);
+return fs_lock__part592(ret);
 }
 
 static int fs_getlock(FSDevice *fs, FSFile *f, FSLock *lock)
@@ -5904,35 +5805,25 @@ static int fs_getlock(FSDevice *fs, FSFile *f, FSLock *lock)
     struct flock fl;
 
 
-    if (!f->is_opened || f->is_dir)
-        return -71;
+    int fs_getlock__part594(FSFile *f);
+return fs_getlock__part594(f);
 
-    fl.l_type = lock->type;
-    fl.l_whence = 
-                 0
-                         ;
-    fl.l_start = lock->start;
-    fl.l_len = lock->length;
+        int fs_getlock__part595(int fd, unsigned char l_type, unsigned long long start, unsigned long long length, struct flock *fl);
+    int fs_getlock__part595(int fd, unsigned char l_type, unsigned long long start, unsigned long long length, struct flock *fl);
+    ret = fs_getlock__part595(f->u.fd, lock->type, lock->start, lock->length, &fl);
 
-    ret = fcntl(f->u.fd, 
-                        5
-                               , &fl);
-    if (ret < 0) {
-        ret = -errno_to_p9(
-                          (*__errno_location ())
-                               );
-    } else {
-        lock->type = fl.l_type;
-        lock->start = fl.l_start;
-        lock->length = fl.l_len;
-    }
-    return ret;
+    /* Replaces the TARGET block in fs_getlock after fcntl call.
+   PROTOTYPE: the Rust function below. */
+int fs_getlock__part596(int ret, struct flock *fl, FSLock *lock);
+    int fs_getlock__part597(int ret);
+return fs_getlock__part597(ret);
 }
 
 static void fs_disk_end(FSDevice *fs1)
 {
-    FSDeviceDisk *fs = (FSDeviceDisk *)fs1;
-    free(fs->root_path);
+    void fs_disk_end__part599(FSDevice *fs1);
+FSDeviceDisk *fs = (FSDeviceDisk *)fs1;
+free(fs->root_path);
 }
 
 FSDevice *fs_disk_init(const char *root_path)
@@ -5940,41 +5831,44 @@ FSDevice *fs_disk_init(const char *root_path)
     FSDeviceDisk *fs;
     struct stat st;
 
-    lstat(root_path, &st);
-    if (!
-        ((((
-        st.st_mode
-        )) & 0170000) == (0040000))
-                           )
-        return 
-              ((void *)0)
-                  ;
+    extern int fs_disk_init__part601(const char *root_path, void *st);
+    (void)fs_disk_init__part601(root_path, &st);
 
-    fs = mallocz(sizeof(*fs));
+        {
+        int fs_disk_init__part602(unsigned int st_mode);
+        if (fs_disk_init__part602(st.st_mode))
+            return ((void *)0);
+    }
 
-    fs->common.fs_end = fs_disk_end;
-    fs->common.fs_delete = fs_delete;
-    fs->common.fs_statfs = fs_statfs;
-    fs->common.fs_attach = fs_attach;
-    fs->common.fs_walk = fs_walk;
-    fs->common.fs_mkdir = fs_mkdir;
-    fs->common.fs_open = fs_open;
-    fs->common.fs_create = fs_create;
-    fs->common.fs_stat = fs_stat;
-    fs->common.fs_setattr = fs_setattr;
-    fs->common.fs_close = fs_close;
-    fs->common.fs_readdir = fs_readdir;
-    fs->common.fs_read = fs_read;
-    fs->common.fs_write = fs_write;
-    fs->common.fs_link = fs_link;
-    fs->common.fs_symlink = fs_symlink;
-    fs->common.fs_mknod = fs_mknod;
-    fs->common.fs_readlink = fs_readlink;
-    fs->common.fs_renameat = fs_renameat;
-    fs->common.fs_unlinkat = fs_unlinkat;
-    fs->common.fs_lock = fs_lock;
-    fs->common.fs_getlock = fs_getlock;
 
-    fs->root_path = strdup(root_path);
-    return (FSDevice *)fs;
+        void fs_disk_init__part603(FSDeviceDisk **fs_out, const char *root_path,
+                               void (*p_end)(FSDevice *),
+                               void (*p_delete)(FSDevice *, FSFile *),
+                               void (*p_statfs)(FSDevice *, FSStatFS *),
+                               int (*p_attach)(FSDevice *, FSFile **, FSQID *, uint32_t, const char *, const char *),
+                               int (*p_walk)(FSDevice *, FSFile **, FSQID *, FSFile *, int, char **),
+                               int (*p_mkdir)(FSDevice *, FSQID *, FSFile *, const char *, uint32_t, uint32_t),
+                               int (*p_open)(FSDevice *, FSQID *, FSFile *, uint32_t, FSOpenCompletionFunc *, void *),
+                               int (*p_create)(FSDevice *, FSQID *, FSFile *, const char *, uint32_t, uint32_t, uint32_t),
+                               int (*p_stat)(FSDevice *, FSFile *, FSStat *),
+                               int (*p_setattr)(FSDevice *, FSFile *, uint32_t, uint32_t, uint32_t, uint32_t, uint64_t, uint64_t, uint64_t, uint64_t, uint64_t),
+                               void (*p_close)(FSDevice *, FSFile *),
+                               int (*p_readdir)(FSDevice *, FSFile *, uint64_t, uint8_t *, int),
+                               int (*p_read)(FSDevice *, FSFile *, uint64_t, uint8_t *, int),
+                               int (*p_write)(FSDevice *, FSFile *, uint64_t, const uint8_t *, int),
+                               int (*p_link)(FSDevice *, FSFile *, FSFile *, const char *),
+                               int (*p_symlink)(FSDevice *, FSQID *, FSFile *, const char *, const char *, uint32_t),
+                               int (*p_mknod)(FSDevice *, FSQID *, FSFile *, const char *, uint32_t, uint32_t, uint32_t, uint32_t),
+                               int (*p_readlink)(FSDevice *, char *, int, FSFile *),
+                               int (*p_renameat)(FSDevice *, FSFile *, const char *, FSFile *, const char *),
+                               int (*p_unlinkat)(FSDevice *, FSFile *, const char *),
+                               int (*p_lock)(FSDevice *, FSFile *, const FSLock *),
+                               int (*p_getlock)(FSDevice *, FSFile *, FSLock *));
+
+    fs_disk_init__part603(&fs, root_path, fs_disk_end, fs_delete, fs_statfs,
+                          fs_attach, fs_walk, fs_mkdir, fs_open, fs_create,
+                          fs_stat, fs_setattr, fs_close, fs_readdir, fs_read,
+                          fs_write, fs_link, fs_symlink, fs_mknod, fs_readlink,
+                          fs_renameat, fs_unlinkat, fs_lock, fs_getlock);
+
 }

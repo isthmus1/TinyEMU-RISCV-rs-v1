@@ -461,6 +461,335 @@ pub extern "C" fn scan_dir__part379(path: *const c_char) -> *mut c_void {
 }
 }
 
+// ── `for (; ; )` · build_filelist.c:136-207 · chunk 380 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     for(;;) {
+//             de = readdir(dirp);
+//             if (!de)
+//                 break;
+//             name = de->d_name;
+//             if (!strcmp(name, ".") || !strcmp(name, ".."))
+//                 continue;
+//             path1 = compose_path(path, name);
+//             if (lstat(path1, &st) < 0) {
+//                 perror(path1);
+//                 exit(1);
+//             }
+//     
+//             mode = st.st_mode & 0xffff;
+//             fprintf(f, "%06o %u %u",
+//                     mode,
+//                     (int)st.st_uid,
+//                     (int)st.st_gid);
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0020000)) 
+//                              || 
+//                                 ((((
+//                                 mode
+//                                 )) & 0170000) == (0060000))
+//                                              ) {
+//                 fprintf(f, " %u %u",
+//                         (int)
+//                             gnu_dev_major (
+//                             st.st_rdev
+//                             )
+//                                              ,
+//                         (int)
+//                             gnu_dev_minor (
+//                             st.st_rdev
+//                             )
+//                                              );
+//             }
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0100000))
+//                             ) {
+//                 fprintf(f, " %" 
+//                                "l" "u"
+//                                      , st.st_size);
+//             }
+//     
+//     
+//     
+//     
+//     
+//             fprintf(f, " %u", (int)st.st_mtim.tv_sec);
+//             v = st.st_mtim.tv_nsec;
+//     
+//             if (v != 0) {
+//                 fprintf(f, ".");
+//                 while (v != 0) {
+//                     fprintf(f, "%u", v / 100000000);
+//                     v = (v % 100000000) * 10;
+//                 }
+//             }
+//     
+//             fprintf(f, " ");
+//             print_str(f, name);
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0120000))
+//                             ) {
+//                 char buf[1024];
+//                 int len;
+//                 len = readlink(path1, buf, sizeof(buf) - 1);
+//                 if (len < 0) {
+//                     perror("readlink");
+//                     exit(1);
+//                 }
+//                 buf[len] = '\0';
+//                 fprintf(f, " ");
+//                 print_str(f, buf);
+//             } else if (
+//                       ((((
+//                       mode
+//                       )) & 0170000) == (0100000)) 
+//                                     && st.st_size > 0) {
+//                 char buf1[32], *fname;
+//                 FSFileID file_id;
+//                 file_id = s->next_inode_num++;
+//                 fprintf(f, " %" 
+//                                "l" "x"
+//                                      , file_id);
+//                 file_id_to_filename(buf1, file_id);
+//                 fname = compose_path(s->files_path, buf1);
+//                 copy_file(path1, fname);
+//                 add_file_size(s, st.st_size);
+//             }
+//     
+//             fprintf(f, "\n");
+//             if (
+//                ((((
+//                mode
+//                )) & 0170000) == (0040000))
+//                             ) {
+//                 scan_dir(s, path1);
+//             }
+//             free(path1);
+//         }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk380 {
+// Rust port of one iteration of the directory scan loop of scan_dir().
+use core::ffi::{c_char, c_int, c_uint, c_void};
+
+#[repr(C)]
+pub struct ScanState {
+    pub files_path: *mut c_char,
+    pub next_inode_num: u64,
+    pub fs_size: u64,
+    pub fs_max_size: u64,
+    pub f: *mut c_void,
+}
+
+#[repr(C)]
+struct Timespec {
+    tv_sec: i64,
+    tv_nsec: i64,
+}
+
+#[repr(C)]
+struct Stat {
+    st_dev: u64,
+    st_ino: u64,
+    st_nlink: u64,
+    st_mode: u32,
+    st_uid: u32,
+    st_gid: u32,
+    __pad0: i32,
+    st_rdev: u64,
+    st_size: i64,
+    st_blksize: i64,
+    st_blocks: i64,
+    st_atim: Timespec,
+    st_mtim: Timespec,
+    st_ctim: Timespec,
+    __glibc_reserved: [i64; 3],
+}
+
+#[repr(C)]
+struct Dirent {
+    d_ino: u64,
+    d_off: i64,
+    d_reclen: u16,
+    d_type: u8,
+    d_name: [c_char; 256],
+}
+
+extern "C" {
+    #[link_name = "readdir64"]
+    fn readdir(dirp: *mut c_void) -> *mut Dirent;
+    #[link_name = "lstat64"]
+    fn lstat(path: *const c_char, buf: *mut Stat) -> c_int;
+    fn strcmp(a: *const c_char, b: *const c_char) -> c_int;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn perror(s: *const c_char);
+    fn exit(code: c_int);
+    fn free(p: *mut c_void);
+    fn fprintf(f: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn print_str(f: *mut c_void, s: *const c_char);
+    fn gnu_dev_major(dev: u64) -> c_uint;
+    fn gnu_dev_minor(dev: u64) -> c_uint;
+    fn readlink(path: *const c_char, buf: *mut c_char, bufsiz: usize) -> isize;
+    fn file_id_to_filename(buf: *mut c_char, file_id: u64) -> *mut c_char;
+    fn scan_dir(s: *mut ScanState, path: *const c_char);
+    fn malloc(size: usize) -> *mut u8;
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fwrite(ptr: *const c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fclose(stream: *mut c_void) -> c_int;
+    static mut stderr: *mut c_void;
+}
+
+const COPY_BUF_LEN: usize = 1024 * 1024;
+
+unsafe fn die(code: c_int) -> ! {
+    exit(code);
+    loop {}
+}
+
+// port of the static C helper copy_file()
+unsafe fn copy_file_rs(src_filename: *const c_char, dst_filename: *const c_char) {
+    let buf = malloc(COPY_BUF_LEN);
+    let fi = fopen(src_filename, b"rb\0".as_ptr() as *const c_char);
+    if fi.is_null() {
+        perror(src_filename);
+        die(1);
+    }
+    let fo = fopen(dst_filename, b"wb\0".as_ptr() as *const c_char);
+    if fo.is_null() {
+        perror(dst_filename);
+        die(1);
+    }
+    loop {
+        let len = fread(buf as *mut c_void, 1, COPY_BUF_LEN, fi) as c_int;
+        if len == 0 {
+            break;
+        }
+        fwrite(buf as *const c_void, 1, len as usize, fo);
+    }
+    fclose(fo);
+    fclose(fi);
+}
+
+// port of the static C helper block_align()
+fn block_align(val: u64, align: u64) -> u64 {
+    val.wrapping_add(align - 1) & !(align - 1)
+}
+
+// port of the static C helper add_file_size()
+unsafe fn add_file_size_rs(s: *mut ScanState, size: u64) {
+    (*s).fs_size = (*s).fs_size.wrapping_add(block_align(size, 1u64 << 12));
+    if (*s).fs_size > (*s).fs_max_size {
+        let se: *mut c_void = core::ptr::addr_of!(stderr).read();
+        fprintf(
+            se,
+            b"Filesystem Quota exceeded (%ld bytes)\n\0".as_ptr() as *const c_char,
+            (*s).fs_max_size,
+        );
+        die(1);
+    }
+}
+
+// returns 1 when the readdir() loop must stop, 0 otherwise
+#[no_mangle]
+pub extern "C" fn scan_dir__part380(
+    s: *mut ScanState,
+    path: *const c_char,
+    dirp: *mut c_void,
+) -> c_int {
+    unsafe {
+        let de = readdir(dirp);
+        if de.is_null() {
+            return 1;
+        }
+        let name: *const c_char = (*de).d_name.as_ptr();
+        if strcmp(name, b".\0".as_ptr() as *const c_char) == 0
+            || strcmp(name, b"..\0".as_ptr() as *const c_char) == 0
+        {
+            return 0;
+        }
+        let path1 = compose_path(path, name);
+        let mut st: Stat = core::mem::zeroed();
+        if lstat(path1, &mut st) < 0 {
+            perror(path1);
+            die(1);
+        }
+
+        let mode: u32 = st.st_mode & 0xffff;
+        let f: *mut c_void = (*s).f;
+        fprintf(
+            f,
+            b"%06o %u %u\0".as_ptr() as *const c_char,
+            mode,
+            st.st_uid as c_int,
+            st.st_gid as c_int,
+        );
+        let fmt: u32 = mode & 0o170000;
+        if fmt == 0o020000 || fmt == 0o060000 {
+            fprintf(
+                f,
+                b" %u %u\0".as_ptr() as *const c_char,
+                gnu_dev_major(st.st_rdev) as c_int,
+                gnu_dev_minor(st.st_rdev) as c_int,
+            );
+        }
+        if fmt == 0o100000 {
+            fprintf(f, b" %lu\0".as_ptr() as *const c_char, st.st_size);
+        }
+
+        fprintf(
+            f,
+            b" %u\0".as_ptr() as *const c_char,
+            st.st_mtim.tv_sec as c_int,
+        );
+        let mut v: u32 = st.st_mtim.tv_nsec as u32;
+
+        if v != 0 {
+            fprintf(f, b".\0".as_ptr() as *const c_char);
+            while v != 0 {
+                fprintf(f, b"%u\0".as_ptr() as *const c_char, v / 100000000);
+                v = (v % 100000000).wrapping_mul(10);
+            }
+        }
+
+        fprintf(f, b" \0".as_ptr() as *const c_char);
+        print_str(f, name);
+        if fmt == 0o120000 {
+            let mut buf: [c_char; 1024] = [0; 1024];
+            let len = readlink(path1, buf.as_mut_ptr(), 1024 - 1) as c_int;
+            if len < 0 {
+                perror(b"readlink\0".as_ptr() as *const c_char);
+                die(1);
+            }
+            *buf.as_mut_ptr().offset(len as isize) = 0;
+            fprintf(f, b" \0".as_ptr() as *const c_char);
+            print_str(f, buf.as_ptr());
+        } else if fmt == 0o100000 && st.st_size > 0 {
+            let mut buf1: [c_char; 32] = [0; 32];
+            let file_id: u64 = (*s).next_inode_num;
+            (*s).next_inode_num = file_id.wrapping_add(1);
+            fprintf(f, b" %lx\0".as_ptr() as *const c_char, file_id);
+            file_id_to_filename(buf1.as_mut_ptr(), file_id);
+            let fname = compose_path((*s).files_path, buf1.as_ptr());
+            copy_file_rs(path1, fname);
+            add_file_size_rs(s, st.st_size as u64);
+        }
+
+        fprintf(f, b"\n\0".as_ptr() as *const c_char);
+        if fmt == 0o040000 {
+            scan_dir(s, path1);
+        }
+        free(path1 as *mut c_void);
+        0
+    }
+}
+}
+
 // ── `closedir(dirp); fprintf(f, ".\n");` · build_filelist.c:209-210 · chunk 381 · nvidia/nemotron-3.5-lightning · 2 attempt(s) · Unvalidated
 //
 // Original C:
@@ -635,6 +964,142 @@ extern "C" {
 pub extern "C" fn main__part387(optind: c_int, argc: c_int) {
     if optind + 1 >= argc {
         unsafe { help() }
+    }
+}
+}
+
+// ── `src_path = argv[optind]; dst_path = argv[optind + 1]; mkdir(dst_path, 0755); s->files_path = co…` · build_filelist.c:258-273 · chunk 388 · nvidia/nemotron-3.5-lightning · 3 attempt(s) · Unvalidated
+//
+// Original C:
+//     src_path = argv[optind];
+//         dst_path = argv[optind + 1];
+//     
+//         mkdir(dst_path, 0755);
+//     
+//         s->files_path = compose_path(dst_path, "files");
+//         s->next_inode_num = first_inode;
+//         s->fs_size = 0;
+//         s->fs_max_size = fs_max_size;
+//     
+//         mkdir(s->files_path, 0755);
+//     
+//         root_id = s->next_inode_num++;
+//         file_id_to_filename(fname, root_id);
+//         filename = compose_path(s->files_path, fname);
+//         f = fopen(filename, "wb");
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk388 {
+// Ported piece of main__part388 from build_filelist.c
+// SYMBOL: main__part388
+// This replaces the TARGET in main(): from src_path = argv[optind] through f = fopen(filename, "wb")
+
+use std::os::raw::{c_char, c_int, c_ulong, c_void};
+
+extern "C" {
+    fn compose_path(dst: *const c_char, suffix: *const c_char) -> *mut c_char;
+    fn file_id_to_filename(buf: *mut c_char, file_id: c_ulong);
+    fn mkdir(path: *const c_char, mode: c_int);
+    fn fopen(filename: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn exit(status: c_int);
+}
+
+#[repr(C)]
+struct ScanState {
+    files_path: *mut c_char,
+    next_inode_num: c_ulong,
+    fs_size: c_ulong,
+    fs_max_size: c_ulong,
+    f: *mut c_void,
+}
+
+#[no_mangle]
+pub extern "C" fn main__part388(
+    argv: *const *const c_char,
+    optind: c_int,
+    // Output pointers for the C code to read after the call
+    src_path: *mut *const c_char,
+    dst_path: *mut *const c_char,
+    // ScanState pointer (already dereferenced by caller if needed)
+    s: *mut ScanState,
+    // Values from main's local scope
+    first_inode: c_ulong,
+    fs_max_size: c_ulong,
+    // Output pointers for derived values
+    root_id: *mut c_ulong,
+    fname: *mut c_char,
+    filename: *mut *mut c_char,
+    // FILE pointer output
+    f: *mut *mut c_void,
+) {
+    // 1. src_path = argv[optind]
+    unsafe {
+        let src = *argv.offset(optind as isize);
+        *src_path = src;
+    }
+
+    // 2. dst_path = argv[optind + 1]
+    unsafe {
+        let dst = *argv.offset((optind + 1) as isize);
+        *dst_path = dst;
+    }
+
+    // 3. mkdir(dst_path, 0755)
+    unsafe {
+        let dst_for_mkdir = *dst_path;
+        mkdir(dst_for_mkdir, 0o755);
+    }
+
+    // 4. s->files_path = compose_path(dst_path, "files")
+    unsafe {
+        let files_path = compose_path(*dst_path, b"files\0".as_ptr() as *const c_char);
+        (*s).files_path = files_path;
+    }
+
+    // 5. s->next_inode_num = first_inode
+    unsafe {
+        (*s).next_inode_num = first_inode;
+    }
+
+    // 6. s->fs_size = 0
+    unsafe {
+        (*s).fs_size = 0;
+    }
+
+    // 7. s->fs_max_size = fs_max_size
+    unsafe {
+        (*s).fs_max_size = fs_max_size;
+    }
+
+    // 8. mkdir(s->files_path, 0755)
+    unsafe {
+        mkdir((*s).files_path, 0o755);
+    }
+
+    // 9. root_id = s->next_inode_num++
+    unsafe {
+        let current_next = (*s).next_inode_num;
+        (*s).next_inode_num = current_next + 1;
+        *root_id = current_next;
+    }
+
+    // 10. file_id_to_filename(fname, root_id)
+    unsafe {
+        file_id_to_filename(fname, *root_id);
+    }
+
+    // 11. filename = compose_path(s->files_path, fname)
+    unsafe {
+        let fname_val = fname as *const c_char;
+        let filename_result = compose_path((*s).files_path, fname_val);
+        *filename = filename_result;
+    }
+
+    // 12. f = fopen(filename, "wb")
+    unsafe {
+        let filename_c = *filename;
+        let mode = b"wb\0".as_ptr() as *const c_char;
+        *f = fopen(filename_c, mode);
     }
 }
 }
@@ -832,6 +1297,107 @@ pub extern "C" fn main__part393(f: *mut c_void, filename: *const c_char) {
             exit(1);
         }
     }
+}
+}
+
+// ── `fprintf(f, "Version: 1\n"); fprintf(f, "Revision: 1\n"); fprintf(f, "NextFileID: %" "l" "x" "\n…` · build_filelist.c:300-312 · chunk 394 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     fprintf(f, "Version: 1\n");
+//         fprintf(f, "Revision: 1\n");
+//         fprintf(f, "NextFileID: %" 
+//                                   "l" "x" 
+//                                          "\n", s->next_inode_num);
+//         fprintf(f, "FSFileCount: %" 
+//                                    "l" "u" 
+//                                           "\n", s->next_inode_num - 1);
+//         fprintf(f, "FSSize: %" 
+//                               "l" "u" 
+//                                      "\n", s->fs_size);
+//         fprintf(f, "FSMaxSize: %" 
+//                                  "l" "u" 
+//                                         "\n", s->fs_max_size);
+//         fprintf(f, "Key:\n");
+//         fprintf(f, "RootID: %" 
+//                               "l" "x" 
+//                                      "\n", root_id);
+//         fclose(f);
+//         free(filename);
+//     
+//         filename = compose_path(dst_path, "lock");
+//         f = fopen(filename, "wb");
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk394 {
+// Port of the head-file writing block from main().
+use core::ffi::{c_char, c_int, c_void};
+
+#[repr(C)]
+pub struct FILE {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
+pub struct ScanState {
+    pub files_path: *mut c_char,
+    pub next_inode_num: u64,
+    pub fs_size: u64,
+    pub fs_max_size: u64,
+    pub f: *mut FILE,
+}
+
+extern "C" {
+    fn fprintf(f: *mut FILE, fmt: *const c_char, ...) -> c_int;
+    fn fclose(f: *mut FILE) -> c_int;
+    fn fopen(path: *const c_char, mode: *const c_char) -> *mut FILE;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn free(ptr: *mut c_void);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn main__part394(
+    pf: *mut *mut FILE,
+    dst_path: *const c_char,
+    pfilename: *mut *mut c_char,
+    s: *mut ScanState,
+    root_id: u64,
+) {
+    let f: *mut FILE = *pf;
+
+    fprintf(f, b"Version: 1\n\0".as_ptr() as *const c_char);
+    fprintf(f, b"Revision: 1\n\0".as_ptr() as *const c_char);
+    fprintf(
+        f,
+        b"NextFileID: %lx\n\0".as_ptr() as *const c_char,
+        (*s).next_inode_num,
+    );
+    fprintf(
+        f,
+        b"FSFileCount: %lu\n\0".as_ptr() as *const c_char,
+        (*s).next_inode_num.wrapping_sub(1),
+    );
+    fprintf(
+        f,
+        b"FSSize: %lu\n\0".as_ptr() as *const c_char,
+        (*s).fs_size,
+    );
+    fprintf(
+        f,
+        b"FSMaxSize: %lu\n\0".as_ptr() as *const c_char,
+        (*s).fs_max_size,
+    );
+    fprintf(f, b"Key:\n\0".as_ptr() as *const c_char);
+    fprintf(
+        f,
+        b"RootID: %lx\n\0".as_ptr() as *const c_char,
+        root_id,
+    );
+
+    fclose(f);
+    free(*pfilename as *mut c_void);
+
+    let filename: *mut c_char = compose_path(dst_path, b"lock\0".as_ptr() as *const c_char);
+    *pfilename = filename;
+    *pf = fopen(filename, b"wb\0".as_ptr() as *const c_char);
 }
 }
 

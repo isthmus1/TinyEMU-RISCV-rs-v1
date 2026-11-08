@@ -1289,24 +1289,12 @@ AES_set_encrypt_key__part70(bits, key);
 
  int AES_set_encrypt_key__part71(u32 *rk, const unsigned char *userKey);
 AES_set_encrypt_key__part71(rk, userKey);
+ int AES_set_encrypt_key__part72(u32 *rk, int *i, u32 *temp);
  if (bits == 128) {
-  while (1) {
-   temp = rk[3];
-   rk[4] = rk[0] ^
-    (Te4[(temp >> 16) & 0xff] & 0xff000000) ^
-    (Te4[(temp >> 8) & 0xff] & 0x00ff0000) ^
-    (Te4[(temp ) & 0xff] & 0x0000ff00) ^
-    (Te4[(temp >> 24) ] & 0x000000ff) ^
-    rcon[i];
-   rk[5] = rk[1] ^ rk[4];
-   rk[6] = rk[2] ^ rk[5];
-   rk[7] = rk[3] ^ rk[6];
-   if (++i == 10) {
-    return 0;
-   }
-   rk += 4;
-  }
+  AES_set_encrypt_key__part72(rk, &i, &temp);
+  return 0;
  }
+
  void AES_set_encrypt_key__part73(u32 *rk, const unsigned char *user_key);
 AES_set_encrypt_key__part73(rk, userKey);
  int AES_set_encrypt_key__part74(u32 *rk, int *i, u32 *Te4, u32 *rcon);
@@ -1351,29 +1339,11 @@ rk = AES_set_decrypt_key__part81(key);
  extern void AES_set_decrypt_key__part82(u32 *rk, int rounds);
 AES_set_decrypt_key__part82(rk, key->rounds);
 
- for (i = 1; i < (key->rounds); i++) {
-  rk += 4;
-  rk[0] =
-   Td0[Te4[(rk[0] >> 24) ] & 0xff] ^
-   Td1[Te4[(rk[0] >> 16) & 0xff] & 0xff] ^
-   Td2[Te4[(rk[0] >> 8) & 0xff] & 0xff] ^
-   Td3[Te4[(rk[0] ) & 0xff] & 0xff];
-  rk[1] =
-   Td0[Te4[(rk[1] >> 24) ] & 0xff] ^
-   Td1[Te4[(rk[1] >> 16) & 0xff] & 0xff] ^
-   Td2[Te4[(rk[1] >> 8) & 0xff] & 0xff] ^
-   Td3[Te4[(rk[1] ) & 0xff] & 0xff];
-  rk[2] =
-   Td0[Te4[(rk[2] >> 24) ] & 0xff] ^
-   Td1[Te4[(rk[2] >> 16) & 0xff] & 0xff] ^
-   Td2[Te4[(rk[2] >> 8) & 0xff] & 0xff] ^
-   Td3[Te4[(rk[2] ) & 0xff] & 0xff];
-  rk[3] =
-   Td0[Te4[(rk[3] >> 24) ] & 0xff] ^
-   Td1[Te4[(rk[3] >> 16) & 0xff] & 0xff] ^
-   Td2[Te4[(rk[3] >> 8) & 0xff] & 0xff] ^
-   Td3[Te4[(rk[3] ) & 0xff] & 0xff];
- }
+ // Prototype for the Rust-exported function
+int AES_set_decrypt_key__part83(AES_KEY *key, const u32 *te4, const u32 *td0, const u32 *td1, const u32 *td2, const u32 *td3);
+
+// Replace the TARGET for loop with a call to the Rust function
+return AES_set_decrypt_key__part83(key, Te4, Td0, Td1, Td2, Td3);
  int AES_set_decrypt_key__part84(const unsigned char *userKey, const int bits, AES_KEY *key);
 return AES_set_decrypt_key__part84(userKey, bits, key);
 }
@@ -1386,26 +1356,16 @@ return AES_set_decrypt_key__part84(userKey, bits, key);
 void AES_encrypt(const unsigned char *in, unsigned char *out,
    const AES_KEY *key) {
 
+ void AES_encrypt__part86(const unsigned char *in, const AES_KEY *key,
+    const u32 **rk_out, u32 *s0, u32 *s1, u32 *s2, u32 *s3,
+    u32 *t0, u32 *t1, u32 *t2, u32 *t3, int *r_out);
  const u32 *rk;
  u32 s0, s1, s2, s3, t0, t1, t2, t3;
 
  int r;
 
+ AES_encrypt__part86(in, key, &rk, &s0, &s1, &s2, &s3, &t0, &t1, &t2, &t3, &r);
 
- 
-((void) (0))
-                        ;
- rk = key->rd_key;
-
-
-
-
-
- s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
- s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
- s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
- s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
-    r = key->rounds >> 1;
     void AES_encrypt__part87(
     u32 *s0, u32 *s1, u32 *s2, u32 *s3,
     int *r,
@@ -1442,82 +1402,24 @@ AES_encrypt__part96();
 void AES_decrypt(const unsigned char *in, unsigned char *out,
    const AES_KEY *key) {
 
- const u32 *rk;
+  const u32 *rk;
  u32 s0, s1, s2, s3, t0, t1, t2, t3;
 
  int r;
 
+ extern void AES_decrypt__part98(const unsigned char *inp, const AES_KEY *key,
+                                 const u32 **rk_out, u32 *s0_out, u32 *s1_out,
+                                 u32 *s2_out, u32 *s3_out, int *r_out);
 
  
 ((void) (0))
                         ;
- rk = key->rd_key;
+ AES_decrypt__part98(in, key, &rk, &s0, &s1, &s2, &s3, &r);
 
-
-
-
-
-    s0 = (((u32)(in)[0] << 24) ^ ((u32)(in)[1] << 16) ^ ((u32)(in)[2] << 8) ^ ((u32)(in)[3])) ^ rk[0];
-    s1 = (((u32)(in + 4)[0] << 24) ^ ((u32)(in + 4)[1] << 16) ^ ((u32)(in + 4)[2] << 8) ^ ((u32)(in + 4)[3])) ^ rk[1];
-    s2 = (((u32)(in + 8)[0] << 24) ^ ((u32)(in + 8)[1] << 16) ^ ((u32)(in + 8)[2] << 8) ^ ((u32)(in + 8)[3])) ^ rk[2];
-    s3 = (((u32)(in + 12)[0] << 24) ^ ((u32)(in + 12)[1] << 16) ^ ((u32)(in + 12)[2] << 8) ^ ((u32)(in + 12)[3])) ^ rk[3];
-    r = key->rounds >> 1;
-    for (;;) {
-        t0 =
-            Td0[(s0 >> 24) ] ^
-            Td1[(s3 >> 16) & 0xff] ^
-            Td2[(s2 >> 8) & 0xff] ^
-            Td3[(s1 ) & 0xff] ^
-            rk[4];
-        t1 =
-            Td0[(s1 >> 24) ] ^
-            Td1[(s0 >> 16) & 0xff] ^
-            Td2[(s3 >> 8) & 0xff] ^
-            Td3[(s2 ) & 0xff] ^
-            rk[5];
-        t2 =
-            Td0[(s2 >> 24) ] ^
-            Td1[(s1 >> 16) & 0xff] ^
-            Td2[(s0 >> 8) & 0xff] ^
-            Td3[(s3 ) & 0xff] ^
-            rk[6];
-        t3 =
-            Td0[(s3 >> 24) ] ^
-            Td1[(s2 >> 16) & 0xff] ^
-            Td2[(s1 >> 8) & 0xff] ^
-            Td3[(s0 ) & 0xff] ^
-            rk[7];
-
-        rk += 8;
-        if (--r == 0) {
-            break;
-        }
-
-        s0 =
-            Td0[(t0 >> 24) ] ^
-            Td1[(t3 >> 16) & 0xff] ^
-            Td2[(t2 >> 8) & 0xff] ^
-            Td3[(t1 ) & 0xff] ^
-            rk[0];
-        s1 =
-            Td0[(t1 >> 24) ] ^
-            Td1[(t0 >> 16) & 0xff] ^
-            Td2[(t3 >> 8) & 0xff] ^
-            Td3[(t2 ) & 0xff] ^
-            rk[1];
-        s2 =
-            Td0[(t2 >> 24) ] ^
-            Td1[(t1 >> 16) & 0xff] ^
-            Td2[(t0 >> 8) & 0xff] ^
-            Td3[(t3 ) & 0xff] ^
-            rk[2];
-        s3 =
-            Td0[(t3 >> 24) ] ^
-            Td1[(t2 >> 16) & 0xff] ^
-            Td2[(t1 >> 8) & 0xff] ^
-            Td3[(t0 ) & 0xff] ^
-            rk[3];
-    }
+        void AES_decrypt__part99(u32 s0, u32 s1, u32 s2, u32 s3,
+        const u32 **rkp, int *rp,
+        u32 *t0p, u32 *t1p, u32 *t2p, u32 *t3p);
+    AES_decrypt__part99(s0, s1, s2, s3, &rk, &r, &t0, &t1, &t2, &t3);
 
 
 
@@ -1528,12 +1430,11 @@ void AES_decrypt(const unsigned char *in, unsigned char *out,
 AES_decrypt__part100(t0, t1, t2, t3, rk[0], out);
  void AES_decrypt__part101(unsigned char *out, unsigned int s0);
 AES_decrypt__part101(out, s0);;
-    s1 =
-     (Td4[(t1 >> 24) ] & 0xff000000) ^
-     (Td4[(t0 >> 16) & 0xff] & 0x00ff0000) ^
-     (Td4[(t3 >> 8) & 0xff] & 0x0000ff00) ^
-     (Td4[(t2 ) & 0xff] & 0x000000ff) ^
-     rk[1];
+    {
+        u32 AES_decrypt__part102(u32 t0, u32 t1, u32 t2, u32 t3, const u32 *rk);
+        s1 = AES_decrypt__part102(t0, t1, t2, t3, rk);
+    }
+
  void AES_decrypt__part103(u32 s1, unsigned char *out);
 AES_decrypt__part103(s1, out + 4);void AES_decrypt__part104(unsigned int t0, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int rk2, unsigned char *out);
 AES_decrypt__part104(t0, t1, t2, t3, rk[2], out + 8);
@@ -1559,11 +1460,19 @@ unsigned long n = r.n;
 unsigned long len = r.len;
 unsigned char tmp[16] = {r.tmp[0], r.tmp[1], r.tmp[2], r.tmp[3], r.tmp[4], r.tmp[5], r.tmp[6], r.tmp[7], r.tmp[8], r.tmp[9], r.tmp[10], r.tmp[11], r.tmp[12], r.tmp[13], r.tmp[14], r.tmp[15]};
 
- if (enc) {
+ // Prototype of the Rust function, replacing the TARGET declaration
+void AES_cbc_encrypt__part111(const unsigned char *in, unsigned char *out,
+                              unsigned long *len, unsigned long *n,
+                              unsigned char *tmp, unsigned char *ivec,
+                              int enc, const void *key);
+
+// Call to the Rust function, replacing the TARGET block
+// This replaces the entire if/else block starting at line 1672
+if (enc) {
   while (len >= 16) {
    for(n=0; n < 16; ++n)
     tmp[n] = in[n] ^ ivec[n];
-   AES_encrypt(tmp, out, key);
+   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 1, key);
    memcpy(ivec, out, 16);
    len -= 16;
    in += 16;
@@ -1574,14 +1483,14 @@ unsigned char tmp[16] = {r.tmp[0], r.tmp[1], r.tmp[2], r.tmp[3], r.tmp[4], r.tmp
     tmp[n] = in[n] ^ ivec[n];
    for(n=len; n < 16; ++n)
     tmp[n] = ivec[n];
-   AES_encrypt(tmp, tmp, key);
+   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 1, key);
    memcpy(out, tmp, 16);
    memcpy(ivec, tmp, 16);
   }
- } else {
+} else {
   while (len >= 16) {
    memcpy(tmp, in, 16);
-   AES_decrypt(in, out, key);
+   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 0, key);
    for(n=0; n < 16; ++n)
     out[n] ^= ivec[n];
    memcpy(ivec, tmp, 16);
@@ -1591,10 +1500,10 @@ unsigned char tmp[16] = {r.tmp[0], r.tmp[1], r.tmp[2], r.tmp[3], r.tmp[4], r.tmp
   }
   if (len) {
    memcpy(tmp, in, 16);
-   AES_decrypt(tmp, tmp, key);
+   AES_cbc_encrypt__part111(in, out, &len, &n, tmp, ivec, 0, key);
    for(n=0; n < len; ++n)
     out[n] = tmp[n] ^ ivec[n];
    memcpy(ivec, tmp, 16);
   }
- }
+}
 }

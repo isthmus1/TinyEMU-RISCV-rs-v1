@@ -10887,65 +10887,50 @@ static CachedBlock *bf_find_block(BlockDeviceHTTP *bf, unsigned int block_num)
     CachedBlock *b;
     struct list_head *el;
 
-    for(el = (&bf->cached_blocks)->next; el != (&bf->cached_blocks); el = el->next) {
-        b = ((CachedBlock *)((uint8_t *)(el) - 
-           __builtin_offsetof (
-           CachedBlock
-           , 
-           link
-           )
-           ));
-        if (b->block_num == block_num) {
+        CachedBlock *bf_find_block__part292(BlockDeviceHTTP *bf, unsigned int block_num);
+    CachedBlock *found292 = bf_find_block__part292(bf, block_num);
+    if (found292)
+        return found292;
 
-            if (bf->cached_blocks.next != el) {
-                list_del(&b->link);
-                list_add(&b->link, &bf->cached_blocks);
-            }
-            return b;
-        }
-    }
     extern void *bf_find_block__part293(void);
 return bf_find_block__part293();
 }
 
 static void bf_free_block(BlockDeviceHTTP *bf, CachedBlock *b)
 {
-    bf->n_cached_blocks--;
-    file_buffer_reset(&b->fbuf);
-    list_del(&b->link);
-    free(b);
+    void bf_free_block__part295(BlockDeviceHTTP *bf, CachedBlock *b);
+    bf_free_block__part295(bf, b);
 }
 
 static CachedBlock *bf_add_block(BlockDeviceHTTP *bf, unsigned int block_num)
 {
     CachedBlock *b;
-    if (bf->n_cached_blocks >= bf->n_cached_blocks_max) {
-        struct list_head *el, *el1;
+    // C replacement for TARGET lines 10937-10954 of bf_add_block
+// The TARGET is the cache eviction loop; we replace it with a call to the Rust function
 
-        for(el = (&bf->cached_blocks)->prev, el1 = el->prev; el != (&bf->cached_blocks); el = el1, el1 = el->prev) {
-            b = ((CachedBlock *)((uint8_t *)(el) - 
-               __builtin_offsetof (
-               CachedBlock
-               , 
-               link
-               )
-               ));
-            if (b->state == CBLOCK_LOADED) {
-                bf_free_block(bf, b);
-                if (bf->n_cached_blocks < bf->n_cached_blocks_max)
-                    break;
-            }
-        }
+// Declare the Rust-exported function with exact C ABI types
+// bf_add_block__part297 takes a BlockDeviceHTTP pointer (as void*) and returns unsigned int
+unsigned int bf_add_block__part297(void *bf);
+
+// Replace the TARGET with a call to the Rust function
+// Original TARGET was:
+//   if (bf->n_cached_blocks >= bf->n_cached_blocks_max) {
+//       struct list_head *el, *el1;
+//       for(el = (&bf->cached_blocks)->prev, el1 = el->prev; el != (&bf->cached_blocks); el = el1, el1 = el->prev) {
+//           b = ((CachedBlock *)((uint8_t *)(el) - __builtin_offsetof(CachedBlock, link)));
+//           if (b->state == CBLOCK_LOADED) {
+//               bf_free_block(bf, b);
+//               if (bf->n_cached_blocks < bf->n_cached_blocks_max)
+//                   break;
+//           }
+//       }
+//   }
+bf_add_block__part297(bf);
+        {
+        CachedBlock *bf_add_block__part298(BlockDeviceHTTP *bf, unsigned int block_num);
+        return bf_add_block__part298(bf, block_num);
     }
-    b = mallocz(sizeof(CachedBlock));
-    b->bf = bf;
-    b->block_num = block_num;
-    b->state = CBLOCK_LOADING;
-    file_buffer_init(&b->fbuf);
-    file_buffer_resize(&b->fbuf, bf->block_size * 512);
-    list_add(&b->link, &bf->cached_blocks);
-    bf->n_cached_blocks++;
-    return b;
+
 }
 
 static int64_t bf_get_sector_count(BlockDevice *bs)
@@ -10956,50 +10941,37 @@ return bf_get_sector_count__part300(bs);
 
 static void bf_start_load_block(BlockDevice *bs, int block_num)
 {
-    BlockDeviceHTTP *bf = bs->opaque;
-    char filename[1024];
-    CachedBlock *b;
-    b = bf_add_block(bf, block_num);
-    bf->n_read_blocks++;
-    snprintf(filename, sizeof(filename), "%sblk%09u.bin", bf->url, block_num);
+    void bf_start_load_block__part302(BlockDevice *bs, int block_num,
+                                  void (*cb)(void *opaque, int err, void *data, size_t size));
+    bf_start_load_block__part302(bs, block_num, bf_read_onload);
 
-    fs_wget(filename, 
-                     ((void *)0)
-                         , 
-                           ((void *)0)
-                               , b, bf_read_onload, TRUE);
 }
 
 static void bf_start_load_prefetch_group(BlockDevice *bs, int group_num,
                                          const int *tab_block_num,
                                          int n_block_num)
 {
-    BlockDeviceHTTP *bf = bs->opaque;
+        void bf_start_load_prefetch_group__part304(BlockDevice *bs, int group_num,
+                                               int n_block_num,
+                                               BlockDeviceHTTP **out_bf,
+                                               PrefetchGroupRequest **out_req,
+                                               BOOL *out_req_flag);
+    BlockDeviceHTTP *bf;
     CachedBlock *b;
     PrefetchGroupRequest *req;
     char filename[1024];
     BOOL req_flag;
     int i;
 
-    req_flag = FALSE;
-    req = malloc(sizeof(*req));
-    req->bf = bf;
-    req->group_num = group_num;
-    req->n_block_num = n_block_num;
-    for(i = 0; i < n_block_num; i++) {
-        b = bf_find_block(bf, tab_block_num[i]);
-        if (!b) {
-            b = bf_add_block(bf, tab_block_num[i]);
-            req_flag = TRUE;
-        } else {
+    bf_start_load_prefetch_group__part304(bs, group_num, n_block_num,
+                                          &bf, &req, &req_flag);
 
+        void bf_start_load_prefetch_group__part305(void *bf, const int *tab_block_num,
+                                               int n_block_num, void *req, void **p_b,
+                                               int *p_req_flag, int *p_i);
+    bf_start_load_prefetch_group__part305(bf, tab_block_num, n_block_num, req,
+                                          (void **)&b, &req_flag, &i);
 
-            b = 
-               ((void *)0)
-                   ;
-        }
-        req->tab_block[i] = b;
-    }
 
     int bf_start_load_prefetch_group__part306(
     int req_flag,
@@ -11029,12 +11001,13 @@ static void bf_prefetch_group_onload(void *opaque, int err, void *data,
 bf_prefetch_group_onload__part308(err, req->group_num);
     int bf_prefetch_group_onload__part309(BlockDeviceHTTP *bf, size_t size, int n_block_num);
 block_bytes = bf_prefetch_group_onload__part309(bf, size, req->n_block_num);
-    for(i = 0; i < req->n_block_num; i++) {
-        b = req->tab_block[i];
-        if (b) {
-            bf_update_block(b, (const uint8_t *)data + block_bytes * i);
-        }
-    }
+        void bf_prefetch_group_onload__part310(PrefetchGroupRequest *req,
+                                           const uint8_t *data, int block_bytes,
+                                           int *i, CachedBlock **b,
+                                           void (*update)(CachedBlock *, const uint8_t *));
+    bf_prefetch_group_onload__part310(req, (const uint8_t *)data, block_bytes,
+                                      &i, &b, bf_update_block);
+
     void bf_prefetch_group_onload__part311(void *req);
 bf_prefetch_group_onload__part311(req);
 }
@@ -11079,15 +11052,12 @@ static void bf_read_onload(void *opaque, int err, void *data, size_t size)
 bf_read_onload__part320(err, b->block_num);
 
     
-   ((void) sizeof (__assert_single_arg (
-   size == bf->block_size * 512
-   )), __extension__ ({ if (
-   size == bf->block_size * 512
-   ) ; else __assert_fail (
-   "size == bf->block_size * 512"
-   , "block_net.c", 366, __extension__ __PRETTY_FUNCTION__); }))
-                                       ;
+       {
+        extern void bf_read_onload__part321(void *opaque, size_t size);
+        bf_read_onload__part321(b, size);
+    }
     bf_update_block(b, data);
+
 }
 
 static int bf_read_async(BlockDevice *bs,
@@ -11113,27 +11083,17 @@ BlockDevice *block_device_init_http(const char *url,
                                     void (*start_cb)(void *opaque),
                                     void *start_opaque)
 {
-    BlockDevice *bs;
+        BlockDevice *bs;
     BlockDeviceHTTP *bf;
     char *p;
 
-    bs = mallocz(sizeof(*bs));
-    bf = mallocz(sizeof(*bf));
-    strcpy(bf->url, url);
+    void block_device_init_http__part327(const char *url,
+                                         BlockDevice **out_bs,
+                                         BlockDeviceHTTP **out_bf,
+                                         char **out_p);
 
-    p = 
-       _Generic (0 ? (
-       bf->url
-       ) : (void *) 1, const void *: (const char *) (strrchr (
-       bf->url
-       , 
-       '/'
-       )), default: strrchr (
-       bf->url
-       , 
-       '/'
-       ))
-                            ;
+    block_device_init_http__part327(url, &bs, &bf, &p);
+
     void block_device_init_http__part328(char **p, const char *url);
 block_device_init_http__part328(&p, bf->url);
     BlockDevice *block_device_init_http__part329(const char *url,
@@ -11183,14 +11143,9 @@ if (bf_init_onload__part337(cfg, &bf->nb_blocks) < 0) goto config_error;
     int bf_init_onload__part338(int nb_blocks);
 if (bf_init_onload__part338(bf->nb_blocks)) { goto config_error; }
 
-    bf->nb_sectors = bf->block_size * (uint64_t)bf->nb_blocks;
-    bf->n_cached_blocks = 0;
-    bf->n_cached_blocks_max = max_int(1, bf->max_cache_size_kb / block_size_kb);
-    bf->cur_block_num = -1;
+        void bf_init_onload__part339(BlockDeviceHTTP *bf, int block_size_kb);
+    bf_init_onload__part339(bf, block_size_kb);
 
-    bf->sectors_per_cluster = 8;
-    bf->n_clusters = (bf->nb_sectors + bf->sectors_per_cluster - 1) / bf->sectors_per_cluster;
-    bf->clusters = mallocz(sizeof(bf->clusters[0]) * bf->n_clusters);
 
     int bf_init_onload__part340(JSONValue cfg, int *prefetch_group_len);
 if (bf_init_onload__part340(cfg, &bf->prefetch_group_len) < 0)
@@ -11204,39 +11159,24 @@ if (bf_init_onload__part341(bf->prefetch_group_len)) {
 
     JSONValue bf_init_onload__part342(JSONValue cfg);
 array = bf_init_onload__part342(cfg);
-    if (!json_is_undefined(array)) {
-        int idx, prefetch_len, l, i;
-        JSONValue el;
-        int tab_block_num[32];
-
-        if (array.type != JSON_ARRAY) {
-            vm_error("expecting an array\n");
+        {
+        int bf_prefetch_res;
+        int bf_init_onload__part343(BlockDevice *bs, BlockDeviceHTTP *bf,
+                                    JSONValue array,
+                                    CachedBlock *(*find_block)(BlockDeviceHTTP *,
+                                                               unsigned int),
+                                    void (*start_load_block)(BlockDevice *, int),
+                                    void (*start_prefetch_group)(BlockDevice *,
+                                                                 int,
+                                                                 const int *,
+                                                                 int));
+        bf_prefetch_res = bf_init_onload__part343(bs, bf, array, bf_find_block,
+                                                  bf_start_load_block,
+                                                  bf_start_load_prefetch_group);
+        if (bf_prefetch_res < 0)
             goto config_error;
-        }
-        prefetch_len = array.u.array->len;
-        idx = 0;
-        while (idx < prefetch_len) {
-            l = min_int(prefetch_len - idx, bf->prefetch_group_len);
-            for(i = 0; i < l; i++) {
-                el = json_array_get(array, idx + i);
-                if (el.type != JSON_INT) {
-                    vm_error("expecting an integer\n");
-                    goto config_error;
-                }
-                tab_block_num[i] = el.u.int32;
-            }
-            if (l == 1) {
-                block_num = tab_block_num[0];
-                if (!bf_find_block(bf, block_num)) {
-                    bf_start_load_block(bs, block_num);
-                }
-            } else {
-                bf_start_load_prefetch_group(bs, idx / bf->prefetch_group_len,
-                                             tab_block_num, l);
-            }
-            idx += l;
-        }
     }
+
     void bf_init_onload__part344(JSONValue val);
 bf_init_onload__part344(cfg);
 
