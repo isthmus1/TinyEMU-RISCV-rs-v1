@@ -9869,80 +9869,7 @@ static void dump_loaded_file(FSDevice *fs1, FSINode *n);
 
 static JSONValue json_load(const char *filename);
 
-void fs_dump_cache_load(FSDevice *fs1, const char *cfg_filename)
-{
-    FSDeviceMem *fs = (FSDeviceMem *)fs1;
-    JSONValue cfg, val, array;
-    char *fname;
-    const char *preload_dir, *name;
-    int i;
-
-        int fs_dump_cache_load__part914(FSDevice *fs1, void (*fs_mem_end_fn)(FSDevice *));
-    if (!fs_dump_cache_load__part914(fs1, fs_mem_end))
-        return;
-    JSONValue fs_dump_cache_load__part915(const char *filename);
-    cfg = fs_dump_cache_load__part915(cfg_filename);
-
-    {
-        int fs_dump_cache_load__part916(JSONValue cfg);
-        if (fs_dump_cache_load__part916(cfg))
-            exit(1);
-    }
-
-    JSONValue fs_dump_cache_load__part917(JSONValue cfg);
-    val = fs_dump_cache_load__part917(cfg);
-    int fs_dump_cache_load__part918(JSONValue cfg);
-    if (fs_dump_cache_load__part918(cfg)) {
-    config_error:
-        exit(1);
-    }
-
-        const char *fs_dump_cache_load__part919(JSONValue val);
-    preload_dir = fs_dump_cache_load__part919(val);
-    int fs_dump_cache_load__part920(const char *preload_dir);
-    if (fs_dump_cache_load__part920(preload_dir)) {
-        goto config_error;
-    }
-    void fs_dump_cache_load__part921(char **dir_out, struct list_head *preload_list,
-    struct list_head *exclude_list, const char *preload_dir, JSONValue cfg,
-    JSONValue *array_out);
-    fs_dump_cache_load__part921(&fs->dump_preload_dir, &fs->dump_preload_list,
-                                &fs->dump_exclude_list, preload_dir, cfg, &array);
-    int fs_dump_cache_load__part922(int array_type);
-    if (fs_dump_cache_load__part922(array.type)) {
-        goto config_error;
-    }
-
-        {
-        extern int fs_dump_cache_load__part923(const JSONValue *array,
-                                               unsigned int idx,
-                                               struct list_head *head);
-        for(i = 0; i < array.u.array->len; i++) {
-            if (fs_dump_cache_load__part923(&array, (unsigned int)i,
-                                            &fs->dump_preload_list))
-                goto config_error;
-        }
-    }
-
-        char *fs_dump_cache_load__part924(JSONValue cfg, const char *dump_preload_dir, FILE **dump_preload_file);
-    fname = fs_dump_cache_load__part924(cfg, fs->dump_preload_dir, &fs->dump_preload_file);
-        {
-        void fs_dump_cache_load__part925(FILE *fp, const char *fname);
-        fs_dump_cache_load__part925(fs->dump_preload_file, fname);
-    }
-
-    void fs_dump_cache_load__part926(char **fname, const char *dir, FILE **file);
-    fs_dump_cache_load__part926(&fname, fs->dump_preload_dir, &fs->dump_preload_archive_file);
-
-    {
-        void fs_dump_cache_load__part927(FILE *_fp, const char *_fname);
-        fs_dump_cache_load__part927(fs->dump_preload_archive_file, fname);
-    }
-
-    void fs_dump_cache_load__part928(char *fname, int *dump_cache_load);
-    fs_dump_cache_load__part928(fname, &fs->dump_cache_load);
-
-}
+void fs_dump_cache_load(FSDevice *fs1, const char *cfg_filename);
 static int filelist_load_rec(FSDevice *fs1, const char **pp, FSINode *dir,
                              const char *path);
 
@@ -10089,27 +10016,7 @@ static void head_loaded(FSDevice *fs, FSFile *f, int64_t size, void *opaque)
 
 }
 
-static void filelist_loaded(FSDevice *fs, FSFile *f, int64_t size, void *opaque)
-{
-    FSNetInitState *s = opaque;
-    uint8_t *buf;
-
-    void filelist_loaded__part957(int64_t size);
-    if (size < 0)
-        { filelist_loaded__part957(size); }
-
-
-    uint8_t *filelist_loaded__part958(FSDevice *fs, FSFile *f, int64_t size, FSNetInitState *s);
-    buf = filelist_loaded__part958(fs, f, size, s);
-
-    int filelist_loaded__part959(FSDevice *fs, const char *str);
-    if (filelist_loaded__part959(fs, (char *)buf) != 0)
-        fatal_error("error while parsing file list");
-
-
-    void filelist_loaded__part960(FSDevice *fs, FSNetInitState *s);
-    filelist_loaded__part960(fs, s);
-}
+static void filelist_loaded(FSDevice *fs, FSFile *f, int64_t size, void *opaque);
 
 
 

@@ -1,6 +1,6 @@
 # Argo rewrite of https://github.com/fernandotcl/TinyEMU.git
 
-3396 of 3751 functions exported into 52 modules; 355 left out.
+3399 of 3751 functions exported into 52 modules; 352 left out.
 
 Every exported function compiled on its own with rustc when its worker checked it. `cargo build` here checks that they also compile together as one crate.
 
@@ -582,7 +582,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `fs_mem_end` | fs_net.c | exported | Unvalidated |
 | `for (el = (&fs->inode_list)->next, el1 = el->next; el != (&fs->inode_list; el = el1, el1 = el->…` | fs_net.c | exported | Unvalidated |
 | `((void) sizeof (__assert_single_arg ( list_empty(&fs->inode_cache_list) )), __extension__ ({ if…` | fs_net.c | exported | Unvalidated |
-| `fs_mem_init` | fs_net.c | left out | still being translated |
+| `fs_mem_init` | fs_net.c | left out | translation failed |
 | `FSDeviceMem *fs; FSDevice *fs1; FSINode *n; fs = mallocz(sizeof(*fs)); fs1 = &fs->common; fs->c…` | fs_net.c | exported | Unvalidated |
 | `fs_is_net` | fs_net.c | exported | Unvalidated |
 | `return (fs->fs_end == fs_mem_end);` | fs_net.c | exported | Unvalidated |
@@ -631,7 +631,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `FILE *f; JSONValue val; size_t size; char *buf; f = fopen(filename, "rb");` | fs_net.c | exported | Unvalidated |
 | `if (!f)` | fs_net.c | exported | Unvalidated |
 | `fseek(f, 0, 2 ); size = ftell(f); fseek(f, 0, 0 ); buf = malloc(size + 1); fread(buf, 1, size,…` | fs_net.c | exported | Unvalidated |
-| `fs_dump_cache_load` | fs_net.c | left out | still being translated |
+| `fs_dump_cache_load` | fs_net.c | exported | Unvalidated |
 | `if (!fs_is_net(fs1))` | fs_net.c | exported | Unvalidated |
 | `cfg = json_load(cfg_filename);` | fs_net.c | exported | Unvalidated |
 | `if (json_is_error(cfg))` | fs_net.c | exported | Unvalidated |
@@ -658,20 +658,20 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `ret = filelist_load_rec(fs1, &p, fs->root_inode, ""); return ret;` | fs_net.c | exported | Unvalidated |
 | `fs_create_cmd` | fs_net.c | exported | Unvalidated |
 | `FSFile *root_fd; FSQID qid; FSINode *n; ((void) sizeof (__assert_single_arg ( !fs->fs_attach(fs…` | fs_net.c | exported | Unvalidated |
-| `fs_net_init` | fs_net.c | left out | still being translated |
+| `fs_net_init` | fs_net.c | left out | translation failed |
 | `FSDevice *fs; FSDeviceMem *fs1; fs_wget_init(); fs = fs_mem_init(); fs1 = (FSDeviceMem *)fs; fs…` | fs_net.c | exported | Unvalidated |
 | `if (url)` | fs_net.c | exported | Unvalidated |
 | `return fs;` | fs_net.c | exported | Unvalidated |
-| `fs_initial_sync` | fs_net.c | left out | still being translated |
+| `fs_initial_sync` | fs_net.c | left out | translation failed |
 | `FSNetInitState *s; FSFile *head_fd; FSQID qid; char *head_url; char buf[128]; struct timeval tv…` | fs_net.c | exported | Unvalidated |
-| `head_loaded` | fs_net.c | left out | still being translated |
+| `head_loaded` | fs_net.c | left out | translation failed |
 | `if (size < 0)` | fs_net.c | exported | Unvalidated |
 | `buf = malloc(size + 1); fs->fs_read(fs, f, 0, (uint8_t *)buf, size); buf[size] = '\0'; fs->fs_d…` | fs_net.c | exported | Unvalidated |
 | `if (parse_tag_version(buf) != 1)` | fs_net.c | exported | Unvalidated |
 | `if (parse_tag_file_id(&root_id, buf, "RootID") < 0)` | fs_net.c | exported | Unvalidated |
 | `if (parse_tag_uint64(&fs_max_size, buf, "FSMaxSize") == 0 && fs_max_size >= ((uint64_t)1 << 20)` | fs_net.c | exported | Unvalidated |
 | `root_url = compose_url(s->url, "files"); fs_net_set_base_url(fs, "/", root_url, ((void *)0) , (…` | fs_net.c | exported | Unvalidated |
-| `filelist_loaded` | fs_net.c | left out | still being translated |
+| `filelist_loaded` | fs_net.c | exported | Unvalidated |
 | `if (size < 0)` | fs_net.c | exported | Unvalidated |
 | `buf = malloc(size + 1); fs->fs_read(fs, f, 0, buf, size); buf[size] = '\0'; fs->fs_delete(fs, f…` | fs_net.c | exported | Unvalidated |
 | `if (filelist_load(fs, (char *)buf) != 0)` | fs_net.c | exported | Unvalidated |
@@ -2262,7 +2262,7 @@ Every exported function compiled on its own with rustc when its worker checked i
 | `if (tp->t_state == 3 && ti->ti_i.ih_len)` | slirp/tcp_input.c | exported | Unvalidated |
 | `do … while (ti != (struct tcpiphdr *)tp && ti->ti_t.th_seq == tp->rcv_nxt)` | slirp/tcp_input.c | exported | Unvalidated |
 | `return (flags);` | slirp/tcp_input.c | exported | Unvalidated |
-| `tcp_input` | slirp/tcp_input.c | left out | still being translated |
+| `tcp_input` | slirp/tcp_input.c | exported | Unvalidated |
 | `struct ip save_ip, *ip; register struct tcpiphdr *ti; caddr_t optp = ((void *)0) ; int optlen =…` | slirp/tcp_input.c | exported | Unvalidated |
 | `if (m == ((void *)0)` | slirp/tcp_input.c | exported | Unvalidated |
 | `slirp = m->slirp; ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);` | slirp/tcp_input.c | exported | Unvalidated |

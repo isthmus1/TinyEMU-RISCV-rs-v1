@@ -36940,6 +36940,376 @@ pub extern "C" fn json_load__part912(f: *mut FILE) -> JSONValue {
 }
 }
 
+// ── `fs_dump_cache_load` · fs_net.c:1825-1889 · chunk 913 · deepseek/deepseek-v4.1-flash-1017 · 2 attempt(s) · Unvalidated
+//
+// Original C:
+//     void fs_dump_cache_load(FSDevice *fs1, const char *cfg_filename)
+//     {
+//         FSDeviceMem *fs = (FSDeviceMem *)fs1;
+//         JSONValue cfg, val, array;
+//         char *fname;
+//         const char *preload_dir, *name;
+//         int i;
+//     
+//         if (!fs_is_net(fs1))
+//             return;
+//         cfg = json_load(cfg_filename);
+//         if (json_is_error(cfg)) {
+//             fprintf(
+//                    stderr
+//                          , "%s\n", json_get_error(cfg));
+//             exit(1);
+//         }
+//     
+//         val = json_object_get(cfg, "preload_dir");
+//         if (json_is_undefined(cfg)) {
+//         config_error:
+//             exit(1);
+//         }
+//         preload_dir = json_get_str(val);
+//         if (!preload_dir) {
+//             fprintf(
+//                    stderr
+//                          , "expecting preload_filename\n");
+//             goto config_error;
+//         }
+//         fs->dump_preload_dir = strdup(preload_dir);
+//     
+//         init_list_head(&fs->dump_preload_list);
+//         init_list_head(&fs->dump_exclude_list);
+//     
+//         array = json_object_get(cfg, "preload");
+//         if (array.type != JSON_ARRAY) {
+//             fprintf(
+//                    stderr
+//                          , "expecting preload array\n");
+//             goto config_error;
+//         }
+//         for(i = 0; i < array.u.array->len; i++) {
+//             val = json_array_get(array, i);
+//             name = json_get_str(val);
+//             if (!name) {
+//                 fprintf(
+//                        stderr
+//                              , "expecting a string\n");
+//                 goto config_error;
+//             }
+//             fs_dump_add_file(&fs->dump_preload_list, name);
+//         }
+//         json_free(cfg);
+//     
+//         fname = compose_path(fs->dump_preload_dir, "preload.txt");
+//         fs->dump_preload_file = fopen(fname, "w");
+//         if (!fs->dump_preload_file) {
+//             perror(fname);
+//             exit(1);
+//         }
+//         free(fname);
+//     
+//         fname = compose_path(fs->dump_preload_dir, "preload_archive.txt");
+//         fs->dump_preload_archive_file = fopen(fname, "w");
+//         if (!fs->dump_preload_archive_file) {
+//             perror(fname);
+//             exit(1);
+//         }
+//         free(fname);
+//     
+//         fs->dump_cache_load = TRUE;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk913 {
+// Rust port of fs_dump_cache_load (from fs_net.c)
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
+
+type BOOL = c_int;
+const TRUE: BOOL = 1;
+
+/* JSONTypeEnum values (json.c) */
+const JSON_ARRAY: c_int = 3;
+const JSON_UNDEFINED: c_int = 6;
+const JSON_EXCEPTION: c_int = 7;
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
+
+#[repr(C)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+/* struct FSDevice: only the function pointer table; the entries are opaque
+   here except for fs_end, which is only compared, never called. */
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: *mut c_void,
+    pub fs_delete: *mut c_void,
+    pub fs_statfs: *mut c_void,
+    pub fs_attach: *mut c_void,
+    pub fs_walk: *mut c_void,
+    pub fs_mkdir: *mut c_void,
+    pub fs_open: *mut c_void,
+    pub fs_create: *mut c_void,
+    pub fs_stat: *mut c_void,
+    pub fs_setattr: *mut c_void,
+    pub fs_close: *mut c_void,
+    pub fs_readdir: *mut c_void,
+    pub fs_read: *mut c_void,
+    pub fs_write: *mut c_void,
+    pub fs_link: *mut c_void,
+    pub fs_symlink: *mut c_void,
+    pub fs_mknod: *mut c_void,
+    pub fs_readlink: *mut c_void,
+    pub fs_renameat: *mut c_void,
+    pub fs_unlinkat: *mut c_void,
+    pub fs_lock: *mut c_void,
+    pub fs_getlock: *mut c_void,
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut c_void,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONArray {
+    pub len: c_int,
+    pub size: c_int,
+    pub tab: *mut JSONValue,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union JSONValueU {
+    pub str_: *mut c_void,
+    pub int32: c_int,
+    pub b: BOOL,
+    pub obj: *mut c_void,
+    pub array: *mut JSONArray,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct JSONValue {
+    pub type_: c_int,
+    pub u: JSONValueU,
+}
+
+/* static struct in fs_net.c: { struct list_head link; BOOL is_archive;
+   const char *name; } */
+#[repr(C)]
+struct PreloadFile {
+    link: ListHead,
+    is_archive: BOOL,
+    name: *const c_char,
+}
+
+extern "C" {
+    static stderr: *mut c_void;
+
+    fn fprintf(stream: *mut c_void, fmt: *const c_char, ...) -> c_int;
+    fn perror(s: *const c_char);
+    fn exit(status: c_int) -> !;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn free(p: *mut c_void);
+    fn malloc(size: usize) -> *mut c_void;
+    #[link_name = "fopen64"]
+    fn fopen(filename: *const c_char, mode: *const c_char) -> *mut c_void;
+    fn fseek(stream: *mut c_void, off: c_long, whence: c_int) -> c_int;
+    fn ftell(stream: *mut c_void) -> c_long;
+    fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut c_void) -> usize;
+    fn fclose(stream: *mut c_void) -> c_int;
+
+    fn mallocz(size: usize) -> *mut c_void;
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+
+    fn json_object_get(val: JSONValue, name: *const c_char) -> JSONValue;
+    fn json_array_get(val: JSONValue, idx: c_uint) -> JSONValue;
+    fn json_get_str(val: JSONValue) -> *const c_char;
+    fn json_get_error(val: JSONValue) -> *const c_char;
+    fn json_parse_value_len(p: *const c_char, len: c_int) -> JSONValue;
+    fn json_free(val: JSONValue);
+
+    fn fs_mem_init() -> *mut FSDevice;
+    fn fs_end(fs: *mut FSDevice);
+}
+
+unsafe fn init_list_head(head: *mut ListHead) {
+    (*head).prev = head;
+    (*head).next = head;
+}
+
+unsafe fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    let prev = (*head).prev;
+    let next = head;
+    (*prev).next = el;
+    (*el).prev = prev;
+    (*el).next = next;
+    (*next).prev = el;
+}
+
+/* static void fs_dump_add_file(struct list_head *head, const char *name) */
+unsafe fn fs_dump_add_file(head: *mut ListHead, name: *const c_char) {
+    let pf = mallocz(core::mem::size_of::<PreloadFile>()) as *mut PreloadFile;
+    if pf.is_null() {
+        return;
+    }
+    (*pf).name = strdup(name);
+    list_add_tail(core::ptr::addr_of_mut!((*pf).link), head);
+}
+
+/* static JSONValue json_load(const char *filename) */
+unsafe fn json_load(filename: *const c_char) -> JSONValue {
+    let f = fopen(filename, b"rb\0".as_ptr() as *const c_char);
+    if f.is_null() {
+        perror(filename);
+        exit(1);
+    }
+    fseek(f, 0, SEEK_END);
+    let size: usize = ftell(f) as usize;
+    fseek(f, 0, SEEK_SET);
+    let buf = malloc(size.wrapping_add(1)) as *mut c_char;
+    fread(buf as *mut c_void, 1, size, f);
+    fclose(f);
+    let val = json_parse_value_len(buf, size as c_int);
+    free(buf as *mut c_void);
+    val
+}
+
+/* static BOOL fs_is_net(FSDevice *fs): (fs->fs_end == fs_mem_end).
+   fs_mem_end is a static function, so recover its address from a freshly
+   initialised (and immediately released) in-memory filesystem. */
+unsafe fn fs_is_net(fs: *mut FSDevice) -> bool {
+    let probe = fs_mem_init();
+    if probe.is_null() {
+        return false;
+    }
+    let mem_end = (*probe).fs_end;
+    fs_end(probe);
+    (*fs).fs_end == mem_end
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fs_dump_cache_load(fs1: *mut FSDevice, cfg_filename: *const c_char) {
+    if fs1.is_null() {
+        return;
+    }
+    if !fs_is_net(fs1) {
+        return;
+    }
+    let fs = fs1 as *mut FSDeviceMem;
+
+    let cfg: JSONValue = json_load(cfg_filename);
+    if cfg.type_ == JSON_EXCEPTION {
+        fprintf(
+            stderr,
+            b"%s\n\0".as_ptr() as *const c_char,
+            json_get_error(cfg),
+        );
+        exit(1);
+    }
+
+    let mut val: JSONValue =
+        json_object_get(cfg, b"preload_dir\0".as_ptr() as *const c_char);
+    /* note: the original checks 'cfg' here, not 'val' */
+    if cfg.type_ == JSON_UNDEFINED {
+        exit(1);
+    }
+    let preload_dir = json_get_str(val);
+    if preload_dir.is_null() {
+        fprintf(
+            stderr,
+            b"expecting preload_filename\n\0".as_ptr() as *const c_char,
+        );
+        exit(1);
+    }
+    (*fs).dump_preload_dir = strdup(preload_dir);
+
+    init_list_head(core::ptr::addr_of_mut!((*fs).dump_preload_list));
+    init_list_head(core::ptr::addr_of_mut!((*fs).dump_exclude_list));
+
+    let array: JSONValue = json_object_get(cfg, b"preload\0".as_ptr() as *const c_char);
+    if array.type_ != JSON_ARRAY {
+        fprintf(
+            stderr,
+            b"expecting preload array\n\0".as_ptr() as *const c_char,
+        );
+        exit(1);
+    }
+    let arr = array.u.array;
+    let len: c_int = if arr.is_null() { 0 } else { (*arr).len };
+    let mut i: c_int = 0;
+    while i < len {
+        val = json_array_get(array, i as c_uint);
+        let name = json_get_str(val);
+        if name.is_null() {
+            fprintf(stderr, b"expecting a string\n\0".as_ptr() as *const c_char);
+            exit(1);
+        }
+        fs_dump_add_file(core::ptr::addr_of_mut!((*fs).dump_preload_list), name);
+        i += 1;
+    }
+    json_free(cfg);
+
+    let mut fname: *mut c_char = compose_path(
+        (*fs).dump_preload_dir,
+        b"preload.txt\0".as_ptr() as *const c_char,
+    );
+    (*fs).dump_preload_file = fopen(fname, b"w\0".as_ptr() as *const c_char);
+    if (*fs).dump_preload_file.is_null() {
+        perror(fname);
+        exit(1);
+    }
+    free(fname as *mut c_void);
+
+    fname = compose_path(
+        (*fs).dump_preload_dir,
+        b"preload_archive.txt\0".as_ptr() as *const c_char,
+    );
+    (*fs).dump_preload_archive_file = fopen(fname, b"w\0".as_ptr() as *const c_char);
+    if (*fs).dump_preload_archive_file.is_null() {
+        perror(fname);
+        exit(1);
+    }
+    free(fname as *mut c_void);
+
+    (*fs).dump_cache_load = TRUE;
+}
+}
+
 // ── `if (!fs_is_net(fs1))` · fs_net.c:1833-1834 · chunk 914 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
@@ -42386,6 +42756,1315 @@ pub unsafe extern "C" fn head_loaded__part955(
     // free(root_url); free(url);
     free(root_url as *mut c_void);
     free(url as *mut c_void);
+}
+}
+
+// ── `filelist_loaded` · fs_net.c:2199-2219 · chunk 956 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     static void filelist_loaded(FSDevice *fs, FSFile *f, int64_t size, void *opaque)
+//     {
+//         FSNetInitState *s = opaque;
+//         uint8_t *buf;
+//     
+//         if (size < 0)
+//             fatal_error("could not load file list (HTTP error=%d)", -(int)size);
+//     
+//         buf = malloc(size + 1);
+//         fs->fs_read(fs, f, 0, buf, size);
+//         buf[size] = '\0';
+//         fs->fs_delete(fs, f);
+//         fs->fs_unlinkat(fs, s->root_fd, ".filelist.txt");
+//     
+//         if (filelist_load(fs, (char *)buf) != 0)
+//             fatal_error("error while parsing file list");
+//     
+//     
+//         s->file_index = 0;
+//         kernel_load_cb(fs, 
+//                           ((void *)0)
+//                               , 0, s);
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk956 {
+// Port of fs_net.c: filelist_loaded()
+//
+// The target function is `static` in the original but exported here.  The C
+// helpers it calls (filelist_load(), filelist_load_rec(), inode_new(),
+// inode_dir_add(), inode_incref(), fs_net_set_url(), preload_parse*() and
+// kernel_load_cb()) are `static` too, hence they have no linker symbol: their
+// logic is ported here as private Rust functions, exactly as in fs_net.c.
+
+#![allow(non_camel_case_types, non_snake_case, dead_code, unused_variables, unused_unsafe)]
+
+use core::ffi::{c_char, c_int, c_void};
+use core::mem::size_of;
+use core::ptr::{addr_of_mut, null_mut};
+
+pub type BOOL = c_int;
+
+/* ------------------------------------------------------------------ */
+/* C symbols used                                                      */
+
+extern "C" {
+    static mut stderr: *mut c_void;
+
+    fn fprintf(stream: *mut c_void, format: *const c_char, ...) -> c_int;
+    fn exit(code: c_int) -> !;
+    fn malloc(size: usize) -> *mut c_void;
+    fn free(ptr: *mut c_void);
+    fn memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+    fn strlen(s: *const c_char) -> usize;
+    fn strcmp(s1: *const c_char, s2: *const c_char) -> c_int;
+    fn strchr(s: *const c_char, c: c_int) -> *mut c_char;
+    fn strdup(s: *const c_char) -> *mut c_char;
+    fn gettimeofday(tv: *mut TimeVal, tz: *mut c_void) -> c_int;
+    fn abort() -> !;
+
+    /* cutils.c */
+    fn mallocz(size: usize) -> *mut c_void;
+
+    /* fs_utils.c */
+    fn compose_path(path: *const c_char, name: *const c_char) -> *mut c_char;
+    fn skip_line(pp: *mut *const c_char);
+    fn parse_fname(buf: *mut c_char, buf_size: c_int, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32_base(pval: *mut u32, pp: *mut *const c_char, base: c_int) -> c_int;
+    fn parse_uint64(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn parse_uint32(pval: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_time(psec: *mut u32, pnsec: *mut u32, pp: *mut *const c_char) -> c_int;
+    fn parse_file_id(pval: *mut u64, pp: *mut *const c_char) -> c_int;
+    fn skip_header(p: *const c_char) -> *const c_char;
+    fn parse_tag_version(str_: *const c_char) -> c_int;
+
+    /* fs.c */
+    fn fs_walk_path(fs: *mut FSDevice, f: *mut FSFile, path: *const c_char) -> *mut FSFile;
+
+    /* fs_net.c (non static file buffer helpers) */
+    fn file_buffer_init(bs: *mut FileBuffer);
+    fn file_buffer_read(bs: *mut FileBuffer, offset: usize, buf: *mut u8, size: usize);
+}
+
+/* ------------------------------------------------------------------ */
+/* constants                                                           */
+
+const FT_CHR: c_int = 2;
+const FT_DIR: c_int = 4;
+const FT_BLK: c_int = 6;
+const FT_REG: c_int = 8;
+const FT_LNK: c_int = 10;
+
+const REG_STATE_LOCAL: c_int = 0;
+const REG_STATE_UNLOADED: c_int = 1;
+const REG_STATE_LOADING: c_int = 2;
+const REG_STATE_LOADED: c_int = 3;
+
+const P9_O_RDONLY: u32 = 0x00000000;
+
+const FILE_LOAD_COUNT: c_int = 2;
+
+const FILELIST_TXT: &[u8] = b".filelist.txt\0";
+const PRELOAD2_TXT: &[u8] = b".preload2/preload.txt\0";
+const PRELOAD_TXT: &[u8] = b".preload\0";
+const SLASH: &[u8] = b"/\0";
+const EMPTY_STR: &[u8] = b"\0";
+const DOT_STR: &[u8] = b".\0";
+const DOTDOT_STR: &[u8] = b"..\0";
+
+static KERNEL_FILE_LIST: [&[u8]; 2] = [b".preload\0", b".preload2/preload.txt\0"];
+
+/* ------------------------------------------------------------------ */
+/* struct mirrors                                                      */
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ListHead {
+    pub prev: *mut ListHead,
+    pub next: *mut ListHead,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct TimeVal {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FileBuffer {
+    pub data: *mut u8,
+    pub allocated_size: usize,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSStatFS {
+    pub f_bsize: u32,
+    pub f_blocks: u64,
+    pub f_bfree: u64,
+    pub f_bavail: u64,
+    pub f_files: u64,
+    pub f_ffree: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSQID {
+    pub r#type: u8,
+    pub version: u32,
+    pub path: u64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSStat {
+    pub qid: FSQID,
+    pub st_mode: u32,
+    pub st_uid: u32,
+    pub st_gid: u32,
+    pub st_nlink: u64,
+    pub st_rdev: u64,
+    pub st_size: u64,
+    pub st_blksize: u64,
+    pub st_blocks: u64,
+    pub st_atime_sec: u64,
+    pub st_atime_nsec: u32,
+    pub st_mtime_sec: u64,
+    pub st_mtime_nsec: u32,
+    pub st_ctime_sec: u64,
+    pub st_ctime_nsec: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSLock {
+    pub r#type: u8,
+    pub flags: u32,
+    pub start: u64,
+    pub length: u64,
+    pub proc_id: u32,
+    pub client_id: *mut c_char,
+}
+
+pub type FSOpenCompletionFunc =
+    unsafe extern "C" fn(*mut FSDevice, *mut FSQID, c_int, *mut c_void);
+
+#[repr(C)]
+pub struct FSDevice {
+    pub fs_end: Option<unsafe extern "C" fn(*mut FSDevice)>,
+    pub fs_delete: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_statfs: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSStatFS)>,
+    pub fs_attach: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            u32,
+            *const c_char,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_walk: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut *mut FSFile,
+            *mut FSQID,
+            *mut FSFile,
+            c_int,
+            *mut *mut c_char,
+        ) -> c_int,
+    >,
+    pub fs_mkdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSQID, *mut FSFile, *const c_char, u32, u32) -> c_int,
+    >,
+    pub fs_open: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            u32,
+            Option<FSOpenCompletionFunc>,
+            *mut c_void,
+        ) -> c_int,
+    >,
+    pub fs_create: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_stat: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSStat) -> c_int>,
+    pub fs_setattr: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            u32,
+            u32,
+            u32,
+            u32,
+            u64,
+            u64,
+            u64,
+            u64,
+            u64,
+        ) -> c_int,
+    >,
+    pub fs_close: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile)>,
+    pub fs_readdir: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int,
+    >,
+    pub fs_read: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *mut u8, c_int) -> c_int>,
+    pub fs_write: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, u64, *const u8, c_int) -> c_int,
+    >,
+    pub fs_link: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSFile, *const c_char) -> c_int,
+    >,
+    pub fs_symlink: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            *const c_char,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_mknod: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSQID,
+            *mut FSFile,
+            *const c_char,
+            u32,
+            u32,
+            u32,
+            u32,
+        ) -> c_int,
+    >,
+    pub fs_readlink: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut c_char, c_int, *mut FSFile) -> c_int,
+    >,
+    pub fs_renameat: Option<
+        unsafe extern "C" fn(
+            *mut FSDevice,
+            *mut FSFile,
+            *const c_char,
+            *mut FSFile,
+            *const c_char,
+        ) -> c_int,
+    >,
+    pub fs_unlinkat: Option<
+        unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const c_char) -> c_int,
+    >,
+    pub fs_lock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *const FSLock) -> c_int>,
+    pub fs_getlock: Option<unsafe extern "C" fn(*mut FSDevice, *mut FSFile, *mut FSLock) -> c_int>,
+}
+
+#[repr(C)]
+pub struct FSFile {
+    pub uid: u32,
+    pub inode: *mut FSINode,
+    pub is_opened: BOOL,
+    pub open_flags: u32,
+    pub req: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct AES_KEY {
+    pub rd_key: [u32; 4 * 15],
+    pub rounds: c_int,
+}
+
+#[repr(C)]
+pub struct FSBaseURL {
+    pub link: ListHead,
+    pub ref_count: c_int,
+    pub base_url_id: *mut c_char,
+    pub url: *mut c_char,
+    pub user: *mut c_char,
+    pub password: *mut c_char,
+    pub encrypted: BOOL,
+    pub aes_state: AES_KEY,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeReg {
+    pub state: c_int,
+    pub size: usize,
+    pub fbuf: FileBuffer,
+    pub base_url: *mut FSBaseURL,
+    pub file_id: u64,
+    pub link: ListHead,
+    pub open_info: *mut c_void,
+    pub is_fscmd: BOOL,
+    pub filename: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDir {
+    pub de_list: ListHead,
+    pub size: c_int,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeDev {
+    pub major: u32,
+    pub minor: u32,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FSINodeSymlink {
+    pub name: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union FSINodeU {
+    pub reg: FSINodeReg,
+    pub dir: FSINodeDir,
+    pub dev: FSINodeDev,
+    pub symlink: FSINodeSymlink,
+}
+
+#[repr(C)]
+pub struct FSINode {
+    pub link: ListHead,
+    pub inode_num: u64,
+    pub refcount: i32,
+    pub open_count: i32,
+    pub r#type: c_int,
+    pub mode: u32,
+    pub uid: u32,
+    pub gid: u32,
+    pub mtime_sec: u32,
+    pub ctime_sec: u32,
+    pub mtime_nsec: u32,
+    pub ctime_nsec: u32,
+    pub u: FSINodeU,
+}
+
+#[repr(C)]
+pub struct FSDirEntry {
+    pub link: ListHead,
+    pub inode: *mut FSINode,
+    pub mark: u8,
+    pub name: [c_char; 0],
+}
+
+#[repr(C)]
+pub struct FSDeviceMem {
+    pub common: FSDevice,
+    pub inode_list: ListHead,
+    pub inode_count: i64,
+    pub inode_limit: u64,
+    pub fs_blocks: i64,
+    pub fs_max_blocks: u64,
+    pub inode_num_alloc: u64,
+    pub block_size_log2: c_int,
+    pub block_size: u32,
+    pub root_inode: *mut FSINode,
+    pub inode_cache_list: ListHead,
+    pub inode_cache_size: i64,
+    pub inode_cache_size_limit: i64,
+    pub preload_list: ListHead,
+    pub preload_archive_list: ListHead,
+    pub base_url_list: ListHead,
+    pub import_dir: *mut c_char,
+    pub dump_cache_load: BOOL,
+    pub dump_started: BOOL,
+    pub dump_preload_dir: *mut c_char,
+    pub dump_preload_file: *mut c_void,
+    pub dump_preload_archive_file: *mut c_void,
+    pub dump_archive_name: *mut c_char,
+    pub dump_archive_size: u64,
+    pub dump_archive_file: *mut c_void,
+    pub dump_archive_num: c_int,
+    pub dump_preload_list: ListHead,
+    pub dump_exclude_list: ListHead,
+}
+
+#[repr(C)]
+pub struct PreloadFile {
+    pub link: ListHead,
+    pub is_archive: BOOL,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct PreloadEntry {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct PreloadArchiveFile {
+    pub link: ListHead,
+    pub file_id: u64,
+    pub size: u64,
+    pub name: *const c_char,
+}
+
+#[repr(C)]
+pub struct PreloadArchive {
+    pub link: ListHead,
+    pub name: *const c_char,
+    pub file_list: ListHead,
+}
+
+#[repr(C)]
+pub struct FSNetInitState {
+    pub fs: *mut FSDevice,
+    pub url: *mut c_char,
+    pub start_cb: Option<unsafe extern "C" fn(*mut c_void)>,
+    pub start_opaque: *mut c_void,
+    pub root_fd: *mut FSFile,
+    pub fd: *mut FSFile,
+    pub file_index: c_int,
+}
+
+/* ------------------------------------------------------------------ */
+/* list helpers (list.h)                                               */
+
+fn init_list_head(head: *mut ListHead) {
+    unsafe {
+        (*head).prev = head;
+        (*head).next = head;
+    }
+}
+
+fn list_add(el: *mut ListHead, head: *mut ListHead) {
+    unsafe {
+        let next = (*head).next;
+        (*head).next = el;
+        (*el).prev = head;
+        (*el).next = next;
+        (*next).prev = el;
+    }
+}
+
+fn list_add_tail(el: *mut ListHead, head: *mut ListHead) {
+    unsafe {
+        let prev = (*head).prev;
+        (*prev).next = el;
+        (*el).prev = prev;
+        (*el).next = head;
+        (*head).prev = el;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* fatal_error() equivalents (variadic static C function)              */
+
+fn fatal_error_http(size: i64) -> ! {
+    unsafe {
+        let v: c_int = (size as c_int).wrapping_neg();
+        fprintf(
+            *core::ptr::addr_of!(stderr),
+            b"Error: could not load file list (HTTP error=%d)\n\0".as_ptr() as *const c_char,
+            v,
+        );
+        exit(1)
+    }
+}
+
+fn fatal_error_parse() -> ! {
+    unsafe {
+        fprintf(
+            *core::ptr::addr_of!(stderr),
+            b"Error: error while parsing file list\n\0".as_ptr() as *const c_char,
+        );
+        exit(1)
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* small wrappers around the FSDevice operation table                  */
+
+fn fs_op_delete(fs: *mut FSDevice, f: *mut FSFile) {
+    unsafe {
+        if let Some(fp) = (*fs).fs_delete {
+            fp(fs, f);
+        }
+    }
+}
+
+fn fs_op_read(fs: *mut FSDevice, f: *mut FSFile, offset: u64, buf: *mut u8, count: c_int) -> c_int {
+    unsafe {
+        match (*fs).fs_read {
+            Some(fp) => fp(fs, f, offset, buf, count),
+            None => {
+                abort();
+            }
+        }
+    }
+}
+
+fn fs_op_unlinkat(fs: *mut FSDevice, f: *mut FSFile, name: *const c_char) -> c_int {
+    unsafe {
+        match (*fs).fs_unlinkat {
+            Some(fp) => fp(fs, f, name),
+            None => {
+                abort();
+            }
+        }
+    }
+}
+
+fn fs_op_open(
+    fs: *mut FSDevice,
+    qid: *mut FSQID,
+    f: *mut FSFile,
+    flags: u32,
+    cb: Option<FSOpenCompletionFunc>,
+    opaque: *mut c_void,
+) -> c_int {
+    unsafe {
+        match (*fs).fs_open {
+            Some(fp) => fp(fs, qid, f, flags, cb, opaque),
+            None => {
+                abort();
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* inode helpers                                                       */
+
+fn to_blocks(fs: *mut FSDeviceMem, size: u64) -> i64 {
+    unsafe {
+        let bs = (*fs).block_size as u64;
+        let shift = (*fs).block_size_log2 as u32;
+        (size.wrapping_add(bs).wrapping_sub(1) >> shift) as i64
+    }
+}
+
+fn inode_incref(fs: *mut FSDevice, n: *mut FSINode) -> *mut FSINode {
+    unsafe {
+        (*n).refcount = (*n).refcount.wrapping_add(1);
+        n
+    }
+}
+
+fn inode_update_mtime(fs: *mut FSDevice, n: *mut FSINode) {
+    unsafe {
+        let mut tv = TimeVal {
+            tv_sec: 0,
+            tv_usec: 0,
+        };
+        gettimeofday(&mut tv, null_mut());
+        (*n).mtime_sec = tv.tv_sec as u32;
+        (*n).mtime_nsec = tv.tv_usec.wrapping_mul(1000) as u32;
+    }
+}
+
+fn inode_new(fs1: *mut FSDevice, r#type: c_int, mode: u32, uid: u32, gid: u32) -> *mut FSINode {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let n = mallocz(size_of::<FSINode>()) as *mut FSINode;
+        (*n).refcount = 1;
+        (*n).open_count = 0;
+        (*n).inode_num = (*fs).inode_num_alloc;
+        (*fs).inode_num_alloc = (*fs).inode_num_alloc.wrapping_add(1);
+        (*n).r#type = r#type;
+        (*n).mode = mode & 0xfff;
+        (*n).uid = uid;
+        (*n).gid = gid;
+
+        match r#type {
+            FT_REG => {
+                file_buffer_init(addr_of_mut!((*n).u.reg.fbuf));
+            }
+            FT_DIR => {
+                init_list_head(addr_of_mut!((*n).u.dir.de_list));
+            }
+            _ => {}
+        }
+
+        list_add(addr_of_mut!((*n).link), addr_of_mut!((*fs).inode_list));
+        (*fs).inode_count = (*fs).inode_count.wrapping_add(1);
+
+        inode_update_mtime(fs1, n);
+        (*n).ctime_sec = (*n).mtime_sec;
+        (*n).ctime_nsec = (*n).mtime_nsec;
+
+        n
+    }
+}
+
+fn inode_dir_add(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    name: *const c_char,
+    n1: *mut FSINode,
+) -> *mut FSDirEntry {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let name_len = strlen(name) as c_int;
+        let de = mallocz(size_of::<FSDirEntry>() + name_len as usize + 1) as *mut FSDirEntry;
+        (*de).inode = n1;
+        memcpy(
+            addr_of_mut!((*de).name) as *mut c_void,
+            name as *const c_void,
+            name_len as usize + 1,
+        );
+        let dirent_size: c_int = size_of::<FSDirEntry>() as c_int + name_len + 1;
+        let new_size: c_int = (*n).u.dir.size + dirent_size;
+        (*fs).fs_blocks += to_blocks(fs, new_size as u64) - to_blocks(fs, (*n).u.dir.size as u64);
+        (*n).u.dir.size = new_size;
+        list_add_tail(addr_of_mut!((*de).link), addr_of_mut!((*n).u.dir.de_list));
+        de
+    }
+}
+
+fn inode_search(n: *mut FSINode, name: *const c_char) -> *mut FSDirEntry {
+    unsafe {
+        if (*n).r#type != FT_DIR {
+            return null_mut();
+        }
+        let head = addr_of_mut!((*n).u.dir.de_list);
+        let mut el = (*head).next;
+        while el != head {
+            /* 'link' is the first member of FSDirEntry */
+            let de = el as *mut FSDirEntry;
+            if strcmp(addr_of_mut!((*de).name) as *const c_char, name) == 0 {
+                return de;
+            }
+            el = (*el).next;
+        }
+        null_mut()
+    }
+}
+
+fn inode_search_path1(fs: *mut FSDevice, n0: *mut FSINode, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        let mut name = [0 as c_char; 1024];
+        let mut n = n0;
+        let mut p: *const c_char = path;
+
+        if *p == b'/' as c_char {
+            p = p.add(1);
+        }
+        if *p == 0 {
+            return n;
+        }
+        loop {
+            let len: c_int;
+            let mut p1 = strchr(p, b'/' as c_int);
+            if p1.is_null() {
+                len = strlen(p) as c_int;
+            } else {
+                len = (p1 as isize).wrapping_sub(p as isize) as c_int;
+                p1 = p1.add(1);
+            }
+            if (len as usize) > 1023 {
+                return null_mut();
+            }
+            memcpy(
+                name.as_mut_ptr() as *mut c_void,
+                p as *const c_void,
+                len as usize,
+            );
+            *name.as_mut_ptr().offset(len as isize) = 0;
+
+            if (*n).r#type != FT_DIR {
+                return null_mut();
+            }
+            let de = inode_search(n, name.as_ptr());
+            if de.is_null() {
+                return null_mut();
+            }
+            n = (*de).inode;
+            p = if p1.is_null() {
+                core::ptr::null()
+            } else {
+                p1 as *const c_char
+            };
+            if p.is_null() {
+                break;
+            }
+        }
+        n
+    }
+}
+
+fn inode_search_path(fs1: *mut FSDevice, path: *const c_char) -> *mut FSINode {
+    unsafe {
+        if fs1.is_null() {
+            return null_mut();
+        }
+        let fs = fs1 as *mut FSDeviceMem;
+        inode_search_path1(fs1, (*fs).root_inode, path)
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* base url helpers                                                    */
+
+fn fs_find_base_url(fs1: *mut FSDevice, base_url_id: *const c_char) -> *mut FSBaseURL {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let head = addr_of_mut!((*fs).base_url_list);
+        let mut el = (*head).next;
+        while el != head {
+            /* 'link' is the first member of FSBaseURL */
+            let bu = el as *mut FSBaseURL;
+            if strcmp((*bu).base_url_id, base_url_id) == 0 {
+                return bu;
+            }
+            el = (*el).next;
+        }
+        null_mut()
+    }
+}
+
+fn fs_net_set_url(
+    fs1: *mut FSDevice,
+    n: *mut FSINode,
+    base_url_id: *const c_char,
+    file_id: u64,
+    size: u64,
+) -> c_int {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        /* assert(fs_is_net(fs1)) : fs_is_net() compares the fs_end method
+         * pointer with the static fs_mem_end(), which has no linker symbol.
+         * In this code path fs is always the memory FS. */
+
+        let bu = fs_find_base_url(fs1, base_url_id);
+        if bu.is_null() {
+            return -2;
+        }
+
+        if (*n).r#type != FT_REG
+            || (*n).u.reg.state != REG_STATE_LOCAL
+            || (*n).u.reg.fbuf.allocated_size != 0
+        {
+            return -5;
+        }
+
+        if size > 0 {
+            (*n).u.reg.state = REG_STATE_UNLOADED;
+            (*n).u.reg.base_url = bu;
+            (*bu).ref_count = (*bu).ref_count.wrapping_add(1);
+            (*n).u.reg.size = size as usize;
+            (*fs).fs_blocks += to_blocks(fs, size);
+            (*n).u.reg.file_id = file_id;
+        }
+        0
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* file list loading                                                   */
+
+fn filelist_load_rec(
+    fs1: *mut FSDevice,
+    pp: *mut *const c_char,
+    dir: *mut FSINode,
+    path: *const c_char,
+) -> c_int {
+    unsafe {
+        let mut fname = [0 as c_char; 1024];
+        let mut lname = [0 as c_char; 1024];
+        let mut ntype: c_int;
+        let mut mode: u32 = 0;
+        let mut uid: u32 = 0;
+        let mut gid: u32 = 0;
+        let mut size: u64 = 0;
+        let mut n: *mut FSINode;
+        let mut p: *const c_char = *pp;
+
+        loop {
+            if *p == 0 {
+                break;
+            }
+            if *p == b'#' as c_char {
+                skip_line(&mut p);
+                continue;
+            }
+            if *p == b'.' as c_char {
+                p = p.add(1);
+                skip_line(&mut p);
+                break;
+            }
+            if parse_uint32_base(&mut mode, &mut p, 8) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid mode\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+            ntype = (mode >> 12) as c_int;
+            mode &= 0xfff;
+
+            if parse_uint32(&mut uid, &mut p) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid uid\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+
+            if parse_uint32(&mut gid, &mut p) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid gid\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+
+            n = inode_new(fs1, ntype, mode, uid, gid);
+
+            size = 0;
+            match ntype {
+                FT_CHR | FT_BLK => {
+                    if parse_uint32(addr_of_mut!((*n).u.dev.major), &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid major\n\0".as_ptr() as *const c_char,
+                        );
+                        return -1;
+                    }
+                    if parse_uint32(addr_of_mut!((*n).u.dev.minor), &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid minor\n\0".as_ptr() as *const c_char,
+                        );
+                        return -1;
+                    }
+                }
+                FT_REG => {
+                    if parse_uint64(&mut size, &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid size\n\0".as_ptr() as *const c_char,
+                        );
+                        return -1;
+                    }
+                }
+                FT_DIR => {
+                    inode_dir_add(fs1, n, DOT_STR.as_ptr() as *const c_char, inode_incref(fs1, n));
+                    inode_dir_add(
+                        fs1,
+                        n,
+                        DOTDOT_STR.as_ptr() as *const c_char,
+                        inode_incref(fs1, dir),
+                    );
+                }
+                _ => {}
+            }
+
+            if parse_time(
+                addr_of_mut!((*n).mtime_sec),
+                addr_of_mut!((*n).mtime_nsec),
+                &mut p,
+            ) < 0
+            {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid mtime\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+
+            if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid filename\n\0".as_ptr() as *const c_char,
+                );
+                return -1;
+            }
+            inode_dir_add(fs1, dir, fname.as_ptr(), n);
+
+            if ntype == FT_LNK {
+                if parse_fname(lname.as_mut_ptr(), 1024, &mut p) < 0 {
+                    fprintf(
+                        *core::ptr::addr_of!(stderr),
+                        b"invalid symlink name\n\0".as_ptr() as *const c_char,
+                    );
+                    return -1;
+                }
+                (*n).u.symlink.name = strdup(lname.as_ptr());
+            } else if ntype == FT_REG && size > 0 {
+                let mut file_id: u64 = 0;
+                if parse_file_id(&mut file_id, &mut p) < 0 {
+                    fprintf(
+                        *core::ptr::addr_of!(stderr),
+                        b"invalid file id\n\0".as_ptr() as *const c_char,
+                    );
+                    return -1;
+                }
+                fs_net_set_url(fs1, n, SLASH.as_ptr() as *const c_char, file_id, size);
+
+                let fs = fs1 as *mut FSDeviceMem;
+                if (*fs).dump_cache_load != 0 {
+                    (*n).u.reg.filename = compose_path(path, fname.as_ptr());
+                } else {
+                    (*n).u.reg.filename = null_mut();
+                }
+            }
+
+            skip_line(&mut p);
+
+            if ntype == FT_DIR {
+                let path1 = compose_path(path, fname.as_ptr());
+                let ret = filelist_load_rec(fs1, &mut p, n, path1);
+                free(path1 as *mut c_void);
+                if ret != 0 {
+                    return ret;
+                }
+            }
+        }
+        *pp = p;
+        0
+    }
+}
+
+fn filelist_load(fs1: *mut FSDevice, str_: *const c_char) -> c_int {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        if parse_tag_version(str_) != 1 {
+            return -1;
+        }
+        let p = skip_header(str_);
+        if p.is_null() {
+            return -1;
+        }
+        let mut p = p;
+        filelist_load_rec(fs1, &mut p, (*fs).root_inode, EMPTY_STR.as_ptr() as *const c_char)
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* preload parsing                                                     */
+
+fn isspace_nolf(c: c_int) -> BOOL {
+    if c == b' ' as c_int || c == b'\t' as c_int {
+        1
+    } else {
+        0
+    }
+}
+
+fn preload_parse_str_old(fs1: *mut FSDevice, p0: *const c_char) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let mut fname = [0 as c_char; 1024];
+        let mut p = p0;
+
+        loop {
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p as c_int == b'\n' as c_int {
+                p = p.add(1);
+                continue;
+            }
+            if *p == 0 {
+                break;
+            }
+            if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid filename\n\0".as_ptr() as *const c_char,
+                );
+                return;
+            }
+
+            let n = inode_search_path(fs1, fname.as_ptr());
+            if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                    fname.as_ptr(),
+                );
+                while *p as c_int != b'\n' as c_int && *p != 0 {
+                    p = p.add(1);
+                }
+            } else {
+                let pe = mallocz(size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                (*pe).file_id = (*n).u.reg.file_id;
+                init_list_head(addr_of_mut!((*pe).file_list));
+                list_add_tail(addr_of_mut!((*pe).link), addr_of_mut!((*fs).preload_list));
+                loop {
+                    while isspace_nolf(*p as c_int) != 0 {
+                        p = p.add(1);
+                    }
+                    if *p == 0 || *p as c_int == b'\n' as c_int {
+                        break;
+                    }
+                    if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid filename\n\0".as_ptr() as *const c_char,
+                        );
+                        return;
+                    }
+                    let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+                    (*pf).name = strdup(fname.as_ptr());
+                    list_add_tail(addr_of_mut!((*pf).link), addr_of_mut!((*pe).file_list));
+                }
+            }
+        }
+    }
+}
+
+fn preload_parse_str(fs1: *mut FSDevice, p0: *const c_char) {
+    unsafe {
+        let fs = fs1 as *mut FSDeviceMem;
+        let mut fname = [0 as c_char; 1024];
+        let mut p = p0;
+        let mut pe: *mut PreloadEntry = null_mut();
+        let mut pa: *mut PreloadArchive = null_mut();
+
+        loop {
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p as c_int == b'\n' as c_int {
+                pe = null_mut();
+                p = p.add(1);
+                continue;
+            }
+            if *p as c_int == b'#' as c_int {
+                continue; /* comment (as in the C code) */
+            }
+            if *p == 0 {
+                break;
+            }
+
+            let mut is_archive: BOOL = 0;
+            if *p as c_int == b'@' as c_int {
+                is_archive = 1;
+                p = p.add(1);
+            }
+            if parse_fname(fname.as_mut_ptr(), 1024, &mut p) < 0 {
+                fprintf(
+                    *core::ptr::addr_of!(stderr),
+                    b"invalid filename\n\0".as_ptr() as *const c_char,
+                );
+                return;
+            }
+            while isspace_nolf(*p as c_int) != 0 {
+                p = p.add(1);
+            }
+            if *p as c_int == b':' as c_int {
+                p = p.add(1);
+
+                let n = inode_search_path(fs1, fname.as_ptr());
+                pe = null_mut();
+                pa = null_mut();
+                if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state == REG_STATE_LOCAL {
+                    fprintf(
+                        *core::ptr::addr_of!(stderr),
+                        b"invalid preload file: '%s'\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    while *p as c_int != b'\n' as c_int && *p != 0 {
+                        p = p.add(1);
+                    }
+                } else if is_archive != 0 {
+                    pa = mallocz(size_of::<PreloadArchive>()) as *mut PreloadArchive;
+                    (*pa).name = strdup(fname.as_ptr());
+                    init_list_head(addr_of_mut!((*pa).file_list));
+                    list_add_tail(
+                        addr_of_mut!((*pa).link),
+                        addr_of_mut!((*fs).preload_archive_list),
+                    );
+                } else {
+                    pe = mallocz(size_of::<PreloadEntry>()) as *mut PreloadEntry;
+                    (*pe).file_id = (*n).u.reg.file_id;
+                    init_list_head(addr_of_mut!((*pe).file_list));
+                    list_add_tail(addr_of_mut!((*pe).link), addr_of_mut!((*fs).preload_list));
+                }
+            } else {
+                if pe.is_null() && pa.is_null() {
+                    fprintf(
+                        *core::ptr::addr_of!(stderr),
+                        b"filename without target: %s\n\0".as_ptr() as *const c_char,
+                        fname.as_ptr(),
+                    );
+                    return;
+                }
+                if !pa.is_null() {
+                    let mut file_id: u64 = 0;
+                    let mut size: u64 = 0;
+
+                    if parse_uint64(&mut size, &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid size\n\0".as_ptr() as *const c_char,
+                        );
+                        return;
+                    }
+
+                    if parse_file_id(&mut file_id, &mut p) < 0 {
+                        fprintf(
+                            *core::ptr::addr_of!(stderr),
+                            b"invalid file id\n\0".as_ptr() as *const c_char,
+                        );
+                        return;
+                    }
+
+                    let paf = mallocz(size_of::<PreloadArchiveFile>()) as *mut PreloadArchiveFile;
+                    (*paf).name = strdup(fname.as_ptr());
+                    (*paf).file_id = file_id;
+                    (*paf).size = size;
+                    list_add_tail(addr_of_mut!((*paf).link), addr_of_mut!((*pa).file_list));
+                } else {
+                    let pf = mallocz(size_of::<PreloadFile>()) as *mut PreloadFile;
+                    (*pf).name = strdup(fname.as_ptr());
+                    (*pf).is_archive = is_archive;
+                    list_add_tail(addr_of_mut!((*pf).link), addr_of_mut!((*pe).file_list));
+                }
+            }
+
+            /* skip the rest of the line */
+            while *p as c_int != b'\n' as c_int && *p != 0 {
+                p = p.add(1);
+            }
+            if *p as c_int == b'\n' as c_int {
+                p = p.add(1);
+            }
+        }
+    }
+}
+
+fn preload_parse(fs: *mut FSDevice, fname: *const c_char, is_new: BOOL) -> c_int {
+    unsafe {
+        let n = inode_search_path(fs, fname);
+        if n.is_null() || (*n).r#type != FT_REG || (*n).u.reg.state != REG_STATE_LOADED {
+            return -1;
+        }
+
+        let size = (*n).u.reg.size;
+        let buf = malloc(size + 1) as *mut u8;
+        file_buffer_read(addr_of_mut!((*n).u.reg.fbuf), 0, buf, size);
+        *buf.add(size) = 0;
+        if is_new != 0 {
+            preload_parse_str(fs, buf as *const c_char);
+        } else {
+            preload_parse_str_old(fs, buf as *const c_char);
+        }
+        free(buf as *mut c_void);
+        0
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* kernel / preload file loading                                       */
+
+unsafe extern "C" fn kernel_load_cb(
+    fs: *mut FSDevice,
+    qid1: *mut FSQID,
+    err: c_int,
+    opaque: *mut c_void,
+) {
+    unsafe {
+        let s = opaque as *mut FSNetInitState;
+        let mut qid = FSQID {
+            r#type: 0,
+            version: 0,
+            path: 0,
+        };
+
+        /* disable preloading if dumping cache load */
+        if (*(fs as *mut FSDeviceMem)).dump_cache_load != 0 {
+            return;
+        }
+
+        if !(*s).fd.is_null() {
+            fs_op_delete(fs, (*s).fd);
+            (*s).fd = null_mut();
+        }
+
+        if (*s).file_index >= FILE_LOAD_COUNT {
+            /* all files are loaded */
+            if preload_parse(fs, PRELOAD2_TXT.as_ptr() as *const c_char, 1) < 0 {
+                preload_parse(fs, PRELOAD_TXT.as_ptr() as *const c_char, 0);
+            }
+            fs_op_delete(fs, (*s).root_fd);
+            if let Some(cb) = (*s).start_cb {
+                cb((*s).start_opaque);
+            }
+            free(s as *mut c_void);
+        } else {
+            let index = (*s).file_index;
+            (*s).file_index = index + 1;
+            let name: *const c_char = if index >= 0 && (index as usize) < KERNEL_FILE_LIST.len() {
+                KERNEL_FILE_LIST[index as usize].as_ptr() as *const c_char
+            } else {
+                core::ptr::null()
+            };
+            if name.is_null() {
+                (*s).fd = null_mut();
+            } else {
+                (*s).fd = fs_walk_path(fs, (*s).root_fd, name);
+            }
+            if (*s).fd.is_null() {
+                kernel_load_cb(fs, null_mut(), 0, s as *mut c_void);
+                return;
+            }
+            let err2 = fs_op_open(
+                fs,
+                &mut qid,
+                (*s).fd,
+                P9_O_RDONLY,
+                Some(kernel_load_cb),
+                s as *mut c_void,
+            );
+            if err2 <= 0 {
+                kernel_load_cb(fs, null_mut(), 0, s as *mut c_void);
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* the target function                                                 */
+
+#[no_mangle]
+pub extern "C" fn filelist_loaded(
+    fs: *mut FSDevice,
+    f: *mut FSFile,
+    size: i64,
+    opaque: *mut c_void,
+) {
+    unsafe {
+        let s = opaque as *mut FSNetInitState;
+        let buf: *mut u8;
+
+        if size < 0 {
+            fatal_error_http(size);
+        }
+
+        buf = malloc((size + 1) as usize) as *mut u8;
+        fs_op_read(fs, f, 0, buf, size as c_int);
+        *buf.offset(size as isize) = 0;
+        fs_op_delete(fs, f);
+        fs_op_unlinkat(fs, (*s).root_fd, FILELIST_TXT.as_ptr() as *const c_char);
+
+        if filelist_load(fs, buf as *const c_char) != 0 {
+            fatal_error_parse();
+        }
+
+        /* try to load the kernel and the preload file */
+        (*s).file_index = 0;
+        kernel_load_cb(fs, null_mut(), 0, s as *mut c_void);
+    }
 }
 }
 

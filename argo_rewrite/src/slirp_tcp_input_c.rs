@@ -1294,6 +1294,2665 @@ pub extern "C" fn tcp_reass__part2672(flags: core::ffi::c_int) -> core::ffi::c_i
 }
 }
 
+// ── `tcp_input` · slirp/tcp_input.c:215-1287 · chunk 2673 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
+//
+// Original C:
+//     void
+//     tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
+//     {
+//        struct ip save_ip, *ip;
+//      register struct tcpiphdr *ti;
+//      caddr_t optp = 
+//                    ((void *)0)
+//                        ;
+//      int optlen = 0;
+//      int len, tlen, off;
+//             register struct tcpcb *tp = 
+//                                        ((void *)0)
+//                                            ;
+//      register int tiflags;
+//             struct socket *so = 
+//                                ((void *)0)
+//                                    ;
+//      int todrop, acked, ourfinisacked, needoutput = 0;
+//      int iss = 0;
+//      u_long tiwin;
+//      int ret;
+//         struct ex_list *ex_ptr;
+//         Slirp *slirp;
+//     
+//      ;
+//     
+//                                           ;
+//     
+//     
+//     
+//     
+//      if (m == 
+//              ((void *)0)
+//                  ) {
+//       so = inso;
+//       slirp = so->slirp;
+//     
+//     
+//       tp = ((so)->so_tcpcb);
+//       m = so->so_m;
+//                     so->so_m = 
+//                               ((void *)0)
+//                                   ;
+//       ti = so->so_ti;
+//       tiwin = ti->ti_t.th_win;
+//       tiflags = ti->ti_t.th_flags;
+//     
+//       goto cont_conn;
+//      }
+//      slirp = m->slirp;
+//     
+//     
+//     
+//     
+//     
+//      ti = ((struct tcpiphdr *)(m)->m_hdr.mh_data);
+//      if (iphlen > sizeof(struct ip )) {
+//        ip_stripoptions(m, (struct mbuf *)0);
+//        iphlen=sizeof(struct ip );
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//      ip=((struct ip *)(m)->m_hdr.mh_data);
+//      save_ip = *ip;
+//      save_ip.ip_len+= iphlen;
+//     
+//     
+//     
+//     
+//      tlen = ((struct ip *)ti)->ip_len;
+//             ((struct qlink*)(((char*)(ti)) - sizeof(struct qlink)))->next = ((struct qlink*)(((char*)(ti)) - sizeof(struct qlink)))->prev = 
+//                                                                  ((void *)0)
+//                                                                      ;
+//             memset(&ti->ti_i.ih_mbuf, 0 , sizeof(struct mbuf_ptr));
+//      ti->ti_i.ih_x1 = 0;
+//      ti->ti_i.ih_len = htons((uint16_t)tlen);
+//      len = sizeof(struct ip ) + tlen;
+//      if(cksum(m, len)) {
+//        goto drop;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      off = ti->ti_t.th_off << 2;
+//      if (off < sizeof (struct tcphdr) || off > tlen) {
+//        goto drop;
+//      }
+//      tlen -= off;
+//      ti->ti_i.ih_len = tlen;
+//      if (off > sizeof (struct tcphdr)) {
+//        optlen = off - sizeof (struct tcphdr);
+//        optp = ((caddr_t)(m)->m_hdr.mh_data) + sizeof (struct tcpiphdr);
+//      }
+//      tiflags = ti->ti_t.th_flags;
+//     
+//     
+//     
+//     
+//      ((ti->ti_t.th_seq) = ntohl((ti->ti_t.th_seq)));
+//      ((ti->ti_t.th_ack) = ntohl((ti->ti_t.th_ack)));
+//      ((ti->ti_t.th_win) = ntohs((uint16_t)(ti->ti_t.th_win)));
+//      ((ti->ti_t.th_urp) = ntohs((uint16_t)(ti->ti_t.th_urp)));
+//     
+//     
+//     
+//     
+//      m->m_hdr.mh_data += sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
+//      m->m_hdr.mh_len -= sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
+//     
+//         if (slirp->restricted) {
+//             for (ex_ptr = slirp->exec_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+//                 if (ex_ptr->ex_fport == ti->ti_t.th_dport &&
+//                     ti->ti_i.ih_dst.s_addr == ex_ptr->ex_addr.s_addr) {
+//                     break;
+//                 }
+//             }
+//             if (!ex_ptr)
+//                 goto drop;
+//         }
+//     
+//     
+//     
+//     findso:
+//      so = slirp->tcp_last_so;
+//      if (so->so_fport != ti->ti_t.th_dport ||
+//          so->so_lport != ti->ti_t.th_sport ||
+//          so->so_laddr.s_addr != ti->ti_i.ih_src.s_addr ||
+//          so->so_faddr.s_addr != ti->ti_i.ih_dst.s_addr) {
+//       so = solookup(&slirp->tcb, ti->ti_i.ih_src, ti->ti_t.th_sport,
+//               ti->ti_i.ih_dst, ti->ti_t.th_dport);
+//       if (so)
+//        slirp->tcp_last_so = so;
+//      }
+//             if (so == 
+//                      ((void *)0)
+//                          ) {
+//        if ((tiflags & (0x02|0x01|0x04|0x20|0x10)) != 0x02)
+//          goto dropwithreset;
+//     
+//        if ((so = socreate(slirp)) == 
+//                                     ((void *)0)
+//                                         )
+//          goto dropwithreset;
+//        if (tcp_attach(so) < 0) {
+//          free(so);
+//          goto dropwithreset;
+//        }
+//     
+//        sbreserve(&so->so_snd, 8192);
+//        sbreserve(&so->so_rcv, 8192);
+//     
+//        so->so_laddr = ti->ti_i.ih_src;
+//        so->so_lport = ti->ti_t.th_sport;
+//        so->so_faddr = ti->ti_i.ih_dst;
+//        so->so_fport = ti->ti_t.th_dport;
+//     
+//        if ((so->so_iptos = tcp_tos(so)) == 0)
+//          so->so_iptos = ((struct ip *)ti)->ip_tos;
+//     
+//        tp = ((so)->so_tcpcb);
+//        tp->t_state = 1;
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//             if (so->so_state & 0x002)
+//                     goto drop;
+//     
+//      tp = ((so)->so_tcpcb);
+//     
+//     
+//             if (tp == 
+//                      ((void *)0)
+//                          )
+//       goto dropwithreset;
+//      if (tp->t_state == 0)
+//       goto drop;
+//     
+//      tiwin = ti->ti_t.th_win;
+//     
+//     
+//     
+//     
+//     
+//      tp->t_idle = 0;
+//      if (0)
+//         tp->t_timer[2] = ( 75*2);
+//      else
+//         tp->t_timer[2] = (120*60*2);
+//     
+//     
+//     
+//     
+//     
+//      if (optp && tp->t_state != 1)
+//       tcp_dooptions(tp, (u_char *)optp, optlen, ti);
+//      if (tp->t_state == 4 &&
+//          (tiflags & (0x02|0x01|0x04|0x20|0x10)) == 0x10 &&
+//          ti->ti_t.th_seq == tp->rcv_nxt &&
+//          tiwin && tiwin == tp->snd_wnd &&
+//          tp->snd_nxt == tp->snd_max) {
+//       if (ti->ti_i.ih_len == 0) {
+//        if (((int)((ti->ti_t.th_ack)-(tp->snd_una)) > 0) &&
+//            ((int)((ti->ti_t.th_ack)-(tp->snd_max)) <= 0) &&
+//            tp->snd_cwnd >= tp->snd_wnd) {
+//     
+//     
+//     
+//         if (tp->t_rtt &&
+//             ((int)((ti->ti_t.th_ack)-(tp->t_rtseq)) > 0))
+//          tcp_xmit_timer(tp, tp->t_rtt);
+//         acked = ti->ti_t.th_ack - tp->snd_una;
+//         sbdrop(&so->so_snd, acked);
+//         tp->snd_una = ti->ti_t.th_ack;
+//         m_free(m);
+//         if (tp->snd_una == tp->snd_max)
+//          tp->t_timer[0] = 0;
+//         else if (tp->t_timer[1] == 0)
+//          tp->t_timer[0] = tp->t_rxtcur;
+//     
+//     
+//     
+//     
+//     
+//     
+//         if (so->so_snd.sb_cc)
+//          (void) tcp_output(tp);
+//     
+//         return;
+//        }
+//       } else if (ti->ti_t.th_ack == tp->snd_una &&
+//           ((tp)->seg_next == (struct tcpiphdr*)(tp)) &&
+//           ti->ti_i.ih_len <= ((&so->so_rcv)->sb_datalen - (&so->so_rcv)->sb_cc)) {
+//     
+//     
+//     
+//     
+//     
+//        tp->rcv_nxt += ti->ti_i.ih_len;
+//     
+//     
+//     
+//        if (so->so_emu) {
+//         if (tcp_emu(so,m)) sbappend(so, m);
+//        } else
+//         sbappend(so, m);
+//        tp->t_flags |= 0x0001;
+//        tcp_output(tp);
+//        return;
+//       }
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//      { int win;
+//               win = ((&so->so_rcv)->sb_datalen - (&so->so_rcv)->sb_cc);
+//        if (win < 0)
+//          win = 0;
+//        tp->rcv_wnd = ((win) > ((int)(tp->rcv_adv - tp->rcv_nxt)) ? (win) : ((int)(tp->rcv_adv - tp->rcv_nxt)));
+//      }
+//     
+//      switch (tp->t_state) {
+//      case 1: {
+//     
+//        if (tiflags & 0x04)
+//          goto drop;
+//        if (tiflags & 0x10)
+//          goto dropwithreset;
+//        if ((tiflags & 0x02) == 0)
+//          goto drop;
+//        if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
+//            slirp->vnetwork_addr.s_addr) {
+//          if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr &&
+//       so->so_faddr.s_addr != slirp->vnameserver_addr.s_addr) {
+//     
+//       for (ex_ptr = slirp->exec_list; ex_ptr;
+//            ex_ptr = ex_ptr->ex_next) {
+//         if(ex_ptr->ex_fport == so->so_fport &&
+//            so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
+//           so->so_state |= 0x080;
+//           break;
+//         }
+//       }
+//       if (so->so_state & 0x080) {
+//           goto cont_input;
+//       }
+//          }
+//     
+//        }
+//     
+//        if (so->so_emu & 0x10) {
+//          so->so_emu &= ~0x10;
+//          goto cont_input;
+//        }
+//     
+//        if((tcp_fconnect(so) == -1) && (
+//                                       (*__errno_location ()) 
+//                                             != 
+//                                                115
+//                                                           ) && (
+//                                                                 (*__errno_location ()) 
+//                                                                       != 
+//                                                                          11
+//                                                                                     )) {
+//          u_char code=0;
+//         
+//                               ;
+//          if(
+//            (*__errno_location ()) 
+//                  == 
+//                     111
+//                                 ) {
+//     
+//            tcp_respond(tp, ti, m, ti->ti_t.th_seq+1, (tcp_seq)0,
+//          0x04|0x10);
+//          } else {
+//            if(
+//              (*__errno_location ()) 
+//                    == 
+//                       113
+//                                   ) code=1;
+//            ((ti->ti_t.th_seq) = htonl((ti->ti_t.th_seq)));
+//            ((ti->ti_t.th_ack) = htonl((ti->ti_t.th_ack)));
+//            ((ti->ti_t.th_win) = htons((uint16_t)(ti->ti_t.th_win)));
+//            ((ti->ti_t.th_urp) = htons((uint16_t)(ti->ti_t.th_urp)));
+//            m->m_hdr.mh_data -= sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
+//            m->m_hdr.mh_len += sizeof(struct tcpiphdr)+off-sizeof(struct tcphdr);
+//            *ip=save_ip;
+//            icmp_error(m, 3,code, 0,strerror(
+//                                                       (*__errno_location ())
+//                                                            ));
+//          }
+//                 tcp_close(tp);
+//          m_free(m);
+//        } else {
+//     
+//     
+//     
+//     
+//     
+//     
+//          so->so_m = m;
+//          so->so_ti = ti;
+//          tp->t_timer[2] = ( 75*2);
+//          tp->t_state = 3;
+//        }
+//        return;
+//     
+//      cont_conn:
+//     
+//     
+//     
+//        if (so->so_state & 0x001) {
+//          tp = tcp_close(tp);
+//          goto dropwithreset;
+//        }
+//      cont_input:
+//        tcp_template(tp);
+//     
+//        if (optp)
+//          tcp_dooptions(tp, (u_char *)optp, optlen, ti);
+//     
+//        if (iss)
+//          tp->iss = iss;
+//        else
+//          tp->iss = slirp->tcp_iss;
+//        slirp->tcp_iss += (125*1024)/2;
+//        tp->irs = ti->ti_t.th_seq;
+//        (tp)->snd_una = (tp)->snd_nxt = (tp)->snd_max = (tp)->snd_up = (tp)->iss;
+//        (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1;
+//        tp->t_flags |= 0x0001;
+//        tp->t_state = 3;
+//        tp->t_timer[2] = ( 75*2);
+//        goto trimthenstep6;
+//      }
+//      case 2:
+//       if ((tiflags & 0x10) &&
+//           (((int)((ti->ti_t.th_ack)-(tp->iss)) <= 0) ||
+//            ((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0)))
+//        goto dropwithreset;
+//     
+//       if (tiflags & 0x04) {
+//                             if (tiflags & 0x10) {
+//                                     tcp_drop(tp, 0);
+//                             }
+//        goto drop;
+//       }
+//     
+//       if ((tiflags & 0x02) == 0)
+//        goto drop;
+//       if (tiflags & 0x10) {
+//        tp->snd_una = ti->ti_t.th_ack;
+//        if (((int)((tp->snd_nxt)-(tp->snd_una)) < 0))
+//         tp->snd_nxt = tp->snd_una;
+//       }
+//     
+//       tp->t_timer[0] = 0;
+//       tp->irs = ti->ti_t.th_seq;
+//       (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1;
+//       tp->t_flags |= 0x0001;
+//       if (tiflags & 0x10 && ((int)((tp->snd_una)-(tp->iss)) > 0)) {
+//        soisfconnected(so);
+//        tp->t_state = 4;
+//     
+//        (void) tcp_reass(tp, (struct tcpiphdr *)0,
+//         (struct mbuf *)0);
+//     
+//     
+//     
+//     
+//        if (tp->t_rtt)
+//         tcp_xmit_timer(tp, tp->t_rtt);
+//       } else
+//        tp->t_state = 3;
+//     
+//     trimthenstep6:
+//     
+//     
+//     
+//     
+//     
+//       ti->ti_t.th_seq++;
+//       if (ti->ti_i.ih_len > tp->rcv_wnd) {
+//        todrop = ti->ti_i.ih_len - tp->rcv_wnd;
+//        m_adj(m, -todrop);
+//        ti->ti_i.ih_len = tp->rcv_wnd;
+//        tiflags &= ~0x01;
+//       }
+//       tp->snd_wl1 = ti->ti_t.th_seq - 1;
+//       tp->rcv_up = ti->ti_t.th_seq;
+//       goto step6;
+//      }
+//     
+//     
+//     
+//     
+//     
+//     
+//      todrop = tp->rcv_nxt - ti->ti_t.th_seq;
+//      if (todrop > 0) {
+//       if (tiflags & 0x02) {
+//        tiflags &= ~0x02;
+//        ti->ti_t.th_seq++;
+//        if (ti->ti_t.th_urp > 1)
+//         ti->ti_t.th_urp--;
+//        else
+//         tiflags &= ~0x20;
+//        todrop--;
+//       }
+//     
+//     
+//     
+//       if (todrop > ti->ti_i.ih_len
+//           || (todrop == ti->ti_i.ih_len && (tiflags & 0x01) == 0)) {
+//     
+//     
+//     
+//     
+//     
+//        tiflags &= ~0x01;
+//     
+//     
+//     
+//     
+//     
+//        tp->t_flags |= 0x0001;
+//        todrop = ti->ti_i.ih_len;
+//       }
+//       m_adj(m, todrop);
+//       ti->ti_t.th_seq += todrop;
+//       ti->ti_i.ih_len -= todrop;
+//       if (ti->ti_t.th_urp > todrop)
+//        ti->ti_t.th_urp -= todrop;
+//       else {
+//        tiflags &= ~0x20;
+//        ti->ti_t.th_urp = 0;
+//       }
+//      }
+//     
+//     
+//     
+//     
+//      if ((so->so_state & 0x001) &&
+//          tp->t_state > 5 && ti->ti_i.ih_len) {
+//       tp = tcp_close(tp);
+//       goto dropwithreset;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      todrop = (ti->ti_t.th_seq+ti->ti_i.ih_len) - (tp->rcv_nxt+tp->rcv_wnd);
+//      if (todrop > 0) {
+//       if (todrop >= ti->ti_i.ih_len) {
+//     
+//     
+//     
+//     
+//     
+//     
+//        if (tiflags & 0x02 &&
+//            tp->t_state == 10 &&
+//            ((int)((ti->ti_t.th_seq)-(tp->rcv_nxt)) > 0)) {
+//         iss = tp->rcv_nxt + (125*1024);
+//         tp = tcp_close(tp);
+//         goto findso;
+//        }
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//        if (tp->rcv_wnd == 0 && ti->ti_t.th_seq == tp->rcv_nxt) {
+//         tp->t_flags |= 0x0001;
+//        } else {
+//         goto dropafterack;
+//        }
+//       }
+//       m_adj(m, -todrop);
+//       ti->ti_i.ih_len -= todrop;
+//       tiflags &= ~(0x08|0x01);
+//      }
+//      if (tiflags&0x04) switch (tp->t_state) {
+//     
+//      case 3:
+//      case 4:
+//      case 6:
+//      case 9:
+//      case 5:
+//       tp->t_state = 0;
+//                     tcp_close(tp);
+//       goto drop;
+//     
+//      case 7:
+//      case 8:
+//      case 10:
+//                     tcp_close(tp);
+//       goto drop;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      if (tiflags & 0x02) {
+//       tp = tcp_drop(tp,0);
+//       goto dropwithreset;
+//      }
+//     
+//     
+//     
+//     
+//      if ((tiflags & 0x10) == 0) goto drop;
+//     
+//     
+//     
+//     
+//      switch (tp->t_state) {
+//     
+//     
+//     
+//     
+//     
+//      case 3:
+//     
+//       if (((int)((tp->snd_una)-(ti->ti_t.th_ack)) > 0) ||
+//           ((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0))
+//        goto dropwithreset;
+//       tp->t_state = 4;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       tp->snd_una=ti->ti_t.th_ack;
+//       if (so->so_state & 0x080) {
+//     
+//         ret = tcp_ctl(so);
+//         if (ret == 1) {
+//           soisfconnected(so);
+//           so->so_state &= ~0x080;
+//         } else if (ret == 2) {
+//           so->so_state &= 0xf000;
+//           so->so_state |= 0x001;
+//         } else {
+//           needoutput = 1;
+//           tp->t_state = 6;
+//         }
+//       } else {
+//         soisfconnected(so);
+//       }
+//     
+//       (void) tcp_reass(tp, (struct tcpiphdr *)0, (struct mbuf *)0);
+//       tp->snd_wl1 = ti->ti_t.th_seq - 1;
+//     
+//       goto synrx_to_est;
+//      case 4:
+//      case 6:
+//      case 9:
+//      case 5:
+//      case 7:
+//      case 8:
+//      case 10:
+//     
+//       if (((int)((ti->ti_t.th_ack)-(tp->snd_una)) <= 0)) {
+//        if (ti->ti_i.ih_len == 0 && tiwin == tp->snd_wnd) {
+//         
+//                                    ;
+//         if (tp->t_timer[0] == 0 ||
+//             ti->ti_t.th_ack != tp->snd_una)
+//          tp->t_dupacks = 0;
+//         else if (++tp->t_dupacks == 3) {
+//          tcp_seq onxt = tp->snd_nxt;
+//          u_int win =
+//              ((tp->snd_wnd) < (tp->snd_cwnd) ? (tp->snd_wnd) : (tp->snd_cwnd)) / 2 /
+//           tp->t_maxseg;
+//     
+//          if (win < 2)
+//           win = 2;
+//          tp->snd_ssthresh = win * tp->t_maxseg;
+//          tp->t_timer[0] = 0;
+//          tp->t_rtt = 0;
+//          tp->snd_nxt = ti->ti_t.th_ack;
+//          tp->snd_cwnd = tp->t_maxseg;
+//          (void) tcp_output(tp);
+//          tp->snd_cwnd = tp->snd_ssthresh +
+//                 tp->t_maxseg * tp->t_dupacks;
+//          if (((int)((onxt)-(tp->snd_nxt)) > 0))
+//           tp->snd_nxt = onxt;
+//          goto drop;
+//         } else if (tp->t_dupacks > 3) {
+//          tp->snd_cwnd += tp->t_maxseg;
+//          (void) tcp_output(tp);
+//          goto drop;
+//         }
+//        } else
+//         tp->t_dupacks = 0;
+//        break;
+//       }
+//      synrx_to_est:
+//     
+//     
+//     
+//     
+//       if (tp->t_dupacks > 3 &&
+//           tp->snd_cwnd > tp->snd_ssthresh)
+//        tp->snd_cwnd = tp->snd_ssthresh;
+//       tp->t_dupacks = 0;
+//       if (((int)((ti->ti_t.th_ack)-(tp->snd_max)) > 0)) {
+//        goto dropafterack;
+//       }
+//       acked = ti->ti_t.th_ack - tp->snd_una;
+//       if (tp->t_rtt && ((int)((ti->ti_t.th_ack)-(tp->t_rtseq)) > 0))
+//        tcp_xmit_timer(tp,tp->t_rtt);
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       if (ti->ti_t.th_ack == tp->snd_max) {
+//        tp->t_timer[0] = 0;
+//        needoutput = 1;
+//       } else if (tp->t_timer[1] == 0)
+//        tp->t_timer[0] = tp->t_rxtcur;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       {
+//         register u_int cw = tp->snd_cwnd;
+//         register u_int incr = tp->t_maxseg;
+//     
+//         if (cw > tp->snd_ssthresh)
+//           incr = incr * incr / cw;
+//         tp->snd_cwnd = ((cw + incr) < (65535<<tp->snd_scale) ? (cw + incr) : (65535<<tp->snd_scale));
+//       }
+//       if (acked > so->so_snd.sb_cc) {
+//        tp->snd_wnd -= so->so_snd.sb_cc;
+//        sbdrop(&so->so_snd, (int )so->so_snd.sb_cc);
+//        ourfinisacked = 1;
+//       } else {
+//        sbdrop(&so->so_snd, acked);
+//        tp->snd_wnd -= acked;
+//        ourfinisacked = 0;
+//       }
+//       tp->snd_una = ti->ti_t.th_ack;
+//       if (((int)((tp->snd_nxt)-(tp->snd_una)) < 0))
+//        tp->snd_nxt = tp->snd_una;
+//     
+//       switch (tp->t_state) {
+//     
+//     
+//     
+//     
+//     
+//     
+//       case 6:
+//        if (ourfinisacked) {
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//         if (so->so_state & 0x008) {
+//          tp->t_timer[3] = (8 * ( 75*2));
+//         }
+//         tp->t_state = 9;
+//        }
+//        break;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       case 7:
+//        if (ourfinisacked) {
+//         tp->t_state = 10;
+//         tcp_canceltimers(tp);
+//         tp->t_timer[3] = 2 * ( 5*2);
+//        }
+//        break;
+//     
+//     
+//     
+//     
+//     
+//     
+//     
+//       case 8:
+//        if (ourfinisacked) {
+//                                     tcp_close(tp);
+//         goto drop;
+//        }
+//        break;
+//     
+//     
+//     
+//     
+//     
+//     
+//       case 10:
+//        tp->t_timer[3] = 2 * ( 5*2);
+//        goto dropafterack;
+//       }
+//      }
+//     
+//     step6:
+//     
+//     
+//     
+//     
+//      if ((tiflags & 0x10) &&
+//          (((int)((tp->snd_wl1)-(ti->ti_t.th_seq)) < 0) ||
+//          (tp->snd_wl1 == ti->ti_t.th_seq && (((int)((tp->snd_wl2)-(ti->ti_t.th_ack)) < 0) ||
+//          (tp->snd_wl2 == ti->ti_t.th_ack && tiwin > tp->snd_wnd))))) {
+//       tp->snd_wnd = tiwin;
+//       tp->snd_wl1 = ti->ti_t.th_seq;
+//       tp->snd_wl2 = ti->ti_t.th_ack;
+//       if (tp->snd_wnd > tp->max_sndwnd)
+//        tp->max_sndwnd = tp->snd_wnd;
+//       needoutput = 1;
+//      }
+//     
+//     
+//     
+//     
+//      if ((tiflags & 0x20) && ti->ti_t.th_urp &&
+//          ((tp->t_state) >= 10) == 0) {
+//     
+//     
+//     
+//     
+//     
+//     
+//       if (ti->ti_t.th_urp + so->so_rcv.sb_cc > so->so_rcv.sb_datalen) {
+//        ti->ti_t.th_urp = 0;
+//        tiflags &= ~0x20;
+//        goto dodata;
+//       }
+//       if (((int)((ti->ti_t.th_seq+ti->ti_t.th_urp)-(tp->rcv_up)) > 0)) {
+//        tp->rcv_up = ti->ti_t.th_seq + ti->ti_t.th_urp;
+//        so->so_urgc = so->so_rcv.sb_cc +
+//         (tp->rcv_up - tp->rcv_nxt);
+//        tp->rcv_up = ti->ti_t.th_seq + ti->ti_t.th_urp;
+//     
+//       }
+//      } else
+//     
+//     
+//     
+//     
+//     
+//       if (((int)((tp->rcv_nxt)-(tp->rcv_up)) > 0))
+//        tp->rcv_up = tp->rcv_nxt;
+//     dodata:
+//      if ((ti->ti_i.ih_len || (tiflags&0x01)) &&
+//          ((tp->t_state) >= 10) == 0) {
+//       { if ((ti)->ti_t.th_seq == (tp)->rcv_nxt && ((tp)->seg_next == (struct tcpiphdr*)(tp)) && (tp)->t_state == 4) { tp->t_flags |= 0x0002; (tp)->rcv_nxt += (ti)->ti_i.ih_len; tiflags = (ti)->ti_t.th_flags & 0x01; if (so->so_emu) { if (tcp_emu((so),(m))) sbappend(so, (m)); } else sbappend((so), (m)); } else { (tiflags) = tcp_reass((tp), (ti), (m)); tp->t_flags |= 0x0001; } };
+//      } else {
+//       m_free(m);
+//       tiflags &= ~0x01;
+//      }
+//     
+//     
+//     
+//     
+//     
+//      if (tiflags & 0x01) {
+//       if (((tp->t_state) >= 10) == 0) {
+//        sofwdrain(so);
+//     
+//        tp->t_flags |= 0x0001;
+//        tp->rcv_nxt++;
+//       }
+//       switch (tp->t_state) {
+//     
+//     
+//     
+//     
+//     
+//       case 3:
+//       case 4:
+//         if(so->so_emu == 0x1)
+//           tp->t_state = 8;
+//         else
+//           tp->t_state = 5;
+//         break;
+//     
+//     
+//     
+//     
+//     
+//       case 6:
+//        tp->t_state = 7;
+//        break;
+//     
+//     
+//     
+//     
+//     
+//     
+//       case 9:
+//        tp->t_state = 10;
+//        tcp_canceltimers(tp);
+//        tp->t_timer[3] = 2 * ( 5*2);
+//        break;
+//     
+//     
+//     
+//     
+//       case 10:
+//        tp->t_timer[3] = 2 * ( 5*2);
+//        break;
+//       }
+//      }
+//      if (ti->ti_i.ih_len && (unsigned)ti->ti_i.ih_len <= 5 &&
+//          ((struct tcpiphdr_2 *)ti)->first_char == (char)27) {
+//       tp->t_flags |= 0x0001;
+//      }
+//     
+//     
+//     
+//     
+//      if (needoutput || (tp->t_flags & 0x0001)) {
+//       (void) tcp_output(tp);
+//      }
+//      return;
+//     
+//     dropafterack:
+//     
+//     
+//     
+//     
+//      if (tiflags & 0x04)
+//       goto drop;
+//      m_free(m);
+//      tp->t_flags |= 0x0001;
+//      (void) tcp_output(tp);
+//      return;
+//     
+//     dropwithreset:
+//     
+//      if (tiflags & 0x10)
+//       tcp_respond(tp, ti, m, (tcp_seq)0, ti->ti_t.th_ack, 0x04);
+//      else {
+//       if (tiflags & 0x02) ti->ti_i.ih_len++;
+//       tcp_respond(tp, ti, m, ti->ti_t.th_seq+ti->ti_i.ih_len, (tcp_seq)0,
+//           0x04|0x10);
+//      }
+//     
+//      return;
+//     
+//     drop:
+//     
+//     
+//     
+//      m_free(m);
+//     
+//      return;
+//     }
+// Its own module: each chunk's file brings its own `use`s and C type stubs.
+pub mod chunk2673 {
+// Rust rewrite of slirp/tcp_input.c : tcp_input()
+// (tcp_reass / tcp_dooptions / tcp_xmit_timer are static in C, so their logic
+//  is ported here as private Rust functions.)
+#![allow(
+    non_snake_case,
+    non_camel_case_types,
+    unused_variables,
+    unused_mut,
+    unused_assignments,
+    unused_parens,
+    dead_code,
+    unsafe_op_in_unsafe_fn,
+    overflowing_literals
+)]
+
+use core::ffi::{c_char, c_int, c_long, c_uint, c_ulong, c_void};
+
+/* ---------------- constants ---------------- */
+
+const TH_FIN: c_int = 0x01;
+const TH_SYN: c_int = 0x02;
+const TH_RST: c_int = 0x04;
+const TH_PUSH: c_int = 0x08;
+const TH_ACK: c_int = 0x10;
+const TH_URG: c_int = 0x20;
+
+const TF_ACKNOW: u16 = 0x0001;
+const TF_DELACK: u16 = 0x0002;
+
+const SS_NOFDREF: c_int = 0x001;
+const SS_ISFCONNECTING: c_int = 0x002;
+const SS_FCANTRCVMORE: c_int = 0x008;
+const SS_FCANTSENDMORE: c_int = 0x010;
+const SS_CTL: c_int = 0x080;
+const SS_PERSISTENT_MASK: c_int = 0xf000;
+
+const EMU_CTL: c_int = 0x1;
+const EMU_NOCONNECT: c_int = 0x10;
+
+/* tcp states */
+const TCPS_CLOSED: i16 = 0;
+const TCPS_LISTEN: i16 = 1;
+const TCPS_SYN_SENT: i16 = 2;
+const TCPS_SYN_RECEIVED: i16 = 3;
+const TCPS_ESTABLISHED: i16 = 4;
+const TCPS_CLOSE_WAIT: i16 = 5;
+const TCPS_FIN_WAIT_1: i16 = 6;
+const TCPS_CLOSING: i16 = 7;
+const TCPS_LAST_ACK: i16 = 8;
+const TCPS_FIN_WAIT_2: i16 = 9;
+const TCPS_TIME_WAIT: i16 = 10;
+
+/* timer indexes */
+const TCPT_REXMT: usize = 0;
+const TCPT_PERSIST: usize = 1;
+const TCPT_KEEP: usize = 2;
+const TCPT_2MSL: usize = 3;
+
+const TCPTV_MSL: c_int = 5 * 2;
+const TCPTV_KEEP_INIT: c_int = 75 * 2;
+const TCPTV_KEEP_IDLE: c_int = 120 * 60 * 2;
+const TCPTV_KEEPINTVL: c_int = 75 * 2;
+const TCPTV_REXMTMAX: c_int = 12 * 2;
+const TCP_MAXIDLE: c_int = 8 * (75 * 2);
+const TCP_ISSINCR: u32 = 125 * 1024;
+const TCP_SNDSPACE: c_int = 8192;
+const TCP_RCVSPACE: c_int = 8192;
+const TCP_MAXWIN: c_uint = 65535;
+const TCPREXMTTHRESH: i16 = 3;
+
+const ICMP_UNREACH: u8 = 3;
+const ICMP_UNREACH_NET: u8 = 0;
+const ICMP_UNREACH_HOST: u8 = 1;
+
+/* errno values as present in the build the C original was preprocessed for */
+const EWOULDBLOCK: c_int = 11;
+const ECONNREFUSED: c_int = 111;
+const EHOSTUNREACH: c_int = 113;
+const EINPROGRESS: c_int = 115;
+
+/* sizes of the C structs we overlay */
+const SIZEOF_IP: c_int = 20;
+const SIZEOF_TCPHDR: c_int = 24;
+const SIZEOF_TCPIPHDR: c_int = 44;
+const SIZEOF_QLINK: isize = 16;
+
+/* ---------------- types ---------------- */
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct InAddr {
+    pub s_addr: u32,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct Ip {
+    pub ip_hl_v: u8,
+    pub ip_tos: u8,
+    pub ip_len: u16,
+    pub ip_id: u16,
+    pub ip_off: u16,
+    pub ip_ttl: u8,
+    pub ip_p: u8,
+    pub ip_sum: u16,
+    pub ip_src: InAddr,
+    pub ip_dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Qlink {
+    pub next: *mut c_void,
+    pub prev: *mut c_void,
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct IpOvly {
+    pub mbuf: *mut Mbuf,
+    pub x1: u8,
+    pub pr: u8,
+    pub len: u16,
+    pub src: InAddr,
+    pub dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TcpHdr {
+    pub th_sport: u16,
+    pub th_dport: u16,
+    pub th_seq: u32,
+    pub th_ack: u32,
+    /* u_int th_x2:4, th_off:4; */
+    pub th_x2_off: u32,
+    pub th_flags: u8,
+    pub th_win: u16,
+    pub th_sum: u16,
+    pub th_urp: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TcpIpHdr {
+    pub ti_i: IpOvly,
+    pub ti_t: TcpHdr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Sbuf {
+    pub sb_cc: c_uint,
+    pub sb_datalen: c_uint,
+    pub sb_wptr: *mut c_char,
+    pub sb_rptr: *mut c_char,
+    pub sb_data: *mut c_char,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Socket {
+    pub so_next: *mut Socket,
+    pub so_prev: *mut Socket,
+    pub s: c_int,
+    pub slirp: *mut Slirp,
+    pub so_m: *mut Mbuf,
+    pub so_ti: *mut TcpIpHdr,
+    pub so_urgc: c_int,
+    pub so_faddr: InAddr,
+    pub so_laddr: InAddr,
+    pub so_fport: u16,
+    pub so_lport: u16,
+    pub so_iptos: u8,
+    pub so_emu: u8,
+    pub so_type: u8,
+    pub so_state: c_int,
+    pub so_tcpcb: *mut Tcpcb,
+    pub so_expire: c_uint,
+    pub so_queued: c_int,
+    pub so_nqueued: c_int,
+    pub so_rcv: Sbuf,
+    pub so_snd: Sbuf,
+    pub extra: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Tcpcb {
+    pub seg_next: *mut TcpIpHdr,
+    pub seg_prev: *mut TcpIpHdr,
+    pub t_state: i16,
+    pub t_timer: [i16; 4],
+    pub t_rxtshift: i16,
+    pub t_rxtcur: i16,
+    pub t_dupacks: i16,
+    pub t_maxseg: u16,
+    pub t_force: c_char,
+    pub t_flags: u16,
+    pub t_template: TcpIpHdr,
+    pub t_socket: *mut Socket,
+    pub snd_una: u32,
+    pub snd_nxt: u32,
+    pub snd_up: u32,
+    pub snd_wl1: u32,
+    pub snd_wl2: u32,
+    pub iss: u32,
+    pub snd_wnd: u32,
+    pub rcv_wnd: u32,
+    pub rcv_nxt: u32,
+    pub rcv_up: u32,
+    pub irs: u32,
+    pub rcv_adv: u32,
+    pub snd_max: u32,
+    pub snd_cwnd: u32,
+    pub snd_ssthresh: u32,
+    pub t_idle: i16,
+    pub t_rtt: i16,
+    pub t_rtseq: u32,
+    pub t_srtt: i16,
+    pub t_rttvar: i16,
+    pub t_rttmin: u16,
+    pub max_sndwnd: u32,
+    pub t_oobflags: c_char,
+    pub t_iobc: c_char,
+    pub t_softerror: i16,
+    pub snd_scale: u8,
+    pub rcv_scale: u8,
+    pub request_r_scale: u8,
+    pub requested_s_scale: u8,
+    pub ts_recent: u32,
+    pub ts_recent_age: u32,
+    pub last_ack_sent: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct MHdr {
+    pub mh_next: *mut Mbuf,
+    pub mh_prev: *mut Mbuf,
+    pub mh_nextpkt: *mut Mbuf,
+    pub mh_prevpkt: *mut Mbuf,
+    pub mh_flags: c_int,
+    pub mh_size: c_int,
+    pub mh_so: *mut Socket,
+    pub mh_data: *mut c_char,
+    pub mh_len: c_int,
+}
+
+#[repr(C)]
+pub union MDat {
+    pub m_dat_: [c_char; 1],
+    pub m_ext_: *mut c_char,
+}
+
+#[repr(C)]
+pub struct Mbuf {
+    pub m_hdr: MHdr,
+    pub slirp: *mut Slirp,
+    pub m_dat: MDat,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct ExList {
+    pub ex_pty: c_int,
+    pub ex_addr: InAddr,
+    pub ex_fport: c_int,
+    pub ex_exec: *const c_char,
+    pub ex_next: *mut ExList,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct Timeval {
+    pub tv_sec: c_long,
+    pub tv_usec: c_long,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct BootpClient {
+    pub allocated: u16,
+    pub macaddr: [u8; 6],
+}
+
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct IpQ {
+    pub frag_link: Qlink,
+    pub ip_link: Qlink,
+    pub ipq_ttl: u8,
+    pub ipq_p: u8,
+    pub ipq_id: u16,
+    pub ipq_src: InAddr,
+    pub ipq_dst: InAddr,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TftpSession {
+    pub slirp: *mut Slirp,
+    pub filename: *mut c_char,
+    pub client_ip: InAddr,
+    pub client_port: u16,
+    pub timestamp: c_int,
+}
+
+#[repr(C)]
+pub struct Slirp {
+    pub vnetwork_addr: InAddr,
+    pub vnetwork_mask: InAddr,
+    pub vhost_addr: InAddr,
+    pub vdhcp_startaddr: InAddr,
+    pub vnameserver_addr: InAddr,
+    pub client_ethaddr: [u8; 6],
+    pub client_ipaddr: InAddr,
+    pub client_hostname: [c_char; 33],
+    pub restricted: c_int,
+    pub tt: Timeval,
+    pub exec_list: *mut ExList,
+    pub m_freelist: Mbuf,
+    pub m_usedlist: Mbuf,
+    pub mbuf_alloced: c_int,
+    pub if_queued: c_int,
+    pub if_fastq: Mbuf,
+    pub if_batchq: Mbuf,
+    pub next_m: *mut Mbuf,
+    pub ipq: IpQ,
+    pub ip_id: u16,
+    pub bootp_clients: [BootpClient; 16],
+    pub bootp_filename: *mut c_char,
+    pub tcb: Socket,
+    pub tcp_last_so: *mut Socket,
+    pub tcp_iss: u32,
+    pub tcp_now: u32,
+    pub udb: Socket,
+    pub udp_last_so: *mut Socket,
+    pub tftp_prefix: *mut c_char,
+    pub tftp_sessions: [TftpSession; 3],
+    pub opaque: *mut c_void,
+}
+
+/* layout sanity checks against the C structs */
+const _: () = assert!(core::mem::size_of::<Ip>() == 20);
+const _: () = assert!(core::mem::size_of::<Qlink>() == 16);
+const _: () = assert!(core::mem::size_of::<IpOvly>() == 20);
+const _: () = assert!(core::mem::size_of::<TcpHdr>() == 24);
+const _: () = assert!(core::mem::size_of::<TcpIpHdr>() == 44);
+const _: () = assert!(core::mem::size_of::<Sbuf>() == 32);
+const _: () = assert!(core::mem::size_of::<Socket>() == 168);
+const _: () = assert!(core::mem::size_of::<Tcpcb>() == 200);
+const _: () = assert!(core::mem::size_of::<MHdr>() == 64);
+const _: () = assert!(core::mem::size_of::<Mbuf>() == 80);
+const _: () = assert!(core::mem::size_of::<ExList>() == 32);
+const _: () = assert!(core::mem::size_of::<IpQ>() == 44);
+const _: () = assert!(core::mem::size_of::<TftpSession>() == 32);
+const _: () = assert!(core::mem::size_of::<Slirp>() == 1088);
+
+/* ---------------- C functions used ---------------- */
+
+extern "C" {
+    fn ip_stripoptions(m: *mut Mbuf, m2: *mut Mbuf);
+    fn cksum(m: *mut Mbuf, len: c_int) -> c_int;
+    fn solookup(
+        tcb: *mut Socket,
+        src: InAddr,
+        sport: c_uint,
+        dst: InAddr,
+        dport: c_uint,
+    ) -> *mut Socket;
+    fn socreate(slirp: *mut Slirp) -> *mut Socket;
+    fn free(p: *mut c_void);
+    fn tcp_attach(so: *mut Socket) -> c_int;
+    fn sbreserve(sb: *mut Sbuf, size: c_int);
+    fn sbdrop(sb: *mut Sbuf, len: c_int);
+    fn sbappend(so: *mut Socket, m: *mut Mbuf);
+    fn tcp_tos(so: *mut Socket) -> u8;
+    fn m_free(m: *mut Mbuf);
+    fn m_adj(m: *mut Mbuf, diff: c_int);
+    fn tcp_output(tp: *mut Tcpcb) -> c_int;
+    fn tcp_fconnect(so: *mut Socket) -> c_int;
+    fn tcp_respond(
+        tp: *mut Tcpcb,
+        ti: *mut TcpIpHdr,
+        m: *mut Mbuf,
+        ack: u32,
+        seq: u32,
+        flags: c_int,
+    );
+    fn tcp_close(tp: *mut Tcpcb) -> *mut Tcpcb;
+    fn tcp_drop(tp: *mut Tcpcb, err: c_int) -> *mut Tcpcb;
+    fn tcp_emu(so: *mut Socket, m: *mut Mbuf) -> c_int;
+    fn tcp_ctl(so: *mut Socket) -> c_int;
+    fn tcp_template(tp: *mut Tcpcb);
+    fn tcp_canceltimers(tp: *mut Tcpcb);
+    fn tcp_mss(tp: *mut Tcpcb, offer: c_uint) -> c_int;
+    fn soisfconnected(so: *mut Socket);
+    fn sofwdrain(so: *mut Socket);
+    fn icmp_error(m: *mut Mbuf, typ: u8, code: u8, minsize: c_int, msg: *const c_char);
+    fn strerror(errnum: c_int) -> *mut c_char;
+    fn __errno_location() -> *mut c_int;
+    fn slirp_insque(elem: *mut c_void, pred: *mut c_void);
+    fn slirp_remque(elem: *mut c_void);
+}
+
+/* ---------------- small helpers ---------------- */
+
+#[inline]
+fn seq_lt(a: u32, b: u32) -> bool {
+    (a.wrapping_sub(b) as i32) < 0
+}
+#[inline]
+fn seq_leq(a: u32, b: u32) -> bool {
+    (a.wrapping_sub(b) as i32) <= 0
+}
+#[inline]
+fn seq_gt(a: u32, b: u32) -> bool {
+    (a.wrapping_sub(b) as i32) > 0
+}
+
+#[inline]
+unsafe fn errno() -> c_int {
+    *__errno_location()
+}
+
+#[inline]
+unsafe fn qlink_of(t: *mut TcpIpHdr) -> *mut Qlink {
+    (t as *mut u8).offset(-SIZEOF_QLINK) as *mut Qlink
+}
+
+#[inline]
+unsafe fn qlink_to(q: *mut Qlink) -> *mut TcpIpHdr {
+    (q as *mut u8).offset(SIZEOF_QLINK) as *mut TcpIpHdr
+}
+
+#[inline]
+unsafe fn tcpiphdr_next(t: *mut TcpIpHdr) -> *mut TcpIpHdr {
+    qlink_to((*qlink_of(t)).next as *mut Qlink)
+}
+
+#[inline]
+unsafe fn tcpiphdr_prev(t: *mut TcpIpHdr) -> *mut TcpIpHdr {
+    qlink_to((*qlink_of(t)).prev as *mut Qlink)
+}
+
+#[inline]
+unsafe fn frag_list_first(tp: *mut Tcpcb) -> *mut TcpIpHdr {
+    qlink_to((*tp).seg_next as *mut Qlink)
+}
+
+#[inline]
+unsafe fn frag_list_end(f: *mut TcpIpHdr, tp: *mut Tcpcb) -> bool {
+    qlink_of(f) == tp as *mut Qlink
+}
+
+#[inline]
+unsafe fn frag_list_empty(tp: *mut Tcpcb) -> bool {
+    (*tp).seg_next == tp as *mut TcpIpHdr
+}
+
+#[inline]
+unsafe fn ti_src(ti: *mut TcpIpHdr) -> u32 {
+    let a = (*ti).ti_i.src;
+    a.s_addr
+}
+
+#[inline]
+unsafe fn ti_dst(ti: *mut TcpIpHdr) -> u32 {
+    let a = (*ti).ti_i.dst;
+    a.s_addr
+}
+
+/* ---------------- static helpers ported from the C file ---------------- */
+
+unsafe fn tcp_dooptions(tp: *mut Tcpcb, cp_in: *mut u8, cnt_in: c_int, ti: *mut TcpIpHdr) {
+    let mut cp = cp_in;
+    let mut cnt = cnt_in;
+    let mut optlen: c_int;
+
+    while cnt > 0 {
+        let opt: c_int = *cp as c_int;
+        if opt == 0 {
+            break; /* TCPOPT_EOL */
+        }
+        if opt == 1 {
+            /* TCPOPT_NOP */
+            optlen = 1;
+        } else {
+            optlen = *cp.offset(1) as c_int;
+            if optlen <= 0 {
+                break;
+            }
+        }
+        if opt == 2 {
+            /* TCPOPT_MAXSEG */
+            if optlen == 4 && ((*ti).ti_t.th_flags & TH_SYN as u8) != 0 {
+                let mut mss: u16 = 0;
+                core::ptr::copy_nonoverlapping(
+                    cp.offset(2),
+                    &mut mss as *mut u16 as *mut u8,
+                    core::mem::size_of::<u16>(),
+                );
+                mss = u16::from_be(mss);
+                tcp_mss(tp, mss as c_uint);
+            }
+        }
+        cnt -= optlen;
+        cp = cp.offset(optlen as isize);
+    }
+}
+
+unsafe fn tcp_xmit_timer(tp: *mut Tcpcb, rtt: c_int) {
+    let mut delta: i16;
+
+    if (*tp).t_srtt != 0 {
+        delta = (rtt - 1 - (((*tp).t_srtt as i32) >> 3)) as i16;
+        let v = (((*tp).t_srtt as i32) + (delta as i32)) as i16;
+        (*tp).t_srtt = v;
+        if v <= 0 {
+            (*tp).t_srtt = 1;
+        }
+        if delta < 0 {
+            delta = delta.wrapping_neg();
+        }
+        delta = (delta as i32 - (((*tp).t_rttvar as i32) >> 2)) as i16;
+        let v2 = (((*tp).t_rttvar as i32) + (delta as i32)) as i16;
+        (*tp).t_rttvar = v2;
+        if v2 <= 0 {
+            (*tp).t_rttvar = 1;
+        }
+    } else {
+        (*tp).t_srtt = (rtt << 3) as i16;
+        (*tp).t_rttvar = (rtt << 1) as i16;
+    }
+    (*tp).t_rtt = 0;
+    (*tp).t_rxtshift = 0;
+    {
+        let mut rxtcur: i16 =
+            ((((*tp).t_srtt as i32) >> 3) + ((*tp).t_rttvar as i32)) as i16;
+        let minv: i16 = (*tp).t_rttmin as i16;
+        if rxtcur < minv {
+            rxtcur = minv;
+        } else if rxtcur > TCPTV_REXMTMAX as i16 {
+            rxtcur = TCPTV_REXMTMAX as i16;
+        }
+        (*tp).t_rxtcur = rxtcur;
+    }
+    (*tp).t_softerror = 0;
+}
+
+/* "present" part of tcp_reass() */
+unsafe fn tcp_reass_present(tp: *mut Tcpcb, so: *mut Socket) -> c_int {
+    let mut ti: *mut TcpIpHdr;
+    let mut m: *mut Mbuf;
+    let mut flags: c_int = 0;
+
+    if (*tp).t_state < TCPS_ESTABLISHED {
+        return 0;
+    }
+    ti = frag_list_first(tp);
+    if frag_list_end(ti, tp) || (*ti).ti_t.th_seq != (*tp).rcv_nxt {
+        return 0;
+    }
+    if (*tp).t_state == TCPS_SYN_RECEIVED && (*ti).ti_i.len != 0 {
+        return 0;
+    }
+    loop {
+        (*tp).rcv_nxt = (*tp).rcv_nxt.wrapping_add((*ti).ti_i.len as u32);
+        flags = ((*ti).ti_t.th_flags & TH_FIN as u8) as c_int;
+        slirp_remque(qlink_of(ti) as *mut c_void);
+        m = (*ti).ti_i.mbuf;
+        ti = tcpiphdr_next(ti);
+        if ((*so).so_state & SS_FCANTSENDMORE) != 0 {
+            m_free(m);
+        } else {
+            if (*so).so_emu != 0 {
+                if tcp_emu(so, m) != 0 {
+                    sbappend(so, m);
+                }
+            } else {
+                sbappend(so, m);
+            }
+        }
+        if !(ti != tp as *mut TcpIpHdr && (*ti).ti_t.th_seq == (*tp).rcv_nxt) {
+            break;
+        }
+    }
+    flags
+}
+
+unsafe fn tcp_reass(tp: *mut Tcpcb, ti_in: *mut TcpIpHdr, m_in: *mut Mbuf) -> c_int {
+    let so: *mut Socket = (*tp).t_socket;
+    let mut m: *mut Mbuf = m_in;
+
+    if !ti_in.is_null() {
+        let ti = ti_in;
+        let mut q: *mut TcpIpHdr = frag_list_first(tp);
+
+        /* Find a segment which begins after this one does. */
+        while !frag_list_end(q, tp) {
+            if seq_gt((*q).ti_t.th_seq, (*ti).ti_t.th_seq) {
+                break;
+            }
+            q = tcpiphdr_next(q);
+        }
+
+        /* trim from preceding segment if it overlaps */
+        if !frag_list_end(tcpiphdr_prev(q), tp) {
+            q = tcpiphdr_prev(q);
+            let i: c_int = (*q)
+                .ti_t
+                .th_seq
+                .wrapping_add((*q).ti_i.len as u32)
+                .wrapping_sub((*ti).ti_t.th_seq) as c_int;
+            if i > 0 {
+                if i >= (*ti).ti_i.len as c_int {
+                    m_free(m);
+                    return tcp_reass_present(tp, so);
+                }
+                m_adj(m, i);
+                (*ti).ti_i.len = (*ti).ti_i.len.wrapping_sub(i as u16);
+                (*ti).ti_t.th_seq = (*ti).ti_t.th_seq.wrapping_add(i as u32);
+            }
+            q = tcpiphdr_next(q);
+        }
+        (*ti).ti_i.mbuf = m;
+
+        /* trim succeeding segments */
+        while !frag_list_end(q, tp) {
+            let i: c_int = (*ti)
+                .ti_t
+                .th_seq
+                .wrapping_add((*ti).ti_i.len as u32)
+                .wrapping_sub((*q).ti_t.th_seq) as c_int;
+            if i <= 0 {
+                break;
+            }
+            if i < (*q).ti_i.len as c_int {
+                (*q).ti_t.th_seq = (*q).ti_t.th_seq.wrapping_add(i as u32);
+                (*q).ti_i.len = (*q).ti_i.len.wrapping_sub(i as u16);
+                m_adj((*q).ti_i.mbuf, i);
+                break;
+            }
+            q = tcpiphdr_next(q);
+            let p = tcpiphdr_prev(q);
+            m = (*p).ti_i.mbuf;
+            slirp_remque(qlink_of(p) as *mut c_void);
+            m_free(m);
+        }
+
+        slirp_insque(
+            qlink_of(ti) as *mut c_void,
+            qlink_of(tcpiphdr_prev(q)) as *mut c_void,
+        );
+    }
+
+    tcp_reass_present(tp, so)
+}
+
+/* ---------------- the target function ---------------- */
+
+#[derive(Clone, Copy, PartialEq)]
+enum Lbl {
+    Start,
+    FindSo,
+    Listen,
+    ContConn,
+    ContInput,
+    SynSent,
+    Trim,
+    StatesOther,
+    SynRxAck,
+    EstAck,
+    SynRxToEst,
+    Step6,
+    DoData,
+    DropAfterAck,
+    DropWithReset,
+    Drop,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tcp_input(m: *mut Mbuf, iphlen: c_int, inso: *mut Socket) {
+    let mut m = m;
+    let mut iphlen = iphlen;
+
+    let mut save_ip: Ip = core::mem::zeroed();
+    let mut ip: *mut Ip = core::ptr::null_mut();
+    let mut ti: *mut TcpIpHdr = core::ptr::null_mut();
+    let mut optp: *mut c_char = core::ptr::null_mut();
+    let mut optlen: c_int = 0;
+    let mut len: c_int = 0;
+    let mut tlen: c_int = 0;
+    let mut off: c_int = 0;
+    let mut tp: *mut Tcpcb = core::ptr::null_mut();
+    let mut tiflags: c_int = 0;
+    let mut so: *mut Socket = core::ptr::null_mut();
+    let mut todrop: c_int = 0;
+    let mut acked: c_int = 0;
+    let mut ourfinisacked: c_int = 0;
+    let mut needoutput: c_int = 0;
+    let mut iss: c_int = 0;
+    let mut tiwin: c_ulong = 0;
+    let mut ret: c_int = 0;
+    let mut ex_ptr: *mut ExList = core::ptr::null_mut();
+    let mut slirp: *mut Slirp = core::ptr::null_mut();
+
+    let mut lbl = Lbl::Start;
+
+    loop {
+        match lbl {
+            Lbl::Start => {
+                /*
+                 * If called with m == 0, then we're continuing the connect
+                 */
+                if m.is_null() {
+                    so = inso;
+                    slirp = (*so).slirp;
+
+                    tp = (*so).so_tcpcb;
+                    m = (*so).so_m;
+                    (*so).so_m = core::ptr::null_mut();
+                    ti = (*so).so_ti;
+                    tiwin = (*ti).ti_t.th_win as c_ulong;
+                    tiflags = (*ti).ti_t.th_flags as c_int;
+
+                    lbl = Lbl::ContConn;
+                    continue;
+                }
+                slirp = (*m).slirp;
+
+                /*
+                 * Get IP and TCP header together in first mbuf.
+                 */
+                ti = (*m).m_hdr.mh_data as *mut TcpIpHdr;
+                if iphlen > SIZEOF_IP {
+                    ip_stripoptions(m, core::ptr::null_mut());
+                    iphlen = SIZEOF_IP;
+                }
+                /* XXX Check if too short */
+
+                /*
+                 * Save a copy of the IP header for possible ICMP error.
+                 */
+                ip = (*m).m_hdr.mh_data as *mut Ip;
+                save_ip = *ip;
+                save_ip.ip_len = save_ip.ip_len.wrapping_add(iphlen as u16);
+
+                /*
+                 * Checksum extended TCP header and data.
+                 */
+                tlen = (ti as *const u8).add(2).cast::<u16>().read_unaligned() as c_int;
+                {
+                    let q = (ti as *mut u8).offset(-SIZEOF_QLINK) as *mut Qlink;
+                    (*q).next = core::ptr::null_mut();
+                    (*q).prev = core::ptr::null_mut();
+                }
+                core::ptr::write_bytes(ti as *mut u8, 0, 8);
+                (*ti).ti_i.x1 = 0;
+                (*ti).ti_i.len = (tlen as u16).to_be();
+                len = SIZEOF_IP + tlen;
+                if cksum(m, len) != 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                /*
+                 * Check that TCP offset makes sense,
+                 * pull out TCP options and adjust length.
+                 */
+                off = ((((*ti).ti_t.th_x2_off >> 4) & 0xf) as c_int) * 4;
+                if off < SIZEOF_TCPHDR || off > tlen {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+                tlen -= off;
+                (*ti).ti_i.len = tlen as u16;
+                if off > SIZEOF_TCPHDR {
+                    optlen = off - SIZEOF_TCPHDR;
+                    optp = (*m).m_hdr.mh_data.add(SIZEOF_TCPIPHDR as usize);
+                }
+                tiflags = (*ti).ti_t.th_flags as c_int;
+
+                /*
+                 * Convert TCP protocol specific fields to host format.
+                 */
+                (*ti).ti_t.th_seq = u32::from_be((*ti).ti_t.th_seq);
+                (*ti).ti_t.th_ack = u32::from_be((*ti).ti_t.th_ack);
+                (*ti).ti_t.th_win = u16::from_be((*ti).ti_t.th_win);
+                (*ti).ti_t.th_urp = u16::from_be((*ti).ti_t.th_urp);
+
+                /*
+                 * Drop TCP, IP headers and TCP options.
+                 */
+                {
+                    let adv: c_int = SIZEOF_TCPIPHDR + off - SIZEOF_TCPHDR;
+                    (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(-(adv as isize));
+                    (*m).m_hdr.mh_len -= adv;
+                }
+
+                if (*slirp).restricted != 0 {
+                    ex_ptr = (*slirp).exec_list;
+                    while !ex_ptr.is_null() {
+                        if (*ex_ptr).ex_fport == (*ti).ti_t.th_dport as c_int
+                            && ti_dst(ti) == (*ex_ptr).ex_addr.s_addr
+                        {
+                            break;
+                        }
+                        ex_ptr = (*ex_ptr).ex_next;
+                    }
+                    if ex_ptr.is_null() {
+                        lbl = Lbl::Drop;
+                        continue;
+                    }
+                }
+
+                lbl = Lbl::FindSo;
+                continue;
+            }
+
+            Lbl::FindSo => {
+                /*
+                 * Locate pcb for segment.
+                 */
+                so = (*slirp).tcp_last_so;
+                if (*so).so_fport != (*ti).ti_t.th_dport
+                    || (*so).so_lport != (*ti).ti_t.th_sport
+                    || (*so).so_laddr.s_addr != ti_src(ti)
+                    || (*so).so_faddr.s_addr != ti_dst(ti)
+                {
+                    let src = (*ti).ti_i.src;
+                    let dst = (*ti).ti_i.dst;
+                    so = solookup(
+                        &mut (*slirp).tcb as *mut Socket,
+                        src,
+                        (*ti).ti_t.th_sport as c_uint,
+                        dst,
+                        (*ti).ti_t.th_dport as c_uint,
+                    );
+                    if !so.is_null() {
+                        (*slirp).tcp_last_so = so;
+                    }
+                }
+
+                if so.is_null() {
+                    if (tiflags & (TH_SYN | TH_FIN | TH_RST | TH_URG | TH_ACK)) != TH_SYN {
+                        lbl = Lbl::DropWithReset;
+                        continue;
+                    }
+
+                    so = socreate(slirp);
+                    if so.is_null() {
+                        lbl = Lbl::DropWithReset;
+                        continue;
+                    }
+                    if tcp_attach(so) < 0 {
+                        free(so as *mut c_void); /* Not sofree */
+                        lbl = Lbl::DropWithReset;
+                        continue;
+                    }
+
+                    sbreserve(&mut (*so).so_snd as *mut Sbuf, TCP_SNDSPACE);
+                    sbreserve(&mut (*so).so_rcv as *mut Sbuf, TCP_RCVSPACE);
+
+                    (*so).so_laddr = (*ti).ti_i.src;
+                    (*so).so_lport = (*ti).ti_t.th_sport;
+                    (*so).so_faddr = (*ti).ti_i.dst;
+                    (*so).so_fport = (*ti).ti_t.th_dport;
+
+                    (*so).so_iptos = tcp_tos(so);
+                    if (*so).so_iptos == 0 {
+                        (*so).so_iptos = (ti as *const u8).add(1).read();
+                    }
+
+                    tp = (*so).so_tcpcb;
+                    (*tp).t_state = TCPS_LISTEN;
+                }
+
+                /*
+                 * If this is a still-connecting socket, this probably
+                 * a retransmit of the SYN: nuke it.
+                 */
+                if ((*so).so_state & SS_ISFCONNECTING) != 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                tp = (*so).so_tcpcb;
+
+                if tp.is_null() {
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+                if (*tp).t_state == TCPS_CLOSED {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                tiwin = (*ti).ti_t.th_win as c_ulong;
+
+                /*
+                 * Segment received on connection.
+                 * Reset idle time and keep-alive timer.
+                 */
+                (*tp).t_idle = 0;
+                (*tp).t_timer[TCPT_KEEP] = TCPTV_KEEP_IDLE as i16;
+
+                /*
+                 * Process options if not in LISTEN state.
+                 */
+                if !optp.is_null() && (*tp).t_state != TCPS_LISTEN {
+                    tcp_dooptions(tp, optp as *mut u8, optlen, ti);
+                }
+
+                /*
+                 * Header prediction.
+                 */
+                if (*tp).t_state == TCPS_ESTABLISHED
+                    && (tiflags & (TH_SYN | TH_FIN | TH_RST | TH_URG | TH_ACK)) == TH_ACK
+                    && (*ti).ti_t.th_seq == (*tp).rcv_nxt
+                    && tiwin != 0
+                    && tiwin == (*tp).snd_wnd as c_ulong
+                    && (*tp).snd_nxt == (*tp).snd_max
+                {
+                    if (*ti).ti_i.len == 0 {
+                        if seq_gt((*ti).ti_t.th_ack, (*tp).snd_una)
+                            && seq_leq((*ti).ti_t.th_ack, (*tp).snd_max)
+                            && (*tp).snd_cwnd >= (*tp).snd_wnd
+                        {
+                            /* pure ack for outstanding data */
+                            if (*tp).t_rtt != 0 && seq_gt((*ti).ti_t.th_ack, (*tp).t_rtseq) {
+                                tcp_xmit_timer(tp, (*tp).t_rtt as c_int);
+                            }
+                            acked = (*ti).ti_t.th_ack.wrapping_sub((*tp).snd_una) as c_int;
+                            sbdrop(&mut (*so).so_snd as *mut Sbuf, acked);
+                            (*tp).snd_una = (*ti).ti_t.th_ack;
+                            m_free(m);
+
+                            if (*tp).snd_una == (*tp).snd_max {
+                                (*tp).t_timer[TCPT_REXMT] = 0;
+                            } else if (*tp).t_timer[TCPT_PERSIST] == 0 {
+                                (*tp).t_timer[TCPT_REXMT] = (*tp).t_rxtcur;
+                            }
+
+                            if (*so).so_snd.sb_cc != 0 {
+                                tcp_output(tp);
+                            }
+
+                            return;
+                        }
+                    } else if (*ti).ti_t.th_ack == (*tp).snd_una
+                        && frag_list_empty(tp)
+                        && ((*ti).ti_i.len as c_uint)
+                            <= (*so).so_rcv.sb_datalen.wrapping_sub((*so).so_rcv.sb_cc)
+                    {
+                        /* pure, in-sequence data packet */
+                        (*tp).rcv_nxt = (*tp).rcv_nxt.wrapping_add((*ti).ti_i.len as u32);
+
+                        if (*so).so_emu != 0 {
+                            if tcp_emu(so, m) != 0 {
+                                sbappend(so, m);
+                            }
+                        } else {
+                            sbappend(so, m);
+                        }
+
+                        (*tp).t_flags |= TF_ACKNOW;
+                        tcp_output(tp);
+                        return;
+                    }
+                } /* header prediction */
+
+                /*
+                 * Calculate amount of space in receive window.
+                 */
+                {
+                    let mut win: c_int =
+                        (*so).so_rcv.sb_datalen.wrapping_sub((*so).so_rcv.sb_cc) as c_int;
+                    if win < 0 {
+                        win = 0;
+                    }
+                    let other: c_int = (*tp).rcv_adv.wrapping_sub((*tp).rcv_nxt) as c_int;
+                    (*tp).rcv_wnd = (if win > other { win } else { other }) as u32;
+                }
+
+                lbl = match (*tp).t_state {
+                    TCPS_LISTEN => Lbl::Listen,
+                    TCPS_SYN_SENT => Lbl::SynSent,
+                    _ => Lbl::StatesOther,
+                };
+                continue;
+            }
+
+            Lbl::Listen => {
+                if (tiflags & TH_RST) != 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+                if (tiflags & TH_ACK) != 0 {
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+                if (tiflags & TH_SYN) == 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                /*
+                 * If this is destined for the control address, then flag to
+                 * tcp_ctl once connected, otherwise connect
+                 */
+                if ((*so).so_faddr.s_addr & (*slirp).vnetwork_mask.s_addr)
+                    == (*slirp).vnetwork_addr.s_addr
+                {
+                    if (*so).so_faddr.s_addr != (*slirp).vhost_addr.s_addr
+                        && (*so).so_faddr.s_addr != (*slirp).vnameserver_addr.s_addr
+                    {
+                        /* May be an add exec */
+                        ex_ptr = (*slirp).exec_list;
+                        while !ex_ptr.is_null() {
+                            if (*ex_ptr).ex_fport == (*so).so_fport as c_int
+                                && (*so).so_faddr.s_addr == (*ex_ptr).ex_addr.s_addr
+                            {
+                                (*so).so_state |= SS_CTL;
+                                break;
+                            }
+                            ex_ptr = (*ex_ptr).ex_next;
+                        }
+                        if ((*so).so_state & SS_CTL) != 0 {
+                            lbl = Lbl::ContInput;
+                            continue;
+                        }
+                    }
+                    /* CTL_ALIAS: Do nothing, tcp_fconnect will be called on it */
+                }
+
+                if ((*so).so_emu as c_int & EMU_NOCONNECT) != 0 {
+                    (*so).so_emu &= !(EMU_NOCONNECT as u8);
+                    lbl = Lbl::ContInput;
+                    continue;
+                }
+
+                if tcp_fconnect(so) == -1 && errno() != EINPROGRESS && errno() != EWOULDBLOCK {
+                    let mut code: u8 = ICMP_UNREACH_NET;
+                    if errno() == ECONNREFUSED {
+                        /* ACK the SYN, send RST to refuse the connection */
+                        tcp_respond(
+                            tp,
+                            ti,
+                            m,
+                            (*ti).ti_t.th_seq.wrapping_add(1),
+                            0,
+                            TH_RST | TH_ACK,
+                        );
+                    } else {
+                        if errno() == EHOSTUNREACH {
+                            code = ICMP_UNREACH_HOST;
+                        }
+                        /* restore tcp header */
+                        (*ti).ti_t.th_seq = (*ti).ti_t.th_seq.to_be();
+                        (*ti).ti_t.th_ack = (*ti).ti_t.th_ack.to_be();
+                        (*ti).ti_t.th_win = (*ti).ti_t.th_win.to_be();
+                        (*ti).ti_t.th_urp = (*ti).ti_t.th_urp.to_be();
+                        let d: c_int = SIZEOF_TCPIPHDR + off - SIZEOF_TCPHDR;
+                        (*m).m_hdr.mh_data = (*m).m_hdr.mh_data.offset(d as isize);
+                        (*m).m_hdr.mh_len += d;
+                        *ip = save_ip;
+                        icmp_error(m, ICMP_UNREACH, code, 0, strerror(errno()));
+                    }
+                    tcp_close(tp);
+                    m_free(m);
+                } else {
+                    /*
+                     * Haven't connected yet, save the current mbuf
+                     * and ti, and return
+                     */
+                    (*so).so_m = m;
+                    (*so).so_ti = ti;
+                    (*tp).t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT as i16;
+                    (*tp).t_state = TCPS_SYN_RECEIVED;
+                }
+                return;
+            }
+
+            Lbl::ContConn => {
+                /* m==NULL: Check if the connect succeeded */
+                if ((*so).so_state & SS_NOFDREF) != 0 {
+                    tp = tcp_close(tp);
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+                lbl = Lbl::ContInput;
+                continue;
+            }
+
+            Lbl::ContInput => {
+                tcp_template(tp);
+
+                if !optp.is_null() {
+                    tcp_dooptions(tp, optp as *mut u8, optlen, ti);
+                }
+
+                if iss != 0 {
+                    (*tp).iss = iss as u32;
+                } else {
+                    (*tp).iss = (*slirp).tcp_iss;
+                }
+                (*slirp).tcp_iss = (*slirp).tcp_iss.wrapping_add(TCP_ISSINCR / 2);
+                (*tp).irs = (*ti).ti_t.th_seq;
+                /* tcp_sendseqinit */
+                (*tp).snd_una = (*tp).iss;
+                (*tp).snd_nxt = (*tp).iss;
+                (*tp).snd_max = (*tp).iss;
+                (*tp).snd_up = (*tp).iss;
+                /* tcp_rcvseqinit */
+                (*tp).rcv_adv = (*tp).irs.wrapping_add(1);
+                (*tp).rcv_nxt = (*tp).irs.wrapping_add(1);
+                (*tp).t_flags |= TF_ACKNOW;
+                (*tp).t_state = TCPS_SYN_RECEIVED;
+                (*tp).t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT as i16;
+                lbl = Lbl::Trim;
+                continue;
+            }
+
+            Lbl::SynSent => {
+                if (tiflags & TH_ACK) != 0
+                    && (seq_leq((*ti).ti_t.th_ack, (*tp).iss)
+                        || seq_gt((*ti).ti_t.th_ack, (*tp).snd_max))
+                {
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+
+                if (tiflags & TH_RST) != 0 {
+                    if (tiflags & TH_ACK) != 0 {
+                        tcp_drop(tp, 0);
+                    }
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                if (tiflags & TH_SYN) == 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+                if (tiflags & TH_ACK) != 0 {
+                    (*tp).snd_una = (*ti).ti_t.th_ack;
+                    if seq_lt((*tp).snd_nxt, (*tp).snd_una) {
+                        (*tp).snd_nxt = (*tp).snd_una;
+                    }
+                }
+
+                (*tp).t_timer[TCPT_REXMT] = 0;
+                (*tp).irs = (*ti).ti_t.th_seq;
+                (*tp).rcv_adv = (*tp).irs.wrapping_add(1);
+                (*tp).rcv_nxt = (*tp).irs.wrapping_add(1);
+                (*tp).t_flags |= TF_ACKNOW;
+                if (tiflags & TH_ACK) != 0 && seq_gt((*tp).snd_una, (*tp).iss) {
+                    soisfconnected(so);
+                    (*tp).t_state = TCPS_ESTABLISHED;
+
+                    tcp_reass(tp, core::ptr::null_mut(), core::ptr::null_mut());
+
+                    if (*tp).t_rtt != 0 {
+                        tcp_xmit_timer(tp, (*tp).t_rtt as c_int);
+                    }
+                } else {
+                    (*tp).t_state = TCPS_SYN_RECEIVED;
+                }
+
+                lbl = Lbl::Trim;
+                continue;
+            }
+
+            Lbl::Trim => {
+                /*
+                 * Advance ti->ti_seq to correspond to first data byte.
+                 * If data, trim to stay within window,
+                 * dropping FIN if necessary.
+                 */
+                (*ti).ti_t.th_seq = (*ti).ti_t.th_seq.wrapping_add(1);
+                if ((*ti).ti_i.len as u32) > (*tp).rcv_wnd {
+                    todrop = ((*ti).ti_i.len as u32).wrapping_sub((*tp).rcv_wnd) as c_int;
+                    m_adj(m, -todrop);
+                    (*ti).ti_i.len = (*tp).rcv_wnd as u16;
+                    tiflags &= !TH_FIN;
+                }
+                (*tp).snd_wl1 = (*ti).ti_t.th_seq.wrapping_sub(1);
+                (*tp).rcv_up = (*ti).ti_t.th_seq;
+                lbl = Lbl::Step6;
+                continue;
+            }
+
+            Lbl::StatesOther => {
+                /*
+                 * States other than LISTEN or SYN_SENT.
+                 */
+                todrop = (*tp).rcv_nxt.wrapping_sub((*ti).ti_t.th_seq) as c_int;
+                if todrop > 0 {
+                    if (tiflags & TH_SYN) != 0 {
+                        tiflags &= !TH_SYN;
+                        (*ti).ti_t.th_seq = (*ti).ti_t.th_seq.wrapping_add(1);
+                        if (*ti).ti_t.th_urp > 1 {
+                            (*ti).ti_t.th_urp = (*ti).ti_t.th_urp.wrapping_sub(1);
+                        } else {
+                            tiflags &= !TH_URG;
+                        }
+                        todrop -= 1;
+                    }
+                    /*
+                     * Following if statement from Stevens, vol. 2, p. 960.
+                     */
+                    if todrop > (*ti).ti_i.len as c_int
+                        || (todrop == (*ti).ti_i.len as c_int && (tiflags & TH_FIN) == 0)
+                    {
+                        tiflags &= !TH_FIN;
+                        (*tp).t_flags |= TF_ACKNOW;
+                        todrop = (*ti).ti_i.len as c_int;
+                    }
+                    m_adj(m, todrop);
+                    (*ti).ti_t.th_seq = (*ti).ti_t.th_seq.wrapping_add(todrop as u32);
+                    (*ti).ti_i.len = (*ti).ti_i.len.wrapping_sub(todrop as u16);
+                    if (*ti).ti_t.th_urp as c_int > todrop {
+                        (*ti).ti_t.th_urp = (*ti).ti_t.th_urp.wrapping_sub(todrop as u16);
+                    } else {
+                        tiflags &= !TH_URG;
+                        (*ti).ti_t.th_urp = 0;
+                    }
+                }
+
+                /*
+                 * If new data are received on a connection after the
+                 * user processes are gone, then RST the other end.
+                 */
+                if ((*so).so_state & SS_NOFDREF) != 0
+                    && (*tp).t_state > TCPS_CLOSE_WAIT
+                    && (*ti).ti_i.len != 0
+                {
+                    tp = tcp_close(tp);
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+
+                /*
+                 * If segment ends after window, drop trailing data.
+                 */
+                todrop = (*ti)
+                    .ti_t
+                    .th_seq
+                    .wrapping_add((*ti).ti_i.len as u32)
+                    .wrapping_sub((*tp).rcv_nxt.wrapping_add((*tp).rcv_wnd))
+                    as c_int;
+                if todrop > 0 {
+                    if todrop >= (*ti).ti_i.len as c_int {
+                        /*
+                         * New connection request while in TIME_WAIT.
+                         */
+                        if (tiflags & TH_SYN) != 0
+                            && (*tp).t_state == TCPS_TIME_WAIT
+                            && seq_gt((*ti).ti_t.th_seq, (*tp).rcv_nxt)
+                        {
+                            iss = (*tp).rcv_nxt.wrapping_add(TCP_ISSINCR) as c_int;
+                            tp = tcp_close(tp);
+                            lbl = Lbl::FindSo;
+                            continue;
+                        }
+                        /*
+                         * If window is closed can only take segments at
+                         * window edge.
+                         */
+                        if (*tp).rcv_wnd == 0 && (*ti).ti_t.th_seq == (*tp).rcv_nxt {
+                            (*tp).t_flags |= TF_ACKNOW;
+                        } else {
+                            lbl = Lbl::DropAfterAck;
+                            continue;
+                        }
+                    }
+                    m_adj(m, -todrop);
+                    (*ti).ti_i.len = (*ti).ti_i.len.wrapping_sub(todrop as u16);
+                    tiflags &= !(TH_PUSH | TH_FIN);
+                }
+
+                /*
+                 * If the RST bit is set examine the state.
+                 */
+                if (tiflags & TH_RST) != 0 {
+                    match (*tp).t_state {
+                        TCPS_SYN_RECEIVED
+                        | TCPS_ESTABLISHED
+                        | TCPS_FIN_WAIT_1
+                        | TCPS_FIN_WAIT_2
+                        | TCPS_CLOSE_WAIT => {
+                            (*tp).t_state = TCPS_CLOSED;
+                            tcp_close(tp);
+                            lbl = Lbl::Drop;
+                            continue;
+                        }
+                        TCPS_CLOSING | TCPS_LAST_ACK | TCPS_TIME_WAIT => {
+                            tcp_close(tp);
+                            lbl = Lbl::Drop;
+                            continue;
+                        }
+                        _ => {}
+                    }
+                }
+
+                /*
+                 * If a SYN is in the window, send an RST and drop.
+                 */
+                if (tiflags & TH_SYN) != 0 {
+                    tp = tcp_drop(tp, 0);
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+
+                /*
+                 * If the ACK bit is off we drop the segment and return.
+                 */
+                if (tiflags & TH_ACK) == 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+
+                lbl = match (*tp).t_state {
+                    TCPS_SYN_RECEIVED => Lbl::SynRxAck,
+                    TCPS_ESTABLISHED
+                    | TCPS_FIN_WAIT_1
+                    | TCPS_FIN_WAIT_2
+                    | TCPS_CLOSE_WAIT
+                    | TCPS_CLOSING
+                    | TCPS_LAST_ACK
+                    | TCPS_TIME_WAIT => Lbl::EstAck,
+                    _ => Lbl::Step6,
+                };
+                continue;
+            }
+
+            Lbl::SynRxAck => {
+                if seq_gt((*tp).snd_una, (*ti).ti_t.th_ack)
+                    || seq_gt((*ti).ti_t.th_ack, (*tp).snd_max)
+                {
+                    lbl = Lbl::DropWithReset;
+                    continue;
+                }
+                (*tp).t_state = TCPS_ESTABLISHED;
+                (*tp).snd_una = (*ti).ti_t.th_ack;
+                if ((*so).so_state & SS_CTL) != 0 {
+                    /* So tcp_ctl reports the right state */
+                    ret = tcp_ctl(so);
+                    if ret == 1 {
+                        soisfconnected(so);
+                        (*so).so_state &= !SS_CTL; /* success XXX */
+                    } else if ret == 2 {
+                        (*so).so_state &= SS_PERSISTENT_MASK;
+                        (*so).so_state |= SS_NOFDREF; /* CTL_CMD */
+                    } else {
+                        needoutput = 1;
+                        (*tp).t_state = TCPS_FIN_WAIT_1;
+                    }
+                } else {
+                    soisfconnected(so);
+                }
+
+                tcp_reass(tp, core::ptr::null_mut(), core::ptr::null_mut());
+                (*tp).snd_wl1 = (*ti).ti_t.th_seq.wrapping_sub(1);
+                /* Avoid ack processing; snd_una==ti_ack => dup ack */
+                lbl = Lbl::SynRxToEst;
+                continue;
+            }
+
+            Lbl::EstAck => {
+                if seq_leq((*ti).ti_t.th_ack, (*tp).snd_una) {
+                    if (*ti).ti_i.len == 0 && tiwin == (*tp).snd_wnd as c_ulong {
+                        if (*tp).t_timer[TCPT_REXMT] == 0
+                            || (*ti).ti_t.th_ack != (*tp).snd_una
+                        {
+                            (*tp).t_dupacks = 0;
+                        } else {
+                            (*tp).t_dupacks = (*tp).t_dupacks.wrapping_add(1);
+                            if (*tp).t_dupacks == TCPREXMTTHRESH {
+                                let onxt: u32 = (*tp).snd_nxt;
+                                let mss: c_uint = (*tp).t_maxseg as c_uint;
+                                let minwin: c_uint =
+                                    core::cmp::min((*tp).snd_wnd, (*tp).snd_cwnd);
+                                let mut win: c_uint =
+                                    if mss != 0 { minwin / 2 / mss } else { 0 };
+
+                                if win < 2 {
+                                    win = 2;
+                                }
+                                (*tp).snd_ssthresh = win.wrapping_mul(mss);
+                                (*tp).t_timer[TCPT_REXMT] = 0;
+                                (*tp).t_rtt = 0;
+                                (*tp).snd_nxt = (*ti).ti_t.th_ack;
+                                (*tp).snd_cwnd = mss;
+                                tcp_output(tp);
+                                (*tp).snd_cwnd = (*tp).snd_ssthresh.wrapping_add(
+                                    mss.wrapping_mul((*tp).t_dupacks as c_uint),
+                                );
+                                if seq_gt(onxt, (*tp).snd_nxt) {
+                                    (*tp).snd_nxt = onxt;
+                                }
+                                lbl = Lbl::Drop;
+                                continue;
+                            } else if (*tp).t_dupacks > TCPREXMTTHRESH {
+                                (*tp).snd_cwnd =
+                                    (*tp).snd_cwnd.wrapping_add((*tp).t_maxseg as u32);
+                                tcp_output(tp);
+                                lbl = Lbl::Drop;
+                                continue;
+                            }
+                        }
+                    } else {
+                        (*tp).t_dupacks = 0;
+                    }
+                    lbl = Lbl::Step6;
+                    continue;
+                }
+                lbl = Lbl::SynRxToEst;
+                continue;
+            }
+
+            Lbl::SynRxToEst => {
+                /*
+                 * If the congestion window was inflated to account
+                 * for the other side's cached packets, retract it.
+                 */
+                if (*tp).t_dupacks > TCPREXMTTHRESH
+                    && (*tp).snd_cwnd > (*tp).snd_ssthresh
+                {
+                    (*tp).snd_cwnd = (*tp).snd_ssthresh;
+                }
+                (*tp).t_dupacks = 0;
+                if seq_gt((*ti).ti_t.th_ack, (*tp).snd_max) {
+                    lbl = Lbl::DropAfterAck;
+                    continue;
+                }
+                acked = (*ti).ti_t.th_ack.wrapping_sub((*tp).snd_una) as c_int;
+
+                if (*tp).t_rtt != 0 && seq_gt((*ti).ti_t.th_ack, (*tp).t_rtseq) {
+                    tcp_xmit_timer(tp, (*tp).t_rtt as c_int);
+                }
+
+                if (*ti).ti_t.th_ack == (*tp).snd_max {
+                    (*tp).t_timer[TCPT_REXMT] = 0;
+                    needoutput = 1;
+                } else if (*tp).t_timer[TCPT_PERSIST] == 0 {
+                    (*tp).t_timer[TCPT_REXMT] = (*tp).t_rxtcur;
+                }
+
+                /*
+                 * When new data is acked, open the congestion window.
+                 */
+                {
+                    let cw: c_uint = (*tp).snd_cwnd;
+                    let mut incr: c_uint = (*tp).t_maxseg as c_uint;
+
+                    if cw > (*tp).snd_ssthresh {
+                        incr = incr.wrapping_mul(incr) / cw;
+                    }
+                    let limit: c_uint =
+                        TCP_MAXWIN.wrapping_shl((*tp).snd_scale as u32);
+                    let sum = cw.wrapping_add(incr);
+                    (*tp).snd_cwnd = if sum < limit { sum } else { limit };
+                }
+                if (acked as c_uint) > (*so).so_snd.sb_cc {
+                    (*tp).snd_wnd = (*tp).snd_wnd.wrapping_sub((*so).so_snd.sb_cc);
+                    sbdrop(
+                        &mut (*so).so_snd as *mut Sbuf,
+                        (*so).so_snd.sb_cc as c_int,
+                    );
+                    ourfinisacked = 1;
+                } else {
+                    sbdrop(&mut (*so).so_snd as *mut Sbuf, acked);
+                    (*tp).snd_wnd = (*tp).snd_wnd.wrapping_sub(acked as u32);
+                    ourfinisacked = 0;
+                }
+                (*tp).snd_una = (*ti).ti_t.th_ack;
+                if seq_lt((*tp).snd_nxt, (*tp).snd_una) {
+                    (*tp).snd_nxt = (*tp).snd_una;
+                }
+
+                match (*tp).t_state {
+                    /*
+                     * In FIN_WAIT_1 STATE in addition to the processing
+                     * for the ESTABLISHED state if our FIN is now acknowledged
+                     * then enter FIN_WAIT_2.
+                     */
+                    TCPS_FIN_WAIT_1 => {
+                        if ourfinisacked != 0 {
+                            if ((*so).so_state & SS_FCANTRCVMORE) != 0 {
+                                (*tp).t_timer[TCPT_2MSL] = TCP_MAXIDLE as i16;
+                            }
+                            (*tp).t_state = TCPS_FIN_WAIT_2;
+                        }
+                    }
+                    /*
+                     * In CLOSING STATE ... enter the TIME-WAIT state
+                     */
+                    TCPS_CLOSING => {
+                        if ourfinisacked != 0 {
+                            (*tp).t_state = TCPS_TIME_WAIT;
+                            tcp_canceltimers(tp);
+                            (*tp).t_timer[TCPT_2MSL] = (2 * TCPTV_MSL) as i16;
+                        }
+                    }
+                    /*
+                     * In LAST_ACK, if our FIN is now acknowledged, delete
+                     * the TCB, enter the closed state and return.
+                     */
+                    TCPS_LAST_ACK => {
+                        if ourfinisacked != 0 {
+                            tcp_close(tp);
+                            lbl = Lbl::Drop;
+                            continue;
+                        }
+                    }
+                    /*
+                     * In TIME_WAIT state the only thing that should arrive
+                     * is a retransmission of the remote FIN.
+                     */
+                    TCPS_TIME_WAIT => {
+                        (*tp).t_timer[TCPT_2MSL] = (2 * TCPTV_MSL) as i16;
+                        lbl = Lbl::DropAfterAck;
+                        continue;
+                    }
+                    _ => {}
+                }
+                lbl = Lbl::Step6;
+                continue;
+            }
+
+            Lbl::Step6 => {
+                /*
+                 * Update window information.
+                 */
+                if (tiflags & TH_ACK) != 0
+                    && (seq_lt((*tp).snd_wl1, (*ti).ti_t.th_seq)
+                        || ((*tp).snd_wl1 == (*ti).ti_t.th_seq
+                            && (seq_lt((*tp).snd_wl2, (*ti).ti_t.th_ack)
+                                || ((*tp).snd_wl2 == (*ti).ti_t.th_ack
+                                    && tiwin > (*tp).snd_wnd as c_ulong))))
+                {
+                    (*tp).snd_wnd = tiwin as u32;
+                    (*tp).snd_wl1 = (*ti).ti_t.th_seq;
+                    (*tp).snd_wl2 = (*ti).ti_t.th_ack;
+                    if (*tp).snd_wnd > (*tp).max_sndwnd {
+                        (*tp).max_sndwnd = (*tp).snd_wnd;
+                    }
+                    needoutput = 1;
+                }
+
+                /*
+                 * Process segments with URG.
+                 */
+                if (tiflags & TH_URG) != 0
+                    && (*ti).ti_t.th_urp != 0
+                    && (*tp).t_state < TCPS_TIME_WAIT
+                {
+                    if ((*ti).ti_t.th_urp as c_uint).wrapping_add((*so).so_rcv.sb_cc)
+                        > (*so).so_rcv.sb_datalen
+                    {
+                        (*ti).ti_t.th_urp = 0;
+                        tiflags &= !TH_URG;
+                        lbl = Lbl::DoData;
+                        continue;
+                    }
+                    if seq_gt(
+                        (*ti).ti_t.th_seq.wrapping_add((*ti).ti_t.th_urp as u32),
+                        (*tp).rcv_up,
+                    ) {
+                        (*tp).rcv_up =
+                            (*ti).ti_t.th_seq.wrapping_add((*ti).ti_t.th_urp as u32);
+                        (*so).so_urgc = (*so)
+                            .so_rcv
+                            .sb_cc
+                            .wrapping_add((*tp).rcv_up.wrapping_sub((*tp).rcv_nxt))
+                            as c_int;
+                        (*tp).rcv_up =
+                            (*ti).ti_t.th_seq.wrapping_add((*ti).ti_t.th_urp as u32);
+                    }
+                } else if seq_gt((*tp).rcv_nxt, (*tp).rcv_up) {
+                    (*tp).rcv_up = (*tp).rcv_nxt;
+                }
+
+                lbl = Lbl::DoData;
+                continue;
+            }
+
+            Lbl::DoData => {
+                /*
+                 * Process the segment text, merging it into the TCP
+                 * sequencing queue.
+                 */
+                if ((*ti).ti_i.len != 0 || (tiflags & TH_FIN) != 0)
+                    && (*tp).t_state < TCPS_TIME_WAIT
+                {
+                    /* TCP_REASS */
+                    if (*ti).ti_t.th_seq == (*tp).rcv_nxt
+                        && frag_list_empty(tp)
+                        && (*tp).t_state == TCPS_ESTABLISHED
+                    {
+                        (*tp).t_flags |= TF_DELACK;
+                        (*tp).rcv_nxt = (*tp).rcv_nxt.wrapping_add((*ti).ti_i.len as u32);
+                        tiflags = ((*ti).ti_t.th_flags & TH_FIN as u8) as c_int;
+                        if (*so).so_emu != 0 {
+                            if tcp_emu(so, m) != 0 {
+                                sbappend(so, m);
+                            }
+                        } else {
+                            sbappend(so, m);
+                        }
+                    } else {
+                        tiflags = tcp_reass(tp, ti, m);
+                        (*tp).t_flags |= TF_ACKNOW;
+                    }
+                } else {
+                    m_free(m);
+                    tiflags &= !TH_FIN;
+                }
+
+                /*
+                 * If FIN is received ACK the FIN and let the user know
+                 * that the connection is closing.
+                 */
+                if (tiflags & TH_FIN) != 0 {
+                    if (*tp).t_state < TCPS_TIME_WAIT {
+                        sofwdrain(so);
+
+                        (*tp).t_flags |= TF_ACKNOW;
+                        (*tp).rcv_nxt = (*tp).rcv_nxt.wrapping_add(1);
+                    }
+                    match (*tp).t_state {
+                        TCPS_SYN_RECEIVED | TCPS_ESTABLISHED => {
+                            if (*so).so_emu as c_int == EMU_CTL {
+                                /* no shutdown on socket */
+                                (*tp).t_state = TCPS_LAST_ACK;
+                            } else {
+                                (*tp).t_state = TCPS_CLOSE_WAIT;
+                            }
+                        }
+                        TCPS_FIN_WAIT_1 => {
+                            (*tp).t_state = TCPS_CLOSING;
+                        }
+                        TCPS_FIN_WAIT_2 => {
+                            (*tp).t_state = TCPS_TIME_WAIT;
+                            tcp_canceltimers(tp);
+                            (*tp).t_timer[TCPT_2MSL] = (2 * TCPTV_MSL) as i16;
+                        }
+                        TCPS_TIME_WAIT => {
+                            (*tp).t_timer[TCPT_2MSL] = (2 * TCPTV_MSL) as i16;
+                        }
+                        _ => {}
+                    }
+                }
+
+                /*
+                 * If this is a small packet (telnet), then ACK now.
+                 */
+                if (*ti).ti_i.len != 0
+                    && (*ti).ti_i.len as c_uint <= 5
+                    && (ti as *const u8)
+                        .add(SIZEOF_TCPIPHDR as usize)
+                        .cast::<i8>()
+                        .read()
+                        == 27
+                {
+                    (*tp).t_flags |= TF_ACKNOW;
+                }
+
+                /*
+                 * Return any desired output.
+                 */
+                if needoutput != 0 || ((*tp).t_flags & TF_ACKNOW) != 0 {
+                    tcp_output(tp);
+                }
+                return;
+            }
+
+            Lbl::DropAfterAck => {
+                /*
+                 * Generate an ACK dropping incoming segment if it occupies
+                 * sequence space, where the ACK reflects our state.
+                 */
+                if (tiflags & TH_RST) != 0 {
+                    lbl = Lbl::Drop;
+                    continue;
+                }
+                m_free(m);
+                (*tp).t_flags |= TF_ACKNOW;
+                tcp_output(tp);
+                return;
+            }
+
+            Lbl::DropWithReset => {
+                /* reuses m if m!=NULL, m_free() unnecessary */
+                if (tiflags & TH_ACK) != 0 {
+                    tcp_respond(tp, ti, m, 0, (*ti).ti_t.th_ack, TH_RST);
+                } else {
+                    if (tiflags & TH_SYN) != 0 {
+                        (*ti).ti_i.len = (*ti).ti_i.len.wrapping_add(1);
+                    }
+                    tcp_respond(
+                        tp,
+                        ti,
+                        m,
+                        (*ti).ti_t.th_seq.wrapping_add((*ti).ti_i.len as u32),
+                        0,
+                        TH_RST | TH_ACK,
+                    );
+                }
+                return;
+            }
+
+            Lbl::Drop => {
+                /*
+                 * Drop space held by incoming segment and return.
+                 */
+                m_free(m);
+                return;
+            }
+        }
+    }
+}
+}
+
 // ── `struct ip save_ip, *ip; register struct tcpiphdr *ti; caddr_t optp = ((void *)0) ; int optlen =…` · slirp/tcp_input.c:218-235 · chunk 2674 · deepseek/deepseek-v4.1-flash-1017 · 1 attempt(s) · Unvalidated
 //
 // Original C:
